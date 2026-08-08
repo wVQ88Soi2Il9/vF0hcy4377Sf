@@ -6,7 +6,7 @@ import { add_vector, rotate_vector_3d } from './math'
  */
 export function get_world_cells(dev: device, def: device_definition): vector[]
 {
-    return def.positions.map(pos => 
+    return def.shape.map(pos => 
         add_vector(dev.position, rotate_vector_3d(pos, dev.rotation))
     )
 }

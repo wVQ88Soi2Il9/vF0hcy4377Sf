@@ -75,7 +75,7 @@ export interface device_definition
    * Cells this device occupies, as local offsets from anchor (before rotation).
    * e.g. [{ x:0, y:0, z:0 }, { x:1, y:0, z:0 }] = 1×2 horizontal device.
    */
-  positions:    vector[]
+  shape:    vector[]
 
   /**
    * Input port positions, local offsets (before rotation).
