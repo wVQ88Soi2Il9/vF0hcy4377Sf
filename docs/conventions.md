@@ -21,7 +21,7 @@
 *   **命名規範**：全部使用全小寫 `snake_case` (`a_b_c`)。
     *   檔名：`types.ts`, `my_file.ts`
     *   型別 / 介面：`vector`, `rotation`, `device`, `game_map`, `item`, `recipe`
-    *   屬性 / 變數：`start_point`, `input_ports`, `output_ports`, `other_info`
+    *   屬性 / 變數：`position`, `input_ports`, `output_ports`, `other_info`
     *   函式：`rotate_vector()`, `place_device()`
 
 ---

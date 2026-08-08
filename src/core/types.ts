@@ -1,7 +1,7 @@
 /**
  * 3D integer grid coordinate vector.
  * x, y = horizontal axes; z = layer index (discrete).
- * All positions within device are local offsets relative to `start_point`.
+ * All positions within device are local offsets relative to `position`.
  */
 export type vector = { x: number; y: number; z: number }
 
@@ -57,6 +57,9 @@ export interface recipe
   duration: number
   inputs:   item_stack[]
   outputs:  item_stack[]
+
+  /** Requires or generates power during recipe processing. Positive amount = generates, Negative amount = consumes. */
+  power?:   power_stack[]
 }
 
 // ── Device ───────────────────────────────────────────────────────────────────
@@ -89,9 +92,6 @@ export interface device_definition
 
   /** All recipes this device can run. Empty = no recipe needed. */
   recipe_ids:   string[]
-
-  /** Requires or generates power. Positive amount = generates, Negative amount = consumes. */
-  power:        power_stack[]
 }
 
 // ── Device Instance (動態實體) ─────────────────────────────────────────
@@ -105,9 +105,9 @@ export interface device
   definition_id:        string
 
   /** Anchor cell in world coordinates (includes layer z). */
-  start_point:          vector
+  position:             vector
 
-  /** Rotation applied to all local offset vectors before adding start_point. */
+  /** Rotation applied to all local offset vectors before adding position. */
   rotation:             rotation
 
   /** The recipe currently selected by the player to be processed by this device */

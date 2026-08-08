@@ -10,7 +10,7 @@ export function create_device(map: game_map, dev: device): void
 }
 
 /**
- * Removes a device from the map by its unique_id.
+ * Removes a device by its unique_id.
  * Modifies the map in place.
  */
 export function delete_device(map: game_map, device_unique_id: number): void
@@ -23,20 +23,20 @@ export function delete_device(map: game_map, device_unique_id: number): void
 }
 
 /**
- * Moves a device to a new start point.
+ * Moves a device.
  * Modifies the device in place.
  */
-export function move_device(map: game_map, device_unique_id: number, new_start_point: vector): void
+export function move_device(map: game_map, device_unique_id: number, new_position: vector): void
 {
     const dev = map.devices.find(d => d.unique_id === device_unique_id)
     if (dev)
     {
-        dev.start_point = new_start_point
+        dev.position = new_position
     }
 }
 
 /**
- * Rotates a device to a new rotation.
+ * Rotates a device.
  * Modifies the device in place.
  */
 export function rotate_device(map: game_map, device_unique_id: number, new_rotation: rotation): void

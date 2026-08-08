@@ -42,7 +42,7 @@ interface device
   unique_id:          number    // 放置在地圖上的實體唯一數值 ID
 
   definition_id:      string    // 引用原型藍圖 ID
-  start_point:        vector    // 錨點（world 座標，含 z layer）
+  position:           vector    // 錨點（world 座標，含 z layer）
   rotation:           rotation
   selected_recipe_id?: string
 

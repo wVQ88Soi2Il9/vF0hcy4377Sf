@@ -12,7 +12,7 @@
   - File names (`my_file.ts`)
   - Type / Interface names (`vec3`, `game_map`, `device`, `recipe`)
   - Function names (`get_world_cells()`, `place_device()`)
-  - Variables and property names (`start_point`, `input_ports`, `other_info`)
+  - Variables and property names (`position`, `input_ports`, `other_info`)
 
 ### 2. Architecture Guidelines
 - **Core (`src/core/`)**: Pure TypeScript, zero dependencies, no Vue/DOM imports.
