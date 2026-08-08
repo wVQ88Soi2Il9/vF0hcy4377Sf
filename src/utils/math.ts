@@ -52,3 +52,19 @@ export function rotate_vector_3d(vec: vector, rot: rotation): vector
         z: z === 0 ? 0 : z
     }
 }
+
+/**
+ * Checks if two vectors are exactly equal.
+ */
+export function vectors_equal(a: vector, b: vector): boolean
+{
+    return a.x === b.x && a.y === b.y && a.z === b.z
+}
+
+/**
+ * Converts a vector to a string for use as a Map or Set key.
+ */
+export function vector_to_string(vec: vector): string
+{
+    return `${vec.x},${vec.y},${vec.z}`
+}
