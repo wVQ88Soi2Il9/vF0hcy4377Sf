@@ -1,6 +1,6 @@
 # Core（最終）
 
-**Core = 純 TypeScript，零外部依賴。全小寫 snake_case + Allman 括號風格。**
+**Core = 純 TypeScript 型別定義。零外部依賴。全小寫 snake_case + Allman 括號風格。**
 
 ---
 
@@ -17,17 +17,11 @@ Device 的 cells 是 `vector[]`——自然支援跨層，不需要任何額外�
 
 ---
 
-## 型別定義
+## 型別定義 (`src/core/types.ts`)
 
 ```ts
-// types.ts
-
 type vector = { x: number; y: number; z: number }
 
-/**
- * 旋轉：繞 Z 軸（在 XY 平面內）
- * 0 = 0°  /  1 = 90°  /  2 = 180°  /  3 = 270°
- */
 type rotation = 0 | 1 | 2 | 3
 
 interface item
@@ -70,56 +64,10 @@ interface game_map
 
 ---
 
-## 純函式
-
-```ts
-// rotate.ts
-function rotate_vector(v: vector, r: rotation): vector
-// 只旋轉 x, y；z（layer）不動
-
-// geometry.ts
-function get_world_cells(d: device): vector[]
-function get_world_input_ports(d: device): vector[]
-function get_world_output_ports(d: device): vector[]
-
-// map.ts
-function is_cell_occupied(map: game_map, cell: vector): boolean
-function place_device(map: game_map, d: device): boolean   // 衝突回傳 false
-function remove_device(map: game_map, id: string): boolean
-function get_device_at(map: game_map, cell: vector): device | null
-```
-
----
-
-## 跨層範例
-
-```ts
-// 一個直立設備，佔 z=0 和 z=1 兩層
-const pipe: device =
-{
-  id: 'pipe-1',
-  start_point:  { x: 3, y: 2, z: 0 },
-  rotation:     0,
-  positions:    [{ x:0, y:0, z:0 }, { x:0, y:0, z:1 }],  // 垂直兩格
-  input_ports:  [{ x:0, y:0, z:-1 }],  // 下方入口
-  output_ports: [{ x:0, y:0, z:2 }],   // 上方出口
-  recipes:      [],
-  other_info:   {},
-}
-```
-
----
-
-## 檔案
+## 檔案結構
 
 ```
 src/core/
   types.ts      ← vector, rotation, item, recipe, device, game_map
-  rotate.ts     ← rotate_vector()
-  geometry.ts   ← get_world_cells / ports
-  map.ts        ← is_cell_occupied, place_device, remove_device, get_device_at
-  index.ts      ← public API 入口
+  index.ts      ← public API 入口（僅導出 types）
 ```
-
-**不屬於 Core（留給 mod / app layer）：**  
-Device 類型 registry、連線 Edge、渲染、Undo/Redo、序列化、UI 狀態。
