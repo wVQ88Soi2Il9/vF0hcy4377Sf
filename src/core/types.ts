@@ -32,18 +32,15 @@ export interface recipe
 
 // ── Device ───────────────────────────────────────────────────────────────────
 
-export interface device
+// ── Device Definition (靜態藍圖 / 原型) ───────────────────────────────────
+
+export interface device_definition
 {
+  /** Unique identifier for the device type, e.g. "assembler_mk1" */
   id:           string
 
-  /** Anchor cell in world coordinates (includes layer z). */
-  start_point:  vector
-
-  /** Rotation applied to all local offset vectors before adding start_point. */
-  rotation:     rotation
-
   /**
-   * Cells this device occupies, as local offsets from start_point (before rotation).
+   * Cells this device occupies, as local offsets from anchor (before rotation).
    * e.g. [{ x:0, y:0, z:0 }, { x:1, y:0, z:0 }] = 1×2 horizontal device.
    */
   positions:    vector[]
@@ -63,9 +60,29 @@ export interface device
 
   /** All recipes this device can run. Empty = no recipe needed. */
   recipes:      recipe[]
+}
 
-  /** Mod-extensible metadata. Core never reads or writes this. */
-  other_info:   Record<string, unknown>
+// ── Device Instance (動態實體) ─────────────────────────────────────────
+
+export interface device
+{
+  /** Unique identifier for this specific placed instance on the map */
+  uuid:                 string
+
+  /** Reference to device_definition.id */
+  definition_id:        string
+
+  /** Anchor cell in world coordinates (includes layer z). */
+  start_point:          vector
+
+  /** Rotation applied to all local offset vectors before adding start_point. */
+  rotation:             rotation
+
+  /** The recipe currently selected by the player to be processed by this device */
+  selected_recipe_id?:  string
+
+  /** Mod-extensible dynamic metadata (e.g. inventory, working status, progress). Core never reads this. */
+  other_info:           Record<string, unknown>
 }
 
 // ── Map ──────────────────────────────────────────────────────────────────────
