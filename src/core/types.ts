@@ -9,25 +9,54 @@ export type vector = { x: number; y: number; z: number }
  * 3D Discrete Rotation in 90-degree steps (0=0°, 1=90°, 2=180°, 3=270°).
  * Representing rotation around the respective axes.
  */
-export type rotation = {
+export type rotation = 
+{
   x: 0 | 1 | 2 | 3
   y: 0 | 1 | 2 | 3
   z: 0 | 1 | 2 | 3
 }
 
-// ── Recipe ───────────────────────────────────────────────────────────────────
+// ── Pack ─────────────────────────────────────────────────────────────────────
 
-export interface item
+/** 
+ * 代表一個從 JSON 載入的資料包 (Mod / Base Game)
+ */
+export interface pack
 {
-  id:       string
-  quantity: number
+  id:                  string
+  items:               item_definition[]
+  recipes:             recipe[]
+  device_definitions:  device_definition[]
 }
+
+// ── Item ─────────────────────────────────────────────────────────────────────
+
+export interface item_definition
+{
+  id:          string
+  other_info:  Record<string, unknown>
+}
+
+export interface item_stack
+{
+  item_id:   string
+  quantity:  number
+}
+
+export interface power_stack
+{
+  power_id:  string
+  amount:    number
+}
+
+// ── Recipe ───────────────────────────────────────────────────────────────────
 
 export interface recipe
 {
-  id:      string
-  inputs:  item[]
-  outputs: item[]
+  id:       string
+  duration: number
+  inputs:   item_stack[]
+  outputs:  item_stack[]
 }
 
 // ── Device ───────────────────────────────────────────────────────────────────
@@ -59,15 +88,18 @@ export interface device_definition
   output_ports: vector[]
 
   /** All recipes this device can run. Empty = no recipe needed. */
-  recipes:      recipe[]
+  recipe_ids:   string[]
+
+  /** Requires or generates power. Positive amount = generates, Negative amount = consumes. */
+  power:        power_stack[]
 }
 
 // ── Device Instance (動態實體) ─────────────────────────────────────────
 
 export interface device
 {
-  /** Unique identifier for this specific placed instance on the map */
-  uuid:                 string
+  /** Unique numerical identifier for this specific placed instance on the map */
+  unique_id:            number
 
   /** Reference to device_definition.id */
   definition_id:        string
@@ -90,6 +122,10 @@ export interface device
 export interface game_map
 {
   /** Grid dimensions: valid cells are 0 ≤ x < size.x, 0 ≤ y < size.y, 0 ≤ z < size.z */
-  size:    vector
-  devices: device[]
+  size:            vector
+
+  /** Auto-increment counter for device unique_id generation */
+  next_unique_id:  number
+
+  devices:         device[]
 }

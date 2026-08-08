@@ -18,3 +18,6 @@
 - **Core (`src/core/`)**: Pure TypeScript, zero dependencies, no Vue/DOM imports.
 - **Renderer (`src/renderer/`)**: Canvas 2D / WebGL rendering layer.
 - **UI (`src/ui/`)**: Vue 3 is ONLY used for overlay UI components.
+
+### 3. Workflow & Verification
+- **Minimal Compilation Verification**: Avoid running frequent or heavy compilation checks (`tsc`, build scripts, etc.) for small or intermediate code edits. Rely on static type awareness and only verify when explicitly requested or at major milestones.

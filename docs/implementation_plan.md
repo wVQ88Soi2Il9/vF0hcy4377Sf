@@ -39,26 +39,22 @@ interface recipe
 
 interface device
 {
-  id:           string
+  unique_id:          number    // 放置在地圖上的實體唯一數值 ID
 
-  // 實例狀態
-  start_point:  vector    // 錨點（world 座標，含 z layer）
-  rotation:     rotation
-
-  // 設備本體定義（local 座標，relative to start_point，rotation 前）
-  positions:    vector[]  // 佔據的格子
-  input_ports:  vector[]  // input port 位置
-  output_ports: vector[]  // output port 位置
-  recipes:      recipe[]
+  definition_id:      string    // 引用原型藍圖 ID
+  start_point:        vector    // 錨點（world 座標，含 z layer）
+  rotation:           rotation
+  selected_recipe_id?: string
 
   // Mod 擴充
-  other_info:   Record<string, unknown>
+  other_info:         Record<string, unknown>
 }
 
 interface game_map
 {
-  size:    vector    // 格數上限 { x, y, z }
-  devices: device[]
+  size:            vector    // 格數上限 { x, y, z }
+  next_unique_id:  number    // 自增 ID 計數器
+  devices:         device[]
 }
 ```
 
