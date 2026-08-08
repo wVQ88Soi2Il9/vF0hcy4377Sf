@@ -1,104 +1,115 @@
-import type { game_map, device_definition } from '../core/types'
+import type { game_map } from '../core/types'
+import type { pack_registry } from '../core/pack_manager'
+import { get_device_definition } from '../core/pack_manager'
 import { get_world_ports } from './device_utils'
 import { vector_to_string } from './math'
 
-export interface graph_node
+export interface device_node
 {
-    device_id: number
-    /** List of target device_ids connected from this device's output ports */
+    unique_id: number
+    previous_nodes: number[]
     next_nodes: number[]
-    /** List of source device_ids connected to this device's input ports */
-    prev_nodes: number[]
 }
 
-export type device_graph = Map<number, graph_node>
+interface spatial_cell
+{
+    in_ports: number[]
+    out_ports: number[]
+}
 
 /**
- * Builds a directed graph representing the connections between devices on the map.
- * Edges are formed when a device's output port shares the exact same world coordinate 
- * as another device's input port.
+ * Builds a directed graph of all devices on the map based on port connections.
+ * 
+ * Connection Logic:
+ * An edge is formed from Device A to Device B if and only if
+ * one of A's output ports exactly matches the coordinates of one of B's input ports.
  */
-export function build_device_graph(map: game_map, definitions: Record<string, device_definition>): device_graph
+export function build_device_graph(map: game_map, registry: pack_registry): device_node[]
 {
-    const graph: device_graph = new Map()
+    const spatial_map = new Map<string, spatial_cell>()
+    const nodes_map = new Map<number, device_node>()
 
-    // Initialize nodes
+    // Initialize all device nodes
     for (const dev of map.devices)
     {
-        graph.set(dev.unique_id, {
-            device_id: dev.unique_id,
-            next_nodes: [],
-            prev_nodes: []
+        nodes_map.set(dev.unique_id, {
+            unique_id: dev.unique_id,
+            previous_nodes: [],
+            next_nodes: []
         })
     }
 
-    // Maps port world coordinates (as string) to an array of device unique_ids
-    const input_map = new Map<string, number[]>()
-    const output_map = new Map<string, number[]>()
-
-    // Populate the port maps
+    // Phase 1: Register all world ports into the spatial map
     for (const dev of map.devices)
     {
-        const def = definitions[dev.definition_id]
+        const def = get_device_definition(registry, dev.definition_id)
         if (!def)
         {
             continue
         }
 
-        const inputs = get_world_ports(dev, def, 'input')
-        for (const port of inputs)
+        const out_ports = get_world_ports(dev, def, 'output')
+        for (const port of out_ports)
         {
             const key = vector_to_string(port)
-            if (!input_map.has(key))
+            let cell = spatial_map.get(key)
+            if (!cell)
             {
-                input_map.set(key, [])
+                cell = { in_ports: [], out_ports: [] }
+                spatial_map.set(key, cell)
             }
-            input_map.get(key)!.push(dev.unique_id)
+            cell.out_ports.push(dev.unique_id)
         }
 
-        const outputs = get_world_ports(dev, def, 'output')
-        for (const port of outputs)
+        const in_ports = get_world_ports(dev, def, 'input')
+        for (const port of in_ports)
         {
             const key = vector_to_string(port)
-            if (!output_map.has(key))
+            let cell = spatial_map.get(key)
+            if (!cell)
             {
-                output_map.set(key, [])
+                cell = { in_ports: [], out_ports: [] }
+                spatial_map.set(key, cell)
             }
-            output_map.get(key)!.push(dev.unique_id)
+            cell.in_ports.push(dev.unique_id)
         }
     }
 
-    // Build edges by matching output port coordinates to input port coordinates
-    for (const [pos_key, source_ids] of output_map.entries())
+    // Phase 2: Form edges by checking exact matches (=) in the spatial map
+    for (const cell of spatial_map.values())
     {
-        const target_ids = input_map.get(pos_key)
-        if (target_ids)
+        // If a cell has both out_ports (source devices) and in_ports (target devices),
+        // we connect all sources to all targets.
+        if (cell.out_ports.length > 0 && cell.in_ports.length > 0)
         {
-            for (const src of source_ids)
+            for (const source_id of cell.out_ports)
             {
-                for (const tgt of target_ids)
+                for (const target_id of cell.in_ports)
                 {
-                    // Prevent self-connections if a device overlaps its own ports
-                    if (src === tgt)
+                    // Prevent self-connection just in case a device points to itself
+                    if (source_id !== target_id)
                     {
-                        continue
-                    }
-
-                    const src_node = graph.get(src)!
-                    const tgt_node = graph.get(tgt)!
-
-                    if (!src_node.next_nodes.includes(tgt))
-                    {
-                        src_node.next_nodes.push(tgt)
-                    }
-                    if (!tgt_node.prev_nodes.includes(src))
-                    {
-                        tgt_node.prev_nodes.push(src)
+                        const source_node = nodes_map.get(source_id)
+                        const target_node = nodes_map.get(target_id)
+                        
+                        if (source_node && target_node)
+                        {
+                            // Avoid duplicate edges if multiple ports overlap identically
+                            if (!source_node.next_nodes.includes(target_id))
+                            {
+                                source_node.next_nodes.push(target_id)
+                            }
+                            if (!target_node.previous_nodes.includes(source_id))
+                            {
+                                target_node.previous_nodes.push(source_id)
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    return graph
+    // Return as array format
+    return Array.from(nodes_map.values())
 }
