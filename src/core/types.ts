@@ -6,11 +6,14 @@
 export type vector = { x: number; y: number; z: number }
 
 /**
- * Rotation around the Z axis (within the XY plane).
- * 0 = 0° | 1 = 90° CCW | 2 = 180° | 3 = 270° CCW
- * z is never affected by rotation.
+ * 3D Discrete Rotation in 90-degree steps (0=0°, 1=90°, 2=180°, 3=270°).
+ * Representing rotation around the respective axes.
  */
-export type rotation = 0 | 1 | 2 | 3
+export type rotation = {
+  x: 0 | 1 | 2 | 3
+  y: 0 | 1 | 2 | 3
+  z: 0 | 1 | 2 | 3
+}
 
 // ── Recipe ───────────────────────────────────────────────────────────────────
 
@@ -47,12 +50,15 @@ export interface device
 
   /**
    * Input port positions, local offsets (before rotation).
-   * A port sits on the boundary adjacent to the device cell.
-   * e.g. { x:-1, y:0, z:0 } = left face of the anchor cell.
+   * A port is defined as the coordinate of the ADJACENT cell it connects to.
+   * Example: If device is at (0,0), a right-facing port is at (1,0), an up-facing port is at (0,1).
    */
   input_ports:  vector[]
 
-  /** Output port positions, local offsets (before rotation). */
+  /** 
+   * Output port positions, local offsets (before rotation). 
+   * Defined as the coordinate of the ADJACENT cell.
+   */
   output_ports: vector[]
 
   /** All recipes this device can run. Empty = no recipe needed. */
