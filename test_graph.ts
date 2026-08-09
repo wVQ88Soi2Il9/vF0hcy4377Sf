@@ -5,7 +5,14 @@ import { init_vanilla_pack } from './src/packs/vanilla/index'
 import type { game_map, device, pack } from './src/core/types'
 import * as fs from 'fs'
 
-const test_pack: pack = JSON.parse(fs.readFileSync('./src/packs/test_pack.json', 'utf8'))
+const test_devices = JSON.parse(fs.readFileSync('./src/packs/test/data/devices.json', 'utf8'))
+// Simulate loader injecting namespace
+const test_pack: pack = {
+    id: "test",
+    items: [],
+    recipes: [],
+    device_definitions: test_devices.map((d: any) => ({ ...d, id: `test:${d.id}` }))
+}
 
 const registry = create_pack_registry()
 load_pack(registry, test_pack)
