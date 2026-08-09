@@ -2,7 +2,7 @@ import type { game_map, device_node } from '../../core/types'
 import type { pack_registry } from '../../core/pack_manager'
 import { get_device_definition } from '../../core/pack_manager'
 import { get_world_ports } from '../../utils/device_utils'
-import { vector_to_string } from '../../utils/math'
+import { spatial_map } from '../../utils/spatial_map'
 
 
 interface spatial_cell
@@ -20,7 +20,7 @@ interface spatial_cell
  */
 export function build_device_graph(map: game_map, registry: pack_registry): device_node[]
 {
-    const spatial_map = new Map<string, spatial_cell>()
+    const port_map = new spatial_map<spatial_cell>()
     const nodes_map = new Map<number, device_node>()
 
     // Initialize all device nodes
@@ -45,32 +45,20 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
         const out_ports = get_world_ports(dev, def, 'output')
         for (const port of out_ports)
         {
-            const key = vector_to_string(port)
-            let cell = spatial_map.get(key)
-            if (!cell)
-            {
-                cell = { in_ports: [], out_ports: [] }
-                spatial_map.set(key, cell)
-            }
+            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }))
             cell.out_ports.push(dev.unique_id)
         }
 
         const in_ports = get_world_ports(dev, def, 'input')
         for (const port of in_ports)
         {
-            const key = vector_to_string(port)
-            let cell = spatial_map.get(key)
-            if (!cell)
-            {
-                cell = { in_ports: [], out_ports: [] }
-                spatial_map.set(key, cell)
-            }
+            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }))
             cell.in_ports.push(dev.unique_id)
         }
     }
 
     // Phase 2: Form edges by checking exact matches (=) in the spatial map
-    for (const cell of spatial_map.values())
+    for (const cell of port_map.values())
     {
         // If a cell has both out_ports (source devices) and in_ports (target devices),
         // we connect all sources to all targets.

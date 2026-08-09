@@ -1,12 +1,12 @@
 # 專案規範與框架原則 (Project Conventions)
 
-基於「本體只是畫布、一切皆為 Mod」以及「Core 為純 TypeScript」的核心哲學，本專案的框架規範如下：
+基於「本體只是畫布、一切皆為 Mod」的核心哲學，本專案的框架規範如下：
 
 ---
 
 ## 1. 程式碼風格 (Code Style)
 
-*   **大括號風格**：強制使用 Allman style（`{` 獨佔新行）。
+*   **大括號風格**：強制使用 Allman style（`{` 獨佔新行），適用於 function, interface, class, for, switch 等。
     ```typescript
     function my_function()
     {
@@ -26,58 +26,18 @@
 
 ---
 
-## 2. 框架角色定位 (Vue.js 的職責)
+## 2. 框架角色定位 (無 Vue 純 TypeScript 架構)
 
-*   **❌ Vue 不負責：**
-    *   **核心邏輯**：不把遊戲/地圖邏輯寫在 Vue 元件中。
-    *   **畫布渲染**：不用 Vue DOM 元件渲染地圖節點（捨棄 VueFlow）。
-    *   **核心狀態**：Core (`src/core/`) 純 TS，零依賴。
-*   **✅ Vue 只負責：**
-    *   **UI 覆蓋層 (Overlay UI)**：右鍵選單、設定面板、Mod 操作介面。
-    *   **使用者輸入轉發**：將滑鼠/鍵盤事件轉發給 Renderer 或控制器。
+*   本專案採用純粹的 TypeScript + HTML5 Canvas 架構，**完全捨棄 Vue** 等前端框架。
+*   **核心狀態**：Core (`src/core/`) 純 TS，零依賴。
+*   **畫布渲染**：自研 Canvas 渲染器，負責所有的地圖與節點渲染。
+*   **使用者介面 (UI)**：使用純原生的 TypeScript 與 DOM 操作來實作覆蓋層 UI，不依賴任何第三方框架。
 
 ---
 
-## 3. 三層單向架構 (Architecture Layers)
-
-```text
-src/
-├── core/         # 純 TS 型別定義與地圖核心 CRUD 邏輯 (Mutable)
-├── utils/        # 衍生的純數學與座標計算輔助函數
-├── renderer/     # (待開發) Canvas 2D 畫布渲染器（未來可換 Three.js）
-├── ui/           # (待開發) Vue UI 覆蓋層
-└── mods/         # (未來) Mod 外掛模組
-```
-
-*   **Core (第一層)**：只有 `src/core/types.ts` 純型別定義，無邏輯、無副作用。
-*   **Renderer (第二層)**：讀取地圖資料並繪製 Canvas，不依賴 Vue。
-*   **UI (第三層)**：用 Vue 呈現外圍選單與操作面板。
-
----
-
-## 4. 狀態與 Mod 擴充
+## 3. 狀態與 Mod 擴充
 
 *   **單一事實來源**：整個世界地圖狀態即為 `game_map` 物件。
-*   **Mod 資料擴充**：`device` 中預留 `other_info: Record<string, unknown>` 欄位供 Mod 使用。
+*   **Mod 資料擴充**：`device` 中預留 `other_info: Record<string, unknown>` 欄位供 Mod 使用，核心絕對不讀取此欄位內的邏輯。
+*   **最小化驗證**：避免為微小變更頻繁執行編譯檢查，依賴 TypeScript 靜態型別提示為主。
 
----
-
-## 5. 網格與端口座標定義 (2x2 Grid & Edge Ports)
-
-為了讓連接埠在 3D 空間中可以 **1:1 完美重合匹配**，我們採用雙倍解析度網格 (Half-grid / Boundary coordinates)：
-
-*   **格子中心/點 (Position)**：固定為 **全部偶數** 座標 `(2i, 2j, 2k)`，代表格子的中心。例如 `(0,0,0)`, `(2,0,0)`, `(0,2,0)`。
-*   **連接埠 (Port)**：固定位在相鄰格子的交界面 (Faces) 上，因此座標必須為 **剛好 1 個奇數，其餘 2 個為偶數**。
-    *   例如沿 X 軸相接的 Port，X 為奇數，Y, Z 為偶數，如 `(1, 0, 0)` 或 `(-1, 0, 0)`。
-
-圖解範例：
-```text
-  (-2,0)         (0,0)          (2,0)          (4,0)  ← 設備中心 (偶數)
-    |              |              |              |
- ───┼──────(-1,0)──┼──────(1,0)───┼──────(3,0)───┼─── ← 邊界 Port (奇數)
-```
-
-**邊界相交優勢：**
-*   位在 `(0,0,0)` 的設備，其右側 Output Port 座標為 `(1, 0, 0)`。
-*   放置在 `(2,0,0)` 的相鄰設備，其左側 Input Port 座標同樣為 `(2 - 1, 0, 0) = (1, 0, 0)`。
-*   **兩個 Port 的世界座標會完全相同！** 要判斷兩台設備是否連通，只需要檢查 `portA.world_pos === portB.world_pos` 即可。

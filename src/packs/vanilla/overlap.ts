@@ -1,7 +1,7 @@
-import type { game_map, device, vector, map_validation_result } from '../../core/types'
+import type { game_map, vector, map_validation_result } from '../../core/types'
 import type { pack_registry } from '../../core/pack_manager'
 import { get_world_cells } from '../../utils/device_utils'
-import { vector_to_string } from '../../utils/math'
+import { spatial_map } from '../../utils/spatial_map'
 
 /**
  * 檢查座標是否超出地圖邊界
@@ -28,7 +28,7 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
     }
 
     // 紀錄每個座標對應了哪些裝置 (unique_id)
-    const occupied_map = new Map<string, number[]>()
+    const occupied_map = new spatial_map<number[]>()
 
     // 第一階段：掃描所有裝置，記錄出界狀況並註冊佔據的格子
     for (const dev of map.devices)
@@ -51,12 +51,7 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
             }
 
             // 記錄佔據
-            const key = vector_to_string(cell)
-            if (!occupied_map.has(key))
-            {
-                occupied_map.set(key, [])
-            }
-            occupied_map.get(key)!.push(dev.unique_id)
+            occupied_map.get_or_insert(cell, () => []).push(dev.unique_id)
         }
 
         if (is_oob)
