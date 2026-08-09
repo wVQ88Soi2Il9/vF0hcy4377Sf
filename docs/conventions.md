@@ -35,9 +35,9 @@
 
 ---
 
-## 3. 狀態與 Mod 擴充
+## 3. 狀態與 Mod 擴充 (Everything is a Plugin)
 
 *   **單一事實來源**：整個世界地圖狀態即為 `game_map` 物件。
-*   **Mod 資料擴充**：`device` 中預留 `other_info: Record<string, unknown>` 欄位供 Mod 使用，核心絕對不讀取此欄位內的邏輯。
+*   **資料層面擴充**：`device` 中預留 `other_info: Record<string, unknown>` 欄位供 Mod 使用，核心絕對不讀取此欄位內的資料。
+*   **邏輯層面擴充 (Hooks)**：所有的遊戲具體規則（如重疊檢測 `check_map_overlap`、電路圖構建 `build_device_graph`）皆非寫死在 Core 中，而是由 `packs/` 透過註冊至 `core/hooks.ts` 中執行。Vanilla 玩法本身也只是一個 Mod。
 *   **最小化驗證**：避免為微小變更頻繁執行編譯檢查，依賴 TypeScript 靜態型別提示為主。
-
