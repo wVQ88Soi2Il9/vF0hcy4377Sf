@@ -4,11 +4,13 @@
 
 ```text
 src/
-├── core/         # 純 TS 型別定義、地圖狀態與 Hooks 擴充點
-├── utils/        # 衍生的純數學與座標計算輔助函數
-├── renderer/     # (待開發) Canvas 2D 畫布渲染器
-├── ui/           # (待開發) 原生 TS / DOM UI 覆蓋層
-└── packs/        # 遊戲邏輯插件與 Mod 資料包 (Plugins & Mods)
+├── core/                 # 純 TS 型別定義、地圖狀態與 Hooks 擴充點
+├── utils/                # 衍生的純數學與座標計算輔助函數
+└── packs/                # 遊戲邏輯插件與 Mod 資料包 (Plugins & Mods)
+    └── vanilla/          # 基本包
+        ├── renderer/     # (待開發) Canvas 2D 畫布渲染器
+        └── ui/           # (待開發) 原生 TS / DOM UI 覆蓋層
+
 ```
 
 *   **Core (引擎核心)**：純 TS 型別定義（`game_map`, `device` 等）與 Hooks 系統。完全無具體遊戲邏輯，只負責狀態載體與擴充點。
@@ -17,17 +19,6 @@ src/
 *   **UI (覆蓋層)**：使用原生的 HTML/TypeScript 控制選單與操作面板。
 
 ---
-
-## 座標系設計
-
-### 基本座標
-```text
-z = layer index（離散整數）
-x, y = 層內格座標
-
-world cell = vector { x, y, z }
-```
-Device 的 cells 是 `vector[]`，自然支援跨層，不需要任何額外包裝。
 
 ### 網格與端口座標定義 (2x2 Grid & Edge Ports)
 

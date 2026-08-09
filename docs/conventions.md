@@ -6,7 +6,7 @@
 
 ## 1. 程式碼風格 (Code Style)
 
-*   **大括號風格**：強制使用 Allman style（`{` 獨佔新行），適用於 function, interface, class, for, switch 等。
+*   **大括號風格**：強制使用 Allman style（`{` 獨佔新行），適用全部 function, interface, class, for, switch 等。
     ```typescript
     function my_function()
     {
@@ -26,12 +26,12 @@
 
 ---
 
-## 2. 框架角色定位 (無 Vue 純 TypeScript 架構)
+## 2. 框架角色定位
 
-*   本專案採用純粹的 TypeScript + HTML5 Canvas 架構，**完全捨棄 Vue** 等前端框架。
+*   本專案暫時採用純粹的 TypeScript + HTML5 Canvas 架構。
 *   **核心狀態**：Core (`src/core/`) 純 TS，零依賴。
-*   **畫布渲染**：自研 Canvas 渲染器，負責所有的地圖與節點渲染。
-*   **使用者介面 (UI)**：使用純原生的 TypeScript 與 DOM 操作來實作覆蓋層 UI，不依賴任何第三方框架。
+*   **畫布渲染**：unknown。
+*   **UI**：unknown。
 
 ---
 
@@ -40,4 +40,4 @@
 *   **單一事實來源**：整個世界地圖狀態即為 `game_map` 物件。
 *   **資料層面擴充**：`device` 中預留 `other_info: Record<string, unknown>` 欄位供 Mod 使用，核心絕對不讀取此欄位內的資料。
 *   **邏輯層面擴充 (Hooks)**：所有的遊戲具體規則（如重疊檢測 `check_map_overlap`、電路圖構建 `build_device_graph`）皆非寫死在 Core 中，而是由 `packs/` 透過註冊至 `core/hooks.ts` 中執行。Vanilla 玩法本身也只是一個 Mod。
-*   **最小化驗證**：避免為微小變更頻繁執行編譯檢查，依賴 TypeScript 靜態型別提示為主。
+*   **最小化驗證**：只有大更動需要編譯檢查。
