@@ -8,16 +8,13 @@ src/
 ├── utils/                # 衍生的純數學與座標計算輔助函數
 └── packs/                # 遊戲邏輯插件與 Mod 資料包 (Plugins & Mods)
     └── vanilla/          # 基本包
-        ├── renderer/     # (待開發) Canvas 2D 畫布渲染器
-        └── ui/           # (待開發) 原生 TS / DOM UI 覆蓋層
+        ├── renderer/     # (待開發) 
+        └── ui/           # (待開發) 
 
 ```
 
 *   **Core (引擎核心)**：純 TS 型別定義（`game_map`, `device` 等）與 Hooks 系統。完全無具體遊戲邏輯，只負責狀態載體與擴充點。
 *   **Packs (插件層)**：包含靜態資料 (JSON) 與動態邏輯 (TS)。所有的遊戲規則（如碰撞檢測、節點連接圖）皆作為外掛註冊至 Core 的 Hooks 中，貫徹「一切皆為 Mod」的設計。
-*   **Renderer (渲染層)**：讀取地圖資料並使用原生的 HTML5 Canvas API 進行畫面繪製。
-*   **UI (覆蓋層)**：使用原生的 HTML/TypeScript 控制選單與操作面板。
-
 ---
 
 ### 網格與端口座標定義 (2x2 Grid & Edge Ports)
