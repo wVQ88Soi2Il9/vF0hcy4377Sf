@@ -1,7 +1,7 @@
-import type { game_map, device, vector } from '../core/types'
-import type { pack_registry } from '../core/pack_manager'
-import { get_world_cells } from './device_utils'
-import { vector_to_string } from './math'
+import type { game_map, device, vector, map_validation_result } from '../../core/types'
+import type { pack_registry } from '../../core/pack_manager'
+import { get_world_cells } from '../../utils/device_utils'
+import { vector_to_string } from '../../utils/math'
 
 /**
  * 檢查座標是否超出地圖邊界
@@ -13,11 +13,6 @@ export function is_out_of_bounds(pos: vector, map_size: vector): boolean
            pos.z < 0 || pos.z >= map_size.z
 }
 
-export interface map_validation_result
-{
-    out_of_bounds: number[]
-    overlapped: number[]
-}
 
 /**
  * 檢查整個地圖上的所有裝置，標記出哪些裝置超出邊界，哪些裝置發生重疊。

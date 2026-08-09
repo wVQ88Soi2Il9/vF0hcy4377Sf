@@ -1,5 +1,39 @@
-# Vue 3 + TypeScript + Vite
+# 工廠自動化遊戲核心框架 (Factory Automation Core Framework)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基於「本體只是畫布、一切皆為 Mod」以及「Core 為純 TypeScript」的核心哲學所打造的遊戲前端/引擎框架。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 核心架構理念
+
+1. **三層單向架構**：
+   * **Core**: 純 TypeScript 型別定義與地圖核心 CRUD 邏輯 (無框架依賴、無副作用)。
+   * **Renderer**: Canvas 2D / 3D 畫布繪製引擎。
+   * **UI**: 基於 Vue 的覆蓋層，負責操作選單與面板。
+2. **單一事實來源**：整個世界地圖狀態即為 `game_map` 物件，資料邏輯與 UI 渲染徹底分離。
+3. **Mod 驅動**：所有的物品 (Items)、配方 (Recipes) 與裝置 (Devices) 都以 JSON 資料包 (Pack) 的形式定義與載入。
+
+---
+
+## ⚠️ 重要的設計規範：網格與連接埠 (2x2 Grid & Edge Ports)
+
+為了解決 3D 空間中設備相連判定困難的問題，並讓連接埠在空間中可以 **1:1 完美重合匹配**，我們採用了雙倍解析度網格 (Half-grid / Boundary coordinates) 設計：
+
+* **設備放置與佔用 (Position / Shape)**：固定必須為 **全部偶數座標** `(2i, 2j, 2k)`，代表格子的中心。
+  * 例如：一個 `1x1` 的設備中心位置為 `(0,0,0)` 或 `(4,2,0)`。
+  * 例如：一個 `2x2` 的設備放置於 `(0,0,0)`，其佔用的網格空間為 `(0,0,0)`, `(2,0,0)`, `(0,2,0)`, `(2,2,0)`。
+  
+* **連接埠 (Ports)**：固定位在格子交界的面 (Faces) 上，因此座標必須為 **剛好 1 個奇數，其餘 2 個為偶數**。
+  * 若沿著 X 軸連接，X 為奇數，Y, Z 為偶數。例如右側邊界的輸出埠座標應為 `(1, 0, 0)`。
+  * 承上，相鄰放置於 `(2,0,0)` 的設備，其左側的輸入埠座標也是 `(2 - 1, 0, 0) = (1, 0, 0)`。
+
+### 邊界相交優勢：
+這樣的設計能確保相鄰設備連接埠在計算出「世界座標」後，兩個座標點會完全相等。
+核心引擎在建立設備有向圖 (Graph) 與判定相連時，只需檢查 `portA.world_pos === portB.world_pos`，不需進行任何複雜的碰撞或範圍計算，大幅提升效能並簡化了邏輯。
+
+---
+
+## 開發與測試指令
+
+* 開發伺服器：`npm run dev`
+* 執行核心連線與重疊邏輯測試：`npx tsx test_graph.ts`
+
+更多專案開發約定與細節，請參閱 [docs/conventions.md](docs/conventions.md)。

@@ -1,15 +1,9 @@
-import type { game_map } from '../core/types'
-import type { pack_registry } from '../core/pack_manager'
-import { get_device_definition } from '../core/pack_manager'
-import { get_world_ports } from './device_utils'
-import { vector_to_string } from './math'
+import type { game_map, device_node } from '../../core/types'
+import type { pack_registry } from '../../core/pack_manager'
+import { get_device_definition } from '../../core/pack_manager'
+import { get_world_ports } from '../../utils/device_utils'
+import { vector_to_string } from '../../utils/math'
 
-export interface device_node
-{
-    unique_id: number
-    previous_nodes: number[]
-    next_nodes: number[]
-}
 
 interface spatial_cell
 {
