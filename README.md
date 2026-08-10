@@ -1,4 +1,4 @@
-# Factory Engine (working title)
+# Factory Engine
 
 一個以 **TypeScript** 撰寫的 3D 網格工廠模擬引擎。
 核心本體極簡，只提供地圖狀態與擴充點（畫布），其餘所有遊戲邏輯（碰撞檢測、節點連接圖、配方系統……）皆以 **Mod / Pack** 的形式外掛進來。
