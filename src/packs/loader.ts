@@ -1,4 +1,4 @@
-import type { pack, item_definition, recipe, device_definition } from '../core/types'
+import type { pack, item_definition, recipe, device_definition } from '@/core/types'
 
 // Helper function to resolve ID with namespace
 function resolve_id(id: string, ns: string): string {

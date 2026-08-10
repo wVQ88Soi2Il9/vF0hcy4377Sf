@@ -1,7 +1,7 @@
-import type { game_map, vector, rotation } from '../../../core/types'
-import type { pack_registry } from '../../../core/pack_manager'
-import { get_device_definition } from '../../../core/pack_manager'
-import { create_device, delete_device, move_device, rotate_device } from '../../../core/map_manager'
+import type { game_map, vector, rotation } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
+import { get_device_definition } from '@/core/pack_manager'
+import { create_device, delete_device, move_device, rotate_device } from '@/core/map_manager'
 
 export interface command_result
 {

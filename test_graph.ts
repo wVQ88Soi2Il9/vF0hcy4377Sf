@@ -1,8 +1,8 @@
-import { create_pack_registry, load_pack } from './src/core/pack_manager'
-import { create_device, move_device, rotate_device, delete_device } from './src/core/map_manager'
-import { trigger_build_graph, trigger_check_overlap } from './src/core/hooks'
-import { init_vanilla_pack } from './src/packs/vanilla/index'
-import type { game_map, device, pack } from './src/core/types'
+import { create_pack_registry, load_pack } from '@/core/pack_manager'
+import { create_device, move_device, rotate_device, delete_device } from '@/core/map_manager'
+import { trigger_build_graph, trigger_check_overlap } from '@/core/hooks'
+import { init_vanilla_pack } from '@/packs/vanilla/index'
+import type { game_map, device, pack } from '@/core/types'
 import * as fs from 'fs'
 
 const test_devices = JSON.parse(fs.readFileSync('./src/packs/test/data/devices.json', 'utf8'))

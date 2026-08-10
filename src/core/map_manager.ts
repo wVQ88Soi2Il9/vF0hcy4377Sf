@@ -1,4 +1,4 @@
-import type { game_map, device, vector, rotation } from './types'
+import type { game_map, device, vector, rotation } from '@/core/types'
 
 /**
  * Adds a device to the map.

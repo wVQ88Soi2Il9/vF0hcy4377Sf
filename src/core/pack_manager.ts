@@ -1,4 +1,4 @@
-import type { pack, item_definition, recipe, device_definition } from './types'
+import type { pack, item_definition, recipe, device_definition } from '@/core/types'
 
 export interface pack_registry
 {

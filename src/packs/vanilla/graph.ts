@@ -1,8 +1,8 @@
-import type { game_map, device_node } from '../../core/types'
-import type { pack_registry } from '../../core/pack_manager'
-import { get_device_definition } from '../../core/pack_manager'
-import { get_world_ports } from '../../utils/device_utils'
-import { spatial_map } from '../../utils/spatial_map'
+import type { game_map, device_node } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
+import { get_device_definition } from '@/core/pack_manager'
+import { get_world_ports } from '@/utils/device_utils'
+import { spatial_map } from '@/utils/spatial_map'
 
 
 interface spatial_cell

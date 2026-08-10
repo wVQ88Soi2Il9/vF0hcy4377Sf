@@ -1,6 +1,6 @@
-import { hooks } from '../../core/hooks'
-import { check_map_overlap } from './overlap'
-import { build_device_graph } from './graph'
+import { hooks } from '@/core/hooks'
+import { check_map_overlap } from '@/packs/vanilla/overlap'
+import { build_device_graph } from '@/packs/vanilla/graph'
 
 /**
  * Initialize the vanilla pack by registering its core logics to the engine hooks.

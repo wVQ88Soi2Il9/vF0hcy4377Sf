@@ -1,5 +1,5 @@
-import type { device, vector, device_definition } from '../core/types'
-import { add_vector, rotate_vector_3d } from './math'
+import type { device, vector, device_definition } from '@/core/types'
+import { add_vector, rotate_vector_3d } from '@/utils/math'
 
 /**
  * Gets the world coordinates of all cells occupied by a device.

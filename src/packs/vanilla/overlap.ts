@@ -1,7 +1,7 @@
-import type { game_map, vector, map_validation_result } from '../../core/types'
-import type { pack_registry } from '../../core/pack_manager'
-import { get_world_cells } from '../../utils/device_utils'
-import { spatial_map } from '../../utils/spatial_map'
+import type { game_map, vector, map_validation_result } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
+import { get_world_cells } from '@/utils/device_utils'
+import { spatial_map } from '@/utils/spatial_map'
 
 /**
  * 檢查座標是否超出地圖邊界

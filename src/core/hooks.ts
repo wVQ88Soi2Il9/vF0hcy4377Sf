@@ -1,5 +1,5 @@
-import type { game_map, map_validation_result, device_node } from './types'
-import type { pack_registry } from './pack_manager'
+import type { game_map, map_validation_result, device_node } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
 
 export type check_overlap_hook = (map: game_map, registry: pack_registry) => map_validation_result;
 export type build_graph_hook = (map: game_map, registry: pack_registry) => device_node[];

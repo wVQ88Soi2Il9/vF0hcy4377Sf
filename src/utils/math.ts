@@ -1,4 +1,4 @@
-import type { vector, rotation } from '../core/types'
+import type { vector, rotation } from '@/core/types'
 
 /**
  * Adds two vectors together.

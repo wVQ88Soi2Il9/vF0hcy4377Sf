@@ -1,7 +1,7 @@
-import type { game_map, device, vector } from '../../../core/types'
-import type { pack_registry } from '../../../core/pack_manager'
-import { get_device_definition } from '../../../core/pack_manager'
-import { get_world_cells } from '../../../utils/device_utils'
+import type { game_map, device, vector } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
+import { get_device_definition } from '@/core/pack_manager'
+import { get_world_cells } from '@/utils/device_utils'
 
 /**
  * Camera state controlling pan and zoom of the map view.

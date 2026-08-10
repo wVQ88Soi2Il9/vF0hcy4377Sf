@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch } from 'vue'
-import type { game_map } from '../../../core/types'
-import type { pack_registry } from '../../../core/pack_manager'
-import { draw_map, create_default_camera } from '../renderer/draw_map.ts'
-import { execute_command } from './command_parser'
+import type { game_map } from '@/core/types'
+import type { pack_registry } from '@/core/pack_manager'
+import { draw_map, create_default_camera } from '@/packs/vanilla/renderer/draw_map.ts'
+import { execute_command } from '@/packs/vanilla/ui/command_parser'
 
 const props = defineProps<{
     map:       game_map
