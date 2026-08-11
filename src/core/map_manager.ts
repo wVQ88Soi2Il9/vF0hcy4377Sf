@@ -1,5 +1,5 @@
 import type { game_map, device, vector, rotation } from '@/core/types'
-import { trigger_create_device, trigger_delete_device, trigger_move_device } from '@/core/hooks'
+import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device } from '@/core/hooks'
 
 /**
  * Adds a device to the map.
@@ -55,6 +55,13 @@ export function rotate_device(map: game_map, device_unique_id: number, new_rotat
     const dev = map.devices.find(d => d.unique_id === device_unique_id)
     if (dev)
     {
+        const old_rotation = dev.rotation
         dev.rotation = new_rotation
+        trigger_rotate_device(
+            map,
+            dev,
+            old_rotation,
+            new_rotation
+        )
     }
 }
