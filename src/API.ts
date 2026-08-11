@@ -1,4 +1,4 @@
-import { hooks, type device_create_hook, type device_delete_hook, type device_move_hook } from '@/core/hooks'
+import { hooks, type device_create_hook, type device_delete_hook, type device_move_hook, type check_overlap_hook, type build_graph_hook } from '@/core/hooks'
 
 export { create_device, delete_device, move_device } from '@/core/map_manager'
 
@@ -66,5 +66,37 @@ export function on_device_change(callback: () => void): unsubscribe_function
         unsub_create();
         unsub_delete();
         unsub_move();
+    };
+}
+
+/**
+ * Register a hook that checks for overlapping or out-of-bounds devices.
+ */
+export function register_overlap_check(fn: check_overlap_hook): unsubscribe_function
+{
+    hooks.on_check_overlap.push(fn);
+    return () =>
+    {
+        const index = hooks.on_check_overlap.indexOf(fn);
+        if (index !== -1)
+        {
+            hooks.on_check_overlap.splice(index, 1);
+        }
+    };
+}
+
+/**
+ * Register a hook that builds the device connection graph.
+ */
+export function register_graph_build(fn: build_graph_hook): unsubscribe_function
+{
+    hooks.on_build_graph.push(fn);
+    return () =>
+    {
+        const index = hooks.on_build_graph.indexOf(fn);
+        if (index !== -1)
+        {
+            hooks.on_build_graph.splice(index, 1);
+        }
     };
 }

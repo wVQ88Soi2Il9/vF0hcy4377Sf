@@ -92,3 +92,22 @@ export function load_all_packs(): pack[] {
 
     return Array.from(namespace_map.values());
 }
+
+/**
+ * Auto-discovers and calls init_pack() from every pack's index.ts.
+ * Any pack that exports init_pack() will be initialized automatically.
+ * The basic_renderer is skipped because it does not export init_pack().
+ */
+export function call_all_pack_inits(): void
+{
+    const init_modules = import.meta.glob('./*/index.ts', { eager: true }) as Record<string, { init_pack?: () => void }>;
+
+    for (const path in init_modules)
+    {
+        const mod = init_modules[path];
+        if (typeof mod.init_pack === 'function')
+        {
+            mod.init_pack();
+        }
+    }
+}
