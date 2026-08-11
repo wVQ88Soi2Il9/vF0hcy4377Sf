@@ -4,13 +4,11 @@ import { get_world_cells } from '@/utils/device_utils'
 import { spatial_map } from '@/utils/spatial_map'
 
 /**
- * 檢查座標是否超出地圖邊界
+ * 檢查座標是否超出地圖邊界 (N 維通用)
  */
 export function is_out_of_bounds(pos: vector, map_size: vector): boolean
 {
-    return pos.x < 0 || pos.x >= map_size.x ||
-           pos.y < 0 || pos.y >= map_size.y ||
-           pos.z < 0 || pos.z >= map_size.z
+    return pos.some((v, i) => v < 0 || v >= (map_size[i] ?? 0))
 }
 
 

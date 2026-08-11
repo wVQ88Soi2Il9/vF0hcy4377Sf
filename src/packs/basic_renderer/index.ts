@@ -1,4 +1,4 @@
-import { cameratype } from "./types"
+import type { cameratype } from "./types"
 import { draw_grid } from "./draw_grid"
 import { draw_devices } from "./draw_device"
 import { game_map, pack_registry } from "@/core"
@@ -7,12 +7,40 @@ const camera: cameratype =
 {
     pan_x: 0,
     pan_y: 0,
-    zoom:  40
+    zoom:  40,
+    plane: { axis: 'z', depth: 0 }
 }
 
-export function grid_to_screen(gx: number, gy: number, camera: cameratype)
+/**
+ * Maps a 3-D world grid position to a 2-D canvas position.
+ *
+ * Coordinate convention (right-hand, Y-up):
+ *   axis='z'  →  h=x (right), v=y (up, flipped)
+ *   axis='x'  →  h=y (right), v=z (up, flipped)
+ *   axis='y'  →  h=x (right), v=z (up, flipped)
+ *
+ * The vertical axis is negated so that positive values go upward on screen.
+ * The canvas origin (pan_x, pan_y) corresponds to world origin of the plane.
+ */
+export function grid_to_screen
+(
+    wx: number,
+    wy: number,
+    wz: number,
+    camera: cameratype
+)
 {
-    return { sx: camera.pan_x + gx * camera.zoom, sy: camera.pan_y + gy * camera.zoom }
+    let h: number  // world coordinate that maps to screen X (right)
+    let v: number  // world coordinate that maps to screen Y (negated, so up = positive)
+
+    if (camera.plane.axis === 'z')       { h = wx; v = wy }
+    else if (camera.plane.axis === 'x')  { h = wy; v = wz }
+    else                                 { h = wx; v = wz }  // axis === 'y'
+
+    // Flip v: in Canvas Y increases downward, but we want Y/Z to increase upward.
+    const sx = camera.pan_x + h * camera.zoom
+    const sy = camera.pan_y - v * camera.zoom
+    return { sx, sy }
 }
 
 function camera_control(canvas: HTMLCanvasElement): void
@@ -41,17 +69,19 @@ function camera_control(canvas: HTMLCanvasElement): void
     {
         e.preventDefault()
 
-        // 滑鼠在哪個格子位置（縮放前）
-        const mouse_gx = (e.offsetX - camera.pan_x) / camera.zoom
-        const mouse_gy = (e.offsetY - camera.pan_y) / camera.zoom
+        // Compute mouse position in world-horizontal/world-vertical units before zoom.
+        // sx = pan_x + h * zoom  →  h = (offsetX - pan_x) / zoom
+        // sy = pan_y - v * zoom  →  v = (pan_y - offsetY) / zoom  (Y is flipped)
+        const mouse_h = (e.offsetX - camera.pan_x) / camera.zoom
+        const mouse_v = (camera.pan_y - e.offsetY) / camera.zoom
 
-        // 調整 zoom
+        // Adjust zoom.
         const factor = e.deltaY < 0 ? 1.1 : 0.9
         camera.zoom = Math.max(10, Math.min(200, camera.zoom * factor))
 
-        // 讓滑鼠指向的格子位置不變（縮放錨點）
-        camera.pan_x = e.offsetX - mouse_gx * camera.zoom
-        camera.pan_y = e.offsetY - mouse_gy * camera.zoom
+        // Keep the world point under the mouse cursor fixed.
+        camera.pan_x = e.offsetX - mouse_h * camera.zoom
+        camera.pan_y = e.offsetY + mouse_v * camera.zoom
     }, { passive: false })
 }
 

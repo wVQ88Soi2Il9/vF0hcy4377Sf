@@ -1,64 +1,52 @@
 import type { vector, rotation } from '@/core/types'
 
 /**
- * Adds two vectors together.
+ * Adds two vectors together component-wise.
+ * Assumes both vectors have the same length.
  */
 export function add_vector(a: vector, b: vector): vector
 {
-    return {
-        x: a.x + b.x,
-        y: a.y + b.y,
-        z: a.z + b.z
-    }
+    return a.map((v, i) => v + (b[i] ?? 0))
 }
 
 /**
- * Applies 3D rotation to a local offset vector.
- * Order of rotation: X-axis, then Y-axis, then Z-axis.
- * Each rotation step is 90 degrees CCW looking down the positive axis.
+ * Applies an N-dimensional rotation to a local offset vector.
+ *
+ * Each rotation_plane describes a 90° CCW turn in the plane spanned by
+ * axis_a and axis_b.  One Givens step in that plane transforms:
+ *   v'[axis_a] = -v[axis_b]
+ *   v'[axis_b] =  v[axis_a]
+ *
+ * Planes are applied left-to-right (first element first).
+ * An empty rotation array means no rotation.
  */
-export function rotate_vector_3d(vec: vector, rot: rotation): vector
+export function rotate_vector(vec: vector, rot: rotation): vector
 {
-    let { x, y, z } = vec
+    const v = vec.slice()   // work on a mutable copy
 
-    // Rotate around X axis (90 deg CCW: y' = -z, z' = y)
-    for (let i = 0; i < rot.x; i++)
+    for (const plane of rot)
     {
-        const temp_y = y
-        y = -z
-        z = temp_y
+        const { axis_a, axis_b, steps } = plane
+
+        for (let s = 0; s < steps; s++)
+        {
+            const a = v[axis_a] ?? 0
+            const b = v[axis_b] ?? 0
+            v[axis_a] = -b
+            v[axis_b] =  a
+        }
     }
 
-    // Rotate around Y axis (90 deg CCW: x' = z, z' = -x)
-    for (let i = 0; i < rot.y; i++)
-    {
-        const temp_x = x
-        x = z
-        z = -temp_x
-    }
-
-    // Rotate around Z axis (90 deg CCW: x' = -y, y' = x)
-    for (let i = 0; i < rot.z; i++)
-    {
-        const temp_x = x
-        x = -y
-        y = temp_x
-    }
-
-    // Convert -0 to 0 (Javascript sometimes leaves -0 which can be annoying in tests)
-    return {
-        x: x === 0 ? 0 : x,
-        y: y === 0 ? 0 : y,
-        z: z === 0 ? 0 : z
-    }
+    // Convert -0 to 0 (JavaScript sometimes leaves -0 which can be annoying in tests)
+    return v.map(c => c === 0 ? 0 : c)
 }
 
 /**
- * Checks if two vectors are exactly equal.
+ * Checks if two vectors are exactly equal (same length and same values).
  */
 export function vectors_equal(a: vector, b: vector): boolean
 {
-    return a.x === b.x && a.y === b.y && a.z === b.z
+    return a.length === b.length && a.every((v, i) => v === b[i])
 }
 
 /**
@@ -66,5 +54,5 @@ export function vectors_equal(a: vector, b: vector): boolean
  */
 export function vector_to_string(vec: vector): string
 {
-    return `${vec.x},${vec.y},${vec.z}`
+    return vec.join(',')
 }

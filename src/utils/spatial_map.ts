@@ -2,7 +2,7 @@ import type { vector } from '@/core/types'
 import { vector_to_string } from '@/utils/math'
 
 /**
- * A generic spatial mapping utility that maps 3D grid vectors to a value of type T.
+ * A generic spatial mapping utility that maps N-dimensional grid vectors to a value of type T.
  */
 export class spatial_map<T>
 {
