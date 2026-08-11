@@ -63,7 +63,8 @@ class my_class
 
 ```
 src/
-├── API.ts              # 唯一對外公開的 Hook 入口（Pack 只能用這裡的函式）
+├── API.ts              # 引擎公開事件契約（pack 的訂閱入口）
+├── runtime.ts          # 啟動期全域狀態（map / registry）
 ├── main.ts             # 應用程式啟動點
 ├── core/               # 引擎核心，零具體遊戲邏輯，零外部依賴
 │   ├── types.ts        # 全域型別定義（game_map, device, port…）
@@ -116,8 +117,18 @@ export function init_pack(): void
 
 ### 三條強制規範
 
-**Rule 1：禁止直接操作 `core/`**  
-Pack 禁止直接 import `@/core/hooks` 並手動操作。一律透過 `@/API` 提供的函式（`register_overlap_check`、`register_graph_build`、`on_device_create` 等）。
+**Rule 1：不要直接操作 `hooks` 物件**  
+`core/hooks.ts` 裡的 `hooks` singleton 不允許直接 push/splice。訂閱事件一律用 `@/API` 提供的函式：
+
+```typescript
+// ✅ 正確
+ import { on_device_create } from '@/API'
+ on_device_create(my_fn)
+
+// ❌ 禁止
+import { hooks } from '@/core/hooks'
+hooks.on_device_create.push(my_fn)  // 繞過訂閱機制，無法取消訂閱
+```
 
 **Rule 2：靜態定義透過 JSON 傳入**  
 Device 的靜態定義（`shape`、`ports`）必須放在 `data/devices.json`。  

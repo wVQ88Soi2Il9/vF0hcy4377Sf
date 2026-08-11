@@ -18,7 +18,8 @@ src/
 │   ├── math.ts             # 向量、座標運算
 │   ├── spatial_map.ts      # 空間索引
 │   └── device_utils.ts     # Device 衍生計算
-├── API.ts                  # 公開 API 邊界（pack 的唯一合法入口）
+├── API.ts                  # 引擎公開事件契約（pack 的訂閱入口）
+├── runtime.ts              # 啟動期全域狀態（map / registry）
 ├── main.ts                 # 應用啟動點
 └── packs/                  # 層 3：遊戲邏輯 / 渲染 / UI（均為 Mod）
     ├── loader.ts           # 掃描 & 呼叫所有 pack 的 init_pack()
@@ -55,28 +56,43 @@ src/
 ### 層 3 — Packs（插件層）
 
 *   所有遊戲規則、渲染邏輯、UI 均在此層，以 pack 形式存在。
-*   只能透過 `@/API` 與引擎互動。
-*   **禁止**：直接 import `@/core/*`（API.ts 除外）、跨 pack 直接互相 import（**unknown** — pack 間通訊機制尚未定義）。
+*   可以自由 import `core/`、`utils/` 中的任意模組。
+*   **禁止**：直接操作 `hooks` singleton（直接 push/splice）— 一律用 `@/API` 的函式訂閱。
+*   跨 pack import 情況未確定；目前允許的刯例：`@/packs/basic_renderer/draw_registry`。
 
 ---
 
 ## API 邊界（`src/API.ts`）
 
-`API.ts` 是 Core 對 Pack 層的唯一公開介面。Pack 只能用這裡匯出的函式。
+`API.ts` 是引擎的公開事件契約。後續開發者在此手動加入新的訂閱入口。
 
 | 函式 | 用途 |
 |------|------|
-| `create_device()` | 新增設備至地圖 |
-| `delete_device()` | 刪除設備 |
-| `move_device()` | 移動設備 |
-| `on_device_create(cb)` | 訂閱設備建立事件 |
-| `on_device_delete(cb)` | 訂閱設備刪除事件 |
-| `on_device_move(cb)` | 訂閱設備移動事件 |
-| `on_device_change(cb)` | 訂閱任何設備生命週期變動 |
+| `create_device()` | 新增裝置至地圖 |
+| `delete_device()` | 刪除裝置 |
+| `move_device()` | 移動裝置 |
+| `on_device_create(cb)` | 訂閱裝置建立事件 |
+| `on_device_delete(cb)` | 訂閱裝置刪除事件 |
+| `on_device_move(cb)` | 訂閱裝置移動事件 |
+| `on_device_change(cb)` | 訂閱任何裝置生命週期變動 |
 | `register_overlap_check(fn)` | 註冊碰撞/越界檢查 Hook |
 | `register_graph_build(fn)` | 註冊連接圖建構 Hook |
 
-> ⚠️ **unknown**：`register_device_draw()` 等渲染 API 的簽名尚未標準化至 API.ts。目前由 `basic_renderer` 內部管理。
+> `register_device_draw()`：渲染公式**已確定不移入** `API.ts`，終身住在 `@/packs/basic_renderer/draw_registry`。
+
+---
+
+## 啟動期全域狀態（`src/runtime.ts`）
+
+`runtime.ts` 不是引擎事件 API，而是啟動順序的狀態容器。
+`main.ts` 在呼叫 `call_all_pack_inits()` 之前对其寫入，需要地圖狀態的 pack（如 basic_renderer）在 `init_pack()` 內讀取。
+
+| 函式 | 用途 |
+|------|------|
+| `set_map(map)` | 注冊全局地圖（main.ts 寫入） |
+| `get_map()` | 讀取全局地圖（pack 在 init_pack() 內使用） |
+| `set_registry(r)` | 注冊 Pack Registry（main.ts 寫入） |
+| `get_registry()` | 讀取 Pack Registry（pack 在 init_pack() 內使用） |
 
 ---
 
@@ -111,5 +127,6 @@ src/
 | Vue 與 Canvas 的整合方式 | ⚠️ unknown | Vue 如何掛載 Canvas、資料響應邏輯未確定 |
 | 全域狀態管理 | ⚠️ unknown | 是否引入 Pinia 或維持純 TS 響應式 |
 | Pack 間通訊機制 | ⚠️ unknown | 跨 pack 是否需要 Event Bus 或 Shared Store |
-| 渲染 API 標準化 | ⚠️ unknown | `register_device_draw()` 等是否移入 API.ts |
+| 渲染 API 標準化 | ✅ 已确定 | `register_device_draw()` 終身住在 `basic_renderer/draw_registry`，不移入 API.ts |
+| Canvas 管理 | ✅ 已确定 | `basic_renderer` 自己建立、掛載 canvas，不由 main.ts 手動控制 |
 | UI 架構 | ⚠️ unknown | Vue component 與遊戲狀態的邊界未定 |

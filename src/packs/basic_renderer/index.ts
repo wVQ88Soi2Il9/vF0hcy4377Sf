@@ -1,11 +1,10 @@
-import type { cameratype } from "./types"
-import type { vector } from "@/core/types"
-import { draw_grid } from "./draw_grid"
-import { draw_devices } from "./draw_device"
-import { game_map, pack_registry } from "@/core"
-import { on_device_change } from "@/API"
+import type { cameratype } from './types'
+import { draw_grid } from './draw_grid'
+import { draw_devices } from './draw_device'
+import { on_device_change } from '@/API'
+import { get_map, get_registry } from '@/runtime'
 
-const camera: cameratype = 
+const camera: cameratype =
 {
     pan_x: 0,
     pan_y: 0,
@@ -25,30 +24,32 @@ const camera: cameratype =
  */
 export function grid_to_screen
 (
-    pos:    vector,
-    camera: cameratype
+    pos:    number[],
+    cam:    cameratype
 )
 {
-    const h = pos[camera.plane.dim_h] ?? 0  // world → screen X
-    const v = pos[camera.plane.dim_v] ?? 0  // world → screen Y (will be flipped)
+    const h = pos[cam.plane.dim_h] ?? 0  // world → screen X
+    const v = pos[cam.plane.dim_v] ?? 0  // world → screen Y (will be flipped)
 
     // Flip v: Canvas Y increases downward, but we want positive values to go upward.
-    const sx = camera.pan_x + h * camera.zoom
-    const sy = camera.pan_y - v * camera.zoom
+    const sx = cam.pan_x + h * cam.zoom
+    const sy = cam.pan_y - v * cam.zoom
     return { sx, sy }
 }
 
-function camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
+function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
 {
     let is_dragging = false
     let drag_start_x = 0
     let drag_start_y = 0
+
     canvas.addEventListener('mousedown', (e) =>
     {
         is_dragging = true
         drag_start_x = e.clientX - camera.pan_x
         drag_start_y = e.clientY - camera.pan_y
     })
+
     canvas.addEventListener('mousemove', (e) =>
     {
         if (!is_dragging) return
@@ -56,7 +57,13 @@ function camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
         camera.pan_y = e.clientY - drag_start_y
         redraw()
     })
+
     canvas.addEventListener('mouseup', () =>
+    {
+        is_dragging = false
+    })
+
+    canvas.addEventListener('mouseleave', () =>
     {
         is_dragging = false
     })
@@ -78,31 +85,57 @@ function camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
         // Keep the world point under the mouse cursor fixed.
         camera.pan_x = e.offsetX - mouse_h * camera.zoom
         camera.pan_y = e.offsetY + mouse_v * camera.zoom
-        
+
         redraw()
     }, { passive: false })
 }
 
-
-
-export function init
-(
-    canvas:   HTMLCanvasElement,
-    map:      game_map, 
-    registry: pack_registry
-): void
+/**
+ * Standard pack entry point.
+ * Creates the canvas, attaches it to #app, sets up camera controls and redraw loop.
+ * Reads game_map and pack_registry from API (set by main.ts before calling init_pack).
+ */
+export function init_pack(): void
 {
-    const ctx = canvas.getContext('2d')!
-    
-    function draw(): void
+    const map      = get_map()
+    const registry = get_registry()
+
+    if (!map || !registry)
     {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_grid(ctx, canvas, camera)
-        draw_devices(ctx, map, registry, camera)
+        console.error('[basic_renderer] init_pack() called before set_map() / set_registry(). Renderer aborted.')
+        return
     }
 
-    camera_control(canvas, draw);
-    on_device_change(draw);
+    // Build and attach canvas to the host element.
+    const canvas = document.createElement('canvas')
+    canvas.id = 'renderer_canvas'
+    canvas.width  = window.innerWidth
+    canvas.height = window.innerHeight
+    canvas.style.cssText = 'display:block;position:fixed;inset:0;'
 
-    draw();
+    const host = document.getElementById('app') ?? document.body
+    host.appendChild(canvas)
+
+    // Keep canvas size in sync with window.
+    window.addEventListener('resize', () =>
+    {
+        canvas.width  = window.innerWidth
+        canvas.height = window.innerHeight
+        draw()
+    })
+
+    const ctx = canvas.getContext('2d')!
+
+    function draw(): void
+    {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        draw_grid(ctx, canvas, camera)
+        draw_devices(ctx, map!, registry!, camera)
+    }
+
+    setup_camera_control(canvas, draw)
+    on_device_change(draw)
+
+    // Initial render — wait one microtask so other packs' init_pack() can finish first.
+    queueMicrotask(draw)
 }
