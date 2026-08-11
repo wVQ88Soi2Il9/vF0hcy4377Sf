@@ -24,16 +24,18 @@ const camera: cameratype =
  */
 export function grid_to_screen
 (
-    pos:    number[],
-    cam:    cameratype
+    pos:           number[],
+    cam:           cameratype,
+    canvas_height: number = window.innerHeight
 )
 {
     const h = pos[cam.plane.dim_h] ?? 0  // world → screen X
     const v = pos[cam.plane.dim_v] ?? 0  // world → screen Y (will be flipped)
 
     // Flip v: Canvas Y increases downward, but we want positive values to go upward.
+    // The canvas origin (pan_x, canvas_height + pan_y) corresponds to world coordinate [0, 0, ...].
     const sx = cam.pan_x + h * cam.zoom
-    const sy = cam.pan_y - v * cam.zoom
+    const sy = canvas_height + cam.pan_y - v * cam.zoom
     return { sx, sy }
 }
 
@@ -74,9 +76,9 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
 
         // Compute mouse position in world-horizontal/world-vertical units before zoom.
         // sx = pan_x + h * zoom  →  h = (offsetX - pan_x) / zoom
-        // sy = pan_y - v * zoom  →  v = (pan_y - offsetY) / zoom  (Y is flipped)
+        // sy = canvas.height + pan_y - v * zoom  →  v = (canvas.height + pan_y - offsetY) / zoom  (Y is flipped)
         const mouse_h = (e.offsetX - camera.pan_x) / camera.zoom
-        const mouse_v = (camera.pan_y - e.offsetY) / camera.zoom
+        const mouse_v = (canvas.height + camera.pan_y - e.offsetY) / camera.zoom
 
         // Adjust zoom.
         const factor = e.deltaY < 0 ? 1.1 : 0.9
@@ -84,7 +86,7 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
 
         // Keep the world point under the mouse cursor fixed.
         camera.pan_x = e.offsetX - mouse_h * camera.zoom
-        camera.pan_y = e.offsetY + mouse_v * camera.zoom
+        camera.pan_y = e.offsetY - canvas.height + mouse_v * camera.zoom
 
         redraw()
     }, { passive: false })
@@ -130,7 +132,7 @@ export function init_pack(): void
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
         draw_grid(ctx, canvas, camera)
-        draw_devices(ctx, map!, registry!, camera)
+        draw_devices(ctx, map!, registry!, camera, canvas)
     }
 
     setup_camera_control(canvas, draw)

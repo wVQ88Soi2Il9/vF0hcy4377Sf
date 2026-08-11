@@ -20,7 +20,7 @@ export function draw_grid
 
     // 讓 pattern 跟著 camera 移動和縮放
     pattern.setTransform(new DOMMatrix()
-        .translate(camera.pan_x, camera.pan_y)
+        .translate(camera.pan_x, canvas.height + camera.pan_y)
         .scale(camera.zoom / SVG_SIZE)
     )
 

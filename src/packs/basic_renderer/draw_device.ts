@@ -10,7 +10,8 @@ export function draw_devices
     ctx:      CanvasRenderingContext2D,
     map:      game_map,
     registry: pack_registry,
-    camera:   cameratype
+    camera:   cameratype,
+    canvas:   HTMLCanvasElement
 ): void
 {
     const { dim_h, dim_v, slices } = camera.plane
@@ -46,7 +47,7 @@ export function draw_devices
         // Each cell at world coord w occupies screen pixels [w*zoom, (w+1)*zoom).
         // Y is flipped: larger v → smaller sy (higher on screen).
         const sx = camera.pan_x + min_h * camera.zoom
-        const sy = camera.pan_y - (max_v + 1) * camera.zoom
+        const sy = canvas.height + camera.pan_y - (max_v + 1) * camera.zoom
         const sw = (max_h - min_h + 1) * camera.zoom
         const sh = (max_v - min_v + 1) * camera.zoom
 

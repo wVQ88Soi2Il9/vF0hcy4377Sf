@@ -97,7 +97,6 @@ export function load_all_packs(): pack[] {
 /**
  * Auto-discovers and calls init_pack() from every pack's index.ts.
  * Any pack that exports init_pack() will be initialized automatically.
- * The basic_renderer is skipped because it does not export init_pack().
  */
 export function call_all_pack_inits(): void
 {
