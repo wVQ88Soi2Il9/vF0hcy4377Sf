@@ -16,7 +16,7 @@
     ],
     "recipe_ids": [],
     "other_info": {
-      "draw": {
+      "basic_renderer": {
         "color": "#1e3a5f",
         "border": "#4a90d9",
         "label": "ASM"
@@ -36,7 +36,7 @@
     ],
     "recipe_ids": [],
     "other_info": {
-      "draw": {
+      "basic_renderer": {
         "color": "#3a3a3a",
         "border": "#aaaaaa",
         "label": "↑"
@@ -58,7 +58,7 @@
     ],
     "recipe_ids": [],
     "other_info": {
-      "draw": {
+      "basic_renderer": {
         "color": "#4a2800",
         "border": "#f0a040",
         "label": "SPL"
@@ -80,7 +80,7 @@
     ],
     "recipe_ids": [],
     "other_info": {
-      "draw": {
+      "basic_renderer": {
         "color": "#0a2e1a",
         "border": "#40c070",
         "label": "MRG"

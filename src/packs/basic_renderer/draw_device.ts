@@ -58,7 +58,7 @@ export function draw_devices
         }
         else
         {
-            const draw_info = def.other_info?.draw as any
+            const draw_info = def.other_info?.basic_renderer as any
             if (draw_info)
             {
                 ctx.fillStyle = draw_info.color || '#FF0000'
