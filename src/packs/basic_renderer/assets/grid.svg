@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="128"
+   height="128"
+   viewBox="0 0 33.866667 33.866667"
+   version="1.1"
+   id="svg1"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="px" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="圖層 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.5;fill:#666666;stroke:none;stroke-width:4.35305;stroke-opacity:0.804075"
+       id="rect1"
+       width="16.933334"
+       height="16.933334"
+       x="0"
+       y="0" />
+    <rect
+       style="opacity:0.5;fill:#666666;stroke:none;stroke-width:4.35305;stroke-opacity:0.804075"
+       id="rect2"
+       width="16.933334"
+       height="16.933334"
+       x="16.933332"
+       y="16.933332" />
+    <rect
+       style="opacity:0.5;fill:#cccccc;stroke:none;stroke-width:4.35305;stroke-opacity:0.804075"
+       id="rect3"
+       width="16.933334"
+       height="16.933334"
+       x="-1.2218952e-06"
+       y="16.933332" />
+    <rect
+       style="opacity:0.5;fill:#cccccc;stroke:none;stroke-width:4.35305;stroke-opacity:0.804075"
+       id="rect4"
+       width="16.933334"
+       height="16.933334"
+       x="16.933332"
+       y="0" />
+  </g>
+</svg>
