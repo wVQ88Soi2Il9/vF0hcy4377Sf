@@ -103,6 +103,9 @@ export interface device_definition
 
     /** All recipes this device can run. Empty = no recipe needed. */
     recipe_ids:   string[]
+
+    /** Mod-extensible static metadata for the device blueprint. Core never reads this. */
+    other_info:   Record<string, unknown>
 }
 
 // ── Device Instance (動態實體) ─────────────────────────────────────────

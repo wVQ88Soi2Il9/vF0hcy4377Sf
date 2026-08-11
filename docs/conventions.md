@@ -45,34 +45,26 @@
 packs/
 └── {pack_name}/
     ├── data/
-    │   ├── devices.json     # 必要，device 定義（shape、ports、recipe_ids）
-    │   ├── items.json       # 選用
-    │   └── recipes.json     # 選用
-    └── index.ts             # 必要，必須 export init_pack(): void
+    │   ├── devices.json     # optional
+    │   ├── items.json       # optional
+    │   └── recipes.json     # optional
+    └── index.ts             # 選用，若需掛載 hook 則必須匯出 init_pack(): void
 ```
 
-### `index.ts` 的契約
+### `index.ts` 的契約 (若有自訂邏輯)
 
-每個 pack 的 `index.ts` **必須** export 一個 `init_pack(): void` 函式。
-`loader.ts` 會在啟動時自動掃描並呼叫，無需手動在 `main.ts` 引入。
+若你的 pack 需要自訂邏輯 (例如客製化碰撞偵測或 graph 建構)，你可以建立 `index.ts` 並匯出 `init_pack(): void`。
+`loader.ts` 會在啟動時自動掃描並呼叫，無需手動在 `main.ts` 引入。若只有純資料 (items, recipes) 或是基本的 device，則完全不需要 `index.ts`。
 
 ```typescript
 // packs/{my_pack}/index.ts
 
 import { register_overlap_check } from '@/API'
-import { register_device_draw }   from '@/packs/basic_renderer/draw_registry'
 
 export function init_pack(): void
 {
     // 透過 API 掛 hook（禁止直接操作 @/core/hooks）
     register_overlap_check(my_overlap_fn)
-
-    // 每個 device 都必須有對應的 draw function
-    register_device_draw('my_pack:my_device', (ctx, sx, sy, sw, sh, zoom) =>
-    {
-        ctx.fillStyle = '#4a90d9'
-        ctx.fillRect(sx, sy, sw, sh)
-    })
 }
 ```
 
@@ -80,6 +72,24 @@ export function init_pack(): void
 
 1. **不准動到 `core/`** — pack 禁止直接 import `@/core/hooks` 並手動操作。一律透過 `@/API` 提供的函式（`register_overlap_check`、`register_graph_build`、`on_device_create` 等）。
 
-2. **資料透過 JSON 傳入** — device 的靜態定義（shape、ports）必須放在 `data/devices.json`，格式遵循 `device_definition` 型別，由 `loader.ts` 自動載入，不可在 TS 程式碼中硬編碼。
+2. **資料與渲染設定透過 JSON 傳入** — device 的靜態定義（shape、ports）必須放在 `data/devices.json`。
+   *渲染設定* (draw) 應放在 `other_info.draw` 中。`loader.ts` 會自動載入，核心 (core) 不會去讀取，但 `basic_renderer` 繪製時會使用這些設定。
 
-3. **每個 device 必須有 draw** — `init_pack()` 必須為 `data/devices.json` 中定義的每一個 device 呼叫 `register_device_draw()`。未註冊的 device 會以紅色 fallback 顯示，視為未完成。
+   ```json
+   {
+     "id": "my_device",
+     "shape": [[0,0,0]],
+     "input_ports": [],
+     "output_ports": [],
+     "recipe_ids": [],
+     "other_info": {
+       "draw": {
+         "color": "#1e3a5f",
+         "border": "#4a90d9",
+         "label": "ASM"
+       }
+     }
+   }
+   ```
+
+3. **每個 device 必須設定渲染外觀** — 除非你在 `index.ts` 透過 `register_device_draw()` 註冊了客製化的繪製函式，否則所有的 device 都必須在 JSON 的 `other_info.draw` 中設定 `color`, `border`, `label`。未設定的 device 會以紅色 fallback 顯示。

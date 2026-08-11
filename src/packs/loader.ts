@@ -81,7 +81,8 @@ export function load_all_packs(): pack[] {
                     const processed_device: device_definition = {
                         ...raw_device,
                         id: full_id,
-                        recipe_ids: raw_device.recipe_ids?.map((rid: string) => resolve_id(rid, namespace)) || []
+                        recipe_ids: raw_device.recipe_ids?.map((rid: string) => resolve_id(rid, namespace)) || [],
+                        other_info: raw_device.other_info || {}
                     };
                     
                     current_pack.device_definitions.push(processed_device);

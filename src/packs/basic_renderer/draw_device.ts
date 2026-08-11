@@ -58,9 +58,34 @@ export function draw_devices
         }
         else
         {
-            // Fallback: solid red rectangle.
-            ctx.fillStyle = '#FF0000'
-            ctx.fillRect(sx, sy, sw, sh)
+            const draw_info = def.other_info?.draw as any
+            if (draw_info)
+            {
+                ctx.fillStyle = draw_info.color || '#FF0000'
+                ctx.fillRect(sx, sy, sw, sh)
+
+                if (draw_info.border)
+                {
+                    ctx.strokeStyle = draw_info.border
+                    ctx.lineWidth = Math.max(1, camera.zoom * 0.04)
+                    ctx.strokeRect(sx, sy, sw, sh)
+                }
+
+                if (draw_info.label)
+                {
+                    ctx.fillStyle = draw_info.border || '#FFFFFF'
+                    ctx.font = `bold ${Math.max(8, camera.zoom * 0.3)}px monospace`
+                    ctx.textAlign = 'center'
+                    ctx.textBaseline = 'middle'
+                    ctx.fillText(draw_info.label, sx + sw / 2, sy + sh / 2)
+                }
+            }
+            else
+            {
+                // Fallback: solid red rectangle.
+                ctx.fillStyle = '#FF0000'
+                ctx.fillRect(sx, sy, sw, sh)
+            }
         }
     }
 }
