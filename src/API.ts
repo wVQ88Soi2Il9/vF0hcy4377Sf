@@ -16,7 +16,7 @@ import
     type build_graph_hook
 } from '@/core/hooks'
 
-export { create_device, delete_device, move_device } from '@/core/map_manager'
+export { create_map, create_device, delete_device, move_device } from '@/core/map_manager'
 
 export type unsubscribe_function = () => void
 

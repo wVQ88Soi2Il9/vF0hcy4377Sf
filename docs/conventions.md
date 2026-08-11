@@ -42,6 +42,9 @@ class my_class
 | 檔案、目錄 | `map_manager.ts`, `basic_renderer/` |
 | JSON key | `"input_ports"`, `"recipe_ids"` |
 
+### 分號規範
+**所有陳述句結尾強制加上分號 `;`**，無例外。
+
 ---
 
 ## 2. 技術棧 (Tech Stack)

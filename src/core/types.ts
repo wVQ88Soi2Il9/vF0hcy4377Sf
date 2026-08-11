@@ -86,7 +86,7 @@ export interface device_definition
      * Cells this device occupies, as local offsets from anchor (before rotation).
      * e.g. [[0,0,0], [2,0,0]] = 1×2 horizontal device in 3D half-grid coords.
      */
-    shape:    vector[]
+    shape:        vector[]
 
     /**
      * Input port positions, local offsets (before rotation).
@@ -128,7 +128,7 @@ export interface device
     selected_recipe_id?:  string
 
     /** Mod-extensible dynamic metadata (e.g. inventory, working status, progress). Core never reads this. */
-    other_info:           Record<string, unknown>
+    other_info?:           Record<string, unknown>
 }
 
 // ── Map ──────────────────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ export interface game_map
     size:            vector
 
     /** Auto-increment counter for device unique_id generation */
-    next_unique_id:  number
+    unique_id:       number
 
     devices:         device[]
 }

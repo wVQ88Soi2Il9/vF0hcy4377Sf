@@ -16,6 +16,7 @@ Before starting **any task or writing any code** in this repository, you MUST re
 
 - **Allman braces** everywhere — `{` always on its own line
 - **snake_case** for all identifiers, filenames, and JSON keys — no exceptions
+- **結尾分號 `;`** — 所有陳述句結尾強制使用分號 `;`
 - **Packs never import `@/core` directly** — only `@/API` is allowed
 - **`unknown` items must not be hard-coded** — if a section in the docs is marked `unknown`, do not make assumptions; ask first or leave it explicitly unresolved
 - **Single Source of Truth** — types live in `core/types.ts`, nothing is duplicated
