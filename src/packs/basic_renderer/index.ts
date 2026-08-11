@@ -1,49 +1,44 @@
 import type { cameratype } from "./types"
+import type { vector } from "@/core/types"
 import { draw_grid } from "./draw_grid"
 import { draw_devices } from "./draw_device"
 import { game_map, pack_registry } from "@/core"
+import { on_device_change } from "@/API"
 
 const camera: cameratype = 
 {
     pan_x: 0,
     pan_y: 0,
     zoom:  40,
-    plane: { axis: 'z', depth: 0 }
+    // dim_h=0 (X→right), dim_v=1 (Y→up), slices[2]=0 (view z=0 layer)
+    plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
 }
 
 /**
- * Maps a 3-D world grid position to a 2-D canvas position.
+ * Maps an N-dimensional world grid position to a 2-D canvas position.
  *
- * Coordinate convention (right-hand, Y-up):
- *   axis='z'  →  h=x (right), v=y (up, flipped)
- *   axis='x'  →  h=y (right), v=z (up, flipped)
- *   axis='y'  →  h=x (right), v=z (up, flipped)
+ * The two displayed dimensions are determined by camera.plane.dim_h and dim_v.
+ * All other dimensions are ignored (they were already filtered by the caller).
  *
  * The vertical axis is negated so that positive values go upward on screen.
- * The canvas origin (pan_x, pan_y) corresponds to world origin of the plane.
+ * The canvas origin (pan_x, pan_y) corresponds to world coordinate [0, 0, ...].
  */
 export function grid_to_screen
 (
-    wx: number,
-    wy: number,
-    wz: number,
+    pos:    vector,
     camera: cameratype
 )
 {
-    let h: number  // world coordinate that maps to screen X (right)
-    let v: number  // world coordinate that maps to screen Y (negated, so up = positive)
+    const h = pos[camera.plane.dim_h] ?? 0  // world → screen X
+    const v = pos[camera.plane.dim_v] ?? 0  // world → screen Y (will be flipped)
 
-    if (camera.plane.axis === 'z')       { h = wx; v = wy }
-    else if (camera.plane.axis === 'x')  { h = wy; v = wz }
-    else                                 { h = wx; v = wz }  // axis === 'y'
-
-    // Flip v: in Canvas Y increases downward, but we want Y/Z to increase upward.
+    // Flip v: Canvas Y increases downward, but we want positive values to go upward.
     const sx = camera.pan_x + h * camera.zoom
     const sy = camera.pan_y - v * camera.zoom
     return { sx, sy }
 }
 
-function camera_control(canvas: HTMLCanvasElement): void
+function camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
 {
     let is_dragging = false
     let drag_start_x = 0
@@ -59,6 +54,7 @@ function camera_control(canvas: HTMLCanvasElement): void
         if (!is_dragging) return
         camera.pan_x = e.clientX - drag_start_x
         camera.pan_y = e.clientY - drag_start_y
+        redraw()
     })
     canvas.addEventListener('mouseup', () =>
     {
@@ -82,6 +78,8 @@ function camera_control(canvas: HTMLCanvasElement): void
         // Keep the world point under the mouse cursor fixed.
         camera.pan_x = e.offsetX - mouse_h * camera.zoom
         camera.pan_y = e.offsetY + mouse_v * camera.zoom
+        
+        redraw()
     }, { passive: false })
 }
 
@@ -89,22 +87,22 @@ function camera_control(canvas: HTMLCanvasElement): void
 
 export function init
 (
-    canvas: HTMLCanvasElement,
-    map: game_map, 
+    canvas:   HTMLCanvasElement,
+    map:      game_map, 
     registry: pack_registry
 ): void
 {
-
     const ctx = canvas.getContext('2d')!
-    camera_control(canvas);
     
-    function loop(): void
+    function draw(): void
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         draw_grid(ctx, canvas, camera)
         draw_devices(ctx, map, registry, camera)
-        requestAnimationFrame(loop);
     }
 
-    loop();
+    camera_control(canvas, draw);
+    on_device_change(draw);
+
+    draw();
 }

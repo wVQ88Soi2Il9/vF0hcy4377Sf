@@ -1,4 +1,5 @@
 import type { game_map, device, vector, rotation } from '@/core/types'
+import { trigger_create_device, trigger_delete_device, trigger_move_device } from '@/core/hooks'
 
 /**
  * Adds a device to the map.
@@ -7,6 +8,7 @@ import type { game_map, device, vector, rotation } from '@/core/types'
 export function create_device(map: game_map, dev: device): void
 {
     map.devices.push(dev)
+    trigger_create_device(map, dev)
 }
 
 /**
@@ -18,7 +20,9 @@ export function delete_device(map: game_map, device_unique_id: number): void
     const index = map.devices.findIndex(d => d.unique_id === device_unique_id)
     if (index !== -1)
     {
+        const dev = map.devices[index]
         map.devices.splice(index, 1)
+        trigger_delete_device(map, dev)
     }
 }
 
@@ -31,7 +35,14 @@ export function move_device(map: game_map, device_unique_id: number, new_positio
     const dev = map.devices.find(d => d.unique_id === device_unique_id)
     if (dev)
     {
+        const old_position = dev.position
         dev.position = new_position
+        trigger_move_device(
+            map,
+            dev,
+            old_position,
+            new_position
+        )
     }
 }
 
