@@ -131,7 +131,7 @@ export function init_pack(): void
     function draw(): void
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        draw_grid(ctx, canvas, camera)
+        draw_grid(ctx, canvas, camera, map!)
         draw_devices(ctx, map!, registry!, camera, canvas)
     }
 

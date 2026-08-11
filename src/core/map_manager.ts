@@ -91,7 +91,8 @@ export function rotate_device(map: game_map, device_unique_id: number, new_rotat
     {
         const old_rotation = dev.rotation;
         dev.rotation = new_rotation;
-        trigger_rotate_device(
+        trigger_rotate_device
+        (
             map,
             dev,
             old_rotation,

@@ -1,4 +1,5 @@
 import grid_svg_url from './assets/grid.svg'   // Vite 幫你轉成 URL
+import type { game_map } from '@/core/types'
 import type { cameratype } from './types'
 
 const SVG_SIZE = 128   // 你的 SVG 是 128×128
@@ -9,9 +10,10 @@ grid_img.src = grid_svg_url
 
 export function draw_grid
 (
-    ctx: CanvasRenderingContext2D,    
-    canvas: HTMLCanvasElement,    
-    camera: cameratype
+    ctx:    CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    camera: cameratype,
+    map:    game_map
 ): void
 {
     if (!grid_img.complete) return  // 還沒載入完就跳過
@@ -26,4 +28,20 @@ export function draw_grid
 
     ctx.fillStyle = pattern
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // 在地圖邊界繪製黑線
+    const size_h = map.size[camera.plane.dim_h] ?? 0
+    const size_v = map.size[camera.plane.dim_v] ?? 0
+
+    if (size_h > 0 && size_v > 0)
+    {
+        const sx = camera.pan_x
+        const sy = canvas.height + camera.pan_y - size_v * camera.zoom
+        const sw = size_h * camera.zoom
+        const sh = size_v * camera.zoom
+
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = Math.max(2, camera.zoom * 0.04)
+        ctx.strokeRect(sx, sy, sw, sh)
+    }
 }
