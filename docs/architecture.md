@@ -35,6 +35,8 @@ src/
     │   ├── info_bar.ts
     │   ├── cmd_bar.ts
     │   └── cmd_executor.ts
+    ├── cmd_parser/         # 內建 CMD 指令與字串解析 pack (clean_flag_arg, tokenize_input 等)
+    │   └── index.ts
     ├── vanilla/            # 內建基礎遊戲邏輯 pack
     │   ├── index.ts
     │   ├── overlap.ts
