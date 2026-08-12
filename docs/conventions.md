@@ -58,7 +58,7 @@ class my_class
 | 框架 | Vue 3 | ✅ 已安裝 |
 | 樣式 | Tailwind CSS v4 | ✅ 已安裝 |
 | 畫布渲染 | HTML5 Canvas(2D) | ✅ 確定 |
-| UI 架構 | **unknown** - 尚未確定 Vue 如何整合 Canvas | ⚠️ 待定 |
+| UI 架構 | 純 DOM / Vanilla Web API（由 packs/basic_ui 管理 Viewport 與 UI 面板） | ✅ 確定 |
 | 狀態管理 | **unknown** - 是否使用 Pinia 或純 TS reactive 未定 | ⚠️ 待定 |
 
 > ⚠️ 標記 **unknown** 的部分：**禁止寫死任何假設**，需等待規範確定後再實作。
@@ -84,13 +84,24 @@ src/
 │   └── device_utils.ts
 └── packs/              # 所有遊戲邏輯、渲染、UI 均在此
     ├── loader.ts       # 掃描 & 載入所有 pack 的 init_pack()
-    ├── basic_renderer/ # 內建基礎渲染 pack
+    ├── basic_renderer/ # 內建基礎渲染 pack (僅負責 Canvas 建立與繪製，不直接掛載至 DOM)
+    ├── basic_ui/       # 內建基礎 UI pack (負責 Viewport 容器掛載、Info Bar 與 CMD Bar)
+    │   ├── index.ts
+    │   ├── layout.ts
+    │   ├── info_bar.ts
+    │   ├── cmd_bar.ts
+    │   └── cmd_executor.ts
     └── vanilla/        # 內建基礎遊戲邏輯 pack
 ```
 
 ---
 
 ## 4. Pack 規範 (Pack Conventions)
+
+### Canvas 與 UI 管理規則
+1. `basic_renderer` 僅建立與維護 Canvas 繪製邏輯，不再直接硬編碼掛載至 DOM (`#app`)。
+2. `basic_ui` 負責初始化頂層 DOM 結構 (`#ui_root`)，從 `basic_renderer` 取得 Canvas 並嵌入 `#canvas_viewport` 容器中。
+3. `basic_ui` 透過 `ResizeObserver` 監聽 Viewport 尺寸變更，同步通知 `basic_renderer` 更新 Canvas 寬高與畫面重繪。
 
 ### 標準目錄結構
 

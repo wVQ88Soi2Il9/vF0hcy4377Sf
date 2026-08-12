@@ -21,7 +21,7 @@ export function create_info_bar(): info_bar_component
         position: absolute;
         top: 16px;
         right: 16px;
-        bottom: 72px;
+        bottom: 96px;
         width: 300px;
         background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(12px);

@@ -1,4 +1,4 @@
-import type { camera_type } from './types';
+import type { camera_type, view_plane } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
 import { on_device_change } from '@/API';
@@ -22,6 +22,32 @@ const camera: camera_type =
 export function get_renderer_canvas(): HTMLCanvasElement | null
 {
     return renderer_canvas;
+}
+
+/**
+ * Returns a shallow copy of the current camera view plane.
+ */
+export function get_camera_plane(): view_plane
+{
+    return {
+        dim_h:  camera.plane.dim_h,
+        dim_v:  camera.plane.dim_v,
+        slices: [...camera.plane.slices]
+    };
+}
+
+/**
+ * Updates the camera view plane and triggers a redraw.
+ */
+export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
+{
+    camera.plane.dim_h = dim_h;
+    camera.plane.dim_v = dim_v;
+    if (slices)
+    {
+        camera.plane.slices = [...slices];
+    }
+    redraw_renderer();
 }
 
 /**
@@ -49,6 +75,7 @@ export function redraw_renderer(): void
         current_draw_fn();
     }
 }
+
 
 /**
  * Maps an N-dimensional world grid position to a 2-D canvas position.

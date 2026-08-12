@@ -29,6 +29,12 @@ src/
     │   ├── draw_grid.ts
     │   ├── draw_registry.ts
     │   └── types.ts
+    ├── basic_ui/           # 內建基礎 UI pack
+    │   ├── index.ts
+    │   ├── layout.ts
+    │   ├── info_bar.ts
+    │   ├── cmd_bar.ts
+    │   └── cmd_executor.ts
     ├── vanilla/            # 內建基礎遊戲邏輯 pack
     │   ├── index.ts
     │   ├── overlap.ts
@@ -124,3 +130,6 @@ src/
 
 ## 待定事項 (Unknown / TBD)
 
+| 待定項目 | 狀態 | 決策結果 |
+|---|---|---|
+| UI 架構 | ✅ 確定 | 採用純 DOM / Vanilla Web API（由 `packs/basic_ui` 負責 Viewport 容器與 UI 面板） |
