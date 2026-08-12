@@ -1,13 +1,13 @@
 # 專案規範 (Project Conventions)
 
-    > **設計哲學**：本體很小，只有引擎核心（畫布 + Hook 系統）。其他一切皆為 Mod。
+    > **設計哲學**：本體很小，只有引擎核心(畫布 + Hook 系統)。其他一切皆為 Mod。
 
 ---
 
 ## 1. 程式碼風格 (Code Style)
 
 ### 大括號風格
-強制使用 **Allman style**（`{` 獨佔新行），無例外。
+強制使用 **Allman style**(`{` 獨佔新行)，無例外。
 
 ```typescript
 function my_function()
@@ -57,9 +57,9 @@ class my_class
 | 建構工具 | Vite + TypeScript | ✅ 確定 |
 | 框架 | Vue 3 | ✅ 已安裝 |
 | 樣式 | Tailwind CSS v4 | ✅ 已安裝 |
-| 畫布渲染 | HTML5 Canvas（2D） | ✅ 確定 |
-| UI 架構 | **unknown** — 尚未確定 Vue 如何整合 Canvas | ⚠️ 待定 |
-| 狀態管理 | **unknown** — 是否使用 Pinia 或純 TS reactive 未定 | ⚠️ 待定 |
+| 畫布渲染 | HTML5 Canvas(2D) | ✅ 確定 |
+| UI 架構 | **unknown** - 尚未確定 Vue 如何整合 Canvas | ⚠️ 待定 |
+| 狀態管理 | **unknown** - 是否使用 Pinia 或純 TS reactive 未定 | ⚠️ 待定 |
 
 > ⚠️ 標記 **unknown** 的部分：**禁止寫死任何假設**，需等待規範確定後再實作。
 
@@ -69,12 +69,12 @@ class my_class
 
 ```
 src/
-├── API.ts              # 引擎公開事件契約（pack 的訂閱入口）
-├── runtime.ts          # 啟動期全域狀態（map / registry）
+├── API.ts              # 引擎公開事件契約(pack 的訂閱入口)
+├── runtime.ts          # 啟動期全域狀態(map / registry)
 ├── main.ts             # 應用程式啟動點
 ├── core/               # 引擎核心，零具體遊戲邏輯，零外部依賴
-│   ├── types.ts        # 全域型別定義（game_map, device, port…）
-│   ├── hooks.ts        # Hook 系統（on_device_create, on_build_graph…）
+│   ├── types.ts        # 全域型別定義(game_map, device, port...)
+│   ├── hooks.ts        # Hook 系統(on_device_create, on_build_graph...)
 │   ├── map_manager.ts  # 地圖狀態 CRUD
 │   ├── pack_manager.ts # Pack 載入與生命週期管理
 │   └── index.ts        # 核心 re-export
@@ -106,18 +106,18 @@ packs/
 
 ### `index.ts` 契約
 
-若 pack 需要自訂邏輯（碰撞偵測、Graph 建構等），建立 `index.ts` 並匯出 `init_pack(): void`。  
+若 pack 需要自訂邏輯(碰撞偵測, Graph 建構等)，建立 `index.ts` 並匯出 `init_pack(): void`。  
 `loader.ts` 會在啟動時自動掃描並呼叫，**無需**手動在 `main.ts` 引入。  
-純資料包（只有 JSON）完全不需要 `index.ts`。
+純資料包(只有 JSON)完全不需要 `index.ts`。
 
 ```typescript
 // packs/{my_pack}/index.ts
-import { register_overlap_check } from '@/API'
+import { register_overlap_check } from '@/API';
 
 export function init_pack(): void
 {
     // 只能透過 @/API 提供的函式掛 hook
-    register_overlap_check(my_overlap_fn)
+    register_overlap_check(my_overlap_fn);
 }
 ```
 
@@ -128,17 +128,17 @@ export function init_pack(): void
 
 ```typescript
 // ✅ 正確
- import { on_device_create } from '@/API'
- on_device_create(my_fn)
+import { on_device_create } from '@/API';
+on_device_create(my_fn);
 
 // ❌ 禁止
-import { hooks } from '@/core/hooks'
-hooks.on_device_create.push(my_fn)  // 繞過訂閱機制，無法取消訂閱
+import { hooks } from '@/core/hooks';
+hooks.on_device_create.push(my_fn);  // 繞過訂閱機制，無法取消訂閱
 ```
 
 **Rule 2：靜態定義透過 JSON 傳入**  
-Device 的靜態定義（`shape`、`ports`）必須放在 `data/devices.json`。  
-渲染設定（`draw`）放在 `other_info.basic_renderer` 中，`loader.ts` 自動載入。
+Device 的靜態定義(`shape`, `ports`)必須放在 `data/devices.json`。  
+渲染設定(`draw`)放在 `other_info.basic_renderer` 中，`loader.ts` 自動載入。
 
 ```json
 {
@@ -158,14 +158,14 @@ Device 的靜態定義（`shape`、`ports`）必須放在 `data/devices.json`。
 ```
 
 **Rule 3：每個 device 要有渲染外觀**
-1. 寫個他自己的draw_device()。
+1. 寫個他自己的 draw_device()。
 2. 或是在 JSON 的 `other_info.basic_renderer` 中設定 `color`、`border`、`label`。未設定者以紅色 fallback 顯示。
 
 ---
 
 ## 5. 編譯驗證原則
 
-*   **最小化驗證**：只有大更動才需要執行編譯檢查（`tsc -b`）。
+*   **最小化驗證**：只有大更動才需要執行編譯檢查(`tsc -b`)。
 *   小幅修改、純 JSON 資料包不強制驗證。
 
 ## 6. 工作原則

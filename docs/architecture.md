@@ -4,13 +4,13 @@
 
 ## 三層單向架構 (Three-Layer Architecture)
 
-依賴方向：`packs` → `utils` → `core`（**嚴格單向，禁止反向依賴**）
+依賴方向：`packs` → `utils` → `core` (**嚴格單向, 禁止反向依賴**)
 
 ```
 src/
 ├── core/                   # 層 1：引擎核心
-│   ├── types.ts            # 全域型別（game_map, device, port…）
-│   ├── hooks.ts            # Hook 擴充點（所有副作用的唯一入口）
+│   ├── types.ts            # 全域型別(game_map, device, port...)
+│   ├── hooks.ts            # Hook 擴充點(所有副作用的唯一入口)
 │   ├── map_manager.ts      # 地圖狀態 CRUD
 │   ├── pack_manager.ts     # Pack 生命週期管理
 │   └── index.ts
@@ -18,10 +18,10 @@ src/
 │   ├── math.ts             # 向量、座標運算
 │   ├── spatial_map.ts      # 空間索引
 │   └── device_utils.ts     # Device 衍生計算
-├── API.ts                  # 引擎公開事件契約（pack 的訂閱入口）
-├── runtime.ts              # 啟動期全域狀態（map / registry）
+├── API.ts                  # 引擎公開事件契約(pack 的訂閱入口)
+├── runtime.ts              # 啟動期全域狀態(map / registry)
 ├── main.ts                 # 應用啟動點
-└── packs/                  # 層 3：遊戲邏輯 / 渲染 / UI（均為 Mod）
+└── packs/                  # 層 3：遊戲邏輯 / 渲染 / UI(均為 Mod)
     ├── loader.ts           # 掃描 & 呼叫所有 pack 的 init_pack()
     ├── basic_renderer/     # 內建基礎渲染 pack
     │   ├── index.ts
@@ -33,36 +33,36 @@ src/
     │   ├── index.ts
     │   ├── overlap.ts
     │   └── graph.ts
-    └── test/               # 測試用 pack（開發期）
+    └── test/               # 測試用 pack(開發期)
 ```
 
 ---
 
 ## 各層職責
 
-### 層 1 — Core（引擎核心）
+### 層 1 - Core(引擎核心)
 
-*   **型別定義**：`game_map`、`device`、`device_port` 等全域型別的唯一來源（Single Source of Truth）。
+*   **型別定義**：`game_map`、`device`、`device_port` 等全域型別的唯一來源(Single Source of Truth)。
 *   **Hook 系統**：`hooks.ts` 是所有副作用的唯一擴充點。Core 不含任何具體遊戲邏輯。
 *   **地圖狀態**：`map_manager.ts` 管理設備的 CRUD，呼叫後觸發對應 Hook。
 *   **禁止**：import 任何 pack、直接執行遊戲規則。
 
-### 層 2 — Utils（工具庫）
+### 層 2 - Utils(工具庫)
 
 *   純函數，無副作用，無狀態。
 *   可被 core 或 packs 引用。
 *   **禁止**：import 任何 pack。
 
-### 層 3 — Packs（插件層）
+### 層 3 - Packs(插件層)
 
 *   所有遊戲規則、渲染邏輯、UI 均在此層，以 pack 形式存在。
 *   可以自由 import `core/`、`utils/` 中的任意模組。
-*   **禁止**：直接操作 `hooks` singleton（直接 push/splice）— 一律用 `@/API` 的函式訂閱。
-*   跨 pack import 情況未確定；目前允許的刯例：`@/packs/basic_renderer/draw_registry`。
+*   **禁止**：直接操作 `hooks` singleton(直接 push/splice)— 一律用 `@/API` 的函式訂閱。
+*   跨 pack import 情況未確定；目前允許的特例：`@/packs/basic_renderer/draw_registry`。
 
 ---
 
-## API 邊界（`src/API.ts`）
+## API 邊界(`src/API.ts`)
 
 `API.ts` 是引擎的公開事件契約。後續開發者在此手動加入新的訂閱入口。
 
@@ -84,17 +84,17 @@ src/
 
 ---
 
-## 啟動期全域狀態（`src/runtime.ts`）
+## 啟動期全域狀態(`src/runtime.ts`)
 
 `runtime.ts` 不是引擎事件 API，而是啟動順序的狀態容器。
-`main.ts` 在呼叫 `call_all_pack_inits()` 之前对其寫入，需要地圖狀態的 pack（如 basic_renderer）在 `init_pack()` 內讀取。
+`main.ts` 在呼叫 `call_all_pack_inits()` 之前對其寫入，需要地圖狀態的 pack(如 basic_renderer)在 `init_pack()` 內讀取。
 
 | 函式 | 用途 |
 |------|------|
-| `set_map(map)` | 注冊全局地圖（main.ts 寫入） |
-| `get_map()` | 讀取全局地圖（pack 在 init_pack() 內使用） |
-| `set_registry(r)` | 注冊 Pack Registry（main.ts 寫入） |
-| `get_registry()` | 讀取 Pack Registry（pack 在 init_pack() 內使用） |
+| `set_map(map)` | 注冊全局地圖(main.ts 寫入) |
+| `get_map()` | 讀取全局地圖(pack 在 init_pack() 內使用) |
+| `set_registry(r)` | 注冊 Pack Registry(main.ts 寫入) |
+| `get_registry()` | 讀取 Pack Registry(pack 在 init_pack() 內使用) |
 
 ---
 
@@ -109,9 +109,9 @@ src/
     例如 X 軸方向的 Port：`(1, 0, 0)`、`(-1, 0, 0)`。
 
 ```text
-  (-2,0)         (0,0)          (2,0)          (4,0)  ← 設備中心（偶數）
+  (-2,0)         (0,0)          (2,0)          (4,0)  ← 設備中心(偶數)
     |              |              |              |
- ───┼──────(-1,0)──┼──────(1,0)───┼──────(3,0)───┼─── ← 邊界 Port（奇數）
+ ───┼──────(-1,0)──┼──────(1,0)───┼──────(3,0)───┼─── ← 邊界 Port(奇數)
 ```
 
 **連通判斷**：
@@ -123,3 +123,4 @@ src/
 ---
 
 ## 待定事項 (Unknown / TBD)
+
