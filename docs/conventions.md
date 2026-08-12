@@ -45,6 +45,9 @@ class my_class
 ### 分號規範
 **所有陳述句結尾強制加上分號 `;`**，無例外。
 
+### 語言符號規範
+**一律**使用半形符號,().
+而非全形的，（）。
 ---
 
 ## 2. 技術棧 (Tech Stack)
@@ -154,8 +157,9 @@ Device 的靜態定義（`shape`、`ports`）必須放在 `data/devices.json`。
 }
 ```
 
-**Rule 3：每個 device 必須有渲染外觀**  
-除非在 `index.ts` 透過 `register_device_draw()` 註冊了客製化繪製函式，否則所有 device 都必須在 JSON 的 `other_info.basic_renderer` 中設定 `color`、`border`、`label`。未設定者以紅色 fallback 顯示。
+**Rule 3：每個 device 要有渲染外觀**
+1. 寫個他自己的draw_device()。
+2. 或是在 JSON 的 `other_info.basic_renderer` 中設定 `color`、`border`、`label`。未設定者以紅色 fallback 顯示。
 
 ---
 
@@ -163,3 +167,8 @@ Device 的靜態定義（`shape`、`ports`）必須放在 `data/devices.json`。
 
 *   **最小化驗證**：只有大更動才需要執行編譯檢查（`tsc -b`）。
 *   小幅修改、純 JSON 資料包不強制驗證。
+
+## 6. 工作原則
+
+*   發現有風險、不明確的指示時，立刻回報給我
+*   **不要額外做事**：每次只做要求的部分

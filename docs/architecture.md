@@ -82,8 +82,6 @@ src/
 | `register_overlap_check(fn)` | 註冊碰撞/越界檢查 Hook |
 | `register_graph_build(fn)` | 註冊連接圖建構 Hook |
 
-> `register_device_draw()`：渲染公式**已確定不移入** `API.ts`，終身住在 `@/packs/basic_renderer/draw_registry`。
-
 ---
 
 ## 啟動期全域狀態（`src/runtime.ts`）
@@ -125,12 +123,3 @@ src/
 ---
 
 ## 待定事項 (Unknown / TBD)
-
-| 項目 | 狀態 | 備註 |
-|------|------|------|
-| Vue 與 Canvas 的整合方式 | ⚠️ unknown | Vue 如何掛載 Canvas、資料響應邏輯未確定 |
-| 全域狀態管理 | ⚠️ unknown | 是否引入 Pinia 或維持純 TS 響應式 |
-| Pack 間通訊機制 | ⚠️ unknown | 跨 pack 是否需要 Event Bus 或 Shared Store |
-| 渲染 API 標準化 | ✅ 已确定 | `register_device_draw()` 終身住在 `basic_renderer/draw_registry`，不移入 API.ts |
-| Canvas 管理 | ✅ 已确定 | `basic_renderer` 自己建立、掛載 canvas，不由 main.ts 手動控制 |
-| UI 架構 | ⚠️ unknown | Vue component 與遊戲狀態的邊界未定 |
