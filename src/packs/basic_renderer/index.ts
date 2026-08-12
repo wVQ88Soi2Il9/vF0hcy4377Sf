@@ -26,20 +26,18 @@ function adapt_camera_plane(cam: camera_type, target_dim: number): void
         return;
     }
 
-    const effective_dim = Math.max(2, target_dim);
-
-    if (cam.plane.dim_h < 0 || cam.plane.dim_h >= effective_dim)
+    if (cam.plane.dim_h < 0 || cam.plane.dim_h >= target_dim)
     {
         cam.plane.dim_h = 0;
     }
-    if (cam.plane.dim_v < 0 || cam.plane.dim_v >= effective_dim || cam.plane.dim_v === cam.plane.dim_h)
+    if (cam.plane.dim_v < 0 || cam.plane.dim_v >= target_dim || cam.plane.dim_v === cam.plane.dim_h)
     {
-        cam.plane.dim_v = cam.plane.dim_h === 0 ? 1 : 0;
+        cam.plane.dim_v = target_dim > 1 ? (cam.plane.dim_h === 0 ? 1 : 0) : 0;
     }
 
     const current_slices = cam.plane.slices || [];
-    const new_slices = new Array(effective_dim).fill(0);
-    for (let i = 0; i < effective_dim; i++)
+    const new_slices = new Array(target_dim).fill(0);
+    for (let i = 0; i < target_dim; i++)
     {
         if (i < current_slices.length && typeof current_slices[i] === 'number')
         {
@@ -80,8 +78,7 @@ export function get_camera_plane(): view_plane
 export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
 {
     const map = get_map();
-    const map_dim = map ? map.size.length : 3;
-    const target_dim = Math.max(2, map_dim, dim_h + 1, dim_v + 1, slices?.length ?? 0);
+    const target_dim = map ? map.size.length : Math.max(3, dim_h + 1, dim_v + 1, slices?.length ?? 0);
 
     if (dim_h >= 0 && dim_h < target_dim)
     {

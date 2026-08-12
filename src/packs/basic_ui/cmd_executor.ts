@@ -85,6 +85,20 @@ export function execute_command(input: string): string
             }
 
             const num_dims = map.size.length;
+            const fixed_axes_set = new Set(fixed_map.keys());
+            const free_dim_count = num_dims - fixed_axes_set.size;
+
+            if (free_dim_count !== 2)
+            {
+                return `Error: Camera requires exactly 2 free dimensions to form a 2D view plane (currently ${free_dim_count} free dimensions). Expected ${num_dims - 2} fixed axes for a ${num_dims}D map.`;
+            }
+
+            const axes = get_right_oriented_axes(num_dims, fixed_axes_set);
+            if (!axes)
+            {
+                return `Error: Unable to resolve 2D view plane. Free dimensions count must equal 2.`;
+            }
+
             const new_slices = [...current.slices];
             while (new_slices.length < num_dims)
             {
@@ -99,10 +113,7 @@ export function execute_command(input: string): string
                 }
             });
 
-            const fixed_axes_set = new Set(fixed_map.keys());
-            const { dim_h, dim_v } = get_right_oriented_axes(num_dims, fixed_axes_set);
-
-            set_camera_plane(dim_h, dim_v, new_slices);
+            set_camera_plane(axes.dim_h, axes.dim_v, new_slices);
 
             const updated = get_camera_plane();
             return format_camera_equation(updated);

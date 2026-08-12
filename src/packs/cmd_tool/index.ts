@@ -121,39 +121,20 @@ export function get_axis_label(internal_idx: number): string
 /**
  * Calculates (dim_h, dim_v) for 2D view projection in N dimensions
  * guaranteeing a Right-Oriented (正定向/右手性, det > 0) coordinate system.
+ * Returns null if remaining free dimensions count is not exactly 2.
  */
-export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number>): { dim_h: number, dim_v: number }
+export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number>): { dim_h: number, dim_v: number } | null
 {
-    if (num_dims <= 1)
-    {
-        return { dim_h: 0, dim_v: 1 };
-    }
-    if (num_dims === 2)
-    {
-        return { dim_h: 0, dim_v: 1 };
-    }
-
     const all_axes = Array.from({ length: num_dims }, (_, i) => i);
     const remaining = all_axes.filter(a => !fixed_axes.has(a));
 
-    let a: number;
-    let b: number;
+    if (remaining.length !== 2)
+    {
+        return null;
+    }
 
-    if (remaining.length >= 2)
-    {
-        a = remaining[0];
-        b = remaining[1];
-    }
-    else if (remaining.length === 1)
-    {
-        a = remaining[0];
-        b = (a + 1) % num_dims;
-    }
-    else
-    {
-        a = 0;
-        b = 1;
-    }
+    const a = remaining[0];
+    const b = remaining[1];
 
     const other_axes = all_axes.filter(x => x !== a && x !== b);
     const candidate_perm = [a, b, ...other_axes];
