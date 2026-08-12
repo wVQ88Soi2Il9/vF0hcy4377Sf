@@ -8,28 +8,29 @@
  * 這不是引擎的公開事件 API，不屬於 API.ts。
  */
 
-import type { game_map } from '@/core/types'
-import type { pack_registry } from '@/core/pack_manager'
+import type { game_map } from '@/core/types';
+import type { pack_registry } from '@/core/pack_manager';
 
-let _map:      game_map      | undefined = undefined
-let _registry: pack_registry | undefined = undefined
+let _map:      game_map      | undefined = undefined;
+let _registry: pack_registry | undefined = undefined;
 
 export function set_map(map: game_map): void
 {
-    _map = map
+    _map = map;
 }
 
 export function get_map(): game_map | undefined
 {
-    return _map
+    return _map;
 }
 
 export function set_registry(registry: pack_registry): void
 {
-    _registry = registry
+    _registry = registry;
 }
 
 export function get_registry(): pack_registry | undefined
 {
-    return _registry
+    return _registry;
 }
+

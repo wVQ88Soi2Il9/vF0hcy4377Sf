@@ -36,9 +36,9 @@ export type device_draw_fn = (
     sw:    number,
     sh:    number,
     zoom:  number
-) => void
+) => void;
 
-const registry = new Map<string, device_draw_fn>()
+const registry = new Map<string, device_draw_fn>();
 
 /**
  * Register a draw function for a device definition.
@@ -46,7 +46,7 @@ const registry = new Map<string, device_draw_fn>()
  */
 export function register_device_draw(definition_id: string, fn: device_draw_fn): void
 {
-    registry.set(definition_id, fn)
+    registry.set(definition_id, fn);
 }
 
 /**
@@ -55,5 +55,6 @@ export function register_device_draw(definition_id: string, fn: device_draw_fn):
  */
 export function get_device_draw(definition_id: string): device_draw_fn | undefined
 {
-    return registry.get(definition_id)
+    return registry.get(definition_id);
 }
+

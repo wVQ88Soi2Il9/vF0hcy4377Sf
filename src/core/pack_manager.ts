@@ -1,11 +1,11 @@
-import type { pack, item_definition, recipe, device_definition } from '@/core/types'
+import type { pack, item_definition, recipe, device_definition } from '@/core/types';
 
 export interface pack_registry
 {
-    loaded_packs:       Map<string, pack>
-    items:              Map<string, item_definition>
-    recipes:            Map<string, recipe>
-    device_definitions: Map<string, device_definition>
+    loaded_packs:       Map<string, pack>;
+    items:              Map<string, item_definition>;
+    recipes:            Map<string, recipe>;
+    device_definitions: Map<string, device_definition>;
 }
 
 /**
@@ -18,7 +18,7 @@ export function create_pack_registry(): pack_registry
         items:              new Map(),
         recipes:            new Map(),
         device_definitions: new Map()
-    }
+    };
 }
 
 /**
@@ -30,24 +30,24 @@ export function load_pack(registry: pack_registry, new_pack: pack): void
 {
     if (registry.loaded_packs.has(new_pack.id))
     {
-        unload_pack(registry, new_pack.id)
+        unload_pack(registry, new_pack.id);
     }
 
-    registry.loaded_packs.set(new_pack.id, new_pack)
+    registry.loaded_packs.set(new_pack.id, new_pack);
 
     for (const item of new_pack.items)
     {
-        registry.items.set(item.id, item)
+        registry.items.set(item.id, item);
     }
 
     for (const rec of new_pack.recipes)
     {
-        registry.recipes.set(rec.id, rec)
+        registry.recipes.set(rec.id, rec);
     }
 
     for (const dev of new_pack.device_definitions)
     {
-        registry.device_definitions.set(dev.id, dev)
+        registry.device_definitions.set(dev.id, dev);
     }
 }
 
@@ -56,28 +56,28 @@ export function load_pack(registry: pack_registry, new_pack: pack): void
  */
 export function unload_pack(registry: pack_registry, pack_id: string): void
 {
-    const p = registry.loaded_packs.get(pack_id)
+    const p = registry.loaded_packs.get(pack_id);
     if (!p)
     {
-        return
+        return;
     }
 
     for (const item of p.items)
     {
-        registry.items.delete(item.id)
+        registry.items.delete(item.id);
     }
 
     for (const rec of p.recipes)
     {
-        registry.recipes.delete(rec.id)
+        registry.recipes.delete(rec.id);
     }
 
     for (const dev of p.device_definitions)
     {
-        registry.device_definitions.delete(dev.id)
+        registry.device_definitions.delete(dev.id);
     }
 
-    registry.loaded_packs.delete(pack_id)
+    registry.loaded_packs.delete(pack_id);
 }
 
 /**
@@ -85,7 +85,7 @@ export function unload_pack(registry: pack_registry, pack_id: string): void
  */
 export function get_item(registry: pack_registry, id: string): item_definition | undefined
 {
-    return registry.items.get(id)
+    return registry.items.get(id);
 }
 
 /**
@@ -93,7 +93,7 @@ export function get_item(registry: pack_registry, id: string): item_definition |
  */
 export function get_recipe(registry: pack_registry, id: string): recipe | undefined
 {
-    return registry.recipes.get(id)
+    return registry.recipes.get(id);
 }
 
 /**
@@ -101,5 +101,6 @@ export function get_recipe(registry: pack_registry, id: string): recipe | undefi
  */
 export function get_device_definition(registry: pack_registry, id: string): device_definition | undefined
 {
-    return registry.device_definitions.get(id)
+    return registry.device_definitions.get(id);
 }
+

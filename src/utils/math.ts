@@ -1,4 +1,4 @@
-import type { vector, rotation } from '@/core/types'
+import type { vector, rotation } from '@/core/types';
 
 /**
  * Adds two vectors together component-wise.
@@ -6,7 +6,7 @@ import type { vector, rotation } from '@/core/types'
  */
 export function add_vector(a: vector, b: vector): vector
 {
-    return a.map((v, i) => v + (b[i] ?? 0))
+    return a.map((v, i) => v + (b[i] ?? 0));
 }
 
 /**
@@ -22,23 +22,23 @@ export function add_vector(a: vector, b: vector): vector
  */
 export function rotate_vector(vec: vector, rot: rotation): vector
 {
-    const v = vec.slice()   // work on a mutable copy
+    const v = vec.slice();   // work on a mutable copy
 
     for (const plane of rot)
     {
-        const { axis_a, axis_b, steps } = plane
+        const { axis_a, axis_b, steps } = plane;
 
         for (let s = 0; s < steps; s++)
         {
-            const a = v[axis_a] ?? 0
-            const b = v[axis_b] ?? 0
-            v[axis_a] = -b
-            v[axis_b] =  a
+            const a = v[axis_a] ?? 0;
+            const b = v[axis_b] ?? 0;
+            v[axis_a] = -b;
+            v[axis_b] =  a;
         }
     }
 
     // Convert -0 to 0 (JavaScript sometimes leaves -0 which can be annoying in tests)
-    return v.map(c => c === 0 ? 0 : c)
+    return v.map(c => c === 0 ? 0 : c);
 }
 
 /**
@@ -46,7 +46,7 @@ export function rotate_vector(vec: vector, rot: rotation): vector
  */
 export function vectors_equal(a: vector, b: vector): boolean
 {
-    return a.length === b.length && a.every((v, i) => v === b[i])
+    return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
 /**
@@ -54,5 +54,6 @@ export function vectors_equal(a: vector, b: vector): boolean
  */
 export function vector_to_string(vec: vector): string
 {
-    return vec.join(',')
+    return vec.join(',');
 }
+

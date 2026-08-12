@@ -1,6 +1,7 @@
-import { register_overlap_check, register_graph_build } from '@/API'
-import { check_map_overlap } from '@/packs/vanilla/overlap'
-import { build_device_graph } from '@/packs/vanilla/graph'
+import { register_overlap_check, register_graph_build } from '@/API';
+import { check_map_overlap } from '@/packs/vanilla/overlap';
+import { build_device_graph } from '@/packs/vanilla/graph';
+
 
 /**
  * Initialize the vanilla pack by registering its core logics to the engine hooks.

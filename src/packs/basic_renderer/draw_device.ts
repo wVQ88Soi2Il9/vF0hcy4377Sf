@@ -1,27 +1,30 @@
-import type { game_map } from '@/core/types'
-import type { pack_registry } from '@/core/pack_manager'
-import { get_device_definition } from '@/core/pack_manager'
-import { get_world_cells } from '@/utils/device_utils'
-import type { cameratype } from './types'
-import { get_device_draw } from './draw_registry'
+import type { game_map } from '@/core/types';
+import type { pack_registry } from '@/core/pack_manager';
+import { get_device_definition } from '@/core/pack_manager';
+import { get_world_cells } from '@/utils/device_utils';
+import type { camera_type } from './types';
+import { get_device_draw } from './draw_registry';
 
 export function draw_devices
 (
     ctx:      CanvasRenderingContext2D,
     map:      game_map,
     registry: pack_registry,
-    camera:   cameratype,
+    camera:   camera_type,
     canvas:   HTMLCanvasElement
 ): void
 {
-    const { dim_h, dim_v, slices } = camera.plane
+    const { dim_h, dim_v, slices } = camera.plane;
 
     for (const device of map.devices)
     {
-        const def = get_device_definition(registry, device.definition_id)
-        if (!def) continue
+        const def = get_device_definition(registry, device.definition_id);
+        if (!def)
+        {
+            continue;
+        }
 
-        const world_cells = get_world_cells(device, def)
+        const world_cells = get_world_cells(device, def);
 
         // Keep only cells that lie on the current cross-section.
         // A cell is visible when every non-displayed dimension matches its slice depth.
@@ -31,61 +34,64 @@ export function draw_devices
                 i === dim_v ||
                 coord === (slices[i] ?? 0)
             )
-        )
+        );
 
-        if (visible_cells.length === 0) continue
+        if (visible_cells.length === 0)
+        {
+            continue;
+        }
 
         // Compute bounding box in world coordinates (across visible cells).
-        const h_coords = visible_cells.map(c => c[dim_h] ?? 0)
-        const v_coords = visible_cells.map(c => c[dim_v] ?? 0)
-        const min_h = Math.min(...h_coords)
-        const max_h = Math.max(...h_coords)
-        const min_v = Math.min(...v_coords)
-        const max_v = Math.max(...v_coords)
+        const h_coords = visible_cells.map(c => c[dim_h] ?? 0);
+        const v_coords = visible_cells.map(c => c[dim_v] ?? 0);
+        const min_h = Math.min(...h_coords);
+        const max_h = Math.max(...h_coords);
+        const min_v = Math.min(...v_coords);
+        const max_v = Math.max(...v_coords);
 
         // Convert bounding box to screen coordinates.
         // Each cell at world coord w occupies screen pixels [w*zoom, (w+1)*zoom).
         // Y is flipped: larger v → smaller sy (higher on screen).
-        const sx = camera.pan_x + min_h * camera.zoom
-        const sy = canvas.height + camera.pan_y - (max_v + 1) * camera.zoom
-        const sw = (max_h - min_h + 1) * camera.zoom
-        const sh = (max_v - min_v + 1) * camera.zoom
+        const sx = camera.pan_x + min_h * camera.zoom;
+        const sy = canvas.height + camera.pan_y - (max_v + 1) * camera.zoom;
+        const sw = (max_h - min_h + 1) * camera.zoom;
+        const sh = (max_v - min_v + 1) * camera.zoom;
 
         // Look up the pack developer's registered draw function.
-        const draw_fn = get_device_draw(device.definition_id)
+        const draw_fn = get_device_draw(device.definition_id);
         if (draw_fn)
         {
-            draw_fn(ctx, sx, sy, sw, sh, camera.zoom)
+            draw_fn(ctx, sx, sy, sw, sh, camera.zoom);
         }
         else
         {
-            const draw_info = def.other_info?.basic_renderer as any
+            const draw_info = def.other_info?.basic_renderer as any;
             if (draw_info)
             {
-                ctx.fillStyle = draw_info.color || '#FF0000'
-                ctx.fillRect(sx, sy, sw, sh)
+                ctx.fillStyle = draw_info.color || '#FF0000';
+                ctx.fillRect(sx, sy, sw, sh);
 
                 if (draw_info.border)
                 {
-                    ctx.strokeStyle = draw_info.border
-                    ctx.lineWidth = Math.max(1, camera.zoom * 0.04)
-                    ctx.strokeRect(sx, sy, sw, sh)
+                    ctx.strokeStyle = draw_info.border;
+                    ctx.lineWidth = Math.max(1, camera.zoom * 0.04);
+                    ctx.strokeRect(sx, sy, sw, sh);
                 }
 
                 if (draw_info.label)
                 {
-                    ctx.fillStyle = draw_info.border || '#FFFFFF'
-                    ctx.font = `bold ${Math.max(8, camera.zoom * 0.3)}px monospace`
-                    ctx.textAlign = 'center'
-                    ctx.textBaseline = 'middle'
-                    ctx.fillText(draw_info.label, sx + sw / 2, sy + sh / 2)
+                    ctx.fillStyle = draw_info.border || '#FFFFFF';
+                    ctx.font = `bold ${Math.max(8, camera.zoom * 0.3)}px monospace`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(draw_info.label, sx + sw / 2, sy + sh / 2);
                 }
             }
             else
             {
                 // Fallback: solid red rectangle.
-                ctx.fillStyle = '#FF0000'
-                ctx.fillRect(sx, sy, sw, sh)
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(sx, sy, sw, sh);
             }
         }
     }

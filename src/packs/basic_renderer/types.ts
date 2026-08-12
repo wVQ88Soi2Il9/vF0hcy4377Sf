@@ -12,16 +12,16 @@
  */
 export interface view_plane
 {
-    dim_h:   number    // world dimension index → screen horizontal (right)
-    dim_v:   number    // world dimension index → screen vertical   (up, flipped)
-    slices:  number[]  // fixed depth for every non-displayed dimension
+    dim_h:   number;   // world dimension index → screen horizontal (right)
+    dim_v:   number;   // world dimension index → screen vertical   (up, flipped)
+    slices:  number[]; // fixed depth for every non-displayed dimension
 }
 
-export interface cameratype
+export interface camera_type
 {
-    pan_x:  number
-    pan_y:  number
-    zoom:   number
+    pan_x:  number;
+    pan_y:  number;
+    zoom:   number;
     /** Which 2-D cross-section of the N-D world to render. */
-    plane:  view_plane
+    plane:  view_plane;
 }

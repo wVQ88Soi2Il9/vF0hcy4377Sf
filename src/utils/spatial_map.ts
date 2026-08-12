@@ -1,19 +1,19 @@
-import type { vector } from '@/core/types'
-import { vector_to_string } from '@/utils/math'
+import type { vector } from '@/core/types';
+import { vector_to_string } from '@/utils/math';
 
 /**
  * A generic spatial mapping utility that maps N-dimensional grid vectors to a value of type T.
  */
 export class spatial_map<T>
 {
-    private map = new Map<string, T>()
+    private map = new Map<string, T>();
 
     /**
      * Sets a value at the given vector position.
      */
     set(pos: vector, value: T): void
     {
-        this.map.set(vector_to_string(pos), value)
+        this.map.set(vector_to_string(pos), value);
     }
 
     /**
@@ -21,7 +21,7 @@ export class spatial_map<T>
      */
     get(pos: vector): T | undefined
     {
-        return this.map.get(vector_to_string(pos))
+        return this.map.get(vector_to_string(pos));
     }
 
     /**
@@ -29,7 +29,7 @@ export class spatial_map<T>
      */
     has(pos: vector): boolean
     {
-        return this.map.has(vector_to_string(pos))
+        return this.map.has(vector_to_string(pos));
     }
 
     /**
@@ -37,12 +37,12 @@ export class spatial_map<T>
      */
     get_or_insert(pos: vector, default_factory: () => T): T
     {
-        const key = vector_to_string(pos)
+        const key = vector_to_string(pos);
         if (!this.map.has(key))
         {
-            this.map.set(key, default_factory())
+            this.map.set(key, default_factory());
         }
-        return this.map.get(key)!
+        return this.map.get(key)!;
     }
 
     /**
@@ -50,7 +50,7 @@ export class spatial_map<T>
      */
     values(): IterableIterator<T>
     {
-        return this.map.values()
+        return this.map.values();
     }
 
     /**
@@ -58,6 +58,7 @@ export class spatial_map<T>
      */
     keys(): IterableIterator<string>
     {
-        return this.map.keys()
+        return this.map.keys();
     }
 }
+

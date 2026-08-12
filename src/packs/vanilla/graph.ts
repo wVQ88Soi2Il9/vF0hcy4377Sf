@@ -1,14 +1,13 @@
-import type { game_map, device_node } from '@/core/types'
-import type { pack_registry } from '@/core/pack_manager'
-import { get_device_definition } from '@/core/pack_manager'
-import { get_world_ports } from '@/utils/device_utils'
-import { spatial_map } from '@/utils/spatial_map'
-
+import type { game_map, device_node } from '@/core/types';
+import type { pack_registry } from '@/core/pack_manager';
+import { get_device_definition } from '@/core/pack_manager';
+import { get_world_ports } from '@/utils/device_utils';
+import { spatial_map } from '@/utils/spatial_map';
 
 interface spatial_cell
 {
-    in_ports: number[]
-    out_ports: number[]
+    in_ports:  number[];
+    out_ports: number[];
 }
 
 /**
@@ -20,8 +19,8 @@ interface spatial_cell
  */
 export function build_device_graph(map: game_map, registry: pack_registry): device_node[]
 {
-    const port_map = new spatial_map<spatial_cell>()
-    const nodes_map = new Map<number, device_node>()
+    const port_map = new spatial_map<spatial_cell>();
+    const nodes_map = new Map<number, device_node>();
 
     // Initialize all device nodes
     for (const dev of map.devices)
@@ -30,30 +29,30 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
             unique_id: dev.unique_id,
             previous_nodes: [],
             next_nodes: []
-        })
+        });
     }
 
     // Phase 1: Register all world ports into the spatial map
     for (const dev of map.devices)
     {
-        const def = get_device_definition(registry, dev.definition_id)
+        const def = get_device_definition(registry, dev.definition_id);
         if (!def)
         {
-            continue
+            continue;
         }
 
-        const out_ports = get_world_ports(dev, def, 'output')
+        const out_ports = get_world_ports(dev, def, 'output');
         for (const port of out_ports)
         {
-            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }))
-            cell.out_ports.push(dev.unique_id)
+            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }));
+            cell.out_ports.push(dev.unique_id);
         }
 
-        const in_ports = get_world_ports(dev, def, 'input')
+        const in_ports = get_world_ports(dev, def, 'input');
         for (const port of in_ports)
         {
-            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }))
-            cell.in_ports.push(dev.unique_id)
+            const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }));
+            cell.in_ports.push(dev.unique_id);
         }
     }
 
@@ -71,19 +70,19 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
                     // Prevent self-connection just in case a device points to itself
                     if (source_id !== target_id)
                     {
-                        const source_node = nodes_map.get(source_id)
-                        const target_node = nodes_map.get(target_id)
+                        const source_node = nodes_map.get(source_id);
+                        const target_node = nodes_map.get(target_id);
                         
                         if (source_node && target_node)
                         {
                             // Avoid duplicate edges if multiple ports overlap identically
                             if (!source_node.next_nodes.includes(target_id))
                             {
-                                source_node.next_nodes.push(target_id)
+                                source_node.next_nodes.push(target_id);
                             }
                             if (!target_node.previous_nodes.includes(source_id))
                             {
-                                target_node.previous_nodes.push(source_id)
+                                target_node.previous_nodes.push(source_id);
                             }
                         }
                     }
@@ -93,5 +92,6 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
     }
 
     // Return as array format
-    return Array.from(nodes_map.values())
+    return Array.from(nodes_map.values());
 }
+
