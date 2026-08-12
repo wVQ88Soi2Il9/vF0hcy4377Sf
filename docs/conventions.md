@@ -1,13 +1,13 @@
 # 專案規範 (Project Conventions)
 
-> **設計哲學**：本體很小，只有引擎核心（畫布 + Hook 系統）。其他一切皆為 Mod。
+    > **設計哲學**：本體很小，只有引擎核心（畫布 + Hook 系統）。其他一切皆為 Mod。
 
 ---
 
 ## 1. 程式碼風格 (Code Style)
 
 ### 大括號風格
-強制使用 **Allman style**（`{` 獨佔新行），適用所有情境。
+強制使用 **Allman style**（`{` 獨佔新行），無例外。
 
 ```typescript
 function my_function()

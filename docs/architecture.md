@@ -51,7 +51,7 @@ src/
 
 *   純函數，無副作用，無狀態。
 *   可被 core 或 packs 引用。
-*   **禁止**：import `@/core/hooks` 或任何 pack。
+*   **禁止**：import 任何 pack。
 
 ### 層 3 — Packs（插件層）
 
