@@ -73,6 +73,21 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 
 因此，判斷兩台裝置是否連通，只需比較兩者的埠世界座標是否相等即可，詳見 `docs/architecture.md`。
 
+## UI 指令系統 (CMD System)
+
+引擎由 `packs/basic_ui` 提供基於網頁底部的指令列介面 (`cmd_bar`)，所有指令均採統一的 Flag 格式規範：
+
+### 指令語法規範
+
+| 指令 (Command) | 語法格式 | 說明與範例 |
+| :--- | :--- | :--- |
+| `create` | `create --"<def_id>" --"<position>"` | 建立裝置至指定世界座標。<br>例：`create --"test:assembler" --"4, 4, 0"` |
+| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`unique_id`) 之裝置。<br>例：`move --"1" --"6, 2, 0"` |
+| `delete` | `delete --"<uid>"` | 刪除指定唯一 ID 之裝置。<br>例：`delete --"1"` |
+| `camera` | `camera --"<axis>=<depth>"` | 調整渲染切面視角與切片深度。<br>例：`camera --"d3=0"` 或 `camera --"d1=1, d3=0"` |
+| `rotate` | *(待重構)* | 暫時停用，執行時會傳回 TODO 訊息。 |
+| `help` | `help` | 顯示所有可用的指令說明。 |
+
 ## 開發規範
 
 - 大括號一律獨立成行(Allman style)。
@@ -87,8 +102,8 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 | Vanilla Pack - 重疊檢測   | ✅ 已完成 |
 | Vanilla Pack - 連接圖建構 | ✅ 已完成 |
 | Pack Loader(自動掃描 JSON)| ✅ 已完成 |
-| 畫布渲染(Renderer)       | 🚧 待開發 |
-| UI                       | 🚧 待開發 |
+| 畫布渲染(Renderer)       | ✅ 已完成 (basic_renderer) |
+| UI (CMD / Viewport)      | ✅ 已完成 (basic_ui) |
 
 ## 快速開始
 

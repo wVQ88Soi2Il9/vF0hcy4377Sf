@@ -1,8 +1,71 @@
-import type { rotation_plane } from '@/core/types';
 import type { view_plane } from '@/packs/basic_renderer/types';
-import { create_device, delete_device, move_device, rotate_device } from '@/API';
+import { create_device, delete_device, move_device } from '@/API';
 import { get_map } from '@/runtime';
 import { get_camera_plane, set_camera_plane } from '@/packs/basic_renderer';
+
+/**
+ * Strips leading '--' and outer double quotes from flag arguments.
+ * Supports: --"value", --"key=value", --key="value", --"val1, val2"
+ */
+function clean_flag_arg(arg: string): string
+{
+    let clean = arg.trim();
+    if (clean.startsWith('--'))
+    {
+        clean = clean.substring(2);
+    }
+    if (clean.startsWith('"') && clean.endsWith('"') && clean.length >= 2)
+    {
+        clean = clean.substring(1, clean.length - 1);
+    }
+    const eq_idx = clean.indexOf('=');
+    if (eq_idx !== -1)
+    {
+        clean = clean.substring(eq_idx + 1);
+        if (clean.startsWith('"') && clean.endsWith('"') && clean.length >= 2)
+        {
+            clean = clean.substring(1, clean.length - 1);
+        }
+    }
+    return clean.trim();
+}
+
+/**
+ * Tokenizes command input while respecting quoted strings.
+ */
+function tokenize_input(input: string): string[]
+{
+    const tokens: string[] = [];
+    let current = '';
+    let in_quotes = false;
+
+    for (let i = 0; i < input.length; i++)
+    {
+        const char = input[i];
+        if (char === '"')
+        {
+            in_quotes = !in_quotes;
+            current += char;
+        }
+        else if (/\s/.test(char) && !in_quotes)
+        {
+            if (current.length > 0)
+            {
+                tokens.push(current);
+                current = '';
+            }
+        }
+        else
+        {
+            current += char;
+        }
+    }
+    if (current.length > 0)
+    {
+        tokens.push(current);
+    }
+    return tokens;
+}
 
 /**
  * Translation Layer: Human (1-indexed) → Internal Code (0-indexed).
@@ -93,7 +156,7 @@ export function execute_command(input: string): string
         return '';
     }
 
-    const tokens = trimmed.split(/\s+/);
+    const tokens = tokenize_input(trimmed);
     const cmd    = tokens[0].toLowerCase();
     const args   = tokens.slice(1);
 
@@ -107,14 +170,11 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            const n_dim = map.size.length;
-            const coords_syntax = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
-            return `Available commands: create <def_id> ${coords_syntax}, move <id> ${coords_syntax}, delete <id>, rotate <id> <a_a> <a_b> <steps>, camera --"<axis>=<depth>", help`;
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", camera --"<axis>=<depth>", help';
         }
 
         case 'camera':
         {
-            // TODO: Support positional camera slice syntax (e.g. camera 1 free 4 free) for alternative input formats.
             const current = get_camera_plane();
             if (args.length === 0)
             {
@@ -122,7 +182,7 @@ export function execute_command(input: string): string
             }
 
             const raw = args.join(' ');
-            const clean = raw.replace(/^--/, '').replace(/^"/, '').replace(/"$/, '').trim();
+            const clean = clean_flag_arg(raw);
 
             const fixed_map = new Map<number, number>();
             const parts = clean.split(',');
@@ -143,7 +203,7 @@ export function execute_command(input: string): string
 
             if (fixed_map.size === 0)
             {
-                return 'Error: Invalid camera format. Usage: camera --"d3=0" or camera --"d1=1, d3=0" or camera --"d3=0, d4=1, d5=2"';
+                return 'Error: Invalid camera format. Usage: camera --"d3=0" or camera --"d1=1, d3=0"';
             }
 
             const num_dims = map.size.length;
@@ -191,18 +251,18 @@ export function execute_command(input: string): string
         case 'add':
         {
             const n_dim = map.size.length;
-            if (args.length < 1 + n_dim)
+            if (args.length < 2)
             {
-                const usage_coords = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
-                const example_coords = Array.from({ length: n_dim }, (_, i) => (i === 0 || i === 1 ? '4' : '0')).join(' ');
-                return `Usage: create <def_id> ${usage_coords} (e.g. create test:assembler ${example_coords})`;
+                return `Usage: create --"<def_id>" --"<position>" (e.g. create --"test:assembler" --"4, 4, 0")`;
             }
-            const def_id = args[0];
-            const coords = args.slice(1, 1 + n_dim).map(arg => parseInt(arg, 10));
+            const def_id = clean_flag_arg(args[0]);
+            const pos_str = clean_flag_arg(args[1]);
 
-            if (coords.some(c => isNaN(c)))
+            const coords = pos_str.split(/[\s,]+/).filter(s => s !== '').map(s => parseInt(s, 10));
+
+            if (coords.length !== n_dim || coords.some(c => isNaN(c)))
             {
-                return `Error: Invalid coordinates. All ${n_dim} coordinates must be numbers.`;
+                return `Error: Invalid position format. Expected ${n_dim} numbers (e.g. create --"${def_id}" --"4, 4, 0").`;
             }
 
             const dev = create_device(map, def_id, coords, []);
@@ -214,12 +274,13 @@ export function execute_command(input: string): string
         {
             if (args.length < 1)
             {
-                return 'Usage: delete <device_id>';
+                return 'Usage: delete --"<uid>" (e.g. delete --"1")';
             }
-            const id = parseInt(args[0], 10);
+            const uid_str = clean_flag_arg(args[0]);
+            const id = parseInt(uid_str, 10);
             if (isNaN(id))
             {
-                return 'Error: Invalid device_id. Must be a number.';
+                return 'Error: Invalid device UID. Must be a number (e.g. delete --"1").';
             }
             const existing = map.devices.find(d => d.unique_id === id);
             if (!existing)
@@ -233,17 +294,19 @@ export function execute_command(input: string): string
         case 'move':
         {
             const n_dim = map.size.length;
-            if (args.length < 1 + n_dim)
+            if (args.length < 2)
             {
-                const usage_coords = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
-                return `Usage: move <device_id> ${usage_coords}`;
+                return `Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;
             }
-            const id     = parseInt(args[0], 10);
-            const coords = args.slice(1, 1 + n_dim).map(arg => parseInt(arg, 10));
+            const uid_str = clean_flag_arg(args[0]);
+            const pos_str = clean_flag_arg(args[1]);
 
-            if (isNaN(id) || coords.some(c => isNaN(c)))
+            const id = parseInt(uid_str, 10);
+            const coords = pos_str.split(/[\s,]+/).filter(s => s !== '').map(s => parseInt(s, 10));
+
+            if (isNaN(id) || coords.length !== n_dim || coords.some(c => isNaN(c)))
             {
-                return `Error: Invalid arguments. ID and all ${n_dim} coordinates must be numbers.`;
+                return `Error: Invalid arguments. Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;
             }
             const existing = map.devices.find(d => d.unique_id === id);
             if (!existing)
@@ -256,28 +319,8 @@ export function execute_command(input: string): string
 
         case 'rotate':
         {
-            if (args.length < 4)
-            {
-                return 'Usage: rotate <device_id> <axis_a> <axis_b> <steps> (e.g. rotate 0 0 1 1)';
-            }
-            const id     = parseInt(args[0], 10);
-            const axis_a = parseInt(args[1], 10);
-            const axis_b = parseInt(args[2], 10);
-            const raw_s  = parseInt(args[3], 10);
-
-            if (isNaN(id) || isNaN(axis_a) || isNaN(axis_b) || isNaN(raw_s))
-            {
-                return 'Error: Invalid arguments. ID, axis_a, axis_b, and steps must be numbers.';
-            }
-            const existing = map.devices.find(d => d.unique_id === id);
-            if (!existing)
-            {
-                return `Error: Device ID ${id} not found.`;
-            }
-            const steps = ((raw_s % 4 + 4) % 4) as 0 | 1 | 2 | 3;
-            const rot_plane: rotation_plane = { axis_a, axis_b, steps };
-            rotate_device(map, id, [rot_plane]);
-            return `Rotated device ID ${id} in plane (${axis_a}, ${axis_b}) by ${steps * 90}°`;
+            // TODO: rotate functionality to be redesigned.
+            return 'TODO: rotate command is currently disabled.';
         }
 
         default:
