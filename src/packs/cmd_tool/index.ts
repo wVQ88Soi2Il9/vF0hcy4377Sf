@@ -126,7 +126,7 @@ export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number
 {
     if (num_dims <= 1)
     {
-        return { dim_h: 0, dim_v: 0 };
+        return { dim_h: 0, dim_v: 1 };
     }
     if (num_dims === 2)
     {
