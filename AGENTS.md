@@ -20,6 +20,7 @@ Before starting **any task or writing any code** in this repository, you MUST re
 - **Packs never import `@/core` directly** — only `@/API` is allowed
 - **`unknown` items must not be hard-coded** — if a section in the docs is marked `unknown`, do not make assumptions; ask first or leave it explicitly unresolved
 - **Single Source of Truth** — types live in `core/types.ts`, nothing is duplicated
+- **拒絕隱性/靜態補齊 (No Implicit Zero-Padding)** — 假設所有資料都是乾淨完整的，向量運算與 JSON 藍圖向量長度必須嚴格匹配，嚴禁在程式碼中透過 `?? 0` 靜態補齊缺少的維度。
 
 ## Unknown / TBD Policy
 

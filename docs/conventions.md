@@ -172,6 +172,9 @@ Device 的靜態定義(`shape`, `ports`)必須放在 `data/devices.json`。
 1. 寫個他自己的 draw_device()。
 2. 或是在 JSON 的 `other_info.basic_renderer` 中設定 `color`、`border`、`label`。未設定者以紅色 fallback 顯示。
 
+**Rule 4：拒絕隱性/靜態補齊 (No Implicit Zero-Padding)**
+所有向量（如 `device_definition` 的 `shape`, `input_ports`, `output_ports` 與 `device.position`）必須假設為乾淨、完整的資料。禁止在向量運算中進行隱性的 `?? 0` 靜態補齊或模糊猜測。所有資料維度必須與當前運算維度一致。
+
 ---
 
 ## 5. 編譯驗證原則

@@ -4,6 +4,16 @@ import { create_device, delete_device, move_device, rotate_device } from '@/API'
 import { get_map } from '@/runtime';
 import { get_camera_plane, set_camera_plane } from '@/packs/basic_renderer';
 
+/**
+ * Translation Layer: Human (1-indexed) → Internal Code (0-indexed).
+ *
+ * Input examples:
+ *   "x" / "1" / "d1" → 0
+ *   "y" / "2" / "d2" → 1
+ *   "z" / "3" / "d3" → 2
+ *   "w" / "4" / "d4" → 3
+ *   "5" / "d5"       → 4
+ */
 function parse_axis_name(name: string): number | null
 {
     const lower = name.trim().toLowerCase();
@@ -25,35 +35,45 @@ function parse_axis_name(name: string): number | null
     }
     if (lower.startsWith('d'))
     {
-        const idx = parseInt(lower.substring(1), 10);
-        if (!isNaN(idx) && idx >= 0)
+        const human_idx = parseInt(lower.substring(1), 10);
+        if (!isNaN(human_idx) && human_idx >= 1)
         {
-            return idx;
+            return human_idx - 1;
         }
     }
-    const direct = parseInt(lower, 10);
-    if (!isNaN(direct) && direct >= 0)
+    const direct_human_idx = parseInt(lower, 10);
+    if (!isNaN(direct_human_idx) && direct_human_idx >= 1)
     {
-        return direct;
+        return direct_human_idx - 1;
     }
     return null;
 }
 
-function get_axis_label(idx: number): string
+/**
+ * Translation Layer: Internal Code (0-indexed) → Human Label (1-indexed d[n] format).
+ *
+ * Output examples:
+ *   0 → "d1"
+ *   1 → "d2"
+ *   2 → "d3"
+ *   3 → "d4"
+ *   4 → "d5"
+ */
+function get_axis_label(internal_idx: number): string
 {
-    const labels = ['X', 'Y', 'Z', 'W'];
-    return labels[idx] ?? `D${idx}`;
+    return `d${internal_idx + 1}`;
 }
 
 function format_camera_equation(plane: view_plane): string
 {
+    const map = get_map();
+    const num_dims = map ? map.size.length : Math.max(plane.slices.length, 3);
     const eq_parts: string[] = [];
-    const num_dims = Math.max(plane.slices.length, 3);
     for (let i = 0; i < num_dims; i++)
     {
         if (i !== plane.dim_h && i !== plane.dim_v)
         {
-            const axis_name = get_axis_label(i).toLowerCase();
+            const axis_name = get_axis_label(i);
             const depth = plane.slices[i] ?? 0;
             eq_parts.push(`${axis_name}=${depth}`);
         }
@@ -87,11 +107,14 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create <def_id> <x> <y> <z>, move <id> <x> <y> <z>, delete <id>, rotate <id> <a_a> <a_b> <steps>, camera --"<axis>=<depth>", help';
+            const n_dim = map.size.length;
+            const coords_syntax = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
+            return `Available commands: create <def_id> ${coords_syntax}, move <id> ${coords_syntax}, delete <id>, rotate <id> <a_a> <a_b> <steps>, camera --"<axis>=<depth>", help`;
         }
 
         case 'camera':
         {
+            // TODO: Support positional camera slice syntax (e.g. camera 1 free 4 free) for alternative input formats.
             const current = get_camera_plane();
             if (args.length === 0)
             {
@@ -120,10 +143,10 @@ export function execute_command(input: string): string
 
             if (fixed_map.size === 0)
             {
-                return 'Error: Invalid camera format. Usage: camera --"z=0" or camera --"x=1, z=0"';
+                return 'Error: Invalid camera format. Usage: camera --"d3=0" or camera --"d1=1, d3=0" or camera --"d3=0, d4=1, d5=2"';
             }
 
-            const num_dims = Math.max(map.size.length, 3);
+            const num_dims = map.size.length;
             const new_slices = [...current.slices];
             while (new_slices.length < num_dims)
             {
@@ -132,7 +155,7 @@ export function execute_command(input: string): string
 
             fixed_map.forEach((depth, axis_idx) =>
             {
-                if (axis_idx < new_slices.length)
+                if (axis_idx < num_dims)
                 {
                     new_slices[axis_idx] = depth;
                 }
@@ -167,22 +190,23 @@ export function execute_command(input: string): string
         case 'create':
         case 'add':
         {
-            if (args.length < 4)
+            const n_dim = map.size.length;
+            if (args.length < 1 + n_dim)
             {
-                return 'Usage: create <def_id> <x> <y> <z> (e.g. create test:assembler 4 4 0)';
+                const usage_coords = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
+                const example_coords = Array.from({ length: n_dim }, (_, i) => (i === 0 || i === 1 ? '4' : '0')).join(' ');
+                return `Usage: create <def_id> ${usage_coords} (e.g. create test:assembler ${example_coords})`;
             }
             const def_id = args[0];
-            const x      = parseInt(args[1], 10);
-            const y      = parseInt(args[2], 10);
-            const z      = parseInt(args[3], 10);
+            const coords = args.slice(1, 1 + n_dim).map(arg => parseInt(arg, 10));
 
-            if (isNaN(x) || isNaN(y) || isNaN(z))
+            if (coords.some(c => isNaN(c)))
             {
-                return 'Error: Invalid coordinates. x, y, z must be numbers.';
+                return `Error: Invalid coordinates. All ${n_dim} coordinates must be numbers.`;
             }
 
-            const dev = create_device(map, def_id, [x, y, z], []);
-            return `Created device ${dev.definition_id} (ID: ${dev.unique_id}) at [${x}, ${y}, ${z}]`;
+            const dev = create_device(map, def_id, coords, []);
+            return `Created device ${dev.definition_id} (ID: ${dev.unique_id}) at [${coords.join(', ')}]`;
         }
 
         case 'delete':
@@ -208,26 +232,26 @@ export function execute_command(input: string): string
 
         case 'move':
         {
-            if (args.length < 4)
+            const n_dim = map.size.length;
+            if (args.length < 1 + n_dim)
             {
-                return 'Usage: move <device_id> <x> <y> <z>';
+                const usage_coords = Array.from({ length: n_dim }, (_, i) => `<c${i + 1}>`).join(' ');
+                return `Usage: move <device_id> ${usage_coords}`;
             }
-            const id = parseInt(args[0], 10);
-            const x  = parseInt(args[1], 10);
-            const y  = parseInt(args[2], 10);
-            const z  = parseInt(args[3], 10);
+            const id     = parseInt(args[0], 10);
+            const coords = args.slice(1, 1 + n_dim).map(arg => parseInt(arg, 10));
 
-            if (isNaN(id) || isNaN(x) || isNaN(y) || isNaN(z))
+            if (isNaN(id) || coords.some(c => isNaN(c)))
             {
-                return 'Error: Invalid arguments. ID and coordinates must be numbers.';
+                return `Error: Invalid arguments. ID and all ${n_dim} coordinates must be numbers.`;
             }
             const existing = map.devices.find(d => d.unique_id === id);
             if (!existing)
             {
                 return `Error: Device ID ${id} not found.`;
             }
-            move_device(map, id, [x, y, z]);
-            return `Moved device ID ${id} to [${x}, ${y}, ${z}]`;
+            move_device(map, id, coords);
+            return `Moved device ID ${id} to [${coords.join(', ')}]`;
         }
 
         case 'rotate':

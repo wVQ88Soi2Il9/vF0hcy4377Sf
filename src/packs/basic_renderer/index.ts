@@ -12,9 +12,40 @@ const camera: camera_type =
     pan_x: 0,
     pan_y: 0,
     zoom:  40,
-    // dim_h=0 (X→right), dim_v=1 (Y→up), slices[2]=0 (view z=0 layer)
+    // dim_h=0 (X→right), dim_v=1 (Y→up), slices dynamically adapt to map.size.length
     plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
 };
+
+/**
+ * Adapts camera plane slices and axes to match the N-dimensional map.
+ */
+function adapt_camera_plane(cam: camera_type, target_dim: number): void
+{
+    if (target_dim <= 0)
+    {
+        return;
+    }
+
+    if (cam.plane.dim_h < 0 || cam.plane.dim_h >= target_dim)
+    {
+        cam.plane.dim_h = 0;
+    }
+    if (cam.plane.dim_v < 0 || cam.plane.dim_v >= target_dim || cam.plane.dim_v === cam.plane.dim_h)
+    {
+        cam.plane.dim_v = target_dim > 1 ? (cam.plane.dim_h === 0 ? 1 : 0) : 0;
+    }
+
+    const current_slices = cam.plane.slices || [];
+    const new_slices = new Array(target_dim).fill(0);
+    for (let i = 0; i < target_dim; i++)
+    {
+        if (i < current_slices.length && typeof current_slices[i] === 'number')
+        {
+            new_slices[i] = current_slices[i];
+        }
+    }
+    cam.plane.slices = new_slices;
+}
 
 /**
  * Returns the Canvas element created by basic_renderer.
@@ -29,6 +60,11 @@ export function get_renderer_canvas(): HTMLCanvasElement | null
  */
 export function get_camera_plane(): view_plane
 {
+    const map = get_map();
+    if (map)
+    {
+        adapt_camera_plane(camera, map.size.length);
+    }
     return {
         dim_h:  camera.plane.dim_h,
         dim_v:  camera.plane.dim_v,
@@ -41,12 +77,35 @@ export function get_camera_plane(): view_plane
  */
 export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
 {
-    camera.plane.dim_h = dim_h;
-    camera.plane.dim_v = dim_v;
+    const map = get_map();
+    const target_dim = map ? map.size.length : Math.max(3, dim_h + 1, dim_v + 1, slices?.length ?? 0);
+
+    if (dim_h >= 0 && dim_h < target_dim)
+    {
+        camera.plane.dim_h = dim_h;
+    }
+    if (dim_v >= 0 && dim_v < target_dim && dim_v !== camera.plane.dim_h)
+    {
+        camera.plane.dim_v = dim_v;
+    }
+
     if (slices)
     {
-        camera.plane.slices = [...slices];
+        const new_slices = new Array(target_dim).fill(0);
+        for (let i = 0; i < target_dim; i++)
+        {
+            if (i < slices.length && typeof slices[i] === 'number')
+            {
+                new_slices[i] = slices[i];
+            }
+        }
+        camera.plane.slices = new_slices;
     }
+    else
+    {
+        adapt_camera_plane(camera, target_dim);
+    }
+
     redraw_renderer();
 }
 
@@ -175,6 +234,8 @@ export function init_pack(): void
         return;
     }
 
+    adapt_camera_plane(camera, map.size.length);
+
     // Build canvas without attaching it to DOM directly (managed by UI pack).
     renderer_canvas = document.createElement('canvas');
     renderer_canvas.id = 'renderer_canvas';
@@ -186,13 +247,14 @@ export function init_pack(): void
 
     function draw(): void
     {
-        if (!renderer_canvas)
+        if (!renderer_canvas || !map)
         {
             return;
         }
+        adapt_camera_plane(camera, map.size.length);
         ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
-        draw_grid(ctx, renderer_canvas, camera, map!);
-        draw_devices(ctx, map!, registry!, camera, renderer_canvas);
+        draw_grid(ctx, renderer_canvas, camera, map);
+        draw_devices(ctx, map, registry!, camera, renderer_canvas);
     }
 
     current_draw_fn = draw;

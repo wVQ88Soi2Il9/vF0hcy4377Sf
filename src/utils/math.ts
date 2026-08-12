@@ -6,7 +6,7 @@ import type { vector, rotation } from '@/core/types';
  */
 export function add_vector(a: vector, b: vector): vector
 {
-    return a.map((v, i) => v + (b[i] ?? 0));
+    return a.map((v, i) => v + b[i]);
 }
 
 /**
@@ -30,8 +30,8 @@ export function rotate_vector(vec: vector, rot: rotation): vector
 
         for (let s = 0; s < steps; s++)
         {
-            const a = v[axis_a] ?? 0;
-            const b = v[axis_b] ?? 0;
+            const a = v[axis_a];
+            const b = v[axis_b];
             v[axis_a] = -b;
             v[axis_b] =  a;
         }
