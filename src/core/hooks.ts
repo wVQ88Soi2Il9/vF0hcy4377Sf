@@ -19,15 +19,23 @@ export type device_rotate_hook =
     old_rotation: rotation,
     new_rotation: rotation
 ) => void;
+export type device_select_recipe_hook =
+(
+    map:           game_map,
+    dev:           device,
+    old_recipe_id: string | undefined,
+    new_recipe_id: string | undefined
+) => void;
 
 export const hooks = 
 {
-    on_check_overlap: [] as check_overlap_hook[],
-    on_build_graph: [] as build_graph_hook[],
-    on_device_create: [] as device_create_hook[],
-    on_device_delete: [] as device_delete_hook[],
-    on_device_move: [] as device_move_hook[],
-    on_device_rotate: [] as device_rotate_hook[]
+    on_check_overlap:        [] as check_overlap_hook[],
+    on_build_graph:          [] as build_graph_hook[],
+    on_device_create:        [] as device_create_hook[],
+    on_device_delete:        [] as device_delete_hook[],
+    on_device_move:          [] as device_move_hook[],
+    on_device_rotate:        [] as device_rotate_hook[],
+    on_device_select_recipe: [] as device_select_recipe_hook[]
 };
 
 /**
@@ -117,5 +125,19 @@ export function trigger_rotate_device
     for (const hook of hooks.on_device_rotate)
     {
         hook(map, dev, old_rotation, new_rotation);
+    }
+}
+
+export function trigger_select_recipe
+(
+    map:           game_map,
+    dev:           device,
+    old_recipe_id: string | undefined,
+    new_recipe_id: string | undefined
+): void
+{
+    for (const hook of hooks.on_device_select_recipe)
+    {
+        hook(map, dev, old_recipe_id, new_recipe_id);
     }
 }

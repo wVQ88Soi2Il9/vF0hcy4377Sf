@@ -1,5 +1,5 @@
 import type { game_map, device, vector, rotation } from '@/core/types';
-import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device } from '@/core/hooks';
+import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device, trigger_select_recipe } from '@/core/hooks';
 
 /**
  * Creates a new map instance with next_unique_id starting from 0.
@@ -97,6 +97,27 @@ export function rotate_device(map: game_map, device_unique_id: number, new_rotat
             dev,
             old_rotation,
             new_rotation
+        );
+    }
+}
+
+/**
+ * Sets or clears the selected recipe for a device.
+ * Modifies the device in place.
+ */
+export function select_recipe(map: game_map, device_unique_id: number, recipe_id?: string): void
+{
+    const dev = map.devices.find(d => d.unique_id === device_unique_id);
+    if (dev)
+    {
+        const old_recipe_id = dev.selected_recipe_id;
+        dev.selected_recipe_id = recipe_id;
+        trigger_select_recipe
+        (
+            map,
+            dev,
+            old_recipe_id,
+            recipe_id
         );
     }
 }

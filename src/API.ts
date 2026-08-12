@@ -12,11 +12,13 @@ import
     type device_create_hook,
     type device_delete_hook,
     type device_move_hook,
+    type device_rotate_hook,
+    type device_select_recipe_hook,
     type check_overlap_hook,
     type build_graph_hook
 } from '@/core/hooks'
 
-export { create_map, create_device, delete_device, move_device } from '@/core/map_manager'
+export { create_map, create_device, delete_device, move_device, rotate_device, select_recipe } from '@/core/map_manager'
 
 export type unsubscribe_function = () => void
 
@@ -65,19 +67,83 @@ export function on_device_move(callback: device_move_hook): unsubscribe_function
 }
 
 /**
- * 訂閱任意裝置生命週期變動（create / delete / move）。
+ * 訂閱裝置旋轉事件。
+ * 回傳取消訂閱函式。
+ */
+export function on_device_rotate(callback: device_rotate_hook): unsubscribe_function
+{
+    hooks.on_device_rotate.push(callback)
+    return () =>
+    {
+        const index = hooks.on_device_rotate.indexOf(callback)
+        if (index !== -1) hooks.on_device_rotate.splice(index, 1)
+    }
+}
+
+/**
+ * 訂閱裝置選擇食譜變更事件。
+ * 回傳取消訂閱函式。
+ */
+export function on_device_select_recipe(callback: device_select_recipe_hook): unsubscribe_function
+{
+    hooks.on_device_select_recipe.push(callback)
+    return () =>
+    {
+        const index = hooks.on_device_select_recipe.indexOf(callback)
+        if (index !== -1) hooks.on_device_select_recipe.splice(index, 1)
+    }
+}
+
+/**
+ * 訂閱任意裝置生命週期變動（create / delete / move / rotate / select_recipe）。
  * 回傳取消訂閱函式。
  */
 export function on_device_change(callback: () => void): unsubscribe_function
 {
-    const unsub_create = on_device_create(() => callback())
-    const unsub_delete = on_device_delete(() => callback())
-    const unsub_move   = on_device_move(() => callback())
+    const unsub_create        = on_device_create(() => callback())
+    const unsub_delete        = on_device_delete(() => callback())
+    const unsub_move          = on_device_move(() => callback())
+    const unsub_rotate        = on_device_rotate(() => callback())
+    const unsub_select_recipe = on_device_select_recipe(() => callback())
     return () =>
     {
         unsub_create()
         unsub_delete()
         unsub_move()
+        unsub_rotate()
+        unsub_select_recipe()
+    }
+}
+
+// ── 驗證系統 ──────────────────────────────────────────────────────────────────
+
+/**
+ * 注冊碰撞 / 越界檢查 Hook。
+ * 引擎在需要驗證地圖時呼叫所有已注冊的函式並合併結果。
+ */
+export function register_overlap_check(fn: check_overlap_hook): unsubscribe_function
+{
+    hooks.on_check_overlap.push(fn)
+    return () =>
+    {
+        const index = hooks.on_check_overlap.indexOf(fn)
+        if (index !== -1) hooks.on_check_overlap.splice(index, 1)
+    }
+}
+
+// ── 連接圖 ────────────────────────────────────────────────────────────────────
+
+/**
+ * 注冊連接圖建構 Hook。
+ * 引擎在需要重建裝置連接關係時呼叫。
+ */
+export function register_graph_build(fn: build_graph_hook): unsubscribe_function
+{
+    hooks.on_build_graph.push(fn)
+    return () =>
+    {
+        const index = hooks.on_build_graph.indexOf(fn)
+        if (index !== -1) hooks.on_build_graph.splice(index, 1)
     }
 }
 

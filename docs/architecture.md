@@ -71,10 +71,14 @@ src/
 | `create_device()` | 新增裝置至地圖 |
 | `delete_device()` | 刪除裝置 |
 | `move_device()` | 移動裝置 |
+| `rotate_device()` | 旋轉裝置 |
+| `select_recipe()` | 設定/清除裝置選擇之食譜 |
 | `on_device_create(cb)` | 訂閱裝置建立事件 |
 | `on_device_delete(cb)` | 訂閱裝置刪除事件 |
 | `on_device_move(cb)` | 訂閱裝置移動事件 |
-| `on_device_change(cb)` | 訂閱任何裝置生命週期變動 |
+| `on_device_rotate(cb)` | 訂閱裝置旋轉事件 |
+| `on_device_select_recipe(cb)` | 訂閱裝置食譜變更事件 |
+| `on_device_change(cb)` | 訂閱任何裝置生命週期與狀態變動 |
 | `register_overlap_check(fn)` | 註冊碰撞/越界檢查 Hook |
 | `register_graph_build(fn)` | 註冊連接圖建構 Hook |
 
