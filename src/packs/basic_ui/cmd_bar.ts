@@ -16,7 +16,7 @@ export function create_cmd_bar(): cmd_bar_component
         position: absolute;
         left: 16px;
         bottom: 16px;
-        width: calc(100% - 348px);
+        width: calc(100% - 32px);
         max-width: 640px;
         height: 68px;
         background: rgba(15, 23, 42, 0.9);
