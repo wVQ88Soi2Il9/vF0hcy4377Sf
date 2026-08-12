@@ -3,7 +3,7 @@ import { create_device, delete_device, move_device } from '@/API';
 import { get_map } from '@/runtime';
 import { get_camera_plane, set_camera_plane } from '@/packs/basic_renderer';
 
-import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label } from '@/packs/cmd_parser';
+import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label } from '@/packs/cmd_tool';
 
 function format_camera_equation(plane: view_plane): string
 {

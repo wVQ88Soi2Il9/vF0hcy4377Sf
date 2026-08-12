@@ -91,7 +91,7 @@ src/
     │   ├── info_bar.ts
     │   ├── cmd_bar.ts
     │   └── cmd_executor.ts
-    ├── cmd_parser/     # 內建 CMD 指線與字串解析 pack
+    ├── cmd_tool/       # 內建 CMD 指令與字串解析 pack
     └── vanilla/        # 內建基礎遊戲邏輯 pack
 ```
 
