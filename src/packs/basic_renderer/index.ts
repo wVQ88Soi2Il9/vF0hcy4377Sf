@@ -4,6 +4,9 @@ import { draw_devices } from './draw_device';
 import { on_device_change } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 
+let renderer_canvas: HTMLCanvasElement | null = null;
+let current_draw_fn: (() => void) | null = null;
+
 const camera: camera_type =
 {
     pan_x: 0,
@@ -12,6 +15,40 @@ const camera: camera_type =
     // dim_h=0 (X→right), dim_v=1 (Y→up), slices[2]=0 (view z=0 layer)
     plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
 };
+
+/**
+ * Returns the Canvas element created by basic_renderer.
+ */
+export function get_renderer_canvas(): HTMLCanvasElement | null
+{
+    return renderer_canvas;
+}
+
+/**
+ * Resizes the renderer canvas to the specified dimensions and triggers a redraw.
+ */
+export function resize_renderer_canvas(width: number, height: number): void
+{
+    if (!renderer_canvas)
+    {
+        return;
+    }
+
+    renderer_canvas.width = width;
+    renderer_canvas.height = height;
+    redraw_renderer();
+}
+
+/**
+ * Triggers a manual redraw of the renderer.
+ */
+export function redraw_renderer(): void
+{
+    if (current_draw_fn)
+    {
+        current_draw_fn();
+    }
+}
 
 /**
  * Maps an N-dimensional world grid position to a 2-D canvas position.
@@ -26,7 +63,7 @@ export function grid_to_screen
 (
     pos:           number[],
     cam:           camera_type,
-    canvas_height: number = window.innerHeight
+    canvas_height: number = (renderer_canvas?.height ?? window.innerHeight)
 )
 {
     const h = pos[cam.plane.dim_h] ?? 0;  // world → screen X
@@ -97,7 +134,7 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
 
 /**
  * Standard pack entry point.
- * Creates the canvas, attaches it to #app, sets up camera controls and redraw loop.
+ * Creates the canvas, sets up camera controls and redraw loop.
  * Reads game_map and pack_registry from API (set by main.ts before calling init_pack).
  */
 export function init_pack(): void
@@ -111,34 +148,29 @@ export function init_pack(): void
         return;
     }
 
-    // Build and attach canvas to the host element.
-    const canvas = document.createElement('canvas');
-    canvas.id = 'renderer_canvas';
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.style.cssText = 'display:block;position:fixed;inset:0;';
+    // Build canvas without attaching it to DOM directly (managed by UI pack).
+    renderer_canvas = document.createElement('canvas');
+    renderer_canvas.id = 'renderer_canvas';
+    renderer_canvas.width  = window.innerWidth;
+    renderer_canvas.height = window.innerHeight;
+    renderer_canvas.style.cssText = 'display:block;width:100%;height:100%;';
 
-    const host = document.getElementById('app') ?? document.body;
-    host.appendChild(canvas);
-
-    // Keep canvas size in sync with window.
-    window.addEventListener('resize', () =>
-    {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-        draw();
-    });
-
-    const ctx = canvas.getContext('2d')!;
+    const ctx = renderer_canvas.getContext('2d')!;
 
     function draw(): void
     {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_grid(ctx, canvas, camera, map!);
-        draw_devices(ctx, map!, registry!, camera, canvas);
+        if (!renderer_canvas)
+        {
+            return;
+        }
+        ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
+        draw_grid(ctx, renderer_canvas, camera, map!);
+        draw_devices(ctx, map!, registry!, camera, renderer_canvas);
     }
 
-    setup_camera_control(canvas, draw);
+    current_draw_fn = draw;
+
+    setup_camera_control(renderer_canvas, draw);
     on_device_change(draw);
 
     // Initial render — wait one microtask so other packs' init_pack() can finish first.
