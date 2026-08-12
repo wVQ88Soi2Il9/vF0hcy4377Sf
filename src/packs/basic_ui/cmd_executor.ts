@@ -3,7 +3,7 @@ import { create_device, delete_device, move_device } from '@/API';
 import { get_map } from '@/runtime';
 import { get_camera_plane, set_camera_plane } from '@/packs/basic_renderer';
 
-import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label } from '@/packs/cmd_tool';
+import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cmd_tool';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -99,27 +99,8 @@ export function execute_command(input: string): string
                 }
             });
 
-            const all_axes = Array.from({ length: num_dims }, (_, i) => i);
-            const remaining_axes = all_axes.filter(a => !fixed_map.has(a));
-
-            let dim_h = current.dim_h;
-            let dim_v = current.dim_v;
-
-            if (remaining_axes.length >= 2)
-            {
-                dim_h = remaining_axes[0];
-                dim_v = remaining_axes[1];
-            }
-            else if (remaining_axes.length === 1)
-            {
-                dim_h = remaining_axes[0];
-                dim_v = (dim_h + 1) % num_dims;
-            }
-            else
-            {
-                dim_h = 0;
-                dim_v = num_dims > 1 ? 1 : 0;
-            }
+            const fixed_axes_set = new Set(fixed_map.keys());
+            const { dim_h, dim_v } = get_right_oriented_axes(num_dims, fixed_axes_set);
 
             set_camera_plane(dim_h, dim_v, new_slices);
 
