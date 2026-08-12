@@ -1,3 +1,5 @@
+import { execute_command } from './cmd_executor';
+
 export interface cmd_bar_component
 {
     element: HTMLElement;
@@ -39,7 +41,7 @@ export function create_cmd_bar(): cmd_bar_component
         <input
             id="cmd_input"
             type="text"
-            placeholder="Type command or press Enter..."
+            placeholder="Type command (e.g. add test:assembler 4 4 0) or type help..."
             style="
                 flex: 1;
                 background: transparent;
@@ -50,19 +52,34 @@ export function create_cmd_bar(): cmd_bar_component
                 font-size: 13px;
             "
         />
+        <div id="cmd_output" style="font-size:12px;color:#94a3b8;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
         <div style="font-size:11px;color:#64748b;user-select:none;">
             Press <kbd style="background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;color:#cbd5e1;">Enter</kbd> to submit
         </div>
     `;
 
-    const input_el = element.querySelector('#cmd_input') as HTMLInputElement | null;
+    const input_el  = element.querySelector('#cmd_input') as HTMLInputElement | null;
+    const output_el = element.querySelector('#cmd_output') as HTMLElement | null;
+
     if (input_el)
     {
         input_el.addEventListener('keydown', (e) =>
         {
             if (e.key === 'Enter' && input_el.value.trim() !== '')
             {
-                console.log('[basic_ui] Executing command:', input_el.value);
+                const result = execute_command(input_el.value);
+                if (output_el)
+                {
+                    output_el.textContent = result;
+                    if (result.startsWith('Error'))
+                    {
+                        output_el.style.color = '#f87171';
+                    }
+                    else
+                    {
+                        output_el.style.color = '#4ade80';
+                    }
+                }
                 input_el.value = '';
             }
         });
@@ -70,3 +87,4 @@ export function create_cmd_bar(): cmd_bar_component
 
     return { element };
 }
+
