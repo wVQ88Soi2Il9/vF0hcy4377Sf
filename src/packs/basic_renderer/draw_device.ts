@@ -148,4 +148,4 @@ export function draw_devices
     {
         render_device_item(ctx, item, camera, canvas);
     }
-}
+}
