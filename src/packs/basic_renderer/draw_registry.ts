@@ -38,7 +38,58 @@ export type device_draw_fn = (
     zoom:  number
 ) => void;
 
+export interface color_block_info
+{
+    color?:  string;
+    border?: string;
+    label?:  string;
+}
+
 const registry = new Map<string, device_draw_fn>();
+
+/**
+ * Creates a standalone draw function that renders a solid color block with optional border and label.
+ */
+export function create_color_block_draw_fn(info?: color_block_info): device_draw_fn
+{
+    return function draw_color_block
+    (
+        ctx:  CanvasRenderingContext2D,
+        sx:   number,
+        sy:   number,
+        sw:   number,
+        sh:   number,
+        zoom: number
+    ): void
+    {
+        if (info)
+        {
+            ctx.fillStyle = info.color || '#FF0000';
+            ctx.fillRect(sx, sy, sw, sh);
+
+            if (info.border)
+            {
+                ctx.strokeStyle = info.border;
+                ctx.lineWidth = Math.max(1, zoom * 0.04);
+                ctx.strokeRect(sx, sy, sw, sh);
+            }
+
+            if (info.label)
+            {
+                ctx.fillStyle = info.border || '#FFFFFF';
+                ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(info.label, sx + sw / 2, sy + sh / 2);
+            }
+        }
+        else
+        {
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(sx, sy, sw, sh);
+        }
+    };
+}
 
 /**
  * Register a draw function for a device definition.
@@ -50,6 +101,14 @@ export function register_device_draw(definition_id: string, fn: device_draw_fn):
 }
 
 /**
+ * Helper to register a color block draw function for a device definition.
+ */
+export function register_color_block_draw(definition_id: string, info?: color_block_info): void
+{
+    registry.set(definition_id, create_color_block_draw_fn(info));
+}
+
+/**
  * Retrieve the registered draw function for a device definition.
  * Returns undefined if none is registered.
  */
@@ -57,4 +116,5 @@ export function get_device_draw(definition_id: string): device_draw_fn | undefin
 {
     return registry.get(definition_id);
 }
+
 

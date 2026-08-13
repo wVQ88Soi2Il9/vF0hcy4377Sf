@@ -169,12 +169,14 @@ Device 的靜態定義(`shape`, `ports`)必須放在 `data/devices.json`。
 }
 ```
 
-**Rule 3：每個 device 要有渲染外觀**
-1. 寫個他自己的 draw_device()。
-2. 或是在 JSON 的 `other_info.basic_renderer` 中設定 `color`、`border`、`label`。未設定者以紅色 fallback 顯示。
+**Rule 3：每個 device 強制要有獨立的 draw function**  
+每個 `device_definition` 必須擁有獨立註冊的繪圖函式（即使是色塊繪圖函式）。`basic_renderer` 不會在繪圖迴圈中進行 inline fallback 補齊或隱性假設。
 
-**Rule 4：拒絕隱性/靜態補齊 (No Implicit Zero-Padding)**
+**Rule 4：拒絕隱性/靜態補齊 (No Implicit Zero-Padding)**  
 所有向量（如 `device_definition` 的 `shape`, `input_ports`, `output_ports` 與 `device.position`）必須假設為乾淨、完整的資料。禁止在向量運算中進行隱性的 `?? 0` 靜態補齊或模糊猜測。所有資料維度必須與當前運算維度一致。
+
+**Rule 5：Pack 介面採用物件導出 (Object Export)**  
+Pack 對外暴露的 API 與介面（例如 `basic_renderer`）必須統一導出一個以 Pack 名稱命名的 API 物件（例如 `export const basic_renderer = { ... }`）。外部模組在存取 Pack 功能時一律使用物件點號語法，維護模組邊界與命名空間。
 
 ---
 

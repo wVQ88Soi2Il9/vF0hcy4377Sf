@@ -1,7 +1,7 @@
 import type { view_plane } from '@/packs/basic_renderer/types';
 import { create_device, delete_device, move_device } from '@/API';
 import { get_map } from '@/runtime';
-import { get_camera_plane, set_camera_plane } from '@/packs/basic_renderer';
+import { basic_renderer } from '@/packs/basic_renderer';
 
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cmd_tool';
 
@@ -53,7 +53,7 @@ export function execute_command(input: string): string
 
         case 'camera':
         {
-            const current = get_camera_plane();
+            const current = basic_renderer.get_camera();
             if (args.length === 0)
             {
                 return format_camera_equation(current);
@@ -113,9 +113,9 @@ export function execute_command(input: string): string
                 }
             });
 
-            set_camera_plane(axes.dim_h, axes.dim_v, new_slices);
+            basic_renderer.set_camera(axes.dim_h, axes.dim_v, new_slices);
 
-            const updated = get_camera_plane();
+            const updated = basic_renderer.get_camera();
             return format_camera_equation(updated);
         }
 

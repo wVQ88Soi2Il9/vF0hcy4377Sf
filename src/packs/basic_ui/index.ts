@@ -1,4 +1,4 @@
-import { get_renderer_canvas, resize_renderer_canvas } from '@/packs/basic_renderer';
+import { basic_renderer } from '@/packs/basic_renderer';
 import { get_map } from '@/runtime';
 import { on_device_change } from '@/API';
 import { create_ui_layout } from './layout';
@@ -16,7 +16,7 @@ export function init_pack(): void
 
     host.appendChild(root);
 
-    const canvas = get_renderer_canvas();
+    const canvas = basic_renderer.get_canvas();
     if (canvas)
     {
         viewport.appendChild(canvas);
@@ -27,7 +27,7 @@ export function init_pack(): void
         for (const entry of entries)
         {
             const { width, height } = entry.contentRect;
-            resize_renderer_canvas(Math.floor(width), Math.floor(height));
+            basic_renderer.resize_canvas(Math.floor(width), Math.floor(height));
         }
     });
 

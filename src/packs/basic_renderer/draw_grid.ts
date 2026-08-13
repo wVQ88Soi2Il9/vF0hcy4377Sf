@@ -35,8 +35,8 @@ export function draw_grid
     // 在地圖邊界繪製黑線 (依據 camera.plane.dim_h 與 dim_v 動態取得世界長度)
     const dim_h  = camera.plane.dim_h;
     const dim_v  = camera.plane.dim_v;
-    const size_h = map.size[dim_h] ?? 0;
-    const size_v = map.size[dim_v] ?? 0;
+    const size_h = map.size[dim_h];
+    const size_v = map.size[dim_v];
 
     if (size_h > 0 && size_v > 0)
     {
@@ -49,4 +49,4 @@ export function draw_grid
         ctx.lineWidth = Math.max(2, camera.zoom * 0.04);
         ctx.strokeRect(sx, sy, sw, sh);
     }
-}
+}

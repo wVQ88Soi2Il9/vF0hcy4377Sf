@@ -1,8 +1,10 @@
 import type { camera_type, view_plane } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
+import { get_device_draw, register_device_draw, register_color_block_draw, create_color_block_draw_fn } from './draw_registry';
 import { on_device_change } from '@/API';
 import { get_map, get_registry } from '@/runtime';
+import type { pack_registry } from '@/core/pack_manager';
 
 let renderer_canvas: HTMLCanvasElement | null = null;
 let current_draw_fn: (() => void) | null = null;
@@ -78,7 +80,8 @@ export function get_camera_plane(): view_plane
 export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
 {
     const map = get_map();
-    const target_dim = map ? map.size.length : Math.max(3, dim_h + 1, dim_v + 1, slices?.length ?? 0);
+    const slice_count = slices ? slices.length : 0;
+    const target_dim = map ? map.size.length : Math.max(3, dim_h + 1, dim_v + 1, slice_count);
 
     if (dim_h >= 0 && dim_h < target_dim)
     {
@@ -149,11 +152,11 @@ export function grid_to_screen
 (
     pos:           number[],
     cam:           camera_type,
-    canvas_height: number = (renderer_canvas?.height ?? window.innerHeight)
+    canvas_height: number = (renderer_canvas ? renderer_canvas.height : window.innerHeight)
 )
 {
-    const h = pos[cam.plane.dim_h] ?? 0;  // world → screen X
-    const v = pos[cam.plane.dim_v] ?? 0;  // world → screen Y (will be flipped)
+    const h = pos[cam.plane.dim_h];  // world → screen X
+    const v = pos[cam.plane.dim_v];  // world → screen Y (will be flipped)
 
     // Flip v: Canvas Y increases downward, but we want positive values to go upward.
     // The canvas origin (pan_x, canvas_height + pan_y) corresponds to world coordinate [0, 0, ...].
@@ -218,6 +221,24 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
     }, { passive: false });
 }
 
+
+
+/**
+ * Ensures every device definition in the registry has an explicitly registered draw function.
+ * If a device definition has no custom draw function registered by a pack, a color block draw function is registered for it.
+ */
+function register_default_device_draws(registry: pack_registry): void
+{
+    for (const [id, def] of registry.device_definitions.entries())
+    {
+        if (!get_device_draw(id))
+        {
+            const draw_info = def.other_info?.basic_renderer as { color?: string; border?: string; label?: string } | undefined;
+            register_color_block_draw(id, draw_info);
+        }
+    }
+}
+
 /**
  * Standard pack entry point.
  * Creates the canvas, sets up camera controls and redraw loop.
@@ -234,6 +255,7 @@ export function init_pack(): void
         return;
     }
 
+    register_default_device_draws(registry);
     adapt_camera_plane(camera, map.size.length);
 
     // Build canvas without attaching it to DOM directly (managed by UI pack).
@@ -265,3 +287,25 @@ export function init_pack(): void
     // Initial render — wait one microtask so other packs' init_pack() can finish first.
     queueMicrotask(draw);
 }
+
+/**
+ * Unified Object Export for basic_renderer pack API.
+ */
+export const basic_renderer = {
+    // Canvas & Redraw
+    get_canvas:          get_renderer_canvas,
+    resize_canvas:       resize_renderer_canvas,
+    redraw:              redraw_renderer,
+
+    // Camera & Viewport
+    get_camera:          get_camera_plane,
+    set_camera:          set_camera_plane,
+    grid_to_screen:      grid_to_screen,
+
+    // Device Draw Registry
+    register_draw:       register_device_draw,
+    register_color_draw: register_color_block_draw,
+    create_color_draw:   create_color_block_draw_fn,
+    get_draw:            get_device_draw
+};
+
