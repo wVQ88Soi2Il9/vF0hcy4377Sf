@@ -40,8 +40,8 @@ export const draw: device_draw_fn = function draw_long_bar
     sw:      number,
     sh:      number,
     zoom:    number,
-    device?: device,
-    def?:    device_definition,
+    _device?: device,
+    _def?:    device_definition,
     camera?: camera_type
 ): void
 {

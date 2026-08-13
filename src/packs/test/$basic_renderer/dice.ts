@@ -24,7 +24,7 @@ export const draw: device_draw_fn = function draw_dice
     sh:      number,
     zoom:    number,
     device?: device,
-    def?:    device_definition,
+    _def?:   device_definition,
     camera?: camera_type
 ): void
 {
