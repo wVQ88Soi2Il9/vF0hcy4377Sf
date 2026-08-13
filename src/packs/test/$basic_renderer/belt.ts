@@ -1,5 +1,7 @@
-import type { device } from '@/core/types';
+import type { device, device_definition } from '@/core/types';
+import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
+import { draw_ports } from './draw_ports';
 
 export const device_id = 'test:belt';
 
@@ -11,7 +13,9 @@ export const draw: device_draw_fn = function draw_belt
     sw:      number,
     sh:      number,
     zoom:    number,
-    device?: device
+    device?: device,
+    def?:    device_definition,
+    camera?: camera_type
 ): void
 {
     ctx.fillStyle = '#3a3a3a';
@@ -28,5 +32,11 @@ export const draw: device_draw_fn = function draw_belt
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(uid_text, sx + sw / 2, sy + sh / 2);
+
+    if (device && def)
+    {
+        draw_ports(ctx, device, def, camera);
+    }
 };
+
 

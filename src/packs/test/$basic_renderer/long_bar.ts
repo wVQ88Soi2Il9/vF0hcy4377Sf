@@ -1,6 +1,7 @@
 import type { device, device_definition } from '@/core/types';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
+import { draw_ports } from './draw_ports';
 
 export const device_id = 'test:long_bar';
 
@@ -40,8 +41,8 @@ export const draw: device_draw_fn = function draw_long_bar
     sw:      number,
     sh:      number,
     zoom:    number,
-    _device?: device,
-    _def?:    device_definition,
+    device?: device,
+    def?:    device_definition,
     camera?: camera_type
 ): void
 {
@@ -62,7 +63,7 @@ export const draw: device_draw_fn = function draw_long_bar
     }
 
     const palette = slice_palettes[palette_idx % slice_palettes.length];
-    const uid_prefix = _device ? `#${_device.unique_id}` : 'S';
+    const uid_prefix = device ? `#${device.unique_id}` : 'S';
 
     // Determine orientation of the bar in screen space (horizontal vs vertical)
     if (sw >= sh)
@@ -118,4 +119,10 @@ export const draw: device_draw_fn = function draw_long_bar
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = Math.max(1, zoom * 0.02);
     ctx.strokeRect(sx, sy, sw, sh);
+
+    if (device && def)
+    {
+        draw_ports(ctx, device, def, camera);
+    }
 };
+

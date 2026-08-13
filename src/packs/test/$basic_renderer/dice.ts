@@ -1,6 +1,7 @@
 import type { device, device_definition } from '@/core/types';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
+import { draw_ports } from './draw_ports';
 
 export const device_id = 'test:dice';
 
@@ -24,7 +25,7 @@ export const draw: device_draw_fn = function draw_dice
     sh:      number,
     zoom:    number,
     device?: device,
-    _def?:   device_definition,
+    def?:    device_definition,
     camera?: camera_type
 ): void
 {
@@ -82,4 +83,10 @@ export const draw: device_draw_fn = function draw_dice
     ctx.strokeStyle = '#cba6f7';
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
+
+    if (device && def)
+    {
+        draw_ports(ctx, device, def, camera);
+    }
 };
+
