@@ -29,13 +29,19 @@
  * drawing a solid red rectangle over the bounding box.
  */
 
+import type { device, device_definition } from '@/core/types';
+import type { camera_type } from './types';
+
 export type device_draw_fn = (
-    ctx:   CanvasRenderingContext2D,
-    sx:    number,
-    sy:    number,
-    sw:    number,
-    sh:    number,
-    zoom:  number
+    ctx:     CanvasRenderingContext2D,
+    sx:      number,
+    sy:      number,
+    sw:      number,
+    sh:      number,
+    zoom:    number,
+    device?: device,
+    def?:    device_definition,
+    camera?: camera_type
 ) => void;
 
 export interface color_block_info

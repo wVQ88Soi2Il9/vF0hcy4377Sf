@@ -61,7 +61,7 @@ export function draw_devices
         const draw_fn = get_device_draw(device.definition_id);
         if (draw_fn)
         {
-            draw_fn(ctx, sx, sy, sw, sh, camera.zoom);
+            draw_fn(ctx, sx, sy, sw, sh, camera.zoom, device, def, camera);
         }
     }
 }
