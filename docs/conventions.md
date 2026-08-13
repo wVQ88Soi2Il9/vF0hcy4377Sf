@@ -178,7 +178,15 @@ Device 的靜態定義(`shape`, `ports`)必須放在 `data/devices.json`。
 **Rule 5：Pack 介面採用物件導出 (Object Export)**  
 Pack 對外暴露的 API 與介面（例如 `basic_renderer`）必須統一導出一個以 Pack 名稱命名的 API 物件（例如 `export const basic_renderer = { ... }`）。外部模組在存取 Pack 功能時一律使用物件點號語法，維護模組邊界與命名空間。
 
+**Rule 6：Rely-Pack 擴充目錄與單向推送機制 (`$<rely_pack>/`)**  
+當 Pack A 需要為所依賴的 Pack B 提供擴充邏輯（如繪圖函式、物理邏輯等）時：
+1. 於 Pack A 內部建立 `$<pack_b_name>/` 子目錄（`$` 前綴標記為向特定 Rely Pack 擴充的點）。
+2. 被依賴的 Pack B 不知曉任何外部 Pack 的結構（維護嚴格單向依賴）。
+3. 由 Pack A 的 `index.ts` 透過 `import.meta.glob('./$<pack_b_name>/*.ts', { eager: true })` 自動動態掃描所有對應模組，並主動註冊至 Pack B。
+4. 若 Pack A 同時依賴多個 Pack（如 `basic_renderer` 與 `basic_physics`），則在 Pack A 下建立多個對應的擴充目錄（如 `$basic_renderer/` 與 `$basic_physics/`），並於 Pack A 的 `index.ts` 中分別進行 `import.meta.glob` 掃描推送。
+
 ---
+
 
 ## 5. 編譯驗證原則
 

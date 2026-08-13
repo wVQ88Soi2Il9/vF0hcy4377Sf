@@ -109,5 +109,22 @@
     ],
     "recipe_ids": [],
     "other_info": {}
+  },
+  {
+    "id": "dice",
+    "shape": [
+      [0, 0, 0]
+    ],
+    "input_ports": [
+      [-1, 0, 0],
+      [0, -1, 0]
+    ],
+    "output_ports": [
+      [1, 0, 0],
+      [0, 1, 0]
+    ],
+    "recipe_ids": [],
+    "other_info": {}
   }
 ]
+
