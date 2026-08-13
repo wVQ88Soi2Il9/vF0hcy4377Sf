@@ -69,6 +69,16 @@ export const draw: device_draw_fn = function draw_dice
         ctx.fillText(`🎲 ${face_idx + 1}`, sx + sw / 2, sy + sh / 2);
     }
 
+    if (device)
+    {
+        const uid_text = `#${device.unique_id}`;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(uid_text, sx + sw / 2, sy + 2);
+    }
+
     ctx.strokeStyle = '#cba6f7';
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);

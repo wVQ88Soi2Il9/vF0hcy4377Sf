@@ -32,12 +32,12 @@ function render_device_item
     const max_v = Math.max(...v_coords);
 
     // Convert bounding box to screen coordinates.
-    // Each cell at world coord w occupies screen pixels [w*zoom, (w+1)*zoom).
+    // Each cell anchor [x, y, z] occupies a 2x2x2 block [x, x+2) * [y, y+2) * [z, z+2).
     // Y is flipped: larger v → smaller sy (higher on screen).
     const sx = camera.pan_x + min_h * camera.zoom;
-    const sy = canvas.height + camera.pan_y - (max_v + 1) * camera.zoom;
-    const sw = (max_h - min_h + 1) * camera.zoom;
-    const sh = (max_v - min_v + 1) * camera.zoom;
+    const sy = canvas.height + camera.pan_y - (max_v + 2) * camera.zoom;
+    const sw = (max_h - min_h + 2) * camera.zoom;
+    const sh = (max_v - min_v + 2) * camera.zoom;
 
     // Retrieve and execute the registered device draw function. Every device MUST have one.
     const draw_fn = get_device_draw(device.definition_id);
@@ -72,7 +72,7 @@ export function draw_devices
         const world_cells = get_world_cells(device, def);
         let max_slice_dist = 0;
 
-        // Compute minimum distance from camera slice to the device's cell range for each non-displayed dimension.
+        // Compute minimum distance from camera slice to the device's 2x2x2 cell range for each non-displayed dimension.
         for (let i = 0; i < slices.length; i++)
         {
             if (i === dim_h || i === dim_v)
@@ -90,9 +90,9 @@ export function draw_devices
             {
                 dim_dist = min_dim - slice_val;
             }
-            else if (slice_val > max_dim)
+            else if (slice_val >= max_dim + 2)
             {
-                dim_dist = slice_val - max_dim;
+                dim_dist = slice_val - (max_dim + 2) + 1;
             }
 
             if (dim_dist > max_slice_dist)
@@ -108,19 +108,19 @@ export function draw_devices
 
         if (max_slice_dist === 1)
         {
-            // Ghost item: adjacent to slice (e.g. slice y=2 for an item occupying [0, 2) i.e. y=0,1).
+            // Ghost item: adjacent to slice (e.g. 1 unit away from [min_dim, max_dim + 2)).
             // Render entire device footprint as semi-transparent.
             ghost_items.push({ device, def, visible_cells: world_cells });
         }
         else
         {
             // Active item: intersects the slice (max_slice_dist === 0).
-            // Filter cells that lie directly on the slice plane.
+            // Filter cells that intersect the slice plane along non-displayed dimensions.
             const visible_cells = world_cells.filter(cell =>
                 cell.every((coord, i) =>
                     i === dim_h ||
                     i === dim_v ||
-                    coord === slices[i]
+                    (slices[i] >= coord && slices[i] < coord + 2)
                 )
             );
 

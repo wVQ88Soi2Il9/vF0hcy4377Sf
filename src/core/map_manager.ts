@@ -2,13 +2,13 @@ import type { game_map, device, vector, rotation } from '@/core/types';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device, trigger_select_recipe } from '@/core/hooks';
 
 /**
- * Creates a new map instance with next_unique_id starting from 0.
+ * Creates a new map instance with next_unique_id starting from 1.
  */
 export function create_map(size: vector): game_map
 {
     return {
         size,
-        unique_id: 0,
+        unique_id: 1,
         devices: []
     };
 }

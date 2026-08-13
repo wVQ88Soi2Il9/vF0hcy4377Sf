@@ -62,6 +62,7 @@ export const draw: device_draw_fn = function draw_long_bar
     }
 
     const palette = slice_palettes[palette_idx % slice_palettes.length];
+    const uid_prefix = _device ? `#${_device.unique_id}` : 'S';
 
     // Determine orientation of the bar in screen space (horizontal vs vertical)
     if (sw >= sh)
@@ -85,7 +86,7 @@ export const draw: device_draw_fn = function draw_long_bar
             ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`S${k}`, seg_x + seg_w / 2, sy + sh / 2);
+            ctx.fillText(`${uid_prefix}`, seg_x + seg_w / 2, sy + sh / 2);
         }
     }
     else
@@ -109,7 +110,7 @@ export const draw: device_draw_fn = function draw_long_bar
             ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`S${k}`, sx + sw / 2, seg_y + seg_h / 2);
+            ctx.fillText(`${uid_prefix}`, sx + sw / 2, seg_y + seg_h / 2);
         }
     }
 

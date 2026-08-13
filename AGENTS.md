@@ -24,6 +24,8 @@ Before starting **any task or writing any code** in this repository, you MUST re
 - **Pack 物件導出 (Object Export)** — 所有 Pack 對外暴露的 API/介面必須統一透過物件導出 (例如 `export const basic_renderer = { ... }`)，外部呼叫時一律使用物件點號存取。
 - **每個 Device 強制具備專屬 Draw Function** — 每個 `device_definition` 必須擁有獨立的 `draw` 繪圖函式，嚴禁在 renderer 內部進行 inline/fallback 補齊假設。
 - **Rely-Pack 擴充目錄 ($<rely_pack>/)** — 當 Pack A 需要向被依賴的 Pack B 提供擴充與整合邏輯時，在 Pack A 建立 `$<pack_b>/` 目錄放置對應模組，由 Pack A 的 `index.ts` 使用 `import.meta.glob('./$<pack_b>/*.ts', { eager: true })` 自行掃描並主動註冊至 Pack B，確保嚴格單向依賴。
+- **CMD Position 偶數座標規範** — CMD 指令傳入的 `position`（如 `create` / `move`）強制驗證各維度座標均為偶數 integer。
+- **地圖 UID 從 1 起算** — `game_map.unique_id` 從 1 開始分配，renderer 畫出 `#<uid>`，支援 `info --"<uid>"` 查詢。
 
 
 ## Unknown / TBD Policy

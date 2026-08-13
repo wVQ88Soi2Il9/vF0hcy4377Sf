@@ -81,9 +81,10 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 
 | 指令 (Command) | 語法格式 | 說明與範例 |
 | :--- | :--- | :--- |
-| `create` | `create --"<def_id>" --"<position>"` | 建立裝置至指定世界座標。<br>例：`create --"test:assembler" --"4, 4, 0"` |
-| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`unique_id`) 之裝置。<br>例：`move --"1" --"6, 2, 0"` |
+| `create` | `create --"<def_id>" --"<position>"` | 建立裝置至指定世界座標（**座標必須全為偶數**）。<br>例：`create --"test:assembler" --"4, 4, 0"` |
+| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`unique_id`) 之裝置（**座標必須全為偶數**）。<br>例：`move --"1" --"6, 2, 0"` |
 | `delete` | `delete --"<uid>"` | 刪除指定唯一 ID 之裝置。<br>例：`delete --"1"` |
+| `info` | `info --"<uid>"` | 於右側 UI 面板顯示指定唯一 ID 之裝置詳細資訊。<br>例：`info --"1"` |
 | `camera` | `camera --"<axis>=<depth>"` | 調整渲染切面視角與切片深度。<br>例：`camera --"d3=0"` 或 `camera --"d1=1, d3=0"` |
 | `rotate` | *(待重構)* | 暫時停用，執行時會傳回 TODO 訊息。 |
 | `help` | `help` | 顯示所有可用的指令說明。 |

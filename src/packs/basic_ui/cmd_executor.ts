@@ -5,6 +5,8 @@ import { basic_renderer } from '@/packs/basic_renderer';
 
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cmd_tool';
 
+import { basic_ui } from './index';
+
 function format_camera_equation(plane: view_plane): string
 {
     const map = get_map();
@@ -48,7 +50,29 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", camera --"<axis>=<depth>", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", help';
+        }
+
+        case 'info':
+        case 'get':
+        case 'inspect':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: info --"<uid>" (e.g. info --"1")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const id = parseInt(uid_str, 10);
+            if (isNaN(id))
+            {
+                return 'Error: Invalid device UID. Must be a number (e.g. info --"1").';
+            }
+            const success = basic_ui.display_device_info(id);
+            if (!success)
+            {
+                return `Error: Device ID ${id} not found.`;
+            }
+            return `Displayed info for device UID ${id}`;
         }
 
         case 'camera':
@@ -137,6 +161,11 @@ export function execute_command(input: string): string
                 return `Error: Invalid position format. Expected ${n_dim} numbers (e.g. create --"${def_id}" --"4, 4, 0").`;
             }
 
+            if (coords.some(c => Math.abs(c) % 2 !== 0))
+            {
+                return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "4, 4, 0").`;
+            }
+
             const dev = create_device(map, def_id, coords, []);
             return `Created device ${dev.definition_id} (ID: ${dev.unique_id}) at [${coords.join(', ')}]`;
         }
@@ -180,6 +209,12 @@ export function execute_command(input: string): string
             {
                 return `Error: Invalid arguments. Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;
             }
+
+            if (coords.some(c => Math.abs(c) % 2 !== 0))
+            {
+                return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "6, 2, 0").`;
+            }
+
             const existing = map.devices.find(d => d.unique_id === id);
             if (!existing)
             {
