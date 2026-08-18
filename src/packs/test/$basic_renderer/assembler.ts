@@ -25,7 +25,7 @@ export const draw: device_draw_fn = function draw_assembler
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
-    const uid_text = device ? `#${device.unique_id}` : 'ASM';
+    const uid_text = device ? `#${device.uid}` : 'ASM';
 
     ctx.fillStyle = '#4a90d9';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;

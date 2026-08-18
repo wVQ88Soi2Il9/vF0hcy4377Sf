@@ -43,12 +43,12 @@ export const draw: device_draw_fn = function draw_dice
                 depth_val += Math.abs(slices[i]);
             }
         }
-        const seed = device.unique_id + dim_h * 2 + dim_v * 3 + Math.floor(depth_val / 2);
+        const seed = device.uid + dim_h * 2 + dim_v * 3 + Math.floor(depth_val / 2);
         face_idx = Math.abs(seed) % total_faces;
     }
     else if (device)
     {
-        face_idx = Math.abs(device.unique_id) % total_faces;
+        face_idx = Math.abs(device.uid) % total_faces;
     }
 
     const face_img = dice_images[face_idx];
@@ -72,7 +72,7 @@ export const draw: device_draw_fn = function draw_dice
 
     if (device)
     {
-        const uid_text = `#${device.unique_id}`;
+        const uid_text = `#${device.uid}`;
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
         ctx.textAlign = 'center';

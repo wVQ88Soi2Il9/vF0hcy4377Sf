@@ -63,7 +63,7 @@ export const draw: device_draw_fn = function draw_long_bar
     }
 
     const palette = slice_palettes[palette_idx % slice_palettes.length];
-    const uid_prefix = device ? `#${device.unique_id}` : 'S';
+    const uid_prefix = device ? `#${device.uid}` : 'S';
 
     // Determine orientation of the bar in screen space (horizontal vs vertical)
     if (sw >= sh)

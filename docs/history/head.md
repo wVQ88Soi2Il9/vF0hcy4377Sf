@@ -4,12 +4,15 @@
 
 ## 目前使用中
 
-[0010_202608131951_ghost-layer-half-open](./0010_202608131951_ghost-layer-half-open.md) — `done`
+[0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/2
 
 ## 現在開著的（逐格）
 
-（沒有開著的項目）
+- `0011#2` · **待實作** — 實作 Recipe 函式化架構與動態上下文評估
+
+> 要做某一格：`python3 docs/history/plan-item.py 0011#2`
+> —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-（無）
+- **0011** [0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/2

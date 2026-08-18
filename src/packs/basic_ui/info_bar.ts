@@ -118,7 +118,7 @@ export function create_info_bar(): info_bar_component
 
         const header = document.createElement('div');
         header.style.cssText = 'color: #a6e3a1; font-weight: bold; font-size: 13px; border-bottom: 1px dashed #45475a; padding-bottom: 4px;';
-        header.textContent = `Device #${dev.unique_id}`;
+        header.textContent = `Device #${dev.uid}`;
 
         const def_row = document.createElement('div');
         def_row.innerHTML = `<span style="color:#89b4fa;">Definition:</span> ${dev.definition_id}`;
@@ -176,7 +176,7 @@ export function create_info_bar(): info_bar_component
             return false;
         }
 
-        const dev = map.devices.find(d => d.unique_id === uid);
+        const dev = map.devices.find(d => d.uid === uid);
         if (!dev)
         {
             content_container.innerHTML = `<div style="color:#f38ba8; background:#313244; padding:8px; border-radius:4px;">Device UID ${uid} not found.</div>`;

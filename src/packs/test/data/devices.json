@@ -14,7 +14,6 @@
       [3, 0, 0],
       [3, 2, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -28,7 +27,6 @@
     "output_ports": [
       [0, 1, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -44,7 +42,6 @@
       [1, 0, 0],
       [0, 1, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -60,7 +57,6 @@
     "output_ports": [
       [0, 1, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -79,7 +75,6 @@
       [3, 0, 0],
       [2, 2, 3]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -107,7 +102,6 @@
     "output_ports": [
       [9, 0, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   },
   {
@@ -123,8 +117,6 @@
       [1, 0, 0],
       [0, 1, 0]
     ],
-    "recipe_ids": [],
     "other_info": {}
   }
 ]
-

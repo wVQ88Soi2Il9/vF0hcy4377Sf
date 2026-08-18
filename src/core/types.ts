@@ -101,9 +101,6 @@ export interface device_definition
      */
     output_ports: vector[];
 
-    /** All recipes this device can run. Empty = no recipe needed. */
-    recipe_ids:   string[];
-
     /** Mod-extensible static metadata for the device blueprint. Core never reads this. */
     other_info:   Record<string, unknown>;
 }
@@ -113,7 +110,7 @@ export interface device_definition
 export interface device
 {
     /** Unique numerical identifier for this specific placed instance on the map */
-    unique_id:            number;
+    uid:                  number;
 
     /** Reference to device_definition.id */
     definition_id:        string;
@@ -142,8 +139,8 @@ export interface game_map
      */
     size:            vector;
 
-    /** Auto-increment counter for device unique_id generation */
-    unique_id:       number;
+    /** Auto-increment counter for device uid generation */
+    uid:             number;
 
     devices:         device[];
 }
@@ -158,7 +155,7 @@ export interface map_validation_result
 
 export interface device_node
 {
-    unique_id:      number;
+    uid:            number;
     previous_nodes: number[];
     next_nodes:     number[];
 }

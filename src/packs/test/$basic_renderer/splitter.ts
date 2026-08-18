@@ -25,7 +25,7 @@ export const draw: device_draw_fn = function draw_splitter
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
-    const uid_text = device ? `#${device.unique_id}` : 'SPL';
+    const uid_text = device ? `#${device.uid}` : 'SPL';
 
     ctx.fillStyle = '#f0a040';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;

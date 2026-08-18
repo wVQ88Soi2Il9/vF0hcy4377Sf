@@ -25,8 +25,8 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
     // Initialize all device nodes
     for (const dev of map.devices)
     {
-        nodes_map.set(dev.unique_id, {
-            unique_id: dev.unique_id,
+        nodes_map.set(dev.uid, {
+            uid: dev.uid,
             previous_nodes: [],
             next_nodes: []
         });
@@ -45,14 +45,14 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
         for (const port of out_ports)
         {
             const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }));
-            cell.out_ports.push(dev.unique_id);
+            cell.out_ports.push(dev.uid);
         }
 
         const in_ports = get_world_ports(dev, def, 'input');
         for (const port of in_ports)
         {
             const cell = port_map.get_or_insert(port, () => ({ in_ports: [], out_ports: [] }));
-            cell.in_ports.push(dev.unique_id);
+            cell.in_ports.push(dev.uid);
         }
     }
 

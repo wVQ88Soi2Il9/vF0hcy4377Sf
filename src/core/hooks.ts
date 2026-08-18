@@ -56,7 +56,7 @@ export function trigger_check_overlap
         result.overlapped.push(...res.overlapped);
     }
     
-    // Deduplicate unique_ids
+    // Deduplicate uids
     result.out_of_bounds = Array.from(new Set(result.out_of_bounds));
     result.overlapped = Array.from(new Set(result.overlapped));
     

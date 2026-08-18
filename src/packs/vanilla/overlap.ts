@@ -16,7 +16,7 @@ export function is_out_of_bounds(pos: vector, map_size: vector): boolean
  * 檢查整個地圖上的所有裝置，標記出哪些裝置超出邊界，哪些裝置發生重疊。
  * @param map 當前地圖
  * @param registry 取得定義用的 registry
- * @returns 回傳包含問題裝置 unique_id 陣列的物件
+ * @returns 回傳包含問題裝置 uid 陣列的物件
  */
 export function check_map_overlap(map: game_map, registry: pack_registry): map_validation_result
 {
@@ -25,7 +25,7 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
         overlapped: []
     };
 
-    // 紀錄每個座標對應了哪些裝置 (unique_id)
+    // 紀錄每個座標對應了哪些裝置 (uid)
     const occupied_map = new spatial_map<number[]>();
 
     // 第一階段：掃描所有裝置，記錄出界狀況並註冊佔據的格子
@@ -49,16 +49,16 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
             }
 
             // 記錄佔據
-            occupied_map.get_or_insert(cell, () => []).push(dev.unique_id);
+            occupied_map.get_or_insert(cell, () => []).push(dev.uid);
         }
 
         if (is_oob)
         {
-            result.out_of_bounds.push(dev.unique_id);
+            result.out_of_bounds.push(dev.uid);
         }
     }
 
-    // 第二階段：尋找被 2 個以上裝置佔用的格子，收集其 unique_id
+    // 第二階段：尋找被 2 個以上裝置佔用的格子，收集其 uid
     const overlapped_set = new Set<number>();
     for (const device_ids of occupied_map.values())
     {

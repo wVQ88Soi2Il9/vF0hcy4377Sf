@@ -10,7 +10,7 @@ for (const p of load_all_packs())
     load_pack(registry, p);
 }
 
-// 2. 建立測試地圖（next_unique_id 預設從 1 開始，3 維空間: 20×20×5）
+// 2. 建立測試地圖（next uid 預設從 1 開始，3 維空間: 20×20×5）
 const map = create_map([20, 20, 5]);
 
 // 3. 在 loader 呼叫 init_pack() 之前，先把 map 和 registry 注冊到 API

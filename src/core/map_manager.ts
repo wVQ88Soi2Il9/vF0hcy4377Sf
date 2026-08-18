@@ -2,20 +2,20 @@ import type { game_map, device, vector, rotation } from '@/core/types';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device, trigger_select_recipe } from '@/core/hooks';
 
 /**
- * Creates a new map instance with next_unique_id starting from 1.
+ * Creates a new map instance with next uid starting from 1.
  */
 export function create_map(size: vector): game_map
 {
     return {
         size,
-        unique_id: 1,
+        uid: 1,
         devices: []
     };
 }
 
 /**
  * Adds a device to the map.
- * Auto-assigns unique_id from map.unique_id and increments it by 1.
+ * Auto-assigns uid from map.uid and increments it by 1.
  * Modifies the map in place and returns the created device instance.
  */
 export function create_device
@@ -27,30 +27,30 @@ export function create_device
     other_info: Record<string, unknown> = {}
 ): device
 {
-    const assigned_id = map.unique_id;
+    const assigned_id = map.uid;
 
     const dev: device = 
     {   
-        unique_id: assigned_id,
+        uid: assigned_id,
         definition_id: definition_id,
         position: position,
         rotation: rotation,
         other_info: other_info
     };
 
-    map.unique_id += 1;
+    map.uid += 1;
     map.devices.push(dev);
     trigger_create_device(map, dev);
     return dev;
 }
 
 /**
- * Removes a device by its unique_id.
+ * Removes a device by its uid.
  * Modifies the map in place.
  */
-export function delete_device(map: game_map, device_unique_id: number): void
+export function delete_device(map: game_map, device_uid: number): void
 {
-    const index = map.devices.findIndex(d => d.unique_id === device_unique_id);
+    const index = map.devices.findIndex(d => d.uid === device_uid);
     if (index !== -1)
     {
         const dev = map.devices[index];
@@ -63,9 +63,9 @@ export function delete_device(map: game_map, device_unique_id: number): void
  * Moves a device.
  * Modifies the device in place.
  */
-export function move_device(map: game_map, device_unique_id: number, new_position: vector): void
+export function move_device(map: game_map, device_uid: number, new_position: vector): void
 {
-    const dev = map.devices.find(d => d.unique_id === device_unique_id);
+    const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)
     {
         const old_position = dev.position;
@@ -84,9 +84,9 @@ export function move_device(map: game_map, device_unique_id: number, new_positio
  * Rotates a device.
  * Modifies the device in place.
  */
-export function rotate_device(map: game_map, device_unique_id: number, new_rotation: rotation): void
+export function rotate_device(map: game_map, device_uid: number, new_rotation: rotation): void
 {
-    const dev = map.devices.find(d => d.unique_id === device_unique_id);
+    const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)
     {
         const old_rotation = dev.rotation;
@@ -105,9 +105,9 @@ export function rotate_device(map: game_map, device_unique_id: number, new_rotat
  * Sets or clears the selected recipe for a device.
  * Modifies the device in place.
  */
-export function select_recipe(map: game_map, device_unique_id: number, recipe_id?: string): void
+export function select_recipe(map: game_map, device_uid: number, recipe_id?: string): void
 {
-    const dev = map.devices.find(d => d.unique_id === device_unique_id);
+    const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)
     {
         const old_recipe_id = dev.selected_recipe_id;

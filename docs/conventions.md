@@ -158,7 +158,6 @@ Device 的靜態定義(`shape`, `ports`)必須放在 `data/devices.json`。
   "shape": [[0, 0, 0]],
   "input_ports": [],
   "output_ports": [],
-  "recipe_ids": [],
   "other_info": {
     "basic_renderer": {
       "color": "#1e3a5f",
@@ -189,7 +188,7 @@ Pack 對外暴露的 API 與介面（例如 `basic_renderer`）必須統一導�
 CMD 指令傳入的 `position` 參數（如 `create` / `move`）必須嚴格驗證各維度座標均為偶數 integer（`coord % 2 === 0`）。若輸入奇數座標將回傳錯誤，禁止自動或靜態修補。
 
 **Rule 8：地圖與裝置 UID 規範 (Map UID & Renderer Rule)**  
-地圖 `game_map.unique_id` 從 `1` 開始遞增分配。繪圖函式需在裝置上畫出其唯一 `#UID`，右側 UI 面板與 `info --"<uid>"` 指令可給定 UID 查詢並顯示裝置詳細資訊。
+地圖 `game_map.uid` 從 `1` 開始遞增分配。繪圖函式需在裝置上畫出其唯一 `#UID`，右側 UI 面板與 `info --"<uid>"` 指令可給定 UID 查詢並顯示裝置詳細資訊。
 
 ---
 

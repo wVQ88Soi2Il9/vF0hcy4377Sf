@@ -25,7 +25,7 @@ export const draw: device_draw_fn = function draw_irregular_3d
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
-    const uid_text = device ? `#${device.unique_id}` : '3D_IRR';
+    const uid_text = device ? `#${device.uid}` : '3D_IRR';
 
     ctx.fillStyle = '#c084fc';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;

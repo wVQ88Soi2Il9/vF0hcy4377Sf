@@ -55,7 +55,7 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 
 以 `vanilla` 為例：
 
-- `overlap.ts`：掃描地圖上所有裝置，回報出界(`out_of_bounds`)與重疊(`overlapped`)的 `unique_id`。
+- `overlap.ts`：掃描地圖上所有裝置，回報出界(`out_of_bounds`)與重疊(`overlapped`)的 `uid`。
 - `graph.ts`：依裝置輸出埠與輸入埠的世界座標是否完全重合，建立裝置之間的有向連接圖(`device_node[]`)。
 
 ### 網格與端口座標定義(Grid & Edge Ports)
@@ -82,7 +82,7 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 | 指令 (Command) | 語法格式 | 說明與範例 |
 | :--- | :--- | :--- |
 | `create` | `create --"<def_id>" --"<position>"` | 建立裝置至指定世界座標（**座標必須全為偶數**）。<br>例：`create --"test:assembler" --"4, 4, 0"` |
-| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`unique_id`) 之裝置（**座標必須全為偶數**）。<br>例：`move --"1" --"6, 2, 0"` |
+| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`uid`) 之裝置（**座標必須全為偶數**）。<br>例：`move --"1" --"6, 2, 0"` |
 | `delete` | `delete --"<uid>"` | 刪除指定唯一 ID 之裝置。<br>例：`delete --"1"` |
 | `info` | `info --"<uid>"` | 於右側 UI 面板顯示指定唯一 ID 之裝置詳細資訊。<br>例：`info --"1"` |
 | `camera` | `camera --"<axis>=<depth>"` | 調整渲染切面視角與切片深度。<br>例：`camera --"d3=0"` 或 `camera --"d1=1, d3=0"` |

@@ -167,7 +167,7 @@ export function execute_command(input: string): string
             }
 
             const dev = create_device(map, def_id, coords, []);
-            return `Created device ${dev.definition_id} (ID: ${dev.unique_id}) at [${coords.join(', ')}]`;
+            return `Created device ${dev.definition_id} (ID: ${dev.uid}) at [${coords.join(', ')}]`;
         }
 
         case 'delete':
@@ -183,7 +183,7 @@ export function execute_command(input: string): string
             {
                 return 'Error: Invalid device UID. Must be a number (e.g. delete --"1").';
             }
-            const existing = map.devices.find(d => d.unique_id === id);
+            const existing = map.devices.find(d => d.uid === id);
             if (!existing)
             {
                 return `Error: Device ID ${id} not found.`;
@@ -215,7 +215,7 @@ export function execute_command(input: string): string
                 return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "6, 2, 0").`;
             }
 
-            const existing = map.devices.find(d => d.unique_id === id);
+            const existing = map.devices.find(d => d.uid === id);
             if (!existing)
             {
                 return `Error: Device ID ${id} not found.`;
