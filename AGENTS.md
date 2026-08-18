@@ -26,6 +26,10 @@ Before starting **any task or writing any code** in this repository, you MUST re
 - **Rely-Pack 擴充目錄 ($<rely_pack>/)** — 當 Pack A 需要向被依賴的 Pack B 提供擴充與整合邏輯時，在 Pack A 建立 `$<pack_b>/` 目錄放置對應模組，由 Pack A 的 `index.ts` 使用 `import.meta.glob('./$<pack_b>/*.ts', { eager: true })` 自行掃描並主動註冊至 Pack B，確保嚴格單向依賴。
 - **CMD Position 偶數座標規範** — CMD 指令傳入的 `position`（如 `create` / `move`）強制驗證各維度座標均為偶數 integer。
 - **地圖 UID 從 1 起算** — `game_map.unique_id` 從 1 開始分配，renderer 畫出 `#<uid>`，支援 `info --"<uid>"` 查詢。
+- **Plan History 自動化處理** — Agent 處理任務時必須自動遵循 `docs/history` 工作流：
+  1. **任務讀取**：接手特定任務（如 `<seq>#<n>`）時，自動執行 `python docs/history/plan-item.py <seq>#<n>` 讀取單一項目內文與依據，避免加載整份 Plan 檔。
+  2. **狀態更新**：完成任務或變更狀態時，主動修改 Plan 檔對應項目的 `- **state:**`（如 `完成`），並記錄歷史沿革（`- H<n> · YYYY-MM-DD HH:MM <kind> —— ...`）。檔名統一精確至分鐘：`<seq>_<YYYYMMDDHHMM>_<topic>.md`。
+  3. **自動同步**：任何 Plan 檔修訂後，強制執行 `python docs/history/update-head.py` 確保 0 衝突並自動更新 `head.md`。
 
 
 ## Unknown / TBD Policy
