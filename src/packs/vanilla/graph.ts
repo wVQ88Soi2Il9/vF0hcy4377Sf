@@ -1,4 +1,5 @@
-import type { game_map, device_node } from '@/core/types';
+import type { game_map } from '@/core/types';
+import type { device_node } from './types';
 import type { pack_registry } from '@/core/pack_manager';
 import { get_device_definition } from '@/core/pack_manager';
 import { get_world_ports } from '@/utils/device_utils';

@@ -1,4 +1,5 @@
-import type { game_map, vector, map_validation_result } from '@/core/types';
+import type { game_map, vector } from '@/core/types';
+import type { map_validation_result } from './types';
 import type { pack_registry } from '@/core/pack_manager';
 import { get_world_cells } from '@/utils/device_utils';
 import { spatial_map } from '@/utils/spatial_map';

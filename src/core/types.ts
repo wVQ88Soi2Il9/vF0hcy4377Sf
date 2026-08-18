@@ -54,12 +54,6 @@ export interface item_stack
     quantity:  number;
 }
 
-export interface power_stack
-{
-    power_id:  string;
-    amount:    number;
-}
-
 // ── Recipe ───────────────────────────────────────────────────────────────────
 
 export interface recipe
@@ -68,9 +62,6 @@ export interface recipe
     duration: number;
     inputs:   item_stack[];
     outputs:  item_stack[];
-
-    /** Requires or generates power during recipe processing. Positive amount = generates, Negative amount = consumes. */
-    power?:   power_stack[];
 }
 
 // ── Device ───────────────────────────────────────────────────────────────────
@@ -102,7 +93,7 @@ export interface device_definition
     output_ports: vector[];
 
     /** Mod-extensible static metadata for the device blueprint. Core never reads this. */
-    other_info:   Record<string, unknown>;
+    other_info?:   Record<string, unknown>;
 }
 
 // ── Device Instance (動態實體) ─────────────────────────────────────────
@@ -145,18 +136,4 @@ export interface game_map
     devices:         device[];
 }
 
-// ── Validation & Graph ───────────────────────────────────────────────────────
-
-export interface map_validation_result
-{
-    out_of_bounds: number[];
-    overlapped:    number[];
-}
-
-export interface device_node
-{
-    uid:            number;
-    previous_nodes: number[];
-    next_nodes:     number[];
-}
 
