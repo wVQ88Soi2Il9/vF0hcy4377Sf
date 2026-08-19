@@ -1,4 +1,5 @@
 import type { pack, item_definition, recipe, device_definition } from '@/core/types';
+import { register_device_behavior } from '@/API';
 
 // Helper function to resolve ID with namespace
 function resolve_id(id: string, ns: string): string
@@ -8,8 +9,8 @@ function resolve_id(id: string, ns: string): string
 
 /**
  * Loads all packs automatically by scanning the folder structure.
- * 1. JSON files inside packs/*/data/*.json (items, devices)
- * 2. TypeScript recipe modules inside packs/*/recipes/*.ts
+ * 1. JSON files inside packs/[pack]/data/*.json (items, devices)
+ * 2. TypeScript recipe modules inside packs/[pack]/recipes/*.ts
  */
 export function load_all_packs(): pack[]
 {
@@ -116,11 +117,9 @@ export function load_all_packs(): pack[]
     return Array.from(namespace_map.values());
 }
 
-import { register_device_behavior } from '@/API';
-
 /**
  * Auto-discovers and calls init_pack() from every pack's index.ts,
- * and auto-discovers and registers behaviors from packs/*\/behaviors/*.ts.
+ * and auto-discovers and registers behaviors from packs/[pack]/behaviors/*.ts.
  */
 export function call_all_pack_inits(): void
 {

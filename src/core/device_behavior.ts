@@ -11,7 +11,7 @@ export abstract class device_behavior
      * Calculates the local shape cells for a given device instance.
      * Default implementation falls back to static definition shape.
      */
-    public get_shape(dev: device, def: device_definition): vector[]
+    public get_shape(_dev: device, def: device_definition): vector[]
     {
         return def.shape;
     }
@@ -20,7 +20,7 @@ export abstract class device_behavior
      * Calculates the local input port offsets for a given device instance.
      * Default implementation falls back to static definition input_ports.
      */
-    public get_input_ports(dev: device, def: device_definition): vector[]
+    public get_input_ports(_dev: device, def: device_definition): vector[]
     {
         return def.input_ports;
     }
@@ -29,7 +29,7 @@ export abstract class device_behavior
      * Calculates the local output port offsets for a given device instance.
      * Default implementation falls back to static definition output_ports.
      */
-    public get_output_ports(dev: device, def: device_definition): vector[]
+    public get_output_ports(_dev: device, def: device_definition): vector[]
     {
         return def.output_ports;
     }

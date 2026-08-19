@@ -9,7 +9,7 @@ export class pipe_behavior extends device_behavior
     /**
      * Calculates variable shape cells along X axis according to other_info.length
      */
-    public override get_shape(dev: device, def: device_definition): vector[]
+    public override get_shape(dev: device, _def: device_definition): vector[]
     {
         const len = typeof dev?.other_info?.length === 'number' ? Math.max(1, dev.other_info.length) : 1;
         const cells: vector[] = [];
@@ -23,7 +23,7 @@ export class pipe_behavior extends device_behavior
     /**
      * Calculates input port at the start of the pipe
      */
-    public override get_input_ports(dev: device, def: device_definition): vector[]
+    public override get_input_ports(_dev: device, _def: device_definition): vector[]
     {
         return [[-1, 0, 0]];
     }
@@ -31,7 +31,7 @@ export class pipe_behavior extends device_behavior
     /**
      * Calculates output port dynamically at the end of the extended pipe
      */
-    public override get_output_ports(dev: device, def: device_definition): vector[]
+    public override get_output_ports(dev: device, _def: device_definition): vector[]
     {
         const len = typeof dev?.other_info?.length === 'number' ? Math.max(1, dev.other_info.length) : 1;
         const tail_port_x = (len - 1) * 2 + 1;
@@ -53,7 +53,7 @@ export class pipe_behavior extends device_behavior
     /**
      * Lifecycle hook when pipe is placed on map
      */
-    public override on_place(dev: device, def: device_definition): void
+    public override on_place(dev: device, _def: device_definition): void
     {
         if (dev.other_info && typeof dev.other_info.length !== 'number')
         {
