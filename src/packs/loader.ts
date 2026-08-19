@@ -8,43 +8,45 @@ function resolve_id(id: string, ns: string): string
 
 /**
  * Loads all packs automatically by scanning the folder structure.
- * The folder name under `packs/` acts as the namespace for all JSON files inside its `data/` folder.
+ * 1. JSON files inside packs/*/data/*.json (items, devices)
+ * 2. TypeScript recipe modules inside packs/*/recipes/*.ts
  */
 export function load_all_packs(): pack[]
 {
-    // Vite's glob import feature to get all json files under packs/*/data/*.json
-    const pack_modules = import.meta.glob('./*/data/*.json', { eager: true }) as Record<string, any>;
-    
-    // Map to group JSON data by namespace
+    // Map to group pack data by namespace
     const namespace_map = new Map<string, pack>();
+
+    function get_or_create_pack(namespace: string): pack
+    {
+        let p = namespace_map.get(namespace);
+        if (!p)
+        {
+            p = {
+                id: namespace,
+                items: [],
+                recipes: [],
+                device_definitions: []
+            };
+            namespace_map.set(namespace, p);
+        }
+        return p;
+    }
+
+    // 1. Vite's glob import to get all JSON files under packs/*/data/*.json
+    const pack_modules = import.meta.glob('./*/data/*.json', { eager: true }) as Record<string, any>;
 
     for (const path in pack_modules)
     {
-        // Example path: './vanilla/data/devices.json'
-        // Extract namespace (e.g. 'vanilla') and filename (e.g. 'devices')
         const parts = path.split('/');
         if (parts.length < 4)
         {
             continue;
         }
-        
+
         const namespace = parts[1];
         const filename = parts[3].replace('.json', '');
-        
         const file_data = pack_modules[path].default;
-        
-        // Ensure pack exists in map
-        if (!namespace_map.has(namespace))
-        {
-            namespace_map.set(namespace, {
-                id: namespace,
-                items: [],
-                recipes: [],
-                device_definitions: []
-            });
-        }
-        
-        const current_pack = namespace_map.get(namespace)!;
+        const current_pack = get_or_create_pack(namespace);
 
         if (Array.isArray(file_data))
         {
@@ -53,40 +55,11 @@ export function load_all_packs(): pack[]
                 for (const raw_item of file_data)
                 {
                     const full_id = resolve_id(raw_item.id, namespace);
-                    current_pack.items.push({
+                    current_pack.items.push
+                    ({
                         ...raw_item,
                         id: full_id
                     } as item_definition);
-                }
-            }
-            else if (filename === 'recipes')
-            {
-                for (const raw_recipe of file_data)
-                {
-                    const full_id = resolve_id(raw_recipe.id, namespace);
-                    
-                    const processed_recipe: recipe = {
-                        ...raw_recipe,
-                        id: full_id,
-                        inputs: raw_recipe.inputs?.map((input: any) => ({
-                            ...input,
-                            item_id: resolve_id(input.item_id, namespace)
-                        })) || [],
-                        outputs: raw_recipe.outputs?.map((output: any) => ({
-                            ...output,
-                            item_id: resolve_id(output.item_id, namespace)
-                        })) || []
-                    };
-                    
-                    if (raw_recipe.power)
-                    {
-                        processed_recipe.power = raw_recipe.power.map((p: any) => ({
-                            ...p,
-                            power_id: resolve_id(p.power_id, namespace)
-                        }));
-                    }
-                    
-                    current_pack.recipes.push(processed_recipe);
                 }
             }
             else if (filename === 'devices')
@@ -94,16 +67,49 @@ export function load_all_packs(): pack[]
                 for (const raw_device of file_data)
                 {
                     const full_id = resolve_id(raw_device.id, namespace);
-                    
-                    const processed_device: device_definition = {
+
+                    const processed_device: device_definition =
+                    {
                         ...raw_device,
                         id: full_id,
                         other_info: raw_device.other_info || {}
                     };
-                    
+
                     current_pack.device_definitions.push(processed_device);
                 }
             }
+        }
+    }
+
+    // 2. Vite's glob import to get all dynamic TS recipe files under packs/*/recipes/*.ts
+    const recipe_modules = import.meta.glob('./*/recipes/*.ts', { eager: true }) as Record<string, any>;
+
+    for (const path in recipe_modules)
+    {
+        const parts = path.split('/');
+        if (parts.length < 4)
+        {
+            continue;
+        }
+
+        const namespace = parts[1];
+        const filename = parts[3].replace('.ts', '');
+        const mod = recipe_modules[path];
+        const rec_candidate = mod.recipe || mod.default || mod;
+
+        if (rec_candidate && typeof rec_candidate.evaluate === 'function')
+        {
+            const full_id = resolve_id(rec_candidate.id || filename, namespace);
+            const current_pack = get_or_create_pack(namespace);
+
+            const processed_recipe: recipe =
+            {
+                ...rec_candidate,
+                id: full_id,
+                evaluate: rec_candidate.evaluate
+            };
+
+            current_pack.recipes.push(processed_recipe);
         }
     }
 

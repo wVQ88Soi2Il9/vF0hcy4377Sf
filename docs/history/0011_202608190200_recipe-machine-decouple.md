@@ -17,7 +17,10 @@
 將 Recipe 設計為接受機器上下文（如 ID、Type、Tags、Power、Position 等）作為引數的函式架構，可動態計算相容性、生產時間、消耗/產出與能源變化。
 
 ### O3 · 2026-08-19 03:02:00+08:00 — 通用函式優先（General Function First）設計策略
-將 Recipe 核心設計為最高彈性的動態函式模型（TypeScript 模組），確立以 `machine_context` 評估的通用架構。未來若有純宣告式配置需求，可再實作 `json_to_recipe_fn` 適配器轉為函式，讓通用函式涵蓋特例資料。
+將 Recipe 核心設計為最高彈性的動態函式模型（TypeScript 模組），確立以函式評估的通用架構。未來若有純宣告式配置需求，可再實作適配器轉為函式，讓通用函式涵蓋特例資料。
+
+### O4 · 2026-08-20 02:03:00+08:00 — 採用 UID 反查簡化評估介面
+確立精簡原則，不引入額外的 context 包裝物件與多餘抽象，直接以裝置 `uid` 配合地圖與註冊表反查裝置資訊進行評估，避免過度設計。
 
 ## 待辦
 
@@ -32,12 +35,31 @@
 - H2 · 2026-08-19 02:05 落地 —— 移除 device_definition.recipe_ids 與 JSON 欄位 → O1
 
 ### 2 實作 Recipe 函式化架構與動態上下文評估
-- **state:** 待實作
+- **state:** 完成
 - **needs:** 0011#1
-- **basis:** → O2, O3
+- **basis:** → O2, O4
 
-將 Recipe 改為接收機器上下文（包含 machine id, type, tags, power, position 等引數）之函式模型，動態評估配方可用性、輸入輸出與能源轉換；Pack recipes 轉向動態 TS 模組。
+以 `uid` 配合反查機制進行 Recipe 動態評估，不做多餘封裝：
+1. 核心型別定義（recipe, recipe_evaluation, recipe_fn）
+2. 核心註冊與評估機制（依 uid 反查計算可用性與產出）
+3. Pack 載入器動態化（recipes/*.ts 掃描與 Adapter 相容）
+4. API 公開邊界擴充與生命週期整合
+5. basic_ui / test pack 實作與畫面驗證
+6. 計畫沿革與 HEAD 狀態同步
 
 **沿革**
 - H1 · 2026-08-19 02:00 決斷 —— 確定 Recipe 改為接收機器屬性引數的函式化架構 → O2
 - H2 · 2026-08-19 03:02 決斷 —— 確立「通用函式優先，JSON 視為 Adapter」架構，推動 Recipe 模組函式化 → O2, O3
+- H3 · 2026-08-19 03:52 決斷 —— 確立 6 步驟實作與整合路徑 → O2, O3
+- H4 · 2026-08-20 02:03 決斷 —— 確定採用 UID 反查簡化架構，不引入額外 context 封裝 → O4
+- H5 · 2026-08-20 02:20 落地 —— 完成 Recipe 函式化核心型別、UID 評估機制、動態掃描與 UI 整合 → O2, O4
+
+### 3 實作宣告式 JSON Recipe 相容 Adapter
+- **state:** 待實作
+- **needs:** 0011#2
+- **basis:** → O3
+
+實作宣告式 JSON 配方轉函式化 Recipe 之 Adapter 機制，使純資料配置之 JSON 配方（如 `data/recipes.json`）能無縫相容並轉換為通用動態函式模型。
+
+**沿革**
+- H1 · 2026-08-20 02:15 決斷 —— 依指示將 JSON Adapter 獨立為後續待辦事項 → O3

@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""Read and validate the plan corpus in `docs/dernoson/plan-history/`.
+"""Read and validate the plan corpus in `docs/history/`.
 
 Stdlib only — no venv needed. This module is not a CLI; it is the **single**
 definition of how a plan file is parsed, imported by every tool in this directory
 (`update-head.py`, and any reader added later).
-
-Splitting it out is not tidiness: a second hand-written parser for the same format
-is how that format starts drifting, and it would drift in the one place nothing else
-can catch — the reading of the record itself.
 
 The split is by responsibility, not by size:
 
@@ -45,20 +41,7 @@ HERE = Path(os.environ.get("PLAN_HISTORY_ROOT") or Path(__file__).resolve().pare
 
 
 def _display_root() -> str:
-    """How to spell the corpus root in text meant for a human to act on.
-
-    Whoever adopts this skill copies the corpus into *their* `docs/<name>/plan-history/`,
-    so a literal path baked into these strings would send them to someone else's
-    directory — and `head.md`, where two of these land, is generated, so they could not
-    correct it. Deriving it from `HERE` keeps the printed command pointing at the corpus
-    the reader is actually holding.
-
-    Relative to the repo root, POSIX separators: `head.md` is committed, and an absolute
-    or backslashed path would differ per machine, so a clone on another box would
-    regenerate a different file and the up-to-date check would fail. Outside a repo there
-    is nothing to be relative to and no committed file to keep stable, so the absolute
-    path — still runnable — is the better answer.
-    """
+    """How to spell the corpus root in text meant for a human to act on."""
     for parent in (HERE, *HERE.parents):
         if (parent / ".git").exists():
             return HERE.relative_to(parent).as_posix()
@@ -133,7 +116,7 @@ CURRENT_VERSION = 3
 DEFAULT_VERSION = 1
 
 # Files in this directory that are not plans.
-NON_PLAN_FILES = ("head.md", "README.md")
+NON_PLAN_FILES = ("head.md", "readme.md", "README.md")
 
 
 @dataclass

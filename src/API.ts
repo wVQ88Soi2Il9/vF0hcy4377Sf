@@ -18,7 +18,44 @@ import
     type build_graph_hook
 } from '@/core/hooks';
 
-export { create_map, create_device, delete_device, move_device, rotate_device, select_recipe } from '@/core/map_manager';
+export
+{
+    create_map,
+    create_device,
+    delete_device,
+    move_device,
+    rotate_device,
+    select_recipe
+} from '@/core/map_manager';
+
+export
+{
+    create_pack_registry,
+    load_pack,
+    unload_pack,
+    get_item,
+    get_recipe,
+    register_recipe,
+    get_device_definition,
+    evaluate_recipe,
+    type pack_registry
+} from '@/core/pack_manager';
+
+export type
+{
+    vector,
+    rotation_plane,
+    rotation,
+    pack,
+    item_definition,
+    item_stack,
+    recipe_evaluation,
+    recipe_fn,
+    recipe,
+    device_definition,
+    device,
+    game_map
+} from '@/core/types';
 
 export type unsubscribe_function = () => void;
 

@@ -56,12 +56,35 @@ export interface item_stack
 
 // ── Recipe ───────────────────────────────────────────────────────────────────
 
+export interface recipe_evaluation
+{
+    /** Whether this recipe is valid / compatible for the given context */
+    valid:       boolean;
+
+    /** Processing duration */
+    duration:    number;
+
+    /** Dynamic input items required */
+    inputs:      item_stack[];
+
+    /** Dynamic output items produced */
+    outputs:     item_stack[];
+
+    /** Mod-extensible evaluation metadata */
+    other_info?: Record<string, unknown>;
+}
+
+/**
+ * Dynamic recipe evaluation function.
+ * Evaluates recipe compatibility, duration, inputs, and outputs for a given device instance UID.
+ */
+export type recipe_fn = (uid?: number) => recipe_evaluation;
+
 export interface recipe
 {
-    id:       string;
-    duration: number;
-    inputs:   item_stack[];
-    outputs:  item_stack[];
+    id:          string;
+    evaluate:    recipe_fn;
+    other_info?: Record<string, unknown>;
 }
 
 // ── Device ───────────────────────────────────────────────────────────────────

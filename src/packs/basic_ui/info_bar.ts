@@ -1,6 +1,6 @@
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
+import { get_device_definition, evaluate_recipe } from '@/API';
 import { get_map, get_registry } from '@/runtime';
-import { get_device_definition } from '@/core/pack_manager';
 
 export interface info_bar_stats
 {
@@ -140,6 +140,33 @@ export function create_info_bar(): info_bar_component
         card.appendChild(pos_row);
         card.appendChild(rot_row);
         card.appendChild(recipe_row);
+
+        const registry = get_registry();
+        if (dev.selected_recipe_id && registry)
+        {
+            const evaluation = evaluate_recipe(registry, dev.selected_recipe_id, dev.uid);
+            if (evaluation)
+            {
+                const eval_card = document.createElement('div');
+                eval_card.style.cssText = 'background: #11111b; border: 1px solid #313244; border-radius: 4px; padding: 6px; margin-top: 2px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;';
+
+                const valid_color = evaluation.valid ? '#a6e3a1' : '#f38ba8';
+                const status_text = evaluation.valid ? 'VALID' : 'INVALID / INCOMPATIBLE';
+                eval_card.innerHTML = `
+                    <div><span style="color:#cba6f7;">Evaluation:</span> <b style="color:${valid_color};">${status_text}</b></div>
+                    <div><span style="color:#fab387;">Duration:</span> ${evaluation.duration}s</div>
+                    <div><span style="color:#89dceb;">Inputs:</span> ${JSON.stringify(evaluation.inputs)}</div>
+                    <div><span style="color:#a6e3a1;">Outputs:</span> ${JSON.stringify(evaluation.outputs)}</div>
+                `.trim();
+
+                if (evaluation.other_info && Object.keys(evaluation.other_info).length > 0)
+                {
+                    eval_card.innerHTML += `<div><span style="color:#f5c2e7;">Extra:</span> ${JSON.stringify(evaluation.other_info)}</div>`;
+                }
+
+                card.appendChild(eval_card);
+            }
+        }
 
         if (def)
         {

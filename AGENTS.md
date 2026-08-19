@@ -26,7 +26,7 @@ Before starting **any task or writing any code** in this repository, you MUST re
 - **Rely-Pack 擴充目錄 ($<rely_pack>/)** — 當 Pack A 需要向被依賴的 Pack B 提供擴充與整合邏輯時，在 Pack A 建立 `$<pack_b>/` 目錄放置對應模組，由 Pack A 的 `index.ts` 使用 `import.meta.glob('./$<pack_b>/*.ts', { eager: true })` 自行掃描並主動註冊至 Pack B，確保嚴格單向依賴。
 - **CMD Position 偶數座標規範** — CMD 指令傳入的 `position`（如 `create` / `move`）強制驗證各維度座標均為偶數 integer。
 - **地圖 UID 從 1 起算** — `game_map.uid` 從 1 開始分配，renderer 畫出 `#<uid>`，支援 `info --"<uid>"` 查詢。
-- **不主動執行 `npx tsc -b`** — 除非使用者明確指示，否則 Agent 嚴禁主動執行 `npx tsc -b` 或型別檢查指令。
+- **不主動執行 `npx tsc -b`** — 除非使用者明確指示，否則 Agent 不要主動執行 `npx tsc -b` 或型別檢查指令。
 - **Git 指令自動執行 (Direct Git Execution)** — 當收到 Git 相關指示（如 `git commit`）時，直接自動完成 `git add`、生成 commit message 並執行 `git commit`，毋需再提問或請求確認。
 - **架構轉型不是問題 (Architecture Transformation Is Not An Issue)** — 不受限於現有實作或歷史包袱，只要符合設計目標與需求，隨時可進行深度的架構重構與轉型（例如從純靜態 JSON 轉向函式化/動態模組），勇於打破現狀重塑架構。
 - **Plan History 自動化處理** — 修改 `docs/history` 計畫檔案與狀態屬於日常追蹤流程，Agent 自行自動處理，**不必再向使用者請求確認**：
@@ -37,4 +37,4 @@ Before starting **any task or writing any code** in this repository, you MUST re
 
 ## Unknown / TBD Policy
 
-If something is marked `⚠️ unknown` in the docs, **do not implement it based on assumptions**. Flag it explicitly in code with a `// TODO: unknown — [reason]` comment and notify the user.
+If something is marked `⚠️ unknown` in the docs, **do not implement it based on assumptions**. Flag it explicitly in code with a `// TODO: unknown — [reason]` comment and notify the user.

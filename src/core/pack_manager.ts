@@ -1,4 +1,4 @@
-import type { pack, item_definition, recipe, device_definition } from '@/core/types';
+import type { pack, item_definition, recipe, recipe_evaluation, device_definition } from '@/core/types';
 
 export interface pack_registry
 {
@@ -97,10 +97,37 @@ export function get_recipe(registry: pack_registry, id: string): recipe | undefi
 }
 
 /**
+ * 直接註冊單一配方至 registry
+ */
+export function register_recipe(registry: pack_registry, recipe: recipe): void
+{
+    registry.recipes.set(recipe.id, recipe);
+}
+
+/**
  * 透過 ID 取得設備定義
  */
 export function get_device_definition(registry: pack_registry, id: string): device_definition | undefined
 {
     return registry.device_definitions.get(id);
+}
+
+/**
+ * 評估指定配方在指定裝置實體（uid）或全局上下文中的結果。
+ * 若配方不存在則回傳 undefined。
+ */
+export function evaluate_recipe
+(
+    registry: pack_registry,
+    recipe_id: string,
+    uid?: number
+): recipe_evaluation | undefined
+{
+    const rec = registry.recipes.get(recipe_id);
+    if (!rec)
+    {
+        return undefined;
+    }
+    return rec.evaluate(uid);
 }
 

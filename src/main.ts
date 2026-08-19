@@ -1,9 +1,9 @@
-import { create_map, create_device } from '@/API';
+import { create_map, create_device, select_recipe } from '@/API';
 import { set_map, set_registry } from '@/runtime';
 import { create_pack_registry, load_pack } from '@/core/pack_manager';
 import { load_all_packs, call_all_pack_inits } from './packs/loader';
 
-// 1. 建立 registry，載入所有 JSON 資料
+// 1. 建立 registry，載入所有 JSON 資料與動態配方模組
 const registry = create_pack_registry();
 for (const p of load_all_packs())
 {
@@ -22,7 +22,9 @@ set_registry(registry);
 call_all_pack_inits();
 
 // 5. 放些 3D 測試設備（包含 3D 不規則圖形裝置）
-create_device(map, 'test:assembler', [2, 2, 0], [], {});
+const dev1 = create_device(map, 'test:assembler', [2, 2, 0], [], {});
+select_recipe(map, dev1.uid, 'test:iron_gear');
+
 create_device(map, 'test:irregular_3d', [4, 4, 0], [], {});
 create_device(map, 'test:belt', [6, 2, 0], [], {});
 create_device(map, 'test:splitter', [8, 2, 0], [], {});

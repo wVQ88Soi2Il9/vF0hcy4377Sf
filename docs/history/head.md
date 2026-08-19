@@ -4,15 +4,15 @@
 
 ## 目前使用中
 
-[0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/2
+[0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/3
 
 ## 現在開著的（逐格）
 
-- `0011#2` · **待實作** — 實作 Recipe 函式化架構與動態上下文評估
+- `0011#3` · **待實作** — 實作宣告式 JSON Recipe 相容 Adapter
 
-> 要做某一格：`python3 docs/history/plan-item.py 0011#2`
+> 要做某一格：`python3 docs/history/plan-item.py 0011#3`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0011** [0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/2
+- **0011** [0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/3

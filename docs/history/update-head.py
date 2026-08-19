@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Regenerate `head.md` and check `docs/dernoson/plan-history/` for internal conflicts.
+"""Regenerate `head.md` and check `docs/history/` for internal conflicts.
 
 Stdlib only — no venv needed. Parsing and the consistency rules live in
 `plan_parse.py`, which every tool in this directory shares; this file is only the
 `head.md` rendering and the CLI/hook around it.
 
-    python3 docs/dernoson/plan-history/update-head.py          # manual run, report on stdout
-    python3 docs/dernoson/plan-history/update-head.py --check  # check only, never write head.md
-    python3 docs/dernoson/plan-history/update-head.py --hook   # PostToolUse hook (reads hook JSON on stdin)
+    python docs/history/update-head.py          # manual run, report on stdout
+    python docs/history/update-head.py --check  # check only, never write head.md
+    python docs/history/update-head.py --hook   # PostToolUse hook (reads hook JSON on stdin)
 
 `head.md` is a pure function of the plan files (no timestamp), so a no-op run
 produces a byte-identical file and never shows up as a spurious diff.
@@ -24,6 +24,7 @@ from pathlib import Path
 
 from plan_parse import (
     HERE,
+    NON_PLAN_FILES,
     ROOT_DISPLAY,
     Conflict,
     Plan,
@@ -160,7 +161,7 @@ def hook_should_run() -> bool:
         path = Path(raw).resolve()
     except OSError:
         return False
-    return path.parent == HERE and path.name != "head.md" and path.suffix == ".md"
+    return path.parent == HERE and path.name not in NON_PLAN_FILES and path.suffix == ".md"
 
 
 def main() -> int:
