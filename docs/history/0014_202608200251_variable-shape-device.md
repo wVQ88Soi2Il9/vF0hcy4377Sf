@@ -28,6 +28,9 @@
 ### O2 · 2026-08-20 02:51:21+08:00 — 採納方案 1（可變形 Device）作為架構擴充
 經方案評估與業界（如 Satisfactory）傳送帶/管線設計參考，管線在資料層應視為「單一實體 + 變形參數」。此決定為刻意之架構擴充（類似 0011 Recipe 函式化），純靜態 Device 依然合法，新增支援動態 Device。
 
+### O3 · 2026-08-20 03:50:00+08:00 — OOP Device Behavior 原型驗證
+在分支 `feat/oop-device-behavior` 實作 OOP `device_behavior` 抽象類別與多型註冊機制。資料層（`device`）依然維持純資料結構可序列化，行為（shape/ports 動態計算、lifecycle、resize）由 `device_behavior` 封裝。靜態裝置繼承預設行為零改動相容，動態裝置（如 `test:pipe`）可在行為內部統一調度 shape 與 port 計算。
+
 ## 待辦
 
 ### 1 決斷 Shape 覆寫機制與 Core 型別定義
