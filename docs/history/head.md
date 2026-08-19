@@ -8,11 +8,17 @@
 
 ## 現在開著的（逐格）
 
+- `0014#1` · **待決斷** — 決斷 Shape 覆寫機制與 Core 型別定義
+- `0014#2` · **待決斷** — 決斷 API 變形操作與 Hook 機制
+- `0014#3` · **待決斷** — 決斷 Loader 掃描與註冊方式
+- `0014#4` · **待決斷** — 決斷 Port 座標與 Grid 架構影響
+- `0014#5` · **待決斷** — 決斷 Conventions 規範修訂
 - `0011#3` · **待實作** — 實作宣告式 JSON Recipe 相容 Adapter
 
-> 要做某一格：`python3 docs/history/plan-item.py 0011#3`
+> 要做某一格：`python3 docs/history/plan-item.py 0014#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0014** [0014_202608200251_variable-shape-device](./0014_202608200251_variable-shape-device.md) — `draft`
 - **0011** [0011_202608190200_recipe-machine-decouple](./0011_202608190200_recipe-machine-decouple.md) — `in-progress`，待辦待決剩 1/3
