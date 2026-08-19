@@ -118,5 +118,18 @@
       [0, 1, 0]
     ],
     "other_info": {}
+  },
+  {
+    "id": "pipe",
+    "shape": [
+      [0, 0, 0]
+    ],
+    "input_ports": [
+      [-1, 0, 0]
+    ],
+    "output_ports": [
+      [1, 0, 0]
+    ],
+    "other_info": {}
   }
 ]

@@ -1,14 +1,12 @@
 import type { device, vector, device_definition } from '@/core/types';
-import { add_vector, rotate_vector } from '@/utils/math';
+import { get_device_behavior } from '@/core/device_behavior';
 
 /**
  * Gets the world coordinates of all cells occupied by a device.
  */
 export function get_world_cells(dev: device, def: device_definition): vector[]
 {
-    return def.shape.map(pos => 
-        add_vector(dev.position, rotate_vector(pos, dev.rotation))
-    );
+    return get_device_behavior(def.id).get_world_cells(dev, def);
 }
 
 /**
@@ -16,9 +14,6 @@ export function get_world_cells(dev: device, def: device_definition): vector[]
  */
 export function get_world_ports(dev: device, def: device_definition, type: 'input' | 'output'): vector[]
 {
-    const ports = type === 'input' ? def.input_ports : def.output_ports;
-    return ports.map(port => 
-        add_vector(dev.position, rotate_vector(port, dev.rotation))
-    );
+    return get_device_behavior(def.id).get_world_ports(dev, def, type);
 }
 

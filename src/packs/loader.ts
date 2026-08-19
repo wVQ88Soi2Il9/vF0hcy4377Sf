@@ -116,12 +116,38 @@ export function load_all_packs(): pack[]
     return Array.from(namespace_map.values());
 }
 
+import { register_device_behavior } from '@/API';
+
 /**
- * Auto-discovers and calls init_pack() from every pack's index.ts.
- * Any pack that exports init_pack() will be initialized automatically.
+ * Auto-discovers and calls init_pack() from every pack's index.ts,
+ * and auto-discovers and registers behaviors from packs/*\/behaviors/*.ts.
  */
 export function call_all_pack_inits(): void
 {
+    // 1. Scan and register dynamic device behaviors
+    const behavior_modules = import.meta.glob('./*/behaviors/*.ts', { eager: true }) as Record<string, any>;
+
+    for (const path in behavior_modules)
+    {
+        const parts = path.split('/');
+        if (parts.length < 4)
+        {
+            continue;
+        }
+
+        const namespace = parts[1];
+        const filename = parts[3].replace('.ts', '');
+        const mod = behavior_modules[path];
+        const behavior_candidate = mod.behavior || mod.default || mod;
+
+        if (behavior_candidate && typeof behavior_candidate.get_shape === 'function')
+        {
+            const full_id = resolve_id(mod.device_id || filename, namespace);
+            register_device_behavior(full_id, behavior_candidate);
+        }
+    }
+
+    // 2. Call pack initializers
     const init_modules = import.meta.glob('./*/index.ts', { eager: true }) as Record<string, { init_pack?: () => void }>;
 
     for (const path in init_modules)

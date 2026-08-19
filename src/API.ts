@@ -41,6 +41,20 @@ export
     type pack_registry
 } from '@/core/pack_manager';
 
+export
+{
+    device_behavior,
+    default_device_behavior,
+    register_device_behavior,
+    get_device_behavior
+} from '@/core/device_behavior';
+
+export
+{
+    get_world_cells,
+    get_world_ports
+} from '@/utils/device_utils';
+
 export type
 {
     vector,

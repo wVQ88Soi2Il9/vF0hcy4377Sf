@@ -28,3 +28,4 @@ select_recipe(map, dev1.uid, 'test:iron_gear');
 create_device(map, 'test:irregular_3d', [4, 4, 0], [], {});
 create_device(map, 'test:belt', [6, 2, 0], [], {});
 create_device(map, 'test:splitter', [8, 2, 0], [], {});
+create_device(map, 'test:pipe', [10, 6, 0], [], { length: 3 });
