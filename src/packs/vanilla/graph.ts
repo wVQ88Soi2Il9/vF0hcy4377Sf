@@ -1,7 +1,6 @@
-import type { game_map } from '@/core/types';
+import type { game_map, pack_registry } from '@/API';
+import { get_device_definition } from '@/API';
 import type { device_node } from './types';
-import type { pack_registry } from '@/core/pack_manager';
-import { get_device_definition } from '@/core/pack_manager';
 import { get_world_ports } from '@/utils/device_utils';
 import { spatial_map } from '@/utils/spatial_map';
 
@@ -95,4 +94,3 @@ export function build_device_graph(map: game_map, registry: pack_registry): devi
     // Return as array format
     return Array.from(nodes_map.values());
 }
-

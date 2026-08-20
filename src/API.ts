@@ -41,6 +41,13 @@ export
     type pack_registry
 } from '@/core/pack_manager';
 
+export
+{
+    recipe_base,
+    device_definition_base,
+    device
+} from '@/core/types';
+
 export type
 {
     vector,
@@ -53,7 +60,6 @@ export type
     recipe_fn,
     recipe,
     device_definition,
-    device,
     game_map
 } from '@/core/types';
 

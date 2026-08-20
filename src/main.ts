@@ -1,9 +1,8 @@
-import { create_map, create_device, select_recipe } from '@/API';
+import { create_map, create_device, select_recipe, create_pack_registry, load_pack } from '@/API';
 import { set_map, set_registry } from '@/runtime';
-import { create_pack_registry, load_pack } from '@/core/pack_manager';
 import { load_all_packs, call_all_pack_inits } from './packs/loader';
 
-// 1. 建立 registry，載入所有 JSON 資料與動態配方模組
+// 1. 建立 registry，載入所有資料與 OOP 裝置/配方模組
 const registry = create_pack_registry();
 for (const p of load_all_packs())
 {

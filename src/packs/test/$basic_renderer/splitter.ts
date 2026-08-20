@@ -1,4 +1,4 @@
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
 import { draw_ports } from './draw_ports';
@@ -18,16 +18,16 @@ export const draw: device_draw_fn = function draw_splitter
     camera?: camera_type
 ): void
 {
-    ctx.fillStyle = '#4a2800';
+    ctx.fillStyle = '#1e4f4a';
     ctx.fillRect(sx, sy, sw, sh);
 
-    ctx.strokeStyle = '#f0a040';
+    ctx.strokeStyle = '#1abc9c';
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
     const uid_text = device ? `#${device.uid}` : 'SPL';
 
-    ctx.fillStyle = '#f0a040';
+    ctx.fillStyle = '#1abc9c';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -38,5 +38,3 @@ export const draw: device_draw_fn = function draw_splitter
         draw_ports(ctx, device, def, camera);
     }
 };
-
-

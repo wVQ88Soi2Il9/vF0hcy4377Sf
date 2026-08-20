@@ -1,15 +1,14 @@
-import type { recipe, recipe_evaluation } from '@/API';
+import { recipe_base, type recipe_evaluation } from '@/API';
 import { get_map } from '@/runtime';
 
-/**
- * Iron Gear recipe:
- * Evaluates dynamically based on the device instance (uid).
- * Only 'test:assembler' can manufacture iron gears.
- */
-export const recipe: recipe =
+export class iron_gear_recipe extends recipe_base
 {
-    id: 'iron_gear',
-    evaluate(uid?: number): recipe_evaluation
+    constructor()
+    {
+        super('iron_gear');
+    }
+
+    public evaluate(uid?: number): recipe_evaluation
     {
         if (uid !== undefined)
         {
@@ -18,16 +17,16 @@ export const recipe: recipe =
             if (dev && dev.definition_id !== 'test:assembler')
             {
                 return {
-                    valid: false,
+                    valid:    false,
                     duration: 0,
-                    inputs: [],
-                    outputs: []
+                    inputs:   [],
+                    outputs:  []
                 };
             }
         }
 
         return {
-            valid: true,
+            valid:    true,
             duration: 2.0,
             inputs:
             [
@@ -39,6 +38,7 @@ export const recipe: recipe =
             ]
         };
     }
-};
+}
 
+export const recipe = new iron_gear_recipe();
 export default recipe;

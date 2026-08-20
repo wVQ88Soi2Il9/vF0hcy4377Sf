@@ -1,14 +1,14 @@
-import type { recipe, recipe_evaluation } from '@/API';
+import { recipe_base, type recipe_evaluation } from '@/API';
 import { get_map } from '@/runtime';
 
-/**
- * Advanced Circuit recipe:
- * Dynamic evaluation: Valid for assemblers; duration scales with height/altitude (Z axis).
- */
-export const recipe: recipe =
+export class advanced_circuit_recipe extends recipe_base
 {
-    id: 'advanced_circuit',
-    evaluate(uid?: number): recipe_evaluation
+    constructor()
+    {
+        super('advanced_circuit');
+    }
+
+    public evaluate(uid?: number): recipe_evaluation
     {
         let altitude = 0;
 
@@ -21,21 +21,20 @@ export const recipe: recipe =
                 if (dev.definition_id !== 'test:assembler')
                 {
                     return {
-                        valid: false,
+                        valid:    false,
                         duration: 0,
-                        inputs: [],
-                        outputs: []
+                        inputs:   [],
+                        outputs:  []
                     };
                 }
                 altitude = dev.position.length > 2 ? dev.position[2] : 0;
             }
         }
 
-        // Higher altitude speeds up cooling/processing
         const duration = Math.max(1.0, 5.0 - altitude * 0.5);
 
         return {
-            valid: true,
+            valid:    true,
             duration: duration,
             inputs:
             [
@@ -52,6 +51,7 @@ export const recipe: recipe =
             }
         };
     }
-};
+}
 
+export const recipe = new advanced_circuit_recipe();
 export default recipe;

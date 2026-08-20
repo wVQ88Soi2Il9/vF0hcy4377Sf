@@ -1,5 +1,5 @@
 import grid_svg_url from './assets/grid.svg';   // Vite 幫你轉成 URL
-import type { game_map } from '@/core/types';
+import type { game_map } from '@/API';
 import type { camera_type } from './types';
 
 const SVG_SIZE = 128;   // 你的 SVG 是 128×128

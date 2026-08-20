@@ -1,4 +1,4 @@
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
 import { draw_ports } from './draw_ports';
@@ -18,16 +18,16 @@ export const draw: device_draw_fn = function draw_belt
     camera?: camera_type
 ): void
 {
-    ctx.fillStyle = '#3a3a3a';
+    ctx.fillStyle = '#2d4f1e';
     ctx.fillRect(sx, sy, sw, sh);
 
-    ctx.strokeStyle = '#aaaaaa';
+    ctx.strokeStyle = '#5cb85c';
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
-    const uid_text = device ? `#${device.uid}` : '↑';
+    const uid_text = device ? `#${device.uid}` : 'BLT';
 
-    ctx.fillStyle = '#aaaaaa';
+    ctx.fillStyle = '#5cb85c';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -38,5 +38,3 @@ export const draw: device_draw_fn = function draw_belt
         draw_ports(ctx, device, def, camera);
     }
 };
-
-

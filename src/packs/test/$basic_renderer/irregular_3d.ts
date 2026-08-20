@@ -1,4 +1,4 @@
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
 import { draw_ports } from './draw_ports';
@@ -18,16 +18,16 @@ export const draw: device_draw_fn = function draw_irregular_3d
     camera?: camera_type
 ): void
 {
-    ctx.fillStyle = '#6b21a8';
+    ctx.fillStyle = '#5c2d3a';
     ctx.fillRect(sx, sy, sw, sh);
 
-    ctx.strokeStyle = '#c084fc';
+    ctx.strokeStyle = '#e056fd';
     ctx.lineWidth = Math.max(1, zoom * 0.04);
     ctx.strokeRect(sx, sy, sw, sh);
 
-    const uid_text = device ? `#${device.uid}` : '3D_IRR';
+    const uid_text = device ? `#${device.uid}` : '3D';
 
-    ctx.fillStyle = '#c084fc';
+    ctx.fillStyle = '#e056fd';
     ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -38,5 +38,3 @@ export const draw: device_draw_fn = function draw_irregular_3d
         draw_ports(ctx, device, def, camera);
     }
 };
-
-

@@ -1,4 +1,4 @@
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer/types';
 import type { device_draw_fn } from '@/packs/basic_renderer/draw_registry';
 import { draw_ports } from './draw_ports';
@@ -38,5 +38,3 @@ export const draw: device_draw_fn = function draw_assembler
         draw_ports(ctx, device, def, camera);
     }
 };
-
-

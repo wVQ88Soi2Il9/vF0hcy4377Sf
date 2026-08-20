@@ -1,6 +1,5 @@
-import type { game_map, device, device_definition } from '@/core/types';
-import type { pack_registry } from '@/core/pack_manager';
-import { get_device_definition } from '@/core/pack_manager';
+import type { game_map, device, device_definition, pack_registry } from '@/API';
+import { get_device_definition } from '@/API';
 import { get_world_cells } from '@/utils/device_utils';
 import type { camera_type } from './types';
 import { get_device_draw } from './draw_registry';

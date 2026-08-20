@@ -1,9 +1,8 @@
-import type { game_map, vector } from '@/core/types';
+import type { game_map, vector, pack_registry } from '@/API';
+import { get_device_definition } from '@/API';
 import type { map_validation_result } from './types';
-import type { pack_registry } from '@/core/pack_manager';
 import { get_world_cells } from '@/utils/device_utils';
 import { spatial_map } from '@/utils/spatial_map';
-import { get_device_definition } from '@/core/pack_manager';
 
 /**
  * 檢查座標是否超出地圖邊界 (N 維通用)
@@ -76,5 +75,3 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
 
     return result;
 }
-
-

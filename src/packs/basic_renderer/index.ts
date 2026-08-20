@@ -2,9 +2,8 @@ import type { camera_type, view_plane } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
 import { get_device_draw, register_device_draw, register_color_block_draw, create_color_block_draw_fn } from './draw_registry';
-import { on_device_change } from '@/API';
+import { on_device_change, type pack_registry } from '@/API';
 import { get_map, get_registry } from '@/runtime';
-import type { pack_registry } from '@/core/pack_manager';
 
 let renderer_canvas: HTMLCanvasElement | null = null;
 let current_draw_fn: (() => void) | null = null;
@@ -221,8 +220,6 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
     }, { passive: false });
 }
 
-
-
 /**
  * Ensures every device definition in the registry has an explicitly registered draw function.
  * If a device definition has no custom draw function registered by a pack, a color block draw function is registered for it.
@@ -308,4 +305,3 @@ export const basic_renderer = {
     create_color_draw:   create_color_block_draw_fn,
     get_draw:            get_device_draw
 };
-

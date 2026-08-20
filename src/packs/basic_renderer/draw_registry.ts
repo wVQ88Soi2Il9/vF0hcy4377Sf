@@ -29,7 +29,7 @@
  * drawing a solid red rectangle over the bounding box.
  */
 
-import type { device, device_definition } from '@/core/types';
+import type { device, device_definition } from '@/API';
 import type { camera_type } from './types';
 
 export type device_draw_fn = (
@@ -122,5 +122,3 @@ export function get_device_draw(definition_id: string): device_draw_fn | undefin
 {
     return registry.get(definition_id);
 }
-
-

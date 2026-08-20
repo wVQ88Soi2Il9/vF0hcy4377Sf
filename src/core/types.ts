@@ -30,7 +30,7 @@ export type rotation = rotation_plane[];
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 
- * 代表一個從 JSON 載入的資料包 (Mod / Base Game)
+ * 代表一個從模組載入的資料包 (Mod / Base Game)
  */
 export interface pack
 {
@@ -87,59 +87,76 @@ export interface recipe
     other_info?: Record<string, unknown>;
 }
 
-// ── Device ───────────────────────────────────────────────────────────────────
+/**
+ * Base OOP class for recipes.
+ * Packs can extend recipe_base to provide custom dynamic evaluation logic.
+ */
+export class recipe_base implements recipe
+{
+    constructor
+    (
+        public id:         string,
+        public other_info: Record<string, unknown> = {}
+    )
+    {
+    }
 
-// ── Device Definition (靜態藍圖 / 原型) ───────────────────────────────────
+    public evaluate(_uid?: number): recipe_evaluation
+    {
+        return {
+            valid:      true,
+            duration:   1,
+            inputs:     [],
+            outputs:    [],
+            other_info: this.other_info
+        };
+    }
+}
+
+// ── Device ───────────────────────────────────────────────────────────────────
 
 export interface device_definition
 {
-    /** Unique identifier for the device type, e.g. "assembler_mk1" */
     id:           string;
-
-    /**
-     * Cells this device occupies, as local offsets from anchor (before rotation).
-     * e.g. [[0,0,0], [2,0,0]] = 1×2 horizontal device in 3D half-grid coords.
-     */
     shape:        vector[];
-
-    /**
-     * Input port positions, local offsets (before rotation).
-     * A port is defined as the coordinate of the ADJACENT cell it connects to.
-     * Example: If device is at [0,0], a right-facing port is at [1,0].
-     */
     input_ports:  vector[];
-
-    /** 
-     * Output port positions, local offsets (before rotation). 
-     * Defined as the coordinate of the ADJACENT cell.
-     */
     output_ports: vector[];
-
-    /** Mod-extensible static metadata for the device blueprint. Core never reads this. */
-    other_info?:   Record<string, unknown>;
+    other_info?:  Record<string, unknown>;
 }
 
-// ── Device Instance (動態實體) ─────────────────────────────────────────
-
-export interface device
+/**
+ * Base OOP class for device blueprints / definitions.
+ */
+export class device_definition_base implements device_definition
 {
-    /** Unique numerical identifier for this specific placed instance on the map */
-    uid:                  number;
+    constructor
+    (
+        public id:           string,
+        public shape:        vector[] = [],
+        public input_ports:  vector[] = [],
+        public output_ports: vector[] = [],
+        public other_info:   Record<string, unknown> = {}
+    )
+    {
+    }
+}
 
-    /** Reference to device_definition.id */
-    definition_id:        string;
-
-    /** Anchor cell in world coordinates (N-dimensional). */
-    position:             vector;
-
-    /** Ordered list of plane rotations applied to all local offset vectors before adding position. */
-    rotation:             rotation;
-
-    /** The recipe currently selected by the player to be processed by this device */
-    selected_recipe_id?:  string;
-
-    /** Mod-extensible dynamic metadata (e.g. inventory, working status, progress). Core never reads this. */
-    other_info?:           Record<string, unknown>;
+/**
+ * OOP Device class representing a placed device on the map.
+ */
+export class device
+{
+    constructor
+    (
+        public uid:                 number,
+        public definition_id:       string,
+        public position:            vector,
+        public rotation:            rotation = [],
+        public other_info:          Record<string, unknown> = {},
+        public selected_recipe_id?: string
+    )
+    {
+    }
 }
 
 // ── Map ──────────────────────────────────────────────────────────────────────
@@ -158,5 +175,3 @@ export interface game_map
 
     devices:         device[];
 }
-
-
