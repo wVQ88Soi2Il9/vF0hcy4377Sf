@@ -26,7 +26,7 @@ export function draw_grid
     const pattern = ctx.createPattern(grid_img, 'repeat')!;
 
     // 讓 pattern 跟著 camera 移動和縮放
-    pattern.setTransform(new DOMMatrix()
+    pattern.setTransform(new DOMMatrix()ㄍ
         .translate(camera.pan_x, canvas.height + camera.pan_y)
         .scale(camera.zoom / SVG_TILE_SIZE)
     );
@@ -47,8 +47,11 @@ export function draw_grid
         const sw = size_h * camera.zoom;
         const sh = size_v * camera.zoom;
 
+        const border_lw = Math.max(4, camera.zoom * 0.08);
+        const half_border_lw = border_lw / 2;
+
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = Math.max(4, camera.zoom * 0.08);
-        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.lineWidth = border_lw;
+        ctx.strokeRect(sx - half_border_lw, sy - half_border_lw, sw + border_lw, sh + border_lw);
     }
 }
