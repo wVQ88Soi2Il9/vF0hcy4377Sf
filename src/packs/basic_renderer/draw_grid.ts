@@ -26,7 +26,7 @@ export function draw_grid
     const pattern = ctx.createPattern(grid_img, 'repeat')!;
 
     // 讓 pattern 跟著 camera 移動和縮放
-    pattern.setTransform(new DOMMatrix()ㄍ
+    pattern.setTransform(new DOMMatrix()
         .translate(camera.pan_x, canvas.height + camera.pan_y)
         .scale(camera.zoom / SVG_TILE_SIZE)
     );
