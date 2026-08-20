@@ -1,6 +1,6 @@
 # 0015_202608201746_device-abstract-class-oop
 
-- **status:** in-progress
+- **status:** done
 - **prev:** `./0014_202608200251_variable-shape-device.md`
 - **skill:** plan-history v3
 
@@ -36,6 +36,9 @@
 4. `packs/`：`loader.ts` 支援 TypeScript 類別動態載入、`vanilla`（`overlap.ts`, `graph.ts`）、`basic_renderer`（`draw_registry.ts`, `draw_device.ts`）、`basic_ui`（`info_bar.ts`, `cmd_executor.ts`）、`test`（具體 device 子類別實作與 `$basic_renderer` 繪圖函式更新）。
 5. `docs/`：`conventions.md`（Rule 2 支援 TS 類別宣告）與 `architecture.md` 文檔同步。
 
+### O3 · 2026-08-21 00:34:00+08:00 — 能力介面（Capability Interface）與垂直繼承/水平介面架構定案
+確立 Core.device 僅維護基礎幾何與狀態（`get_shape`, `get_port`），各功能 Pack（如 `basic_renderer`）以 Interface（如 `drawable_device`）規範能力契約（如 `draw()`）。最終 Pack（Final Pack）可大膽在內部使用 `extends` 建立垂直業務繼承階層，並以 `implements` 水平實作多個 Pack 能力介面，徹底避免多重繼承問題。
+
 ## 待辦
 
 ### 1 重構 Core 層型別與抽象類別定義
@@ -64,35 +67,41 @@
 - H2 · 2026-08-20 17:59 落地 —— 完成 hooks, pack_manager, map_manager, API 之類別註冊與實例化機制重構（使用者）
 
 ### 3 重構 Utils 與 Packs 動態計算與載入器
-- **state:** 待決斷
+- **state:** 完成
 - **basis:** → O1、O2
 - **承接:** 0014#3、0014#4
 
-簡化 `src/utils/device_utils.ts` 為多型呼叫；更新 `src/packs/loader.ts` 支援 `packs/*/devices/*.ts` 類別動態載入；重構 `src/packs/vanilla/overlap.ts` 與 `graph.ts` 直接透過 `dev` 多型方法取得佔用格與埠口。
+依指示移除 `src/utils/device_utils.ts` 以及 Vanilla Pack 中的 `src/packs/vanilla/overlap.ts` 與 `src/packs/vanilla/graph.ts`（包含 `vanilla/types.ts`）；更新 `src/packs/loader.ts` 新增 `load_all_device_classes` 支援 `packs/*/devices/*.ts` 動態載入。
 
 **沿革**
 
 - H1 · 2026-08-20 17:46 決斷 —— 確立 Utils 與 Vanilla Packs 多型化及 Loader 類別掃描，承接 0014#3 與 0014#4（使用者）
+- H2 · 2026-08-21 00:04 決斷 —— 依指示直接移除 device_utils, overlap 與 graph 模組（使用者）
+- H3 · 2026-08-21 00:04 落地 —— 刪除相關檔案、重構 vanilla/index.ts 並於 loader.ts 實作 load_all_device_classes（使用者）
 
 ### 4 重構 Basic Renderer 與 Basic UI 模組
-- **state:** 待決斷
-- **basis:** → O2
+- **state:** 完成
+- **basis:** → O2、O3
 
-調整 `src/packs/basic_renderer/draw_registry.ts` 與 `draw_device.ts` 移除 `def: device_definition` 參數，改從 `device` 實例取得幾何資訊；更新 `src/packs/basic_ui/info_bar.ts` 與 `cmd_executor.ts`。
+`basic_renderer` 定義 `drawable_device` 介面（`draw()` 方法），更新 `draw_device.ts` 直接以多型呼叫 `dev.draw()` 並淘汰 `draw_registry`；更新 `src/packs/basic_ui/info_bar.ts` 與 `cmd_executor.ts`。
 
 **沿革**
 
 - H1 · 2026-08-20 17:46 決斷 —— 確立 Renderer 與 UI 模組移除 def 依賴並適配 OOP 實例（使用者）
+- H2 · 2026-08-21 00:34 決斷 —— 確立 basic_renderer 定義 drawable_device 介面並由 device.draw() 內聚實作 → O3（使用者）
+- H3 · 2026-08-21 00:40 落地 —— 完成 basic_renderer 介面與繪圖多型化、刪除 draw_registry，並更新 basic_ui info_bar 與 cmd_executor（使用者）
 
 ### 5 重構 Test Pack 具體裝置類別與繪圖模組
-- **state:** 待決斷
-- **basis:** → O2
+- **state:** 完成
+- **basis:** → O2、O3
 
-將 `packs/test/data/devices.json` 內的裝置定義轉換為具體 Device 子類別實作，並更新 `packs/test/$basic_renderer/*.ts` 繪圖函式以適配新架構。
+將 `packs/test/data/devices.json` 內的裝置定義轉為繼承 `device` 並實作 `drawable_device`（`draw()`）的具體類別（支援內部 `extends` 階層），淘汰 `$basic_renderer` 外置註冊。
 
 **沿革**
 
 - H1 · 2026-08-20 17:46 決斷 —— 確立 Test Pack 裝置轉型為 TypeScript 類別與繪圖模組適配（使用者）
+- H2 · 2026-08-21 00:34 決斷 —— 確立 Test Pack 裝置類別實作 drawable_device 與內部 extends 階層 → O3（使用者）
+- H3 · 2026-08-21 00:50 落地 —— 建立 base_test_device 與 7 個具體 Device 類別，刪除 devices.json 與 $basic_renderer/ 目錄（使用者）
 
 ### 6 同步更新專案規範與架構文檔
 - **state:** 完成

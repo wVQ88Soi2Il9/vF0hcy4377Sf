@@ -1,10 +1,10 @@
-import type { camera_type, view_plane } from './types';
+import type { camera_type, view_plane, drawable_device } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { get_device_draw, register_device_draw, register_color_block_draw, create_color_block_draw_fn } from './draw_registry';
 import { on_device_change } from '@/API';
-import { get_map, get_registry } from '@/runtime';
-import type { pack_registry } from '@/core/pack_manager';
+import { get_map } from '@/runtime';
+
+export type { camera_type, view_plane, drawable_device };
 
 let renderer_canvas: HTMLCanvasElement | null = null;
 let current_draw_fn: (() => void) | null = null;
@@ -138,7 +138,6 @@ export function redraw_renderer(): void
     }
 }
 
-
 /**
  * Maps an N-dimensional world grid position to a 2-D canvas position.
  *
@@ -221,41 +220,21 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
     }, { passive: false });
 }
 
-
-
-/**
- * Ensures every device definition in the registry has an explicitly registered draw function.
- * If a device definition has no custom draw function registered by a pack, a color block draw function is registered for it.
- */
-function register_default_device_draws(registry: pack_registry): void
-{
-    for (const [id, def] of registry.device_definitions.entries())
-    {
-        if (!get_device_draw(id))
-        {
-            const draw_info = def.other_info?.basic_renderer as { color?: string; border?: string; label?: string } | undefined;
-            register_color_block_draw(id, draw_info);
-        }
-    }
-}
-
 /**
  * Standard pack entry point.
  * Creates the canvas, sets up camera controls and redraw loop.
- * Reads game_map and pack_registry from API (set by main.ts before calling init_pack).
+ * Reads game_map from API (set by main.ts before calling init_pack).
  */
 export function init_pack(): void
 {
-    const map      = get_map();
-    const registry = get_registry();
+    const map = get_map();
 
-    if (!map || !registry)
+    if (!map)
     {
-        console.error('[basic_renderer] init_pack() called before set_map() / set_registry(). Renderer aborted.');
+        console.error('[basic_renderer] init_pack() called before set_map(). Renderer aborted.');
         return;
     }
 
-    register_default_device_draws(registry);
     adapt_camera_plane(camera, map.size.length);
 
     // Build canvas without attaching it to DOM directly (managed by UI pack).
@@ -276,7 +255,7 @@ export function init_pack(): void
         adapt_camera_plane(camera, map.size.length);
         ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
         draw_grid(ctx, renderer_canvas, camera, map);
-        draw_devices(ctx, map, registry!, camera, renderer_canvas);
+        draw_devices(ctx, map, camera, renderer_canvas);
     }
 
     current_draw_fn = draw;
@@ -293,19 +272,12 @@ export function init_pack(): void
  */
 export const basic_renderer = {
     // Canvas & Redraw
-    get_canvas:          get_renderer_canvas,
-    resize_canvas:       resize_renderer_canvas,
-    redraw:              redraw_renderer,
+    get_canvas:     get_renderer_canvas,
+    resize_canvas:  resize_renderer_canvas,
+    redraw:         redraw_renderer,
 
     // Camera & Viewport
-    get_camera:          get_camera_plane,
-    set_camera:          set_camera_plane,
-    grid_to_screen:      grid_to_screen,
-
-    // Device Draw Registry
-    register_draw:       register_device_draw,
-    register_color_draw: register_color_block_draw,
-    create_color_draw:   create_color_block_draw_fn,
-    get_draw:            get_device_draw
+    get_camera:     get_camera_plane,
+    set_camera:     set_camera_plane,
+    grid_to_screen: grid_to_screen
 };
-

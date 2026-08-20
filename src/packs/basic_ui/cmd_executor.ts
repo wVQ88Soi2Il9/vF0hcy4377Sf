@@ -1,6 +1,6 @@
 import type { view_plane } from '@/packs/basic_renderer/types';
-import { create_device, delete_device, move_device } from '@/API';
-import { get_map } from '@/runtime';
+import { create_device, delete_device, move_device, get_device_class } from '@/API';
+import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cmd_tool';
@@ -166,7 +166,19 @@ export function execute_command(input: string): string
                 return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "4, 4, 0").`;
             }
 
-            const dev = create_device(map, def_id, coords, []);
+            const registry = get_registry();
+            if (!registry)
+            {
+                return 'Error: Global pack registry not found.';
+            }
+
+            const dev_class = get_device_class(registry, def_id);
+            if (!dev_class)
+            {
+                return `Error: Device definition ID "${def_id}" not found in registry.`;
+            }
+
+            const dev = create_device(map, dev_class, def_id, coords);
             return `Created device ${dev.definition_id} (ID: ${dev.uid}) at [${coords.join(', ')}]`;
         }
 
@@ -236,5 +248,3 @@ export function execute_command(input: string): string
         }
     }
 }
-
-

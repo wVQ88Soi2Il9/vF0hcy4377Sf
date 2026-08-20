@@ -1,5 +1,5 @@
-import type { device, device_definition } from '@/API';
-import { get_device_definition, evaluate_recipe } from '@/API';
+import type { device } from '@/API';
+import { evaluate_recipe } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 
 export interface info_bar_stats
@@ -109,7 +109,7 @@ export function create_info_bar(): info_bar_component
         map_info_el.innerHTML = `<span>Devices: <b>${stats.device_count}</b></span><span>Size: <b>${stats.map_dimensions}</b></span>`;
     }
 
-    function render_device_details(dev: device, def?: device_definition): void
+    function render_device_details(dev: device): void
     {
         content_container.innerHTML = '';
 
@@ -126,20 +126,25 @@ export function create_info_bar(): info_bar_component
         const pos_row = document.createElement('div');
         pos_row.innerHTML = `<span style="color:#89b4fa;">Position:</span> [${dev.position.join(', ')}]`;
 
-        const rot_str = dev.rotation.length > 0
-            ? dev.rotation.map(r => `Plane(${r.axis_a},${r.axis_b}):${r.steps * 90}°`).join(', ')
-            : 'None';
-        const rot_row = document.createElement('div');
-        rot_row.innerHTML = `<span style="color:#89b4fa;">Rotation:</span> ${rot_str}`;
-
         const recipe_row = document.createElement('div');
         recipe_row.innerHTML = `<span style="color:#89b4fa;">Selected Recipe:</span> ${dev.selected_recipe_id ?? 'None'}`;
+
+        const shape_row = document.createElement('div');
+        shape_row.innerHTML = `<span style="color:#f9e2af;">Shape:</span> ${JSON.stringify(dev.get_shape())}`;
+
+        const in_ports_row = document.createElement('div');
+        in_ports_row.innerHTML = `<span style="color:#f9e2af;">Input Ports:</span> ${JSON.stringify(dev.get_port('input'))}`;
+
+        const out_ports_row = document.createElement('div');
+        out_ports_row.innerHTML = `<span style="color:#f9e2af;">Output Ports:</span> ${JSON.stringify(dev.get_port('output'))}`;
 
         card.appendChild(header);
         card.appendChild(def_row);
         card.appendChild(pos_row);
-        card.appendChild(rot_row);
         card.appendChild(recipe_row);
+        card.appendChild(shape_row);
+        card.appendChild(in_ports_row);
+        card.appendChild(out_ports_row);
 
         const registry = get_registry();
         if (dev.selected_recipe_id && registry)
@@ -168,22 +173,6 @@ export function create_info_bar(): info_bar_component
             }
         }
 
-        if (def)
-        {
-            const shape_row = document.createElement('div');
-            shape_row.innerHTML = `<span style="color:#f9e2af;">Shape:</span> ${JSON.stringify(def.shape)}`;
-
-            const in_ports_row = document.createElement('div');
-            in_ports_row.innerHTML = `<span style="color:#f9e2af;">Input Ports:</span> ${JSON.stringify(def.input_ports)}`;
-
-            const out_ports_row = document.createElement('div');
-            out_ports_row.innerHTML = `<span style="color:#f9e2af;">Output Ports:</span> ${JSON.stringify(def.output_ports)}`;
-
-            card.appendChild(shape_row);
-            card.appendChild(in_ports_row);
-            card.appendChild(out_ports_row);
-        }
-
         if (dev.other_info && Object.keys(dev.other_info).length > 0)
         {
             const other_row = document.createElement('div');
@@ -210,10 +199,7 @@ export function create_info_bar(): info_bar_component
             return false;
         }
 
-        const registry = get_registry();
-        const def = registry ? get_device_definition(registry, dev.definition_id) : undefined;
-
-        render_device_details(dev, def);
+        render_device_details(dev);
         uid_input.value = String(uid);
         return true;
     }
@@ -244,5 +230,3 @@ export function create_info_bar(): info_bar_component
 
     return { element, update_stats, display_device_info, clear_device_info };
 }
-
-

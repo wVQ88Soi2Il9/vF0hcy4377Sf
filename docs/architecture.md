@@ -50,10 +50,10 @@ src/
 
 ### 層 1 - Core(引擎核心)
 
-*   **型別定義**：`game_map`、`device`、`device_port` 等全域型別的唯一來源(Single Source of Truth)。
-*   **Hook 系統**：`hooks.ts` 是所有副作用的唯一擴充點。Core 不含任何具體遊戲邏輯。
+*   **型別與抽象模型**：`game_map`、`device`（抽象基類）等全域核心型別的唯一來源(Single Source of Truth)。Core 僅定義基礎幾何與抽象狀態（`get_shape`, `get_port`），保持零 UI / 零外部依賴。
+*   **Hook 系統**：`hooks.ts` 是所有副作用的唯一擴充點。Core 不含任何具體遊戲規則。
 *   **地圖狀態**：`map_manager.ts` 管理設備的 CRUD，呼叫後觸發對應 Hook。
-*   **禁止**：import 任何 pack、直接執行遊戲規則。
+*   **禁止**：import 任何 pack、直接執行遊戲規則或包含特定渲染 API。
 
 ### 層 2 - Utils(工具庫)
 
@@ -63,10 +63,10 @@ src/
 
 ### 層 3 - Packs(插件層)
 
-*   所有遊戲規則、渲染邏輯、UI 均在此層，以 pack 形式存在。
-*   可以自由 import `core/`、`utils/` 中的任意模組。
+*   所有具體遊戲規則、渲染邏輯、UI 均在此層，以 pack 形式存在。
+*   **能力介面契約 (Capability Interface)**：各功能 Pack（如 `basic_renderer`）導出專屬能力介面（如 `drawable_device`），規範下游裝置必須具備的方法（如 `draw()`）。
+*   **多型與繼承規範**：業務 Pack 內部大膽使用 `extends` 進行類別階層與實作複用，跨 Pack 系統能力則透過 `implements` 多重實作能力介面。
 *   **禁止**：直接操作 `hooks` singleton(直接 push/splice)— 一律用 `@/API` 的函式訂閱。
-*   跨 pack import 情況未確定；目前允許的特例：`@/packs/basic_renderer/draw_registry`。
 
 ---
 

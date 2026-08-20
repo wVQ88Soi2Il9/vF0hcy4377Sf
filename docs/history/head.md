@@ -4,17 +4,12 @@
 
 ## 目前使用中
 
-[0015_202608201746_device-abstract-class-oop](./0015_202608201746_device-abstract-class-oop.md) — `in-progress`，待辦待決剩 3/6
+[0015_202608201746_device-abstract-class-oop](./0015_202608201746_device-abstract-class-oop.md) — `done`
 
 ## 現在開著的（逐格）
 
-- `0015#3` · **待決斷** — 重構 Utils 與 Packs 動態計算與載入器
-- `0015#4` · **待決斷** — 重構 Basic Renderer 與 Basic UI 模組
-- `0015#5` · **待決斷** — 重構 Test Pack 具體裝置類別與繪圖模組
-
-> 要做某一格：`python3 docs/history/plan-item.py 0015#3`
-> —— 只回那一格的正文與它的依據，不必讀整份計畫。
+（沒有開著的項目）
 
 ## draft / in-progress（流水號降序）
 
-- **0015** [0015_202608201746_device-abstract-class-oop](./0015_202608201746_device-abstract-class-oop.md) — `in-progress`，待辦待決剩 3/6
+（無）

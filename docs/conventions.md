@@ -204,3 +204,17 @@ CMD 指令傳入的 `position` 參數（如 `create` / `move`）必須嚴格驗�
 *   **不要額外做事**：每次只做要求的部分
 *   **架構轉型不是問題**：不受限於既有實作或歷史包袱，只要符合設計目標與需求，隨時可進行深度的架構重構與轉型。
 *   **實驗性分支免受既有規則拘束**：在實驗性分支（如 `dev/*`、`dev/oop`）進行探索時，既有規範與文檔約束不適用，允許自由驗證全新架構與實作模式，待架構定案後再同步文檔規範。
+
+---
+
+## 7. 物件導向與能力介面規範 (OOP & Capability Interfaces)
+
+### 垂直用 `extends`，水平用 `implements`
+* **垂直維度（階層與實作複用，Is-A）👉 大膽用 `extends`**：
+  最終業務 Pack（Final Pack）可大膽在內部使用 `extends` 建立多層抽象與具體類別階層（例如 `assembler_mk2 extends assembler_mk1 extends base_machine extends device`），封裝共用繪圖底座、幾何與行為邏輯。
+* **水平維度（跨 Pack 系統能力，Can-Do）👉 組合用 `implements`**：
+  各功能 Pack 對外提供能力契約介面（如 `basic_renderer` 的 `drawable_device`、`physics` 的 `collidable_device`、`tick` 的 `tickable_device`）。具體裝置類別透過多重介面實作（`implements A, B, C`）對齊各系統要求，徹底避免多重繼承與菱形繼承衝突。
+
+### 裝置繪圖內聚原則 (`device.draw`)
+* `basic_renderer` 透過 `drawable_device` 介面規範裝置必須具備專屬的 `draw()` 成員方法。
+* 渲染迴圈直接以多型方式呼叫 `dev.draw(ctx, ...)`，淘汰外部全域 `draw_registry` 靜態查表機制。

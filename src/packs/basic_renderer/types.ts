@@ -1,3 +1,5 @@
+import type { device } from '@/core/types';
+
 /**
  * Defines which 2 dimensions of the N-dimensional world are displayed,
  * and the fixed depths of all other dimensions.
@@ -24,4 +26,21 @@ export interface camera_type
     zoom:   number;
     /** Which 2-D cross-section of the N-D world to render. */
     plane:  view_plane;
+}
+
+/**
+ * Capability interface for devices that can be rendered by basic_renderer.
+ */
+export interface drawable_device extends device
+{
+    draw
+    (
+        ctx:    CanvasRenderingContext2D,
+        sx:     number,
+        sy:     number,
+        sw:     number,
+        sh:     number,
+        zoom:   number,
+        camera: camera_type
+    ): void;
 }

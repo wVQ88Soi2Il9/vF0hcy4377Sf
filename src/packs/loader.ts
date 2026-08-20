@@ -1,4 +1,6 @@
-import type { pack, item_definition, recipe, device_definition } from '@/core/types';
+import type { pack, item_definition, recipe } from '@/core/types';
+import type { pack_registry } from '@/core/pack_manager';
+import { register_device_class } from '@/core/pack_manager';
 
 // Helper function to resolve ID with namespace
 function resolve_id(id: string, ns: string): string
@@ -8,7 +10,7 @@ function resolve_id(id: string, ns: string): string
 
 /**
  * Loads all packs automatically by scanning the folder structure.
- * 1. JSON files inside packs/*/data/*.json (items, devices)
+ * 1. JSON files inside packs/*/data/*.json (items)
  * 2. TypeScript recipe modules inside packs/*/recipes/*.ts
  */
 export function load_all_packs(): pack[]
@@ -24,8 +26,7 @@ export function load_all_packs(): pack[]
             p = {
                 id: namespace,
                 items: [],
-                recipes: [],
-                device_definitions: []
+                recipes: []
             };
             namespace_map.set(namespace, p);
         }
@@ -60,22 +61,6 @@ export function load_all_packs(): pack[]
                         ...raw_item,
                         id: full_id
                     } as item_definition);
-                }
-            }
-            else if (filename === 'devices')
-            {
-                for (const raw_device of file_data)
-                {
-                    const full_id = resolve_id(raw_device.id, namespace);
-
-                    const processed_device: device_definition =
-                    {
-                        ...raw_device,
-                        id: full_id,
-                        other_info: raw_device.other_info || {}
-                    };
-
-                    current_pack.device_definitions.push(processed_device);
                 }
             }
         }
@@ -117,6 +102,34 @@ export function load_all_packs(): pack[]
 }
 
 /**
+ * Loads and registers all dynamic TypeScript device classes under packs/*/devices/*.ts
+ */
+export function load_all_device_classes(registry: pack_registry): void
+{
+    const device_modules = import.meta.glob('./*/devices/*.ts', { eager: true }) as Record<string, any>;
+
+    for (const path in device_modules)
+    {
+        const parts = path.split('/');
+        if (parts.length < 4)
+        {
+            continue;
+        }
+
+        const namespace = parts[1];
+        const filename = parts[3].replace('.ts', '');
+        const mod = device_modules[path];
+        const cls = mod.device_class || mod.default || mod[filename];
+
+        if (cls && typeof cls === 'function')
+        {
+            const full_id = resolve_id(mod.device_id || filename, namespace);
+            register_device_class(registry, full_id, cls);
+        }
+    }
+}
+
+/**
  * Auto-discovers and calls init_pack() from every pack's index.ts.
  * Any pack that exports init_pack() will be initialized automatically.
  */
@@ -133,4 +146,3 @@ export function call_all_pack_inits(): void
         }
     }
 }
-

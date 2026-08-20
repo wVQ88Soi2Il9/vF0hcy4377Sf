@@ -1,14 +1,10 @@
-import type { game_map, device, device_definition } from '@/core/types';
-import type { pack_registry } from '@/core/pack_manager';
-import { get_device_definition } from '@/core/pack_manager';
-import { get_world_cells } from '@/utils/device_utils';
-import type { camera_type } from './types';
-import { get_device_draw } from './draw_registry';
+import type { game_map, device } from '@/core/types';
+import type { camera_type, drawable_device } from './types';
+import { add_vector } from '@/utils/math';
 
 interface render_item
 {
     device:        device;
-    def:           device_definition;
     visible_cells: number[][];
 }
 
@@ -21,7 +17,7 @@ function render_device_item
 ): void
 {
     const { dim_h, dim_v } = camera.plane;
-    const { device, def, visible_cells } = item;
+    const { device, visible_cells } = item;
 
     // Compute bounding box in world coordinates (across visible cells).
     const h_coords = visible_cells.map(c => c[dim_h]);
@@ -39,19 +35,14 @@ function render_device_item
     const sw = (max_h - min_h + 2) * camera.zoom;
     const sh = (max_v - min_v + 2) * camera.zoom;
 
-    // Retrieve and execute the registered device draw function. Every device MUST have one.
-    const draw_fn = get_device_draw(device.definition_id);
-    if (draw_fn)
-    {
-        draw_fn(ctx, sx, sy, sw, sh, camera.zoom, device, def, camera);
-    }
+    // Directly call the device's polymorphic draw method.
+    (device as drawable_device).draw(ctx, sx, sy, sw, sh, camera.zoom, camera);
 }
 
 export function draw_devices
 (
     ctx:      CanvasRenderingContext2D,
     map:      game_map,
-    registry: pack_registry,
     camera:   camera_type,
     canvas:   HTMLCanvasElement
 ): void
@@ -63,13 +54,7 @@ export function draw_devices
 
     for (const device of map.devices)
     {
-        const def = get_device_definition(registry, device.definition_id);
-        if (!def)
-        {
-            continue;
-        }
-
-        const world_cells = get_world_cells(device, def);
+        const world_cells = device.get_shape().map(pos => add_vector(device.position, pos));
         let max_slice_dist = 0;
 
         // Compute minimum distance from camera slice to the device's 2x2x2 cell range for each non-displayed dimension.
@@ -110,7 +95,7 @@ export function draw_devices
         {
             // Ghost item: adjacent to slice (e.g. 1 unit away from [min_dim, max_dim + 2)).
             // Render entire device footprint as semi-transparent.
-            ghost_items.push({ device, def, visible_cells: world_cells });
+            ghost_items.push({ device, visible_cells: world_cells });
         }
         else
         {
@@ -126,7 +111,7 @@ export function draw_devices
 
             if (visible_cells.length > 0)
             {
-                active_items.push({ device, def, visible_cells });
+                active_items.push({ device, visible_cells });
             }
         }
     }
