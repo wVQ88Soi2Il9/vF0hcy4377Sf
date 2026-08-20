@@ -10,8 +10,8 @@ function resolve_id(id: string, ns: string): string
 
 /**
  * Loads all packs automatically by scanning the folder structure.
- * 1. JSON files inside packs/*/data/*.json (items)
- * 2. TypeScript recipe modules inside packs/*/recipes/*.ts
+ * 1. JSON files inside packs/{namespace}/data/*.json (items)
+ * 2. TypeScript recipe modules inside packs/{namespace}/recipes/*.ts
  */
 export function load_all_packs(): pack[]
 {
@@ -102,7 +102,7 @@ export function load_all_packs(): pack[]
 }
 
 /**
- * Loads and registers all dynamic TypeScript device classes under packs/*/devices/*.ts
+ * Loads and registers all dynamic TypeScript device classes under packs/{namespace}/devices/*.ts
  */
 export function load_all_device_classes(registry: pack_registry): void
 {

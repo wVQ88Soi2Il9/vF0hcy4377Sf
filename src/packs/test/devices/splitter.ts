@@ -1,6 +1,5 @@
 import type { vector } from '@/core/types';
-import type { camera_type } from '@/packs/basic_renderer';
-import { base_test_device } from './base_test_device';
+import { base_test_device, type device_color_theme } from './base_test_device';
 
 export const device_id = 'test:splitter';
 
@@ -24,33 +23,12 @@ export class splitter_device extends base_test_device
         ];
     }
 
-    public draw
-    (
-        ctx:    CanvasRenderingContext2D,
-        sx:     number,
-        sy:     number,
-        sw:     number,
-        sh:     number,
-        zoom:   number,
-        camera: camera_type
-    ): void
+    protected get_color_theme(): device_color_theme
     {
-        ctx.fillStyle = '#4a2800';
-        ctx.fillRect(sx, sy, sw, sh);
-
-        ctx.strokeStyle = '#f0a040';
-        ctx.lineWidth = Math.max(1, zoom * 0.04);
-        ctx.strokeRect(sx, sy, sw, sh);
-
-        const uid_text = `#${this.uid}`;
-
-        ctx.fillStyle = '#f0a040';
-        ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(uid_text, sx + sw / 2, sy + sh / 2);
-
-        this.draw_ports(ctx, camera);
+        return {
+            fill:   '#f97316',
+            border: '#c2410c'
+        };
     }
 }
 

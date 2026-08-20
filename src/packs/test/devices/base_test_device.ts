@@ -2,14 +2,21 @@ import { device, type vector } from '@/core/types';
 import type { drawable_device, camera_type } from '@/packs/basic_renderer';
 import { add_vector } from '@/utils/math';
 
+export interface device_color_theme
+{
+    fill:   string;
+    border: string;
+}
+
 /**
  * Common abstract base class for all test pack devices.
- * Implements drawable_device to provide port rendering and drawing hooks.
+ * Implements drawable_device to provide a unified rectangle + deep border + UID + ports renderer.
  */
 export abstract class base_test_device extends device implements drawable_device
 {
     public abstract get_shape(): vector[];
     public abstract get_port(type: 'input' | 'output'): vector[];
+    protected abstract get_color_theme(camera?: camera_type): device_color_theme;
 
     /**
      * Draws input and output ports for this device.
@@ -82,7 +89,10 @@ export abstract class base_test_device extends device implements drawable_device
         render_port_list(out_ports, '#f43f5e', '#be123c', 'O');
     }
 
-    public abstract draw
+    /**
+     * Unified device drawing template: solid rectangle + deep tone border + UID label + ports.
+     */
+    public draw
     (
         ctx:    CanvasRenderingContext2D,
         sx:     number,
@@ -91,5 +101,27 @@ export abstract class base_test_device extends device implements drawable_device
         sh:     number,
         zoom:   number,
         camera: camera_type
-    ): void;
+    ): void
+    {
+        const { fill, border } = this.get_color_theme(camera);
+
+        // 1. 純色矩形
+        ctx.fillStyle = fill;
+        ctx.fillRect(sx, sy, sw, sh);
+
+        // 2. 同色系深色邊框
+        ctx.strokeStyle = border;
+        ctx.lineWidth = Math.max(1, zoom * 0.04);
+        ctx.strokeRect(sx, sy, sw, sh);
+
+        // 3. 裝置 #UID 標籤
+        ctx.fillStyle = border;
+        ctx.font = `bold ${Math.max(8, zoom * 0.3)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`#${this.uid}`, sx + sw / 2, sy + sh / 2);
+
+        // 4. 連接埠
+        this.draw_ports(ctx, camera);
+    }
 }
