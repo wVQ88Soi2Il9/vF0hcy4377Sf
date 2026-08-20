@@ -2,7 +2,7 @@ import grid_svg_url from './assets/grid.svg';   // Vite 幫你轉成 URL
 import type { game_map } from '@/core/types';
 import type { camera_type } from './types';
 
-const SVG_SIZE = 128;   // 你的 SVG 是 128×128
+const SVG_SIZE = 64;   // 你的 SVG 是 128×128
 
 // 圖片只載入一次（模組層級）
 const grid_img = new Image();
