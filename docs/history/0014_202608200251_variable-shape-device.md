@@ -1,8 +1,12 @@
 # 0014_202608200251_variable-shape-device
 
-- **status:** draft
+- **status:** superseded
 - **prev:** 0011_202608190200_recipe-machine-decouple.md
 - **skill:** plan-history v3
+
+## 捨棄原因
+
+方向演進為全面採用 OOP `abstract class device` 架構與多型設計，接手的是 [0015_202608201746_device-abstract-class-oop.md](./0015_202608201746_device-abstract-class-oop.md)。
 
 ## 主題簡述
 
@@ -31,51 +35,61 @@
 ## 待辦
 
 ### 1 決斷 Shape 覆寫機制與 Core 型別定義
-- **state:** 待決斷
+- **state:** 移交
 - **basis:** → O1、O2
+- **移交:** 0015#1
 
 決斷具體型別設計：是採用函式化計算（如 `device_definition.shape_fn(dev) => vector[]`）還是實例屬性覆寫（如 `device.other_info` 儲存動態 shape），以及 `core/types.ts` 與 `src/utils/device_utils.ts`（`get_world_cells`）的支援方式。
 
 **沿革**
 
 - H1 · 2026-08-20 02:51 決斷 —— 確立採用方案 1（可變形 Device），待決斷具體型別設計（使用者）
+- H2 · 2026-08-20 17:46 移交 —— 移交至 0015#1（OOP 抽象類別型別定義）
 
 ### 2 決斷 API 變形操作與 Hook 機制
-- **state:** 待決斷
+- **state:** 移交
 - **basis:** → O2
+- **移交:** 0015#2
 
 決斷是否於 `API.ts` 與 `map_manager.ts` 新增專用操作（如 `resize_device`），或在既有更新流程處理；並確認 Hooks 命名與觸發時機（例如 `on_device_resize` 或是複用 `on_device_change`）。
 
 **沿革**
 
 - H1 · 2026-08-20 02:51 決斷 —— 提出 API 操作與 Hook 擴充議題待決斷（使用者）
+- H2 · 2026-08-20 17:46 移交 —— 移交至 0015#2（API 與實例化機制）
 
 ### 3 決斷 Loader 掃描與註冊方式
-- **state:** 待決斷
+- **state:** 移交
 - **basis:** → O2
+- **移交:** 0015#3
 
 決斷可變形 Device 的註冊路徑：是否維持 JSON 靜態配置並搭配動態 Adapter，抑或比照 Recipe 函式化支援 TS 程式碼註冊（如 `packs/*/devices/*.ts`）。
 
 **沿革**
 
 - H1 · 2026-08-20 02:51 決斷 —— 提出 Loader 掃描與註冊設計待決斷（使用者）
+- H2 · 2026-08-20 17:46 移交 —— 移交至 0015#3（Loader 掃描與註冊）
 
 ### 4 決斷 Port 座標與 Grid 架構影響
-- **state:** 待決斷
+- **state:** 移交
 - **basis:** → O1、O2
+- **移交:** 0015#3
 
 評估管線長度變化時 Port（接口）座標與連通性之動態計算規則，並決斷是否需修訂 `docs/architecture.md` 的 Grid & Port 座標章節。
 
 **沿革**
 
 - H1 · 2026-08-20 02:51 決斷 —— 提出 Port 動態計算與架構文檔調整待決斷（使用者）
+- H2 · 2026-08-20 17:46 移交 —— 移交至 0015#3（Port 座標與多型計算）
 
 ### 5 決斷 Conventions 規範修訂
-- **state:** 待決斷
+- **state:** 移交
 - **basis:** → O2
+- **移交:** 0015#6
 
 決斷是否修訂 `docs/conventions.md`（縮小 Rule 2/4 適用範圍至純靜態 Device，並增列可變形 Device 之開發規範）。
 
 **沿革**
 
 - H1 · 2026-08-20 02:51 決斷 —— 提出 conventions 規範調整待決斷（使用者）
+- H2 · 2026-08-20 17:46 移交 —— 移交至 0015#6（Conventions 規範修訂）

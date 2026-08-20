@@ -12,7 +12,6 @@ import
     type device_create_hook,
     type device_delete_hook,
     type device_move_hook,
-    type device_rotate_hook,
     type device_select_recipe_hook,
     type check_overlap_hook,
     type build_graph_hook
@@ -24,7 +23,6 @@ export
     create_device,
     delete_device,
     move_device,
-    rotate_device,
     select_recipe
 } from '@/core/map_manager';
 
@@ -36,23 +34,22 @@ export
     get_item,
     get_recipe,
     register_recipe,
-    get_device_definition,
+    register_device_class,
+    get_device_class,
     evaluate_recipe,
-    type pack_registry
+    type pack_registry,
+    type device_constructor
 } from '@/core/pack_manager';
 
 export type
 {
     vector,
-    rotation_plane,
-    rotation,
     pack,
     item_definition,
     item_stack,
     recipe_evaluation,
     recipe_fn,
     recipe,
-    device_definition,
     device,
     game_map
 } from '@/core/types';
@@ -113,23 +110,6 @@ export function on_device_move(callback: device_move_hook): unsubscribe_function
 }
 
 /**
- * 訂閱裝置旋轉事件。
- * 回傳取消訂閱函式。
- */
-export function on_device_rotate(callback: device_rotate_hook): unsubscribe_function
-{
-    hooks.on_device_rotate.push(callback);
-    return () =>
-    {
-        const index = hooks.on_device_rotate.indexOf(callback);
-        if (index !== -1)
-        {
-            hooks.on_device_rotate.splice(index, 1);
-        }
-    };
-}
-
-/**
  * 訂閱裝置選擇食譜變更事件。
  * 回傳取消訂閱函式。
  */
@@ -147,7 +127,7 @@ export function on_device_select_recipe(callback: device_select_recipe_hook): un
 }
 
 /**
- * 訂閱任意裝置生命週期變動（create / delete / move / rotate / select_recipe）。
+ * 訂閱任意裝置生命週期變動（create / delete / move / select_recipe）。
  * 回傳取消訂閱函式。
  */
 export function on_device_change(callback: () => void): unsubscribe_function
@@ -155,14 +135,12 @@ export function on_device_change(callback: () => void): unsubscribe_function
     const unsub_create        = on_device_create(() => callback());
     const unsub_delete        = on_device_delete(() => callback());
     const unsub_move          = on_device_move(() => callback());
-    const unsub_rotate        = on_device_rotate(() => callback());
     const unsub_select_recipe = on_device_select_recipe(() => callback());
     return () =>
     {
         unsub_create();
         unsub_delete();
         unsub_move();
-        unsub_rotate();
         unsub_select_recipe();
     };
 }

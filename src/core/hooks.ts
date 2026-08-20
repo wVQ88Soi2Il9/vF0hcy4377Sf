@@ -1,4 +1,4 @@
-import type { game_map, device, vector, rotation } from '@/core/types';
+import type { game_map, device, vector } from '@/core/types';
 import type { pack_registry } from '@/core/pack_manager';
 
 export type check_overlap_hook = (map: game_map, registry: pack_registry) => unknown;
@@ -11,13 +11,6 @@ export type device_move_hook =
     dev:          device,
     old_position: vector,
     new_position: vector
-) => void;
-export type device_rotate_hook =
-(
-    map:          game_map,
-    dev:          device,
-    old_rotation: rotation,
-    new_rotation: rotation
 ) => void;
 export type device_select_recipe_hook =
 (
@@ -34,7 +27,6 @@ export const hooks =
     on_device_create:        [] as device_create_hook[],
     on_device_delete:        [] as device_delete_hook[],
     on_device_move:          [] as device_move_hook[],
-    on_device_rotate:        [] as device_rotate_hook[],
     on_device_select_recipe: [] as device_select_recipe_hook[]
 };
 
@@ -111,20 +103,6 @@ export function trigger_move_device
     for (const hook of hooks.on_device_move)
     {
         hook(map, dev, old_position, new_position);
-    }
-}
-
-export function trigger_rotate_device
-(
-    map:          game_map,
-    dev:          device,
-    old_rotation: rotation,
-    new_rotation: rotation
-): void
-{
-    for (const hook of hooks.on_device_rotate)
-    {
-        hook(map, dev, old_rotation, new_rotation);
     }
 }
 

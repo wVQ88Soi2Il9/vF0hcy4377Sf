@@ -1,5 +1,6 @@
-import type { game_map, device, vector, rotation } from '@/core/types';
-import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_rotate_device, trigger_select_recipe } from '@/core/hooks';
+import type { game_map, device, vector } from '@/core/types';
+import type { device_constructor } from '@/core/pack_manager';
+import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from '@/core/hooks';
 
 /**
  * Creates a new map instance with next uid starting from 1.
@@ -14,29 +15,21 @@ export function create_map(size: vector): game_map
 }
 
 /**
- * Adds a device to the map.
+ * Adds a device to the map by instantiating from a device constructor.
  * Auto-assigns uid from map.uid and increments it by 1.
  * Modifies the map in place and returns the created device instance.
  */
 export function create_device
 (
-    map: game_map, 
+    map:           game_map, 
+    device_class:  device_constructor,
     definition_id: string, 
-    position: vector, 
-    rotation: rotation, 
-    other_info: Record<string, unknown> = {}
+    position:      vector, 
+    other_info:    Record<string, unknown> = {}
 ): device
 {
     const assigned_id = map.uid;
-
-    const dev: device = 
-    {   
-        uid: assigned_id,
-        definition_id: definition_id,
-        position: position,
-        rotation: rotation,
-        other_info: other_info
-    };
+    const dev = new device_class(assigned_id, definition_id, position, other_info);
 
     map.uid += 1;
     map.devices.push(dev);
@@ -76,27 +69,6 @@ export function move_device(map: game_map, device_uid: number, new_position: vec
             dev,
             old_position,
             new_position
-        );
-    }
-}
-
-/**
- * Rotates a device.
- * Modifies the device in place.
- */
-export function rotate_device(map: game_map, device_uid: number, new_rotation: rotation): void
-{
-    const dev = map.devices.find(d => d.uid === device_uid);
-    if (dev)
-    {
-        const old_rotation = dev.rotation;
-        dev.rotation = new_rotation;
-        trigger_rotate_device
-        (
-            map,
-            dev,
-            old_rotation,
-            new_rotation
         );
     }
 }

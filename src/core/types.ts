@@ -5,28 +5,6 @@
  */
 export type vector = number[];
 
-/**
- * A single 90-degree rotation step in the plane spanned by axis_a and axis_b.
- * steps: number of 90° CCW turns (0–3).
- *
- * In 3D this maps to the familiar axis rotations:
- *   axis_a=1, axis_b=2  →  rotate around X
- *   axis_a=0, axis_b=2  →  rotate around Y (CCW looking down +Y)
- *   axis_a=0, axis_b=1  →  rotate around Z
- */
-export type rotation_plane =
-{
-    axis_a: number;
-    axis_b: number;
-    steps:  0 | 1 | 2 | 3;
-};
-
-/**
- * N-dimensional rotation expressed as an ordered list of plane rotations.
- * Applied left-to-right. An empty array means no rotation.
- */
-export type rotation = rotation_plane[];
-
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 
@@ -34,10 +12,9 @@ export type rotation = rotation_plane[];
  */
 export interface pack
 {
-    id:                  string;
-    items:               item_definition[];
-    recipes:             recipe[];
-    device_definitions:  device_definition[];
+    id:       string;
+    items:    item_definition[];
+    recipes:  recipe[];
 }
 
 // ── Item ─────────────────────────────────────────────────────────────────────
@@ -89,57 +66,26 @@ export interface recipe
 
 // ── Device ───────────────────────────────────────────────────────────────────
 
-// ── Device Definition (靜態藍圖 / 原型) ───────────────────────────────────
-
-export interface device_definition
+export abstract class device
 {
-    /** Unique identifier for the device type, e.g. "assembler_mk1" */
-    id:           string;
+    public readonly uid:         number;
+    public definition_id:        string;
+    public position:             vector;
+    public selected_recipe_id?:  string;
+    public other_info?:          Record<string, unknown>;
 
-    /**
-     * Cells this device occupies, as local offsets from anchor (before rotation).
-     * e.g. [[0,0,0], [2,0,0]] = 1×2 horizontal device in 3D half-grid coords.
-     */
-    shape:        vector[];
+    constructor(uid: number, definition_id: string, position: vector)
+    {
+        this.uid = uid;
+        this.definition_id = definition_id;
+        this.position = position;
+    }
 
-    /**
-     * Input port positions, local offsets (before rotation).
-     * A port is defined as the coordinate of the ADJACENT cell it connects to.
-     * Example: If device is at [0,0], a right-facing port is at [1,0].
-     */
-    input_ports:  vector[];
+    /** 取得局部形狀格點 (Local Coordinates) */
+    public abstract get_shape(): vector[];
 
-    /** 
-     * Output port positions, local offsets (before rotation). 
-     * Defined as the coordinate of the ADJACENT cell.
-     */
-    output_ports: vector[];
-
-    /** Mod-extensible static metadata for the device blueprint. Core never reads this. */
-    other_info?:   Record<string, unknown>;
-}
-
-// ── Device Instance (動態實體) ─────────────────────────────────────────
-
-export interface device
-{
-    /** Unique numerical identifier for this specific placed instance on the map */
-    uid:                  number;
-
-    /** Reference to device_definition.id */
-    definition_id:        string;
-
-    /** Anchor cell in world coordinates (N-dimensional). */
-    position:             vector;
-
-    /** Ordered list of plane rotations applied to all local offset vectors before adding position. */
-    rotation:             rotation;
-
-    /** The recipe currently selected by the player to be processed by this device */
-    selected_recipe_id?:  string;
-
-    /** Mod-extensible dynamic metadata (e.g. inventory, working status, progress). Core never reads this. */
-    other_info?:           Record<string, unknown>;
+    /** 取得局部連接埠 (Local Coordinates) */
+    public abstract get_port(type: 'input' | 'output'): vector[];
 }
 
 // ── Map ──────────────────────────────────────────────────────────────────────
@@ -158,5 +104,3 @@ export interface game_map
 
     devices:         device[];
 }
-
-

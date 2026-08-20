@@ -1,6 +1,6 @@
 # 0011_202608190200_recipe-machine-decouple
 
-- **status:** in-progress
+- **status:** done
 - **prev:** 0010_202608131951_ghost-layer-half-open.md
 - **skill:** plan-history v3
 
@@ -55,7 +55,7 @@
 - H5 · 2026-08-20 02:20 落地 —— 完成 Recipe 函式化核心型別、UID 評估機制、動態掃描與 UI 整合 → O2, O4
 
 ### 3 實作宣告式 JSON Recipe 相容 Adapter
-- **state:** 待實作
+- **state:** 否決
 - **needs:** 0011#2
 - **basis:** → O3
 
@@ -63,3 +63,4 @@
 
 **沿革**
 - H1 · 2026-08-20 02:15 決斷 —— 依指示將 JSON Adapter 獨立為後續待辦事項 → O3
+- H2 · 2026-08-20 17:58 否決 —— 確立全面採用動態 TypeScript Recipe 模組，放棄 JSON 配方相容 Adapter（使用者）
