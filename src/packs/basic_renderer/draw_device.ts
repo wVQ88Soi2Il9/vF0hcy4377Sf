@@ -1,4 +1,4 @@
-import type { game_map, device } from '@/core/types';
+import type { game_map, device } from '@/API';
 import type { camera_type, drawable_device } from './types';
 import { add_vector } from '@/utils/math';
 
@@ -49,88 +49,22 @@ export function draw_devices
 {
     const { dim_h, dim_v, slices } = camera.plane;
 
-    const ghost_items: render_item[] = [];
-    const active_items: render_item[] = [];
-
     for (const device of map.devices)
     {
         const world_cells = device.get_shape().map(pos => add_vector(device.position, pos));
-        let max_slice_dist = 0;
 
-        // Compute minimum distance from camera slice to the device's 2x2x2 cell range for each non-displayed dimension.
-        for (let i = 0; i < slices.length; i++)
+        // Filter cells that intersect the current slice plane along non-displayed dimensions
+        const visible_cells = world_cells.filter(cell =>
+            cell.every((coord, i) =>
+                i === dim_h ||
+                i === dim_v ||
+                (slices[i] >= coord && slices[i] < coord + 2)
+            )
+        );
+
+        if (visible_cells.length > 0)
         {
-            if (i === dim_h || i === dim_v)
-            {
-                continue;
-            }
-
-            const dim_coords = world_cells.map(cell => cell[i]);
-            const min_dim = Math.min(...dim_coords);
-            const max_dim = Math.max(...dim_coords);
-            const slice_val = slices[i];
-
-            let dim_dist = 0;
-            if (slice_val < min_dim)
-            {
-                dim_dist = min_dim - slice_val;
-            }
-            else if (slice_val >= max_dim + 2)
-            {
-                dim_dist = slice_val - (max_dim + 2) + 1;
-            }
-
-            if (dim_dist > max_slice_dist)
-            {
-                max_slice_dist = dim_dist;
-            }
+            render_device_item(ctx, { device, visible_cells }, camera, canvas);
         }
-
-        if (max_slice_dist > 1)
-        {
-            continue;
-        }
-
-        if (max_slice_dist === 1)
-        {
-            // Ghost item: adjacent to slice (e.g. 1 unit away from [min_dim, max_dim + 2)).
-            // Render entire device footprint as semi-transparent.
-            ghost_items.push({ device, visible_cells: world_cells });
-        }
-        else
-        {
-            // Active item: intersects the slice (max_slice_dist === 0).
-            // Filter cells that intersect the slice plane along non-displayed dimensions.
-            const visible_cells = world_cells.filter(cell =>
-                cell.every((coord, i) =>
-                    i === dim_h ||
-                    i === dim_v ||
-                    (slices[i] >= coord && slices[i] < coord + 2)
-                )
-            );
-
-            if (visible_cells.length > 0)
-            {
-                active_items.push({ device, visible_cells });
-            }
-        }
-    }
-
-    // Pass 1: Render ghost items (adjacent slice, distance = 1) with translucent alpha
-    if (ghost_items.length > 0)
-    {
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-        for (const item of ghost_items)
-        {
-            render_device_item(ctx, item, camera, canvas);
-        }
-        ctx.restore();
-    }
-
-    // Pass 2: Render active items (current slice, distance = 0) with full opacity
-    for (const item of active_items)
-    {
-        render_device_item(ctx, item, camera, canvas);
     }
 }

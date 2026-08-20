@@ -1,5 +1,7 @@
-import { device, type vector } from '@/core/types';
+import { device, type vector } from '@/API';
 import type { drawable_device, camera_type } from '@/packs/basic_renderer';
+import { get_map } from '@/runtime';
+import { vanilla } from '@/packs/vanilla';
 import { add_vector } from '@/utils/math';
 
 export interface device_color_theme
@@ -91,6 +93,7 @@ export abstract class base_test_device extends device implements drawable_device
 
     /**
      * Unified device drawing template: solid rectangle + deep tone border + UID label + ports.
+     * When overlapped === true, wraps the device in a light red overlay and border.
      */
     public draw
     (
@@ -103,16 +106,21 @@ export abstract class base_test_device extends device implements drawable_device
         camera: camera_type
     ): void
     {
+        ctx.save();
+        ctx.globalAlpha = 0.75;
+
         const { fill, border } = this.get_color_theme(camera);
 
         // 1. 純色矩形
         ctx.fillStyle = fill;
         ctx.fillRect(sx, sy, sw, sh);
 
-        // 2. 同色系深色邊框
+        // 2. 同色系深色邊框（內縮 half_border_lw，確保完全在 grid 內部）
+        const border_lw = Math.max(1, zoom * 0.04);
+        const half_border_lw = border_lw / 2;
         ctx.strokeStyle = border;
-        ctx.lineWidth = Math.max(1, zoom * 0.04);
-        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.lineWidth = border_lw;
+        ctx.strokeRect(sx + half_border_lw, sy + half_border_lw, sw - border_lw, sh - border_lw);
 
         // 3. 裝置 #UID 標籤
         ctx.fillStyle = border;
@@ -123,5 +131,26 @@ export abstract class base_test_device extends device implements drawable_device
 
         // 4. 連接埠
         this.draw_ports(ctx, camera);
+
+        // 5. 若發生重疊，以淡紅色包覆（外框同樣內縮於 grid 內部）
+        const map = get_map();
+        if (map)
+        {
+            const validation = vanilla.check_map_overlap(map);
+            const overlapped = validation.overlapped.includes(this.uid);
+            if (overlapped)
+            {
+                ctx.fillStyle = 'rgba(248, 113, 113, 0.45)';
+                ctx.fillRect(sx, sy, sw, sh);
+
+                const red_lw = Math.max(2, zoom * 0.05);
+                const half_red_lw = red_lw / 2;
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = red_lw;
+                ctx.strokeRect(sx + half_red_lw, sy + half_red_lw, sw - red_lw, sh - red_lw);
+            }
+        }
+
+        ctx.restore();
     }
 }

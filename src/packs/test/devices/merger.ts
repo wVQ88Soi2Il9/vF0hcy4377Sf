@@ -1,4 +1,4 @@
-import type { vector } from '@/core/types';
+import type { vector } from '@/API';
 import { base_test_device, type device_color_theme } from './base_test_device';
 
 export const device_id = 'test:merger';

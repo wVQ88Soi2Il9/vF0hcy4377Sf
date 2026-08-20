@@ -41,6 +41,11 @@ export
     type device_constructor
 } from '@/core/pack_manager';
 
+export
+{
+    device
+} from '@/core/types';
+
 export type
 {
     vector,
@@ -50,7 +55,6 @@ export type
     recipe_evaluation,
     recipe_fn,
     recipe,
-    device,
     game_map
 } from '@/core/types';
 
