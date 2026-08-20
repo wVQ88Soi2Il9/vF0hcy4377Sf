@@ -89,7 +89,7 @@ export interface recipe
 
 // ── Device ───────────────────────────────────────────────────────────────────
 
-// ── Device Definition (靜態藍圖 / 原型) ───────────────────────────────────
+// ── Device Definition (靜態藍圖 / 原型類別) ───────────────────────────────────
 
 export interface device_definition
 {
@@ -119,28 +119,119 @@ export interface device_definition
     other_info?:   Record<string, unknown>;
 }
 
-// ── Device Instance (動態實體) ─────────────────────────────────────────
-
-export interface device
+/**
+ * Base OOP class for device blueprints / definitions.
+ */
+export class device_definition_base implements device_definition
 {
-    /** Unique numerical identifier for this specific placed instance on the map */
-    uid:                  number;
+    public id:           string;
+    public shape:        vector[];
+    public input_ports:  vector[];
+    public output_ports: vector[];
+    public other_info:   Record<string, unknown>;
 
-    /** Reference to device_definition.id */
-    definition_id:        string;
+    constructor
+    (
+        id:           string,
+        shape:        vector[] = [],
+        input_ports:  vector[] = [],
+        output_ports: vector[] = [],
+        other_info:   Record<string, unknown> = {}
+    )
+    {
+        this.id           = id;
+        this.shape        = shape;
+        this.input_ports  = input_ports;
+        this.output_ports = output_ports;
+        this.other_info   = other_info;
+    }
 
-    /** Anchor cell in world coordinates (N-dimensional). */
-    position:             vector;
+    public get_shape(_dev?: device): vector[]
+    {
+        return this.shape;
+    }
 
-    /** Ordered list of plane rotations applied to all local offset vectors before adding position. */
-    rotation:             rotation;
+    public get_input_ports(_dev?: device): vector[]
+    {
+        return this.input_ports;
+    }
 
-    /** The recipe currently selected by the player to be processed by this device */
-    selected_recipe_id?:  string;
+    public get_output_ports(_dev?: device): vector[]
+    {
+        return this.output_ports;
+    }
 
-    /** Mod-extensible dynamic metadata (e.g. inventory, working status, progress). Core never reads this. */
-    other_info?:           Record<string, unknown>;
+    public create_instance
+    (
+        uid:        number,
+        position:   vector,
+        rotation:   rotation = [],
+        other_info: Record<string, unknown> = {}
+    ): device_instance
+    {
+        return new device_instance(uid, this.id, position, rotation, other_info);
+    }
 }
+
+// ── Device Instance (動態實體類別) ─────────────────────────────────────────
+
+export interface device_data
+{
+    uid:                  number;
+    definition_id:        string;
+    position:             vector;
+    rotation:             rotation;
+    selected_recipe_id?:  string;
+    other_info?:          Record<string, unknown>;
+}
+
+/**
+ * OOP Device Instance class representing a placed device on the map.
+ */
+export class device_instance implements device_data
+{
+    public uid:                 number;
+    public definition_id:       string;
+    public position:            vector;
+    public rotation:            rotation;
+    public selected_recipe_id?: string;
+    public other_info:          Record<string, unknown>;
+
+    constructor
+    (
+        uid:                 number,
+        definition_id:       string,
+        position:            vector,
+        rotation:            rotation = [],
+        other_info:          Record<string, unknown> = {},
+        selected_recipe_id?: string
+    )
+    {
+        this.uid                = uid;
+        this.definition_id      = definition_id;
+        this.position           = position;
+        this.rotation           = rotation;
+        this.other_info         = other_info;
+        this.selected_recipe_id = selected_recipe_id;
+    }
+
+    public move(new_position: vector): void
+    {
+        this.position = new_position;
+    }
+
+    public rotate(new_rotation: rotation): void
+    {
+        this.rotation = new_rotation;
+    }
+
+    public select_recipe(recipe_id?: string): void
+    {
+        this.selected_recipe_id = recipe_id;
+    }
+}
+
+export type device = device_instance;
 
 // ── Map ──────────────────────────────────────────────────────────────────────
 

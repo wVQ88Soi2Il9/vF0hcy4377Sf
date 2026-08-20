@@ -44,7 +44,7 @@ export function create_cmd_bar(): cmd_bar_component
             <input
                 id="cmd_input"
                 type="text"
-                placeholder='Type command (e.g. create --"test:assembler" --"4, 4, 0") or help...'
+                placeholder='Type command (e.g. create --"ef:shaping_machine" --"4, 4, 0") or help...'
                 style="
                     flex: 1;
                     background: transparent;

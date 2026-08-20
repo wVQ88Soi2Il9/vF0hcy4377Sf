@@ -3,7 +3,7 @@ import type { camera_type } from '@/packs/basic_renderer/types';
 import { get_world_ports } from '@/utils/device_utils';
 
 /**
- * Draws input and output ports on canvas for a test pack device.
+ * Draws input and output ports on canvas for an ef pack device.
  */
 export function draw_ports
 (

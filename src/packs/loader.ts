@@ -1,5 +1,6 @@
-import type { pack, item_definition, recipe, device_definition } from '@/core/types';
+import type { pack, item_definition, recipe, device_definition, recipe_evaluation } from '@/core/types';
 import { register_device_behavior } from '@/API';
+import { get_map } from '@/runtime';
 
 // Helper function to resolve ID with namespace
 function resolve_id(id: string, ns: string): string
@@ -79,6 +80,60 @@ export function load_all_packs(): pack[]
                     current_pack.device_definitions.push(processed_device);
                 }
             }
+            else if (filename === 'recipes')
+            {
+                for (const raw_recipe of file_data)
+                {
+                    const full_id = resolve_id(raw_recipe.id, namespace);
+                    const target_machine_id = raw_recipe.machine_id ? resolve_id(raw_recipe.machine_id, namespace) : undefined;
+                    const resolved_inputs = (raw_recipe.inputs || []).map((inp: any) =>
+                    ({
+                        item_id: resolve_id(inp.item_id, namespace),
+                        quantity: inp.quantity
+                    }));
+                    const resolved_outputs = (raw_recipe.outputs || []).map((out: any) =>
+                    ({
+                        item_id: resolve_id(out.item_id, namespace),
+                        quantity: out.quantity
+                    }));
+
+                    const evaluate_fn = function(uid?: number): recipe_evaluation
+                    {
+                        if (uid !== undefined && target_machine_id)
+                        {
+                            const map = get_map();
+                            const dev = map?.devices.find(d => d.uid === uid);
+                            if (dev && dev.definition_id !== target_machine_id)
+                            {
+                                return {
+                                    valid: false,
+                                    duration: 0,
+                                    inputs: [],
+                                    outputs: []
+                                };
+                            }
+                        }
+
+                        return {
+                            valid: true,
+                            duration: raw_recipe.duration,
+                            inputs: resolved_inputs,
+                            outputs: resolved_outputs,
+                            other_info: raw_recipe.other_info
+                        };
+                    };
+
+                    const processed_recipe: recipe =
+                    {
+                        ...raw_recipe,
+                        id: full_id,
+                        evaluate: evaluate_fn,
+                        other_info: raw_recipe.other_info || {}
+                    };
+
+                    current_pack.recipes.push(processed_recipe);
+                }
+            }
         }
     }
 
@@ -111,6 +166,55 @@ export function load_all_packs(): pack[]
             };
 
             current_pack.recipes.push(processed_recipe);
+        }
+    }
+
+    // 3. Vite's glob import to get all TS pack definitions under packs/*/pack.ts (OOP packs)
+    const direct_pack_modules = import.meta.glob('./*/pack.ts', { eager: true }) as Record<string, any>;
+
+    for (const path in direct_pack_modules)
+    {
+        const parts = path.split('/');
+        if (parts.length < 3)
+        {
+            continue;
+        }
+
+        const namespace = parts[1];
+        const mod = direct_pack_modules[path];
+        const pack_candidate: pack = mod.ef_pack_data || mod.pack_data || mod.pack || mod.default;
+
+        if (pack_candidate && Array.isArray(pack_candidate.device_definitions))
+        {
+            const current_pack = get_or_create_pack(namespace);
+            current_pack.id = pack_candidate.id || namespace;
+
+            for (const item of (pack_candidate.items || []))
+            {
+                current_pack.items.push
+                ({
+                    ...item,
+                    id: resolve_id(item.id, namespace)
+                });
+            }
+
+            for (const rec of (pack_candidate.recipes || []))
+            {
+                current_pack.recipes.push
+                ({
+                    ...rec,
+                    id: resolve_id(rec.id, namespace)
+                });
+            }
+
+            for (const dev of (pack_candidate.device_definitions || []))
+            {
+                current_pack.device_definitions.push
+                ({
+                    ...dev,
+                    id: resolve_id(dev.id, namespace)
+                });
+            }
         }
     }
 

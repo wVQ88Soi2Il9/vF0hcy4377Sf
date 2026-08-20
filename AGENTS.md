@@ -29,6 +29,7 @@ Before starting **any task or writing any code** in this repository, you MUST re
 - **不主動執行 `npx tsc -b`** — 除非使用者明確指示，否則 Agent 不要主動執行 `npx tsc -b` 或型別檢查指令。
 - **Git 指令自動執行 (Direct Git Execution)** — 當收到 Git 相關指示（如 `git commit`）時，直接自動完成 `git add`、生成 commit message 並執行 `git commit`，毋需再提問或請求確認。
 - **架構轉型不是問題 (Architecture Transformation Is Not An Issue)** — 不受限於現有實作或歷史包袱，只要符合設計目標與需求，隨時可進行深度的架構重構與轉型（例如從純靜態 JSON 轉向函式化/動態模組），勇於打破現狀重塑架構。
+- **大膽使用物件導向 (Bold OOP Usage)** — 在本分支/專案中，可大膽使用物件導向（OOP、類別 Class、繼承 Inheritance、多型 Polymorphism）封裝 Device、Recipe、Behavior 與 Renderer 邏輯，不必受限於純靜態 JSON。
 - **Plan History 自動化處理** — 修改 `docs/history` 計畫檔案與狀態屬於日常追蹤流程，Agent 自行自動處理，**不必再向使用者請求確認**：
   1. **任務讀取**：接手特定任務（如 `<seq>#<n>`）時，自動執行 `python docs/history/plan-item.py <seq>#<n>` 讀取單一項目內文與依據，避免加載整份 Plan 檔。
   2. **狀態更新**：完成任務或變更狀態時，主動修改 Plan 檔對應項目的 `- **state:**`（如 `完成`），並記錄歷史沿革（`- H<n> · YYYY-MM-DD HH:MM <kind> —— ...`）。檔名統一精確至分鐘：`<seq>_<YYYYMMDDHHMM>_<topic>.md`。

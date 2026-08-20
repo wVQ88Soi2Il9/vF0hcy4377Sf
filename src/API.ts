@@ -20,6 +20,7 @@ import
 
 export
 {
+    game_map_instance,
     create_map,
     create_device,
     delete_device,
@@ -30,6 +31,7 @@ export
 
 export
 {
+    pack_registry_instance,
     create_pack_registry,
     load_pack,
     unload_pack,
@@ -54,6 +56,12 @@ export
     get_world_cells,
     get_world_ports
 } from '@/utils/device_utils';
+
+export
+{
+    device_instance,
+    device_definition_base
+} from '@/core/types';
 
 export type
 {

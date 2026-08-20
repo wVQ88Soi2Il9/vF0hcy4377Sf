@@ -21,11 +21,13 @@ set_registry(registry);
 // 4. 呼叫所有 pack 的 init_pack()（包含 basic_renderer）
 call_all_pack_inits();
 
-// 5. 放些 3D 測試設備（包含 3D 不規則圖形裝置）
-const dev1 = create_device(map, 'test:assembler', [2, 2, 0], [], {});
-select_recipe(map, dev1.uid, 'test:iron_gear');
+// 5. 放些 3D 測試設備（ef pack 裝置）
+const dev_ef1 = create_device(map, 'ef:shaping_machine', [2, 2, 0], [], {});
 
-create_device(map, 'test:irregular_3d', [4, 4, 0], [], {});
-create_device(map, 'test:belt', [6, 2, 0], [], {});
-create_device(map, 'test:splitter', [8, 2, 0], [], {});
-create_device(map, 'test:pipe', [10, 6, 0], [], { length: 3 });
+const dev_ef2 = create_device(map, 'ef:reactor', [10, 2, 0], [], {});
+select_recipe(map, dev_ef2.uid, 'ef:reactor_p_357bc568a0_0');
+
+create_device(map, 'ef:splitter', [2, 10, 0], [], {});
+create_device(map, 'ef:refinery', [8, 10, 0], [], {});
+create_device(map, 'ef:filling_machine', [2, 14, 0], [], {});
+create_device(map, 'ef:crusher', [10, 10, 0], [], {});

@@ -149,7 +149,7 @@ export function execute_command(input: string): string
             const n_dim = map.size.length;
             if (args.length < 2)
             {
-                return `Usage: create --"<def_id>" --"<position>" (e.g. create --"test:assembler" --"4, 4, 0")`;
+                return `Usage: create --"<def_id>" --"<position>" (e.g. create --"ef:shaping_machine" --"4, 4, 0")`;
             }
             const def_id = clean_flag_arg(args[0]);
             const pos_str = clean_flag_arg(args[1]);

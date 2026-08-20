@@ -190,6 +190,9 @@ CMD 指令傳入的 `position` 參數（如 `create` / `move`）必須嚴格驗�
 **Rule 8：地圖與裝置 UID 規範 (Map UID & Renderer Rule)**  
 地圖 `game_map.uid` 從 `1` 開始遞增分配。繪圖函式需在裝置上畫出其唯一 `#UID`，右側 UI 面板與 `info --"<uid>"` 指令可給定 UID 查詢並顯示裝置詳細資訊。
 
+**Rule 9：大膽使用物件導向 (Bold OOP Usage)**  
+在本分支與特定遊戲/目的本體中，可大膽使用物件導向（OOP、類別 Class、繼承 Inheritance、多型 Polymorphism）封裝 Device、Recipe、Behavior、Lifecycle 與 Renderer 行為，不受限於純靜態 JSON 藍圖。
+
 ---
 
 
@@ -203,3 +206,4 @@ CMD 指令傳入的 `position` 參數（如 `create` / `move`）必須嚴格驗�
 *   發現有風險、不明確的指示時，立刻回報給我
 *   **不要額外做事**：每次只做要求的部分
 *   **架構轉型不是問題**：不受限於既有實作或歷史包袱，只要符合設計目標與需求，隨時可進行深度的架構重構與轉型。
+*   **大膽使用 OOP**：不受限於純靜態資料假設，可大膽採用類別與物件導向架構實作本體邏輯。
