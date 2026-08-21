@@ -58,7 +58,6 @@ export function draw_devices
 {
     const { dim_h, dim_v, slices } = camera.plane;
 
-    const ghost_items: render_item[] = [];
     const active_items: render_item[] = [];
 
     for (const device of map.devices)
@@ -101,18 +100,7 @@ export function draw_devices
             }
         }
 
-        if (max_slice_dist > 1)
-        {
-            continue;
-        }
-
-        if (max_slice_dist === 1)
-        {
-            // Ghost item: adjacent to slice (e.g. 1 unit away from [min_dim, max_dim + 2)).
-            // Render entire device footprint as semi-transparent.
-            ghost_items.push({ device, def, visible_cells: world_cells });
-        }
-        else
+        if (max_slice_dist === 0)
         {
             // Active item: intersects the slice (max_slice_dist === 0).
             // Filter cells that intersect the slice plane along non-displayed dimensions.
@@ -131,19 +119,7 @@ export function draw_devices
         }
     }
 
-    // Pass 1: Render ghost items (adjacent slice, distance = 1) with translucent alpha
-    if (ghost_items.length > 0)
-    {
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-        for (const item of ghost_items)
-        {
-            render_device_item(ctx, item, camera, canvas);
-        }
-        ctx.restore();
-    }
-
-    // Pass 2: Render active items (current slice, distance = 0) with full opacity
+    // Render active items (current slice, distance = 0)
     for (const item of active_items)
     {
         render_device_item(ctx, item, camera, canvas);

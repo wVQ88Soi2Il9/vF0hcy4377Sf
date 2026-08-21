@@ -2,7 +2,7 @@ import grid_svg_url from './assets/grid.svg';   // Vite 幫你轉成 URL
 import type { game_map } from '@/core/types';
 import type { camera_type } from './types';
 
-const SVG_SIZE = 128;   // 你的 SVG 是 128×128
+const SVG_TILE_SIZE = 64;
 
 // 圖片只載入一次（模組層級）
 const grid_img = new Image();
@@ -21,12 +21,14 @@ export function draw_grid
         return;  // 還沒載入完就跳過
     }
 
+    ctx.imageSmoothingEnabled = false;
+
     const pattern = ctx.createPattern(grid_img, 'repeat')!;
 
     // 讓 pattern 跟著 camera 移動和縮放
     pattern.setTransform(new DOMMatrix()
         .translate(camera.pan_x, canvas.height + camera.pan_y)
-        .scale(camera.zoom / SVG_SIZE)
+        .scale(camera.zoom / SVG_TILE_SIZE)
     );
 
     ctx.fillStyle = pattern;
@@ -45,8 +47,11 @@ export function draw_grid
         const sw = size_h * camera.zoom;
         const sh = size_v * camera.zoom;
 
+        const border_lw = Math.max(4, camera.zoom * 0.08);
+        const half_border_lw = border_lw / 2;
+
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = Math.max(2, camera.zoom * 0.04);
-        ctx.strokeRect(sx, sy, sw, sh);
+        ctx.lineWidth = border_lw;
+        ctx.strokeRect(sx - half_border_lw, sy - half_border_lw, sw + border_lw, sh + border_lw);
     }
 }

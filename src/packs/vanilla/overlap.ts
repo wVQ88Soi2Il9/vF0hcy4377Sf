@@ -10,7 +10,7 @@ import { get_device_definition } from '@/core/pack_manager';
  */
 export function is_out_of_bounds(pos: vector, map_size: vector): boolean
 {
-    return pos.some((v, i) => v < 0 || v >= (map_size[i] ?? 0));
+    return pos.some((v, i) => v < 0 || v >= map_size[i]);
 }
 
 /**
@@ -21,12 +21,7 @@ export function is_out_of_bounds(pos: vector, map_size: vector): boolean
  */
 export function check_map_overlap(map: game_map, registry: pack_registry): map_validation_result
 {
-    const result: map_validation_result = {
-        out_of_bounds: [],
-        overlapped: []
-    };
-
-    // 紀錄每個座標對應了哪些裝置 (uid)
+    const out_of_bounds: number[] = [];
     const occupied_map = new spatial_map<number[]>();
 
     // 第一階段：掃描所有裝置，記錄出界狀況並註冊佔據的格子
@@ -39,42 +34,29 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
         }
 
         const cells = get_world_cells(dev, def);
-        let is_oob = false;
+        if (cells.some(cell => is_out_of_bounds(cell, map.size)))
+        {
+            out_of_bounds.push(dev.uid);
+        }
 
         for (const cell of cells)
         {
-            // 檢查出界
-            if (is_out_of_bounds(cell, map.size))
-            {
-                is_oob = true;
-            }
-
-            // 記錄佔據
             occupied_map.get_or_insert(cell, () => []).push(dev.uid);
         }
-
-        if (is_oob)
-        {
-            result.out_of_bounds.push(dev.uid);
-        }
     }
 
-    // 第二階段：尋找被 2 個以上裝置佔用的格子，收集其 uid
-    const overlapped_set = new Set<number>();
-    for (const device_ids of occupied_map.values())
-    {
-        if (device_ids.length > 1)
-        {
-            for (const id of device_ids)
-            {
-                overlapped_set.add(id);
-            }
-        }
-    }
+    // 第二階段：尋找被 2 個以上相異裝置佔用的格子，收集其 uid
+    const overlapped = Array.from(new Set(
+        occupied_map
+            .values()
+            .filter(ids => new Set(ids).size > 1)
+            .flat()
+    ));
 
-    result.overlapped = Array.from(overlapped_set);
-
-    return result;
+    return {
+        out_of_bounds,
+        overlapped
+    };
 }
 
 
