@@ -275,15 +275,15 @@
 }
 
 .basic_ui_checkbox:checked {
-    background: var(--basic-ui-blue);
-    border-color: var(--basic-ui-sapphire);
+    background: rgba(137, 180, 250, 0.2);
+    border-color: var(--basic-ui-blue);
 }
 
 .basic_ui_checkbox:checked::before {
     content: "";
     width: 6px;
     height: 6px;
-    background-color: var(--basic-ui-bg-crust);
+    background-color: var(--basic-ui-blue);
     clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 
@@ -317,10 +317,10 @@
 
 .basic_ui_btn_primary {
     height: 30px;
-    background: var(--basic-ui-blue);
-    border: 1px solid var(--basic-ui-sapphire);
+    background: rgba(137, 180, 250, 0.15);
+    border: 1px solid rgba(137, 180, 250, 0.4);
     border-radius: 4px;
-    color: var(--basic-ui-bg-crust);
+    color: var(--basic-ui-blue);
     padding: 0 12px;
     font-size: 11px;
     cursor: pointer;
@@ -334,12 +334,14 @@
 }
 
 .basic_ui_btn_primary:hover {
-    background: #b4befe;
-    color: var(--basic-ui-bg-crust);
+    background: rgba(137, 180, 250, 0.28);
+    border-color: var(--basic-ui-blue);
+    color: #ffffff;
 }
 
 .basic_ui_btn_primary:active {
     transform: scale(0.96);
+    background: rgba(137, 180, 250, 0.35);
 }
 
 .basic_ui_btn_danger {
@@ -434,6 +436,10 @@
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
+}
+
+.basic_ui_pos_row > button {
+    margin-left: 8px;
 }
 
 .basic_ui_pos_field {

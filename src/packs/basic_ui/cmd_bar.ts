@@ -17,7 +17,8 @@ export function create_cmd_bar(): cmd_bar_component
         position_css:   'left: 16px; bottom: 16px;',
         default_width:  '580px',
         default_height: '68px',
-        collapsible:    true,
+        collapsible:       true,
+        default_collapsed: true,
         resize: {
             top:        true,
             right:      true,

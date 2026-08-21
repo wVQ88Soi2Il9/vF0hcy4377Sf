@@ -14,15 +14,16 @@ export interface resize_config
 
 export interface panel_options
 {
-    id:              string;
-    tag?:            string;
-    position_css:    string;
-    default_width:   string;
-    default_height?: string;
-    title?:          string | HTMLElement;
-    collapsible?:    boolean;
-    resize?:         resize_config;
-    extra_css?:      string;
+    id:                 string;
+    tag?:               string;
+    position_css:       string;
+    default_width:      string;
+    default_height?:    string;
+    title?:             string | HTMLElement;
+    collapsible?:       boolean;
+    default_collapsed?: boolean;
+    resize?:            resize_config;
+    extra_css?:         string;
 }
 
 export interface panel_component
@@ -150,12 +151,17 @@ export function create_floating_panel(options: panel_options): panel_component
         collapse_btn = document.createElement('button');
         collapse_btn.className = 'basic_ui_collapse_btn';
         collapse_btn.title = 'Collapse / Expand panel';
-        collapse_btn.textContent = '−';
+        collapse_btn.textContent = options.default_collapsed ? '+' : '−';
         collapse_btn.addEventListener('click', () =>
         {
             set_collapsed(!element.classList.contains('is_collapsed'));
         });
         header_element.appendChild(collapse_btn);
+
+        if (options.default_collapsed)
+        {
+            set_collapsed(true);
+        }
     }
 
     if (options.resize)
