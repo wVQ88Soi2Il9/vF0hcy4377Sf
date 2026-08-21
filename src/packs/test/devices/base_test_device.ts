@@ -105,7 +105,7 @@ export abstract class base_test_device extends base_layered_device
     ): void
     {
         ctx.save();
-        ctx.globalAlpha = 0.75;
+        ctx.globalAlpha *= 0.75;
 
         const { fill, border } = this.get_color_theme(camera);
 

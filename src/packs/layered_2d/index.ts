@@ -1,4 +1,5 @@
 import { vanilla, type map_validation_result, type device_node } from '@/packs/vanilla';
+import { basic_renderer } from '@/packs/basic_renderer';
 import { base_layered_device } from './base_device';
 import { apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
 import { draw_layered_devices } from './renderer';
@@ -35,3 +36,12 @@ export const layered_2d =
     build_device_graph: vanilla.build_device_graph,
     is_out_of_bounds:   vanilla.is_out_of_bounds
 };
+
+/**
+ * Initialize layered_2d pack: registers 2.5D layered renderer to basic_renderer.
+ * Auto-discovered by loader.ts.
+ */
+export function init_pack(): void
+{
+    basic_renderer.set_device_drawer(draw_layered_devices);
+}

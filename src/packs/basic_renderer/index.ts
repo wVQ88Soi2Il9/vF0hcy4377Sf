@@ -8,6 +8,16 @@ export type { camera_type, view_plane, drawable_device };
 
 let renderer_canvas: HTMLCanvasElement | null = null;
 let current_draw_fn: (() => void) | null = null;
+let active_draw_devices_fn: typeof draw_devices = draw_devices;
+
+/**
+ * Registers a custom device drawing function for the renderer.
+ */
+export function set_device_drawer(fn: typeof draw_devices): void
+{
+    active_draw_devices_fn = fn;
+    redraw_renderer();
+}
 
 const camera: camera_type =
 {
@@ -255,7 +265,7 @@ export function init_pack(): void
         adapt_camera_plane(camera, map.size.length);
         ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
         draw_grid(ctx, renderer_canvas, camera, map);
-        draw_devices(ctx, map, camera, renderer_canvas);
+        active_draw_devices_fn(ctx, map, camera, renderer_canvas);
     }
 
     current_draw_fn = draw;
@@ -272,12 +282,13 @@ export function init_pack(): void
  */
 export const basic_renderer = {
     // Canvas & Redraw
-    get_canvas:     get_renderer_canvas,
-    resize_canvas:  resize_renderer_canvas,
-    redraw:         redraw_renderer,
+    get_canvas:        get_renderer_canvas,
+    resize_canvas:     resize_renderer_canvas,
+    redraw:            redraw_renderer,
+    set_device_drawer: set_device_drawer,
 
     // Camera & Viewport
-    get_camera:     get_camera_plane,
-    set_camera:     set_camera_plane,
-    grid_to_screen: grid_to_screen
+    get_camera:        get_camera_plane,
+    set_camera:        set_camera_plane,
+    grid_to_screen:    grid_to_screen
 };
