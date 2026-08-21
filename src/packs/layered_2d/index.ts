@@ -8,7 +8,6 @@ export type
     rotation_step,
     d4_transform,
     layered_camera,
-    device_color_theme,
     rotatable_device,
     layered_device,
     drawable_layered_device

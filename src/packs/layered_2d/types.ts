@@ -46,15 +46,6 @@ export interface layered_camera
 }
 
 /**
- * 裝置顏色主題設定
- */
-export interface device_color_theme
-{
-    fill:   string;
-    border: string;
-}
-
-/**
  * 2.5D D4 幾何變換能力介面契約 (Capability Interface)
  * 供下游裝置實作，支援 2.5D 水平主平面之二面體群 D4 (旋轉與翻轉) 變換。
  */
