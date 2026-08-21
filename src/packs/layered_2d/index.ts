@@ -37,6 +37,9 @@ export const layered_2d =
     is_out_of_bounds:   vanilla.is_out_of_bounds
 };
 
+// 自動掃描並載入所有 Rely-Pack 擴充模組（如 ./$basic_ui/*.ts）
+import.meta.glob('./$*/*.ts', { eager: true });
+
 /**
  * Initialize layered_2d pack: registers 2.5D layered renderer to basic_renderer.
  * Auto-discovered by loader.ts.

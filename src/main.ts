@@ -11,8 +11,8 @@ for (const p of load_all_packs())
 }
 load_all_device_classes(registry);
 
-// 2. 建立測試地圖（next uid 預設從 1 開始，3 維空間: 20×20×5）
-const map = create_map([20, 20, 5]);
+// 2. 建立測試地圖（next uid 預設從 1 開始，3 維空間: 20×20×8，符合偶數網格規範）
+const map = create_map([20, 20, 8]);
 
 // 3. 在 loader 呼叫 init_pack() 之前，先把 map 和 registry 注冊到 API
 //    這樣 basic_renderer 的 init_pack() 就能用 get_map() / get_registry() 拿到

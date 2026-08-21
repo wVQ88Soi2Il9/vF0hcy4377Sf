@@ -146,3 +146,277 @@
 .basic_ui_panel .basic_ui_resize_handle.bottom {
     bottom: 0;
 }
+
+/* Stats and Lookup Rows */
+.basic_ui_stats_row {
+    color: #a6adc8;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    border-bottom: 1px solid #45475a;
+    padding-bottom: 8px;
+}
+
+.basic_ui_lookup_row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Select, Input and Button Elements */
+.basic_ui_select {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    background: #1e1e2e;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    color: #cdd6f4;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.basic_ui_input {
+    width: 100%;
+    min-width: 36px;
+    background: #11111b;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    color: #cdd6f4;
+    padding: 3px 4px;
+    font-family: monospace;
+    font-size: 11px;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.basic_ui_btn {
+    height: 30px;
+    background: #313244;
+    border: 1px solid #585b70;
+    border-radius: 4px;
+    color: #cdd6f4;
+    padding: 0 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: all 0.15s;
+}
+
+.basic_ui_btn:hover {
+    background: #45475a;
+    color: #ffffff;
+}
+
+.basic_ui_btn_danger {
+    flex: 1;
+    background: #45212e;
+    border: 1px solid #f38ba8;
+    border-radius: 4px;
+    color: #f38ba8;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.basic_ui_btn_danger:hover {
+    background: #612b3d;
+}
+
+/* Card and Form Structure */
+.basic_ui_card {
+    background: #1e1e2e;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.basic_ui_card_header {
+    color: #a6e3a1;
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: 1px dashed #45475a;
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 6px;
+}
+
+.basic_ui_section_title {
+    color: #89b4fa;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.basic_ui_form_group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.basic_ui_pos_row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.basic_ui_pos_field {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+}
+
+.basic_ui_pos_label {
+    font-size: 11px;
+    color: #a6adc8;
+    font-weight: bold;
+    min-width: 12px;
+}
+
+/* Custom Themed Number Stepper */
+.basic_ui_stepper {
+    display: inline-flex;
+    align-items: center;
+    background: #11111b;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    height: 30px;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: border-color 0.15s;
+}
+
+.basic_ui_stepper:focus-within {
+    border-color: #89b4fa;
+}
+
+.basic_ui_stepper_input {
+    width: 44px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #cdd6f4;
+    padding: 0 4px;
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+    -moz-appearance: textfield;
+}
+
+.basic_ui_stepper_input::-webkit-inner-spin-button,
+.basic_ui_stepper_input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.basic_ui_stepper_btns {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 18px;
+    border-left: 1px solid #313244;
+    background: #181825;
+}
+
+.basic_ui_stepper_btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #89b4fa;
+    font-size: 8px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    user-select: none;
+    transition: background 0.1s, color 0.1s;
+}
+
+.basic_ui_stepper_btn:hover {
+    background: #313244;
+    color: #b4befe;
+}
+
+.basic_ui_stepper_btn:active {
+    background: #45475a;
+    color: #ffffff;
+}
+
+.basic_ui_stepper_btn.up {
+    border-bottom: 1px solid #313244;
+}
+
+.basic_ui_eval_card {
+    background: #11111b;
+    border: 1px solid #313244;
+    border-radius: 4px;
+    padding: 6px;
+    margin-top: 2px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.basic_ui_error_msg {
+    color: #f38ba8;
+    font-size: 10px;
+}
+
+.basic_ui_actions_row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    border-top: 1px dashed #45475a;
+    padding-top: 8px;
+}

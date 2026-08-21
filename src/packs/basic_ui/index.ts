@@ -3,6 +3,17 @@ import { get_map } from '@/runtime';
 import { on_device_change } from '@/API';
 import { create_ui_layout } from './layout';
 import type { info_bar_component } from './info_bar';
+import {
+    register_device_inspector,
+    register_device_action,
+    register_panel_section
+} from './extensions';
+
+export type {
+    device_action,
+    device_inspector_fn,
+    panel_section_fn
+} from './extensions';
 
 let active_info_bar: info_bar_component | null = null;
 
@@ -70,10 +81,8 @@ export function clear_device_info(): void
  */
 export const basic_ui = {
     display_device_info,
-    clear_device_info
+    clear_device_info,
+    register_device_inspector,
+    register_device_action,
+    register_panel_section
 };
-
-
-
-
-
