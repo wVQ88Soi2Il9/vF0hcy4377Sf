@@ -6,12 +6,9 @@ import type
 {
     vector_3d,
     d4_transform,
-    rotation_step,
     rotatable_device,
-    layered_device,
     drawable_layered_device,
-    device_color_theme,
-    layered_camera
+    device_color_theme
 } from './types';
 import { apply_d4_transform, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
 
@@ -107,7 +104,7 @@ export abstract class base_layered_device extends device implements drawable_lay
     /**
      * Provides default or customizable color palette for this device.
      */
-    protected get_color_theme(camera?: camera_type): device_color_theme
+    protected get_color_theme(_camera?: camera_type): device_color_theme
     {
         return {
             fill:   '#38bdf8',

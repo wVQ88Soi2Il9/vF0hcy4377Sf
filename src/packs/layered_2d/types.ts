@@ -1,5 +1,5 @@
 import type { device } from '@/API';
-import type { drawable_device, camera_type } from '@/packs/basic_renderer';
+import type { drawable_device } from '@/packs/basic_renderer';
 
 /**
  * 2.5D 空間向量，強制為長度為 3 的 [x, y, z] 格式。
