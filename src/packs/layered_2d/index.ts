@@ -1,8 +1,7 @@
-import { vanilla, type map_validation_result, type device_node } from '@/packs/vanilla';
+import type { map_validation_result, device_node } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
-import { base_layered_device } from './base_device';
 import { apply_d4_point, apply_d4_cell_anchor, apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
-import { draw_layered_devices } from './renderer';
+import { draw_layered_devices, get_render_options, set_render_options } from './renderer';
 import type
 {
     vector_3d,
@@ -18,7 +17,7 @@ import type
 export type { map_validation_result, device_node };
 export { base_layered_device } from './base_device';
 export { apply_d4_point, apply_d4_cell_anchor, apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
-export { draw_layered_devices } from './renderer';
+export { draw_layered_devices, get_render_options, set_render_options } from './renderer';
 export type
 {
     vector_3d,
@@ -46,6 +45,8 @@ export function init_pack(): void
 export const layered_2d =
 {
     draw_layered_devices,
+    get_render_options,
+    set_render_options,
     apply_d4_point,
     apply_d4_cell_anchor,
     apply_d4_transform,

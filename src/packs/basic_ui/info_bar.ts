@@ -1,6 +1,7 @@
 import { get_map } from '@/runtime';
 import { create_floating_panel } from './panel';
 import { render_device_card } from './device_card';
+import { create_device_creator } from './device_creator';
 import { get_panel_sections } from './extensions';
 
 export interface info_bar_stats
@@ -49,7 +50,10 @@ export function create_info_bar(): info_bar_component
     const custom_sections_el = document.createElement('div');
     custom_sections_el.className = 'basic_ui_form_group';
 
-    // Section 3: Dropdown select for UID -> Get & Display Info
+    // Section 3: Device Creator Section
+    const creator = create_device_creator();
+
+    // Section 4: Dropdown select for UID -> Get & Display Info
     const lookup_container = document.createElement('div');
     lookup_container.className = 'basic_ui_lookup_row';
 
@@ -87,6 +91,7 @@ export function create_info_bar(): info_bar_component
 
     body.appendChild(map_info_el);
     body.appendChild(custom_sections_el);
+    body.appendChild(creator.element);
     body.appendChild(lookup_container);
     body.appendChild(content_container);
 
@@ -94,6 +99,7 @@ export function create_info_bar(): info_bar_component
     {
         map_info_el.innerHTML = `<span>Devices: <b>${stats.device_count}</b></span><span>Size: <b>${stats.map_dimensions}</b></span>`;
         refresh_uid_options();
+        creator.refresh_definitions();
 
         // Render downstream custom sections
         custom_sections_el.innerHTML = '';

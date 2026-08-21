@@ -1,6 +1,7 @@
 import type { game_map } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
 import { basic_renderer } from '@/packs/basic_renderer';
+import { layered_2d } from '../index';
 
 /**
  * Renders the 2.5D Layer Switcher section in Info Bar.
@@ -103,8 +104,34 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
     control_row.appendChild(btn_down);
     control_row.appendChild(btn_up);
 
+    // Translucent layer toggle control (開關半透明層)
+    const toggle_row = document.createElement('div');
+    toggle_row.className = 'basic_ui_lookup_row';
+
+    const checkbox_label = document.createElement('label');
+    checkbox_label.className = 'basic_ui_checkbox_label';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'basic_ui_checkbox';
+    const current_opts = layered_2d.get_render_options();
+    checkbox.checked = current_opts.show_inactive_layers !== false;
+
+    checkbox.addEventListener('change', () =>
+    {
+        layered_2d.set_render_options({ show_inactive_layers: checkbox.checked });
+    });
+
+    const label_text = document.createElement('span');
+    label_text.textContent = '開關半透明層 (Translucent Layers)';
+
+    checkbox_label.appendChild(checkbox);
+    checkbox_label.appendChild(label_text);
+    toggle_row.appendChild(checkbox_label);
+
     section_wrap.appendChild(title_row);
     section_wrap.appendChild(control_row);
+    section_wrap.appendChild(toggle_row);
 
     container.appendChild(section_wrap);
 }

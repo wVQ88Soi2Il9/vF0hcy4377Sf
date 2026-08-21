@@ -246,6 +246,47 @@
     border-color: var(--basic-ui-blue);
 }
 
+/* Checkbox and Toggle */
+.basic_ui_checkbox_label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--basic-ui-subtext0);
+    cursor: pointer;
+    user-select: none;
+}
+
+.basic_ui_checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--basic-ui-bg-crust);
+    border: 1px solid var(--basic-ui-surface1);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    display: inline-grid;
+    place-content: center;
+    transition: all 0.15s ease;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.basic_ui_checkbox:checked {
+    background: var(--basic-ui-blue);
+    border-color: var(--basic-ui-sapphire);
+}
+
+.basic_ui_checkbox:checked::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    background-color: var(--basic-ui-bg-crust);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
 /* Button Hierarchy (Primary / Secondary / Danger) */
 .basic_ui_btn {
     height: 30px;

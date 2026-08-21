@@ -1,7 +1,29 @@
 import type { game_map, device } from '@/API';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
+import { basic_renderer } from '@/packs/basic_renderer';
 import { add_vector_3d } from './math';
 import type { vector_3d, layered_render_options } from './types';
+
+let current_render_options: layered_render_options =
+{
+    show_inactive_layers: true,
+    inactive_alpha:       0.35
+};
+
+export function get_render_options(): layered_render_options
+{
+    return { ...current_render_options };
+}
+
+export function set_render_options(options: Partial<layered_render_options>): void
+{
+    current_render_options =
+    {
+        ...current_render_options,
+        ...options
+    };
+    basic_renderer.redraw();
+}
 
 interface render_item
 {
@@ -52,12 +74,18 @@ export function draw_layered_devices
     options:  layered_render_options = {}
 ): void
 {
+    const merged_options: layered_render_options =
+    {
+        ...current_render_options,
+        ...options
+    };
+
     const { dim_h, dim_v, slices } = camera.plane;
     const is_xy_plane = dim_h === 0 && dim_v === 1;
 
-    const active_layer = options.active_layer ?? (slices.length > 2 ? slices[2] : 0);
-    const show_inactive = options.show_inactive_layers !== false;
-    const inactive_alpha = options.inactive_alpha ?? 0.35;
+    const active_layer = merged_options.active_layer ?? (slices.length > 2 ? slices[2] : 0);
+    const show_inactive = merged_options.show_inactive_layers !== false;
+    const inactive_alpha = merged_options.inactive_alpha ?? 0.35;
 
     if (is_xy_plane)
     {
@@ -109,9 +137,10 @@ export function draw_layered_devices
             }
             else if (show_inactive)
             {
-                // 透視層：以半透明 Alpha 疊加繪製
+                // 透視層：以半透明 Alpha 與灰階濾鏡疊加繪製
                 ctx.save();
                 ctx.globalAlpha = inactive_alpha;
+                ctx.filter = 'grayscale(70%)';
                 for (const item of items)
                 {
                     render_device_item(ctx, item, camera, canvas);

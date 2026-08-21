@@ -4,16 +4,15 @@
 
 ## 目前使用中
 
-[0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 2/4
+[0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/4
 
 ## 現在開著的（逐格）
 
-- `0024#2` · **待實作** — 開發 2.5D 優化渲染器（Better Renderer）
 - `0024#4` · **待實作** — 優化 UI Bar
 
-> 要做某一格：`python3 docs/history/plan-item.py 0024#2`
+> 要做某一格：`python3 docs/history/plan-item.py 0024#4`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0024** [0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 2/4
+- **0024** [0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/4

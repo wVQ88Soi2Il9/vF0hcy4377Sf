@@ -28,7 +28,7 @@ function render_item_stacks(container: HTMLElement, label_text: string, stacks: 
     for (const st of stacks)
     {
         const item_el = document.createElement('div');
-        item_el.textContent = `${st.item_id} × ${st.count}`;
+        item_el.textContent = `${st.item_id} × ${st.quantity}`;
         list.appendChild(item_el);
     }
     row.appendChild(list);
