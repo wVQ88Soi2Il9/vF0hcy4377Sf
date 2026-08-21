@@ -17,7 +17,7 @@ export interface info_bar_component
 }
 
 /**
- * Creates the right-side Info Bar panel supporting interactive UID lookup and device info display.
+ * Creates the right-side Info Bar panel supporting interactive UID lookup via dropdown and device info display.
  */
 export function create_info_bar(): info_bar_component
 {
@@ -60,14 +60,13 @@ export function create_info_bar(): info_bar_component
     stats_container.appendChild(title_el);
     stats_container.appendChild(map_info_el);
 
-    // Section 2: Input box for Given UID -> Get & Display Info
+    // Section 2: Dropdown select for UID -> Get & Display Info
     const lookup_container = document.createElement('div');
-    lookup_container.style.cssText = 'display: flex; gap: 6px;';
+    lookup_container.style.cssText = 'display: flex; gap: 6px; align-items: center;';
 
-    const uid_input = document.createElement('input');
-    uid_input.type = 'number';
-    uid_input.placeholder = 'UID (e.g. 1)';
-    uid_input.style.cssText = `
+    const uid_select = document.createElement('select');
+    uid_select.id = 'uid_select';
+    uid_select.style.cssText = `
         flex: 1;
         background: #1e1e2e;
         border: 1px solid #45475a;
@@ -77,24 +76,32 @@ export function create_info_bar(): info_bar_component
         font-family: monospace;
         font-size: 12px;
         outline: none;
-    `.trim();
-
-    const lookup_btn = document.createElement('button');
-    lookup_btn.textContent = 'Get Info';
-    lookup_btn.style.cssText = `
-        background: #89b4fa;
-        color: #11111b;
-        border: none;
-        border-radius: 4px;
-        padding: 4px 10px;
-        font-family: monospace;
-        font-size: 12px;
-        font-weight: bold;
         cursor: pointer;
     `.trim();
 
-    lookup_container.appendChild(uid_input);
-    lookup_container.appendChild(lookup_btn);
+    function refresh_uid_options(selected_uid?: number): void
+    {
+        const current_val = selected_uid !== undefined ? String(selected_uid) : uid_select.value;
+        uid_select.innerHTML = '<option value="">-- Select Device (#UID) --</option>';
+
+        const map = get_map();
+        if (map)
+        {
+            for (const dev of map.devices)
+            {
+                const opt = document.createElement('option');
+                opt.value = String(dev.uid);
+                opt.textContent = `#${dev.uid} · ${dev.definition_id} @ [${dev.position.join(', ')}]`;
+                if (String(dev.uid) === current_val)
+                {
+                    opt.selected = true;
+                }
+                uid_select.appendChild(opt);
+            }
+        }
+    }
+
+    lookup_container.appendChild(uid_select);
 
     // Section 3: Device Info Content Display
     const content_container = document.createElement('div');
@@ -107,6 +114,7 @@ export function create_info_bar(): info_bar_component
     function update_stats(stats: info_bar_stats): void
     {
         map_info_el.innerHTML = `<span>Devices: <b>${stats.device_count}</b></span><span>Size: <b>${stats.map_dimensions}</b></span>`;
+        refresh_uid_options();
     }
 
     function render_device_details(dev: device): void
@@ -200,31 +208,26 @@ export function create_info_bar(): info_bar_component
         }
 
         render_device_details(dev);
-        uid_input.value = String(uid);
+        refresh_uid_options(uid);
         return true;
     }
 
     function clear_device_info(): void
     {
         content_container.innerHTML = '';
-        uid_input.value = '';
+        uid_select.value = '';
     }
 
-    function trigger_lookup(): void
+    uid_select.addEventListener('change', () =>
     {
-        const val = parseInt(uid_input.value.trim(), 10);
+        const val = parseInt(uid_select.value.trim(), 10);
         if (!isNaN(val))
         {
             display_device_info(val);
         }
-    }
-
-    lookup_btn.addEventListener('click', trigger_lookup);
-    uid_input.addEventListener('keydown', (e) =>
-    {
-        if (e.key === 'Enter')
+        else
         {
-            trigger_lookup();
+            clear_device_info();
         }
     });
 
