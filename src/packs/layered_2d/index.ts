@@ -1,4 +1,4 @@
-import { vanilla, type map_validation_result, type device_node } from '@/packs/vanilla';
+import { vanilla, type map_validation_result, type device_node, type device_graph, type port_cell } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { base_layered_device } from './base_device';
 import { apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
@@ -16,7 +16,7 @@ export type
     layered_render_options
 } from './types';
 
-export type { map_validation_result, device_node };
+export type { map_validation_result, device_node, device_graph, port_cell };
 export { base_layered_device } from './base_device';
 export { apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
 export { draw_layered_devices } from './renderer';
