@@ -1,8 +1,7 @@
-import { device, type vector } from '@/API';
-import type { drawable_device, camera_type } from '@/packs/basic_renderer';
+import type { camera_type } from '@/packs/basic_renderer';
+import { base_layered_device, add_vector_3d, type vector_3d } from '@/packs/layered_2d';
 import { get_map } from '@/runtime';
 import { vanilla } from '@/packs/vanilla';
-import { add_vector } from '@/utils/math';
 
 export interface device_color_theme
 {
@@ -12,12 +11,11 @@ export interface device_color_theme
 
 /**
  * Common abstract base class for all test pack devices.
- * Implements drawable_device to provide a unified rectangle + deep border + UID + ports renderer.
+ * Inherits 2.5D D4 transformations from base_layered_device, and implements
+ * a unified test renderer (solid rectangle + deep border + UID + ports + overlap highlight).
  */
-export abstract class base_test_device extends device implements drawable_device
+export abstract class base_test_device extends base_layered_device
 {
-    public abstract get_shape(): vector[];
-    public abstract get_port(type: 'input' | 'output'): vector[];
     protected abstract get_color_theme(camera?: camera_type): device_color_theme;
 
     /**
@@ -35,7 +33,7 @@ export abstract class base_test_device extends device implements drawable_device
 
         const render_port_list =
         (
-            ports:        vector[],
+            ports:        vector_3d[],
             color:        string,
             border_color: string,
             label:        string
@@ -43,7 +41,7 @@ export abstract class base_test_device extends device implements drawable_device
         {
             for (const local_port of ports)
             {
-                const wp = add_vector(this.position, local_port);
+                const wp = add_vector_3d(this.position as vector_3d, local_port);
 
                 // Check if port lies on or adjacent to current camera slice along non-displayed dimensions
                 let on_slice = true;
