@@ -12,7 +12,7 @@ for (const p of load_all_packs())
 load_all_device_classes(registry);
 
 // 2. 建立地圖（3 維空間: 20×20×8，全偶數網格錨點）
-const map = create_map([20, 20, 8]);
+const map = create_map([64, 64, 8]);
 
 // 3. 在 loader 呼叫 init_pack() 之前，註冊 map 和 registry
 set_map(map);
