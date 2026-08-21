@@ -46,6 +46,19 @@ export interface layered_camera
 }
 
 /**
+ * 2.5D 分層渲染選項
+ */
+export interface layered_render_options
+{
+    /** 當前焦點層級 z（預設為 0 或 camera.plane.slices[2]） */
+    active_layer?:         number;
+    /** 是否開啟非焦點層半透明透視（預設為 true） */
+    show_inactive_layers?: boolean;
+    /** 非焦點層透明度（預設為 0.25） */
+    inactive_alpha?:       number;
+}
+
+/**
  * 2.5D D4 幾何變換能力介面契約 (Capability Interface)
  * 供下游裝置實作，支援 2.5D 水平主平面之二面體群 D4 (旋轉與翻轉) 變換。
  */

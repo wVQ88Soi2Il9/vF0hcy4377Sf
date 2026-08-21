@@ -21,15 +21,11 @@ export interface view_plane
 
 export interface camera_type
 {
-    pan_x:                 number;
-    pan_y:                 number;
-    zoom:                  number;
+    pan_x:  number;
+    pan_y:  number;
+    zoom:   number;
     /** Which 2-D cross-section of the N-D world to render. */
-    plane:                 view_plane;
-    /** Whether to render devices on inactive layers/slices with alpha transparency. Default true. */
-    show_inactive_layers?: boolean;
-    /** Alpha transparency for inactive layers (0.0 ~ 1.0). Default 0.25. */
-    inactive_alpha?:       number;
+    plane:  view_plane;
 }
 
 /**
