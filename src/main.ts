@@ -35,3 +35,6 @@ create_device(map, belt_cls, 'test:belt', [6, 2, 0]);
 
 const splitter_cls = get_device_class(registry, 'test:splitter')!;
 create_device(map, splitter_cls, 'test:splitter', [8, 2, 0]);
+
+const merger_cls = get_device_class(registry, 'test:merger')!;
+create_device(map, merger_cls, 'test:merger', [6, 2, 2]);

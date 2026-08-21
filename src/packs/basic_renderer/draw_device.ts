@@ -48,23 +48,63 @@ export function draw_devices
 ): void
 {
     const { dim_h, dim_v, slices } = camera.plane;
+    const show_inactive = camera.show_inactive_layers !== false;
+    const inactive_alpha = camera.inactive_alpha ?? 0.25;
+
+    const active_items: render_item[] = [];
+    const inactive_items: render_item[] = [];
 
     for (const device of map.devices)
     {
         const world_cells = device.get_shape().map(pos => add_vector(device.position, pos));
 
-        // Filter cells that intersect the current slice plane along non-displayed dimensions
-        const visible_cells = world_cells.filter(cell =>
-            cell.every((coord, i) =>
+        // Separate cells into active slice cells vs non-active slice cells
+        const active_cells: number[][] = [];
+        const inactive_cells: number[][] = [];
+
+        for (const cell of world_cells)
+        {
+            const is_on_slice = cell.every((coord, i) =>
                 i === dim_h ||
                 i === dim_v ||
                 (slices[i] >= coord && slices[i] < coord + 2)
-            )
-        );
+            );
 
-        if (visible_cells.length > 0)
-        {
-            render_device_item(ctx, { device, visible_cells }, camera, canvas);
+            if (is_on_slice)
+            {
+                active_cells.push(cell);
+            }
+            else
+            {
+                inactive_cells.push(cell);
+            }
         }
+
+        if (active_cells.length > 0)
+        {
+            active_items.push({ device, visible_cells: active_cells });
+        }
+        if (inactive_cells.length > 0)
+        {
+            inactive_items.push({ device, visible_cells: inactive_cells });
+        }
+    }
+
+    // Pass 1: Render inactive layers/slices with alpha transparency in background
+    if (show_inactive && inactive_items.length > 0)
+    {
+        ctx.save();
+        ctx.globalAlpha = inactive_alpha;
+        for (const item of inactive_items)
+        {
+            render_device_item(ctx, item, camera, canvas);
+        }
+        ctx.restore();
+    }
+
+    // Pass 2: Render active layer/slice devices in foreground with full opacity
+    for (const item of active_items)
+    {
+        render_device_item(ctx, item, camera, canvas);
     }
 }
