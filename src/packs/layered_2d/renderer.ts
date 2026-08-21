@@ -6,6 +6,7 @@ import type { vector_3d, layered_render_options } from './types';
 interface render_item
 {
     device:        device;
+    layer:         number;
     visible_cells: vector_3d[];
 }
 
@@ -36,8 +37,11 @@ function render_device_item
 }
 
 /**
- * 2.5D Two-Pass 分層透視渲染函式。
- * 在焦點層呈現正常不透明度的同時，將非焦點高程層（如 Z=2 高架層）以半透明 Alpha 繪製在背景。
+ * 2.5D 分層透視渲染函式。
+ * 依照高程 Z 軸由低至高（Z 升序）分層渲染：
+ * 1. 底層物件先畫，高層物件後畫覆蓋在上方。
+ * 2. 當前焦點層（如 Z=0）以正常不透明度繪製。
+ * 3. 非焦點層（如高架 Z=2）以半透明 Alpha 疊加覆蓋在焦點層上方。
  */
 export function draw_layered_devices
 (
@@ -53,35 +57,72 @@ export function draw_layered_devices
 
     const active_layer = options.active_layer ?? (slices.length > 2 ? slices[2] : 0);
     const show_inactive = options.show_inactive_layers !== false;
-    const inactive_alpha = options.inactive_alpha ?? 0.25;
+    const inactive_alpha = options.inactive_alpha ?? 0.35;
 
-    const active_items: render_item[] = [];
-    const inactive_items: render_item[] = [];
-
-    for (const device of map.devices)
+    if (is_xy_plane)
     {
-        const pos = device.position as vector_3d;
-        const local_cells = device.get_shape() as vector_3d[];
-        const world_cells = local_cells.map(c => add_vector_3d(pos, c));
+        // 收集所有在水平視圖中可見的格點與所屬層級
+        const items_by_layer = new Map<number, render_item[]>();
 
-        if (is_xy_plane)
+        for (const device of map.devices)
         {
-            // 2.5D 水平分層邏輯
-            const active_cells = world_cells.filter(c => c[2] >= active_layer && c[2] < active_layer + 2);
-            const inactive_cells = world_cells.filter(c => c[2] < active_layer || c[2] >= active_layer + 2);
+            const pos = device.position as vector_3d;
+            const local_cells = device.get_shape() as vector_3d[];
+            const world_cells = local_cells.map(c => add_vector_3d(pos, c));
 
-            if (active_cells.length > 0)
+            // 依 Z 軸層級分組（偶數座標層級: 0, 2, 4, ...）
+            const layer_groups = new Map<number, vector_3d[]>();
+            for (const cell of world_cells)
             {
-                active_items.push({ device, visible_cells: active_cells });
+                const z_layer = cell[2];
+                const list = layer_groups.get(z_layer) || [];
+                list.push(cell);
+                layer_groups.set(z_layer, list);
             }
-            if (inactive_cells.length > 0)
+
+            for (const [layer, cells] of layer_groups.entries())
             {
-                inactive_items.push({ device, visible_cells: inactive_cells });
+                const list = items_by_layer.get(layer) || [];
+                list.push({ device, layer, visible_cells: cells });
+                items_by_layer.set(layer, list);
             }
         }
-        else
+
+        // 取得所有存在的層級，並依照 Z 由小到大排序（由底層向高層繪製）
+        const sorted_layers = Array.from(items_by_layer.keys()).sort((a, b) => a - b);
+
+        for (const layer of sorted_layers)
         {
-            // 非 XY 平面時退化為標準切片
+            const items = items_by_layer.get(layer) || [];
+            const is_active = layer >= active_layer && layer < active_layer + 2;
+
+            if (is_active)
+            {
+                // 焦點層：以正常不透明度繪製
+                for (const item of items)
+                {
+                    render_device_item(ctx, item, camera, canvas);
+                }
+            }
+            else if (show_inactive)
+            {
+                // 非焦點層（如 Z=2 高架層覆蓋在 Z=0 上方）：以半透明 Alpha 疊加繪製
+                ctx.save();
+                ctx.globalAlpha = inactive_alpha;
+                for (const item of items)
+                {
+                    render_device_item(ctx, item, camera, canvas);
+                }
+                ctx.restore();
+            }
+        }
+    }
+    else
+    {
+        // 非 XY 平面時退化為標準單一切片
+        for (const device of map.devices)
+        {
+            const world_cells = device.get_shape().map(pos => add_vector_3d(device.position as vector_3d, pos as vector_3d));
             const visible_cells = world_cells.filter(cell =>
                 cell.every((coord, i) =>
                     i === dim_h ||
@@ -89,28 +130,11 @@ export function draw_layered_devices
                     (slices[i] >= coord && slices[i] < coord + 2)
                 )
             );
+
             if (visible_cells.length > 0)
             {
-                active_items.push({ device, visible_cells });
+                render_device_item(ctx, { device, layer: 0, visible_cells }, camera, canvas);
             }
         }
-    }
-
-    // Pass 1: 繪製非焦點層的半透明投影
-    if (show_inactive && inactive_items.length > 0)
-    {
-        ctx.save();
-        ctx.globalAlpha = inactive_alpha;
-        for (const item of inactive_items)
-        {
-            render_device_item(ctx, item, camera, canvas);
-        }
-        ctx.restore();
-    }
-
-    // Pass 2: 繪製焦點層清晰裝置
-    for (const item of active_items)
-    {
-        render_device_item(ctx, item, camera, canvas);
     }
 }
