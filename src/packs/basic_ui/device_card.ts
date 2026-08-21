@@ -1,7 +1,39 @@
-import type { device } from '@/API';
+import type { device, item_stack } from '@/API';
 import { evaluate_recipe, delete_device, move_device, select_recipe } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 import { get_device_inspectors, get_device_actions } from './extensions';
+
+function render_item_stacks(container: HTMLElement, label_text: string, stacks: item_stack[]): void
+{
+    const row = document.createElement('div');
+    row.className = 'basic_ui_eval_row';
+
+    const label = document.createElement('span');
+    label.className = 'basic_ui_label_io';
+    label.textContent = `${label_text}:`;
+    row.appendChild(label);
+
+    if (stacks.length === 0)
+    {
+        const empty_span = document.createElement('span');
+        empty_span.className = 'basic_ui_label_sub';
+        empty_span.textContent = ' (None)';
+        row.appendChild(empty_span);
+        container.appendChild(row);
+        return;
+    }
+
+    const list = document.createElement('div');
+    list.className = 'basic_ui_kv_list';
+    for (const st of stacks)
+    {
+        const item_el = document.createElement('div');
+        item_el.textContent = `${st.item_id} × ${st.count}`;
+        list.appendChild(item_el);
+    }
+    row.appendChild(list);
+    container.appendChild(row);
+}
 
 /**
  * Renders the device inspection card, including position editor, recipe selector,
@@ -29,7 +61,7 @@ export function render_device_card
     uid_span.textContent = `Device #${dev.uid}`;
 
     const def_span = document.createElement('span');
-    def_span.style.cssText = 'color:#89b4fa; font-weight:normal; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    def_span.className = 'basic_ui_card_def_id';
     def_span.textContent = dev.definition_id;
 
     header.appendChild(uid_span);
@@ -109,7 +141,7 @@ export function render_device_card
 
     const move_btn = document.createElement('button');
     move_btn.textContent = 'Move';
-    move_btn.className = 'basic_ui_btn';
+    move_btn.className = 'basic_ui_btn_primary';
 
     const move_error = document.createElement('div');
     move_error.className = 'basic_ui_error_msg';
@@ -199,21 +231,21 @@ export function render_device_card
     // 4. Geometry and Ports Info
     const shape_row = document.createElement('div');
     const shape_label = document.createElement('span');
-    shape_label.style.color = '#f9e2af';
+    shape_label.className = 'basic_ui_label_key';
     shape_label.textContent = 'Shape: ';
     shape_row.appendChild(shape_label);
     shape_row.appendChild(document.createTextNode(JSON.stringify(dev.get_shape())));
 
     const in_ports_row = document.createElement('div');
     const in_label = document.createElement('span');
-    in_label.style.color = '#f9e2af';
+    in_label.className = 'basic_ui_label_key';
     in_label.textContent = 'Input Ports: ';
     in_ports_row.appendChild(in_label);
     in_ports_row.appendChild(document.createTextNode(JSON.stringify(dev.get_port('input'))));
 
     const out_ports_row = document.createElement('div');
     const out_label = document.createElement('span');
-    out_label.style.color = '#f9e2af';
+    out_label.className = 'basic_ui_label_key';
     out_label.textContent = 'Output Ports: ';
     out_ports_row.appendChild(out_label);
     out_ports_row.appendChild(document.createTextNode(JSON.stringify(dev.get_port('output'))));
@@ -235,46 +267,43 @@ export function render_device_card
             eval_card.className = 'basic_ui_eval_card';
 
             const eval_status_row = document.createElement('div');
+            eval_status_row.className = 'basic_ui_eval_row';
+
             const eval_label = document.createElement('span');
-            eval_label.style.color = '#cba6f7';
+            eval_label.className = 'basic_ui_label_eval';
             eval_label.textContent = 'Evaluation: ';
-            const eval_status = document.createElement('b');
-            eval_status.style.color = evaluation.valid ? '#a6e3a1' : '#f38ba8';
-            eval_status.textContent = evaluation.valid ? 'VALID' : 'INVALID / INCOMPATIBLE';
+
+            const eval_badge = document.createElement('span');
+            eval_badge.className = evaluation.valid
+                ? 'basic_ui_badge basic_ui_badge_valid'
+                : 'basic_ui_badge basic_ui_badge_invalid';
+            eval_badge.textContent = evaluation.valid ? 'VALID' : 'INVALID';
+
             eval_status_row.appendChild(eval_label);
-            eval_status_row.appendChild(eval_status);
+            eval_status_row.appendChild(eval_badge);
 
             const duration_row = document.createElement('div');
+            duration_row.className = 'basic_ui_eval_row';
+
             const dur_label = document.createElement('span');
-            dur_label.style.color = '#fab387';
+            dur_label.className = 'basic_ui_label_dur';
             dur_label.textContent = 'Duration: ';
             duration_row.appendChild(dur_label);
             duration_row.appendChild(document.createTextNode(`${evaluation.duration}s`));
 
-            const inputs_row = document.createElement('div');
-            const in_eval_label = document.createElement('span');
-            in_eval_label.style.color = '#89dceb';
-            in_eval_label.textContent = 'Inputs: ';
-            inputs_row.appendChild(in_eval_label);
-            inputs_row.appendChild(document.createTextNode(JSON.stringify(evaluation.inputs)));
-
-            const outputs_row = document.createElement('div');
-            const out_eval_label = document.createElement('span');
-            out_eval_label.style.color = '#a6e3a1';
-            out_eval_label.textContent = 'Outputs: ';
-            outputs_row.appendChild(out_eval_label);
-            outputs_row.appendChild(document.createTextNode(JSON.stringify(evaluation.outputs)));
-
             eval_card.appendChild(eval_status_row);
             eval_card.appendChild(duration_row);
-            eval_card.appendChild(inputs_row);
-            eval_card.appendChild(outputs_row);
+
+            render_item_stacks(eval_card, 'Inputs', evaluation.inputs);
+            render_item_stacks(eval_card, 'Outputs', evaluation.outputs);
 
             if (evaluation.other_info && Object.keys(evaluation.other_info).length > 0)
             {
                 const extra_row = document.createElement('div');
+                extra_row.className = 'basic_ui_eval_row';
+
                 const extra_label = document.createElement('span');
-                extra_label.style.color = '#f5c2e7';
+                extra_label.className = 'basic_ui_label_extra';
                 extra_label.textContent = 'Extra: ';
                 extra_row.appendChild(extra_label);
                 extra_row.appendChild(document.createTextNode(JSON.stringify(evaluation.other_info)));
@@ -289,7 +318,7 @@ export function render_device_card
     {
         const other_row = document.createElement('div');
         const other_label = document.createElement('span');
-        other_label.style.color = '#cba6f7';
+        other_label.className = 'basic_ui_label_extra';
         other_label.textContent = 'Other Info: ';
         other_row.appendChild(other_label);
         other_row.appendChild(document.createTextNode(JSON.stringify(dev.other_info)));
