@@ -1,11 +1,11 @@
-import type { recipe, recipe_evaluation } from '@/API';
+import type { recipe as recipe_type, recipe_evaluation } from '@/API';
 import { get_map } from '@/runtime';
 
 /**
  * Advanced Circuit recipe:
  * Dynamic evaluation: Valid for assemblers; duration scales with height/altitude (Z axis).
  */
-export const recipe: recipe =
+export const recipe: recipe_type =
 {
     id: 'advanced_circuit',
     evaluate(uid?: number): recipe_evaluation

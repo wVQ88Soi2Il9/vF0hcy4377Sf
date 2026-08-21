@@ -44,9 +44,10 @@
 - **state:** 完成
 - **basis:** → O1
 
-精簡 `vanilla/overlap.ts` 消除 `?? 0`，並於 `AGENTS.md` 加入實驗性分支豁免條款。
+精簡 `vanilla/overlap.ts` 消除 `?? 0`，修復 `loader.ts` 與動態配方型別定義衝突，並於 `AGENTS.md` 加入實驗性分支豁免條款。
 
 **沿革**
 
 - H1 · 2026-08-21 21:28 決斷 —— 確立精簡 overlap.ts 與同步 AGENTS.md（使用者）
 - H2 · 2026-08-21 21:28 落地 —— 完成 overlap.ts 與 AGENTS.md 之修改 → O1
+- H3 · 2026-08-21 21:30 修正 —— 修正 iterator Array.from、loader JSDoc 註解與 recipe 型別宣告衝突，驗證 build 成功（Agent）

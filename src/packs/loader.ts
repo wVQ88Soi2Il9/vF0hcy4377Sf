@@ -8,8 +8,8 @@ function resolve_id(id: string, ns: string): string
 
 /**
  * Loads all packs automatically by scanning the folder structure.
- * 1. JSON files inside packs/*/data/*.json (items, devices)
- * 2. TypeScript recipe modules inside packs/*/recipes/*.ts
+ * 1. JSON files inside packs/{namespace}/data/*.json (items, devices)
+ * 2. TypeScript recipe modules inside packs/{namespace}/recipes/*.ts
  */
 export function load_all_packs(): pack[]
 {

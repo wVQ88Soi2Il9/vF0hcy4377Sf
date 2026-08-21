@@ -1,4 +1,4 @@
-import type { recipe, recipe_evaluation } from '@/API';
+import type { recipe as recipe_type, recipe_evaluation } from '@/API';
 import { get_map } from '@/runtime';
 
 /**
@@ -6,7 +6,7 @@ import { get_map } from '@/runtime';
  * Evaluates dynamically based on the device instance (uid).
  * Only 'test:assembler' can manufacture iron gears.
  */
-export const recipe: recipe =
+export const recipe: recipe_type =
 {
     id: 'iron_gear',
     evaluate(uid?: number): recipe_evaluation

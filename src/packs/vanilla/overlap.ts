@@ -47,9 +47,8 @@ export function check_map_overlap(map: game_map, registry: pack_registry): map_v
 
     // 第二階段：尋找被 2 個以上相異裝置佔用的格子，收集其 uid
     const overlapped = Array.from(new Set(
-        occupied_map
-            .values()
-            .filter(ids => new Set(ids).size > 1)
+        Array.from(occupied_map.values())
+            .filter((ids: number[]) => new Set(ids).size > 1)
             .flat()
     ));
 
