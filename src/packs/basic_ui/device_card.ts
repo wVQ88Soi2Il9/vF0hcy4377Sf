@@ -2,6 +2,7 @@ import type { device, item_stack } from '@/API';
 import { evaluate_recipe, delete_device, move_device, select_recipe } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 import { get_device_inspectors, get_device_actions } from './extensions';
+import { create_coordinate_stepper_group } from './coordinate_stepper';
 
 function render_item_stacks(container: HTMLElement, label_text: string, stacks: item_stack[]): void
 {
@@ -68,119 +69,32 @@ export function render_device_card
     header.appendChild(def_span);
 
     // 2. Position & Move controls
-    const pos_container = document.createElement('div');
-    pos_container.className = 'basic_ui_form_group';
-
-    const pos_title = document.createElement('div');
-    pos_title.className = 'basic_ui_section_title';
-    pos_title.textContent = 'Position (Even Coords):';
-
-    const pos_row = document.createElement('div');
-    pos_row.className = 'basic_ui_pos_row';
-
-    const map = get_map();
-    const num_dims = map ? map.size.length : dev.position.length;
-    const axis_names = ['X', 'Y', 'Z', 'W', 'V'];
-    const pos_inputs: HTMLInputElement[] = [];
-
-    for (let i = 0; i < num_dims; i++)
-    {
-        const axis_label = i < axis_names.length ? axis_names[i] : `D${i+1}`;
-        const wrap = document.createElement('div');
-        wrap.className = 'basic_ui_pos_field';
-
-        const name_span = document.createElement('span');
-        name_span.className = 'basic_ui_pos_label';
-        name_span.textContent = `${axis_label}:`;
-
-        const stepper = document.createElement('div');
-        stepper.className = 'basic_ui_stepper';
-
-        const inp = document.createElement('input');
-        inp.type = 'number';
-        inp.step = '2';
-        inp.value = String(dev.position[i]);
-        inp.className = 'basic_ui_stepper_input';
-
-        const btns_wrap = document.createElement('div');
-        btns_wrap.className = 'basic_ui_stepper_btns';
-
-        const btn_up = document.createElement('button');
-        btn_up.type = 'button';
-        btn_up.className = 'basic_ui_stepper_btn up';
-        btn_up.innerHTML = '▲';
-        btn_up.title = 'Increase by 2';
-        btn_up.addEventListener('click', () =>
-        {
-            const current = parseInt(inp.value.trim(), 10) || 0;
-            inp.value = String(current + 2);
-        });
-
-        const btn_down = document.createElement('button');
-        btn_down.type = 'button';
-        btn_down.className = 'basic_ui_stepper_btn down';
-        btn_down.innerHTML = '▼';
-        btn_down.title = 'Decrease by 2';
-        btn_down.addEventListener('click', () =>
-        {
-            const current = parseInt(inp.value.trim(), 10) || 0;
-            inp.value = String(current - 2);
-        });
-
-        btns_wrap.appendChild(btn_up);
-        btns_wrap.appendChild(btn_down);
-
-        stepper.appendChild(inp);
-        stepper.appendChild(btns_wrap);
-
-        pos_inputs.push(inp);
-        wrap.appendChild(name_span);
-        wrap.appendChild(stepper);
-        pos_row.appendChild(wrap);
-    }
+    const coords_group = create_coordinate_stepper_group(dev.position, 'Position (Even Coords):');
 
     const move_btn = document.createElement('button');
+    move_btn.type = 'button';
     move_btn.textContent = 'Move';
     move_btn.className = 'basic_ui_btn_primary';
 
-    const move_error = document.createElement('div');
-    move_error.className = 'basic_ui_error_msg';
-    move_error.style.display = 'none';
-
     move_btn.addEventListener('click', () =>
     {
-        const target_pos: number[] = [];
-        for (const inp of pos_inputs)
+        const parsed = coords_group.get_values();
+        if (!parsed.success)
         {
-            const val = parseInt(inp.value.trim(), 10);
-            if (isNaN(val))
-            {
-                move_error.textContent = 'Error: Invalid number coordinate.';
-                move_error.style.display = 'block';
-                return;
-            }
-            if (Math.abs(val) % 2 !== 0)
-            {
-                move_error.textContent = 'Error: Coordinates must all be even numbers.';
-                move_error.style.display = 'block';
-                return;
-            }
-            target_pos.push(val);
+            coords_group.show_error(parsed.error ?? 'Error: Invalid coordinates.');
+            return;
         }
 
         const current_map = get_map();
         if (current_map)
         {
-            move_device(current_map, dev.uid, target_pos);
-            move_error.style.display = 'none';
+            move_device(current_map, dev.uid, parsed.position);
+            coords_group.hide_error();
             refresh_callback();
         }
     });
 
-    pos_row.appendChild(move_btn);
-    pos_container.appendChild(pos_title);
-    pos_container.appendChild(pos_row);
-    pos_container.appendChild(move_error);
+    coords_group.row.appendChild(move_btn);
 
     // 3. Recipe Selector
     const recipe_container = document.createElement('div');
@@ -251,7 +165,7 @@ export function render_device_card
     out_ports_row.appendChild(document.createTextNode(JSON.stringify(dev.get_port('output'))));
 
     card.appendChild(header);
-    card.appendChild(pos_container);
+    card.appendChild(coords_group.container);
     card.appendChild(recipe_container);
     card.appendChild(shape_row);
     card.appendChild(in_ports_row);
