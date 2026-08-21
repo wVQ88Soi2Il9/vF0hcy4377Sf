@@ -1,12 +1,21 @@
 import { basic_renderer } from '@/packs/basic_renderer';
 import { get_map } from '@/runtime';
+import type { unsubscribe_function } from '@/API';
 import { on_device_change } from '@/API';
 import { create_ui_layout } from './layout';
-import type { info_bar_component } from './info_bar';
+import {
+    set_active_info_bar,
+    display_device_info,
+    clear_device_info
+} from './ui_state';
 import {
     register_device_inspector,
+    unregister_device_inspector,
     register_device_action,
-    register_panel_section
+    unregister_device_action,
+    register_panel_section,
+    unregister_panel_section,
+    clear_all_extensions
 } from './extensions';
 
 export type {
@@ -15,7 +24,12 @@ export type {
     panel_section_fn
 } from './extensions';
 
-let active_info_bar: info_bar_component | null = null;
+export {
+    display_device_info,
+    clear_device_info
+} from './ui_state';
+
+let cleanup_device_change: unsubscribe_function | null = null;
 
 /**
  * basic_ui entry point.
@@ -25,9 +39,15 @@ let active_info_bar: info_bar_component | null = null;
  */
 export function init_pack(): void
 {
+    if (cleanup_device_change)
+    {
+        cleanup_device_change();
+        cleanup_device_change = null;
+    }
+
     const host = document.getElementById('app') ?? document.body;
     const { root, viewport, info_bar } = create_ui_layout();
-    active_info_bar = info_bar;
+    set_active_info_bar(info_bar);
 
     host.appendChild(root);
 
@@ -60,20 +80,7 @@ export function init_pack(): void
     }
 
     update_map_info();
-    on_device_change(update_map_info);
-}
-
-export function display_device_info(uid: number): boolean
-{
-    return active_info_bar ? active_info_bar.display_device_info(uid) : false;
-}
-
-export function clear_device_info(): void
-{
-    if (active_info_bar)
-    {
-        active_info_bar.clear_device_info();
-    }
+    cleanup_device_change = on_device_change(update_map_info);
 }
 
 /**
@@ -83,6 +90,10 @@ export const basic_ui = {
     display_device_info,
     clear_device_info,
     register_device_inspector,
+    unregister_device_inspector,
     register_device_action,
-    register_panel_section
+    unregister_device_action,
+    register_panel_section,
+    unregister_panel_section,
+    clear_all_extensions
 };

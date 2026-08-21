@@ -1,4 +1,4 @@
-import type { device, game_map } from '@/API';
+import type { device, game_map, unsubscribe_function } from '@/API';
 
 export interface device_action
 {
@@ -30,36 +30,96 @@ const registered_sections:   panel_section_entry[]    = [];
 
 /**
  * Registers a custom inspector slot for devices matching the predicate.
+ * Returns an unsubscribe function to remove the inspector.
  */
 export function register_device_inspector
 (
     predicate: (dev: device) => boolean,
     render:    device_inspector_fn
-): void
+): unsubscribe_function
 {
-    registered_inspectors.push({ predicate, render });
+    const entry: device_inspector_entry = { predicate, render };
+    registered_inspectors.push(entry);
+    return () =>
+    {
+        unregister_device_inspector(entry);
+    };
+}
+
+/**
+ * Unregisters a previously registered device inspector entry.
+ */
+export function unregister_device_inspector(entry: device_inspector_entry | device_inspector_fn): void
+{
+    const index = registered_inspectors.findIndex(e => e === entry || e.render === entry);
+    if (index !== -1)
+    {
+        registered_inspectors.splice(index, 1);
+    }
 }
 
 /**
  * Registers a custom action button to be displayed in the device card actions row.
+ * Returns an unsubscribe function to remove the action.
  */
-export function register_device_action(action: device_action): void
+export function register_device_action(action: device_action): unsubscribe_function
 {
     registered_actions.push(action);
+    return () =>
+    {
+        unregister_device_action(action);
+    };
+}
+
+/**
+ * Unregisters a previously registered device action.
+ */
+export function unregister_device_action(action: device_action): void
+{
+    const index = registered_actions.indexOf(action);
+    if (index !== -1)
+    {
+        registered_actions.splice(index, 1);
+    }
 }
 
 /**
  * Registers an independent custom section inside the Info Bar panel.
+ * If a section with the same ID already exists, it is replaced.
+ * Returns an unsubscribe function to remove the section.
  */
 export function register_panel_section
 (
     id:       string,
     priority: number,
     render:   panel_section_fn
-): void
+): unsubscribe_function
 {
+    const existing_index = registered_sections.findIndex(s => s.id === id);
+    if (existing_index !== -1)
+    {
+        registered_sections.splice(existing_index, 1);
+    }
+
     registered_sections.push({ id, priority, render });
     registered_sections.sort((a, b) => a.priority - b.priority);
+
+    return () =>
+    {
+        unregister_panel_section(id);
+    };
+}
+
+/**
+ * Unregisters a custom section by ID.
+ */
+export function unregister_panel_section(id: string): void
+{
+    const index = registered_sections.findIndex(s => s.id === id);
+    if (index !== -1)
+    {
+        registered_sections.splice(index, 1);
+    }
 }
 
 /**
@@ -86,4 +146,14 @@ export function get_device_actions(): device_action[]
 export function get_panel_sections(): panel_section_entry[]
 {
     return registered_sections;
+}
+
+/**
+ * Clears all registered extensions (useful for teardown or resets).
+ */
+export function clear_all_extensions(): void
+{
+    registered_inspectors.length = 0;
+    registered_actions.length = 0;
+    registered_sections.length = 0;
 }

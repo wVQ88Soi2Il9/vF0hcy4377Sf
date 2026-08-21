@@ -47,26 +47,11 @@ function attach_resize_handle
     handle.className = `basic_ui_resize_handle ${direction}`;
     const is_horizontal = direction === 'left' || direction === 'right';
 
-    let is_dragging = false;
     let start_coord = 0;
     let start_size  = 0;
 
-    handle.addEventListener('mousedown', (e) =>
+    function on_mouse_move(e: MouseEvent): void
     {
-        is_dragging = true;
-        start_coord = is_horizontal ? e.clientX : e.clientY;
-        start_size  = is_horizontal ? parent.offsetWidth : parent.offsetHeight;
-        document.body.style.cursor = is_horizontal ? 'ew-resize' : 'ns-resize';
-        document.body.style.userSelect = 'none';
-        e.preventDefault();
-    });
-
-    window.addEventListener('mousemove', (e) =>
-    {
-        if (!is_dragging)
-        {
-            return;
-        }
         const current_coord = is_horizontal ? e.clientX : e.clientY;
         const delta = (direction === 'left' || direction === 'top')
             ? start_coord - current_coord
@@ -80,16 +65,25 @@ function attach_resize_handle
         {
             parent.style.height = `${clamped}px`;
         }
-    });
+    }
 
-    window.addEventListener('mouseup', () =>
+    function on_mouse_up(): void
     {
-        if (is_dragging)
-        {
-            is_dragging = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        }
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', on_mouse_move);
+        window.removeEventListener('mouseup', on_mouse_up);
+    }
+
+    handle.addEventListener('mousedown', (e) =>
+    {
+        start_coord = is_horizontal ? e.clientX : e.clientY;
+        start_size  = is_horizontal ? parent.offsetWidth : parent.offsetHeight;
+        document.body.style.cursor = is_horizontal ? 'ew-resize' : 'ns-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('mousemove', on_mouse_move);
+        window.addEventListener('mouseup', on_mouse_up);
+        e.preventDefault();
     });
 
     parent.appendChild(handle);
