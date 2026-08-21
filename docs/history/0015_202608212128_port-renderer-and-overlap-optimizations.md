@@ -52,13 +52,15 @@
 - H2 · 2026-08-21 21:28 落地 —— 完成 overlap.ts 與 AGENTS.md 之修改 → O1
 - H3 · 2026-08-21 21:30 修正 —— 修正 iterator Array.from、loader JSDoc 註解與 recipe 型別宣告衝突，驗證 build 成功（Agent）
 
-### 3 實作裝置重疊紅色高亮包覆 (0017)
+### 3 於 Test Pack 建立通用繪圖雛形與重疊紅色高亮 (0017, 0019)
 - **state:** 完成
 - **basis:** → O1
 
-於 `API.ts` 導出 `trigger_check_overlap`，並在 `draw_device.ts` 繪圖迴圈中為重疊裝置加上淡紅色半透明包覆與 `#ef4444` 邊框。
+於 `src/packs/test/$basic_renderer/base_device.ts` 實作通用繪圖範本 `draw_test_device_template`（包含 `alpha = 0.75`、內縮深色邊框、`#UID`、端口以及 `vanilla.check_map_overlap` 重疊淡紅色半透明矩形與 `#ef4444` 邊框包覆），重構所有 test pack 裝置繪圖函式，保持 `basic_renderer` 純粹解耦，並清理未使用之骰子圖片素材。
 
 **沿革**
 
 - H1 · 2026-08-21 21:34 決斷 —— 確立於 basic_renderer 統一為重疊裝置渲染淡紅色包覆（使用者）
 - H2 · 2026-08-21 21:34 落地 —— 導出 trigger_check_overlap 並更新 draw_device.ts 實作紅色覆蓋渲染 → O1
+- H3 · 2026-08-21 21:36 決斷 —— 依使用者指示不寫在 renderer 核心，改於 test pack 建立通用繪圖範本 base_device.ts（使用者）
+- H4 · 2026-08-21 21:37 落地 —— 還原 draw_device.ts，建立 base_device.ts，重構 7 個 test 裝置繪圖函式並清理 test assets → O1
