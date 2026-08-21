@@ -4,7 +4,7 @@
 
 ## 目前使用中
 
-[0022_202608210204_refactor-vanilla-overlap-streamline](./0022_202608210204_refactor-vanilla-overlap-streamline.md) — `done`
+[0023_202608212157_remove-rotate-references](./0023_202608212157_remove-rotate-references.md) — `done`
 
 ## 現在開著的（逐格）
 

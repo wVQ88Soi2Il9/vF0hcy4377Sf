@@ -236,12 +236,6 @@ export function execute_command(input: string): string
             return `Moved device ID ${id} to [${coords.join(', ')}]`;
         }
 
-        case 'rotate':
-        {
-            // TODO: rotate functionality to be redesigned.
-            return 'TODO: rotate command is currently disabled.';
-        }
-
         default:
         {
             return `Unknown command: "${cmd}". Type "help" for a list of available commands.`;

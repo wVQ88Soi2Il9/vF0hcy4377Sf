@@ -15,8 +15,8 @@
 ```text
 src/
 ├── core/                 # 純 TS 型別定義、地圖狀態與 Hooks 擴充點
-│   ├── types.ts          # vector / rotation / pack / device / game_map ...
-│   ├── map_manager.ts    # create / delete / move / rotate device
+│   ├── types.ts          # vector / pack / device / game_map ...
+│   ├── map_manager.ts    # create / delete / move device
 │   ├── pack_manager.ts   # pack registry：載入、卸載、查詢定義
 │   └── hooks.ts          # on_check_overlap / on_build_graph 掛勾與觸發器
 │
@@ -86,7 +86,6 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 | `delete` | `delete --"<uid>"` | 刪除指定唯一 ID 之裝置。<br>例：`delete --"1"` |
 | `info` | `info --"<uid>"` | 於右側 UI 面板顯示指定唯一 ID 之裝置詳細資訊。<br>例：`info --"1"` |
 | `camera` | `camera --"<axis>=<depth>"` | 調整渲染切面視角與切片深度。<br>例：`camera --"d3=0"` 或 `camera --"d1=1, d3=0"` |
-| `rotate` | *(待重構)* | 暫時停用，執行時會傳回 TODO 訊息。 |
 | `help` | `help` | 顯示所有可用的指令說明。 |
 
 ## 開發規範
