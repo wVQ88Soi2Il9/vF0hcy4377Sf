@@ -4,12 +4,15 @@
 
 ## 目前使用中
 
-[0023_202608212157_remove-rotate-references](./0023_202608212157_remove-rotate-references.md) — `done`
+[0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/3
 
 ## 現在開著的（逐格）
 
-（沒有開著的項目）
+- `0024#2` · **待實作** — 開發 2.5D 優化渲染器（Better Renderer）
+
+> 要做某一格：`python3 docs/history/plan-item.py 0024#2`
+> —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-（無）
+- **0024** [0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/3
