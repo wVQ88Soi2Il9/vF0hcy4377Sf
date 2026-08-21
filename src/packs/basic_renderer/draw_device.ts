@@ -1,6 +1,7 @@
 import type { game_map, device, device_definition } from '@/core/types';
 import type { pack_registry } from '@/core/pack_manager';
 import { get_device_definition } from '@/core/pack_manager';
+import { trigger_check_overlap } from '@/API';
 import { get_world_cells } from '@/utils/device_utils';
 import type { camera_type } from './types';
 import { get_device_draw } from './draw_registry';
@@ -14,10 +15,11 @@ interface render_item
 
 function render_device_item
 (
-    ctx:      CanvasRenderingContext2D,
-    item:     render_item,
-    camera:   camera_type,
-    canvas:   HTMLCanvasElement
+    ctx:           CanvasRenderingContext2D,
+    item:          render_item,
+    camera:        camera_type,
+    canvas:        HTMLCanvasElement,
+    is_overlapped: boolean
 ): void
 {
     const { dim_h, dim_v } = camera.plane;
@@ -45,6 +47,19 @@ function render_device_item
     {
         draw_fn(ctx, sx, sy, sw, sh, camera.zoom, device, def, camera);
     }
+
+    // 若發生重疊，以淡紅色包覆（外框同樣內縮於 grid 內部）
+    if (is_overlapped)
+    {
+        ctx.fillStyle = 'rgba(248, 113, 113, 0.45)';
+        ctx.fillRect(sx, sy, sw, sh);
+
+        const red_lw = Math.max(2, camera.zoom * 0.05);
+        const half_red_lw = red_lw / 2;
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = red_lw;
+        ctx.strokeRect(sx + half_red_lw, sy + half_red_lw, sw - red_lw, sh - red_lw);
+    }
 }
 
 export function draw_devices
@@ -57,6 +72,19 @@ export function draw_devices
 ): void
 {
     const { dim_h, dim_v, slices } = camera.plane;
+
+    const overlap_results = trigger_check_overlap(map, registry) as Array<{ overlapped?: number[] }>;
+    const overlapped_uids = new Set<number>();
+    for (const res of overlap_results)
+    {
+        if (res && Array.isArray(res.overlapped))
+        {
+            for (const uid of res.overlapped)
+            {
+                overlapped_uids.add(uid);
+            }
+        }
+    }
 
     const active_items: render_item[] = [];
 
@@ -122,6 +150,6 @@ export function draw_devices
     // Render active items (current slice, distance = 0)
     for (const item of active_items)
     {
-        render_device_item(ctx, item, camera, canvas);
+        render_device_item(ctx, item, camera, canvas, overlapped_uids.has(item.device.uid));
     }
 }

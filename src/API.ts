@@ -30,6 +30,12 @@ export
 
 export
 {
+    trigger_check_overlap,
+    trigger_build_graph
+} from '@/core/hooks';
+
+export
+{
     create_pack_registry,
     load_pack,
     unload_pack,

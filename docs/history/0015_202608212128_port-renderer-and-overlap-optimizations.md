@@ -18,14 +18,14 @@
 
 1. **網格材質高清化 (`src/packs/basic_renderer/assets/grid.svg` & `draw_grid.ts`)**：重構 `grid.svg` 為純整數 2×2 網格與 `crispEdges`，於 `draw_grid.ts` 停用 Canvas 雙線性插值（`imageSmoothingEnabled = false`）並校準 tile size 為 64。
 2. **地圖邊界線條加粗與外擴 (`src/packs/basic_renderer/draw_grid.ts`)**：線寬提升至 `Math.max(4, camera.zoom * 0.08)`，外擴半個線寬（`Outer Border`）繪製，使邊框完全落在網格外側不遮擋內部像素。
-3. **移除相鄰切片幽靈圖層 (`src/packs/basic_renderer/draw_device.ts`)**：移除 `ghost_items` 與 Pass 1 半透明繪製，僅渲染當前切片實體。
+3. **移除相鄰切片幽靈圖層與實作重疊紅色高亮 (`src/packs/basic_renderer/draw_device.ts`)**：移除 `ghost_items` 與 Pass 1 半透明繪製，僅渲染當前切片實體；並在渲染時呼叫 `trigger_check_overlap`，若裝置發生重疊則繪製淡紅色半透明矩形（`rgba(248, 113, 113, 0.45)`）與紅色內縮外框（`#ef4444`）（承接 0017）。
 4. **精簡 Vanilla Overlap 演算法 (`src/packs/vanilla/overlap.ts`)**：移除 `?? 0` 隱性補齊，使用 `cells.some(...)` 與 `filter/flat` 管道化重構碰撞與邊界檢測。
 5. **規範與 Agent 規則同步 (`AGENTS.md`)**：補充「實驗性分支免受既有規則拘束 (Experimental Branch Exemption)」條款。
 
 ## 觀察與推論
 
 ### O1 · 2026-08-21 21:28:00+08:00 — 獨立非底層更動之安全移植
-經評估，SVG 網格材質、Canvas 渲染設定、地圖邊界外擴計算、相鄰切片幽靈圖層清理、以及基於純陣列管道的 Overlap 重構，均完全獨立於 OOP 類別架構，可無縫移植至 `master` 主線並立即提升畫面細緻度與演算法簡潔度。
+經評估，SVG 網格材質、Canvas 渲染設定、地圖邊界外擴計算、相鄰切片幽靈圖層清理、重疊狀態視覺標註（0017）以及基於純陣列管道的 Overlap 重構，均完全獨立於 OOP 類別架構，可無縫移植至 `master` 主線並立即提升畫面細緻度與演算法簡潔度。
 
 ## 待辦
 
@@ -51,3 +51,14 @@
 - H1 · 2026-08-21 21:28 決斷 —— 確立精簡 overlap.ts 與同步 AGENTS.md（使用者）
 - H2 · 2026-08-21 21:28 落地 —— 完成 overlap.ts 與 AGENTS.md 之修改 → O1
 - H3 · 2026-08-21 21:30 修正 —— 修正 iterator Array.from、loader JSDoc 註解與 recipe 型別宣告衝突，驗證 build 成功（Agent）
+
+### 3 實作裝置重疊紅色高亮包覆 (0017)
+- **state:** 完成
+- **basis:** → O1
+
+於 `API.ts` 導出 `trigger_check_overlap`，並在 `draw_device.ts` 繪圖迴圈中為重疊裝置加上淡紅色半透明包覆與 `#ef4444` 邊框。
+
+**沿革**
+
+- H1 · 2026-08-21 21:34 決斷 —— 確立於 basic_renderer 統一為重疊裝置渲染淡紅色包覆（使用者）
+- H2 · 2026-08-21 21:34 落地 —— 導出 trigger_check_overlap 並更新 draw_device.ts 實作紅色覆蓋渲染 → O1
