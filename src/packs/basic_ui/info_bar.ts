@@ -1,6 +1,7 @@
 import type { device } from '@/API';
 import { evaluate_recipe, delete_device, move_device, select_recipe } from '@/API';
 import { get_map, get_registry } from '@/runtime';
+import { create_floating_panel } from './panel';
 
 export interface info_bar_stats
 {
@@ -22,142 +23,28 @@ export interface info_bar_component
  */
 export function create_info_bar(): info_bar_component
 {
-    const element = document.createElement('aside');
-    element.id = 'info_bar';
-    element.style.cssText = `
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        box-sizing: border-box;
-        width: 20%;
-        min-width: 240px;
-        max-width: min(40vw, calc(100vw - 32px));
-        max-height: calc(100vh - 120px);
-        min-height: 200px;
-        background: rgba(24, 24, 37, 0.92);
-        backdrop-filter: blur(8px);
-        border: 1px solid #313244;
-        border-radius: 8px;
-        padding: 14px;
-        color: #cdd6f4;
-        font-family: monospace;
-        font-size: 13px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        overflow-y: auto;
-        pointer-events: auto;
-        z-index: 10;
-    `.trim();
-
-    // Resize Handles
-    const left_resize_handle = document.createElement('div');
-    left_resize_handle.id = 'info_bar_left_resize';
-    left_resize_handle.style.cssText = `
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 6px;
-        cursor: ew-resize;
-        user-select: none;
-        z-index: 20;
-        transition: background 0.2s;
-    `.trim();
-
-    let is_resizing_x = false;
-    let start_mouse_x = 0;
-    let start_panel_width = 320;
-
-    left_resize_handle.addEventListener('mouseenter', () =>
-    {
-        left_resize_handle.style.background = 'rgba(137, 180, 250, 0.4)';
-    });
-
-    left_resize_handle.addEventListener('mouseleave', () =>
-    {
-        if (!is_resizing_x)
-        {
-            left_resize_handle.style.background = 'transparent';
+    const panel = create_floating_panel({
+        id:            'info_bar',
+        tag:           'aside',
+        position_css:  'top: 16px; right: 16px;',
+        default_width: '20%',
+        title:         'Map Status',
+        collapsible:   true,
+        resize: {
+            left:       true,
+            min_width:  240,
+            max_width:  () => Math.min(window.innerWidth * 0.4, window.innerWidth - 32),
+            min_height: 200,
+            max_height: () => window.innerHeight - 120
         }
     });
 
-    left_resize_handle.addEventListener('mousedown', (e) =>
-    {
-        is_resizing_x = true;
-        start_mouse_x = e.clientX;
-        start_panel_width = element.offsetWidth;
-        document.body.style.cursor = 'ew-resize';
-        document.body.style.userSelect = 'none';
-        left_resize_handle.style.background = 'rgba(137, 180, 250, 0.6)';
-        e.preventDefault();
-    });
+    const element = panel.element;
+    const body = panel.content_element;
 
-    window.addEventListener('mousemove', (e) =>
-    {
-        if (is_resizing_x)
-        {
-            const dx = start_mouse_x - e.clientX;
-            const max_allowed_w = Math.max(240, Math.min(window.innerWidth * 0.4, window.innerWidth - 32));
-            const new_w = Math.max(240, Math.min(max_allowed_w, start_panel_width + dx));
-            element.style.width = `${new_w}px`;
-        }
-    });
-
-    window.addEventListener('mouseup', () =>
-    {
-        if (is_resizing_x)
-        {
-            is_resizing_x = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            left_resize_handle.style.background = 'transparent';
-        }
-    });
-
-    element.appendChild(left_resize_handle);
-
-    // Section 1: Header / Map stats
-    const stats_container = document.createElement('div');
-    stats_container.style.cssText = 'border-bottom: 1px solid #45475a; padding-bottom: 8px; margin-bottom: 2px; width: 100%; min-width: 0; box-sizing: border-box;';
-
-    const header_top = document.createElement('div');
-    header_top.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; width: 100%; min-width: 0;';
-
-    const title_el = document.createElement('h3');
-    title_el.style.cssText = 'margin: 0; font-size: 14px; color: #89b4fa; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-    title_el.textContent = 'Map Status';
-
-    const collapse_btn = document.createElement('button');
-    collapse_btn.id = 'info_bar_collapse_btn';
-    collapse_btn.title = 'Collapse / Expand panel';
-    collapse_btn.innerHTML = '−';
-    collapse_btn.style.cssText = `
-        background: transparent;
-        border: 1px solid #45475a;
-        border-radius: 4px;
-        color: #a6adc8;
-        font-size: 12px;
-        font-weight: bold;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        flex-shrink: 0;
-    `.trim();
-
-    header_top.appendChild(title_el);
-    header_top.appendChild(collapse_btn);
-
+    // Section 1: Map stats summary
     const map_info_el = document.createElement('div');
-    map_info_el.style.cssText = 'color: #a6adc8; font-size: 12px; display: flex; justify-content: space-between; width: 100%; min-width: 0;';
-
-    stats_container.appendChild(header_top);
-    stats_container.appendChild(map_info_el);
+    map_info_el.style.cssText = 'color: #a6adc8; font-size: 12px; display: flex; justify-content: space-between; width: 100%; min-width: 0; border-bottom: 1px solid #45475a; padding-bottom: 8px;';
 
     // Section 2: Dropdown select for UID -> Get & Display Info
     const lookup_container = document.createElement('div');
@@ -213,54 +100,9 @@ export function create_info_bar(): info_bar_component
     const content_container = document.createElement('div');
     content_container.style.cssText = 'display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 0; box-sizing: border-box;';
 
-    element.appendChild(stats_container);
-    element.appendChild(lookup_container);
-    element.appendChild(content_container);
-
-    let is_collapsed = false;
-    let saved_expanded_width: string = '20%';
-
-    collapse_btn.addEventListener('click', () =>
-    {
-        is_collapsed = !is_collapsed;
-        if (is_collapsed)
-        {
-            saved_expanded_width = `${element.offsetWidth}px`;
-            collapse_btn.innerHTML = '+';
-            map_info_el.style.display = 'none';
-            lookup_container.style.display = 'none';
-            content_container.style.display = 'none';
-            left_resize_handle.style.display = 'none';
-
-            element.style.width = 'auto';
-            element.style.minWidth = 'unset';
-            element.style.minHeight = 'unset';
-            element.style.maxHeight = 'unset';
-            element.style.padding = '8px 12px';
-            element.style.gap = '0';
-            stats_container.style.borderBottom = 'none';
-            stats_container.style.paddingBottom = '0';
-            stats_container.style.marginBottom = '0';
-        }
-        else
-        {
-            collapse_btn.innerHTML = '−';
-            map_info_el.style.display = 'flex';
-            lookup_container.style.display = 'flex';
-            content_container.style.display = 'flex';
-            left_resize_handle.style.display = 'block';
-
-            element.style.width = saved_expanded_width;
-            element.style.minWidth = '240px';
-            element.style.minHeight = '200px';
-            element.style.maxHeight = 'calc(100vh - 120px)';
-            element.style.padding = '14px';
-            element.style.gap = '12px';
-            stats_container.style.borderBottom = '1px solid #45475a';
-            stats_container.style.paddingBottom = '8px';
-            stats_container.style.marginBottom = '2px';
-        }
-    });
+    body.appendChild(map_info_el);
+    body.appendChild(lookup_container);
+    body.appendChild(content_container);
 
     function update_stats(stats: info_bar_stats): void
     {
@@ -466,7 +308,7 @@ export function create_info_bar(): info_bar_component
             if (evaluation)
             {
                 const eval_card = document.createElement('div');
-                eval_card.style.cssText = 'background: #11111b; border: 1px solid #313244; border-radius: 4px; padding: 6px; margin-top: 2px; font-size: 11px; display: flex; flex-direction: column; gap: 4px;';
+                eval_card.style.cssText = 'background: #11111b; border: 1px solid #313244; border-radius: 4px; padding: 6px; margin-top: 2px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: anywhere; word-break: break-all;';
 
                 const valid_color = evaluation.valid ? '#a6e3a1' : '#f38ba8';
                 const status_text = evaluation.valid ? 'VALID' : 'INVALID / INCOMPATIBLE';

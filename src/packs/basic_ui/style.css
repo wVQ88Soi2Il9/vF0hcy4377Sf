@@ -1,0 +1,148 @@
+/* basic_ui Floating Panel Core Styles */
+.basic_ui_panel {
+    position: absolute;
+    box-sizing: border-box;
+    background: rgba(24, 24, 37, 0.92);
+    backdrop-filter: blur(10px);
+    border: 1px solid #313244;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #cdd6f4;
+    font-family: monospace;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    pointer-events: auto;
+    z-index: 10;
+    overflow: hidden;
+}
+
+/* Collapsed State */
+.basic_ui_panel.is_collapsed {
+    width: auto !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    padding: 8px 12px;
+    gap: 0;
+}
+
+.basic_ui_panel.is_collapsed .basic_ui_content,
+.basic_ui_panel.is_collapsed .basic_ui_resize_handle {
+    display: none !important;
+}
+
+/* Header & Title */
+.basic_ui_panel .basic_ui_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    gap: 8px;
+}
+
+.basic_ui_panel .basic_ui_title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.basic_ui_panel .basic_ui_title h3 {
+    margin: 0;
+    font-size: 13px;
+    color: #89b4fa;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Content Area */
+.basic_ui_panel .basic_ui_content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Collapse / Expand Button */
+.basic_ui_panel .basic_ui_collapse_btn {
+    background: transparent;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    color: #a6adc8;
+    font-size: 12px;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.basic_ui_panel .basic_ui_collapse_btn:hover {
+    background: #313244;
+    color: #cdd6f4;
+}
+
+/* Resize Handles */
+.basic_ui_panel .basic_ui_resize_handle {
+    position: absolute;
+    user-select: none;
+    z-index: 20;
+    transition: background 0.15s;
+}
+
+.basic_ui_panel .basic_ui_resize_handle:hover {
+    background: rgba(137, 180, 250, 0.3);
+}
+
+.basic_ui_panel .basic_ui_resize_handle.left,
+.basic_ui_panel .basic_ui_resize_handle.right {
+    width: 6px;
+    top: 0;
+    bottom: 0;
+    cursor: ew-resize;
+}
+
+.basic_ui_panel .basic_ui_resize_handle.left {
+    left: 0;
+}
+
+.basic_ui_panel .basic_ui_resize_handle.right {
+    right: 0;
+}
+
+.basic_ui_panel .basic_ui_resize_handle.top,
+.basic_ui_panel .basic_ui_resize_handle.bottom {
+    height: 6px;
+    left: 0;
+    right: 0;
+    cursor: ns-resize;
+}
+
+.basic_ui_panel .basic_ui_resize_handle.top {
+    top: 0;
+}
+
+.basic_ui_panel .basic_ui_resize_handle.bottom {
+    bottom: 0;
+}
