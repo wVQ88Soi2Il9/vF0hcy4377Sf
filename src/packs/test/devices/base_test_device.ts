@@ -43,13 +43,13 @@ export abstract class base_test_device extends base_layered_device
             {
                 const wp = add_vector_3d(this.position as vector_3d, local_port);
 
-                // Check if port lies on or adjacent to current camera slice along non-displayed dimensions
+                // Check if port lies within the camera slice window [slices[i], slices[i] + 3) along non-displayed dimensions
                 let on_slice = true;
                 for (let i = 0; i < slices.length; i++)
                 {
                     if (i !== dim_h && i !== dim_v)
                     {
-                        if (slices[i] < wp[i] - 1 || slices[i] > wp[i] + 1)
+                        if (wp[i] < slices[i] || wp[i] >= slices[i] + 3)
                         {
                             on_slice = false;
                             break;
@@ -62,8 +62,8 @@ export abstract class base_test_device extends base_layered_device
                     continue;
                 }
 
-                const port_sx = camera.pan_x + (wp[dim_h] + 1) * camera.zoom;
-                const port_sy = canvas_height + camera.pan_y - (wp[dim_v] + 1) * camera.zoom;
+                const port_sx = camera.pan_x + wp[dim_h] * camera.zoom;
+                const port_sy = canvas_height + camera.pan_y - wp[dim_v] * camera.zoom;
                 const radius  = Math.max(3, camera.zoom * 0.12);
 
                 ctx.beginPath();

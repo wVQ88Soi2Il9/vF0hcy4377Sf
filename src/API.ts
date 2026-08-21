@@ -58,6 +58,13 @@ export type
     game_map
 } from '@/core/types';
 
+export
+{
+    is_valid_device_position,
+    is_valid_port_position,
+    get_port_axis
+} from '@/utils/device_utils';
+
 export type unsubscribe_function = () => void;
 
 // ── 裝置生命週期 ──────────────────────────────────────────────────────────────

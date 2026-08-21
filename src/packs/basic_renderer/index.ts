@@ -24,7 +24,7 @@ const camera: camera_type =
     pan_x: 0,
     pan_y: 0,
     zoom:  40,
-    // dim_h=0 (X→right), dim_v=1 (Y→up), slices dynamically adapt to map.size.length
+    // dim_h=0 (X→right), dim_v=1 (Y→up), slices dynamically adapt to map.size.length (default Z=1)
     plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
 };
 

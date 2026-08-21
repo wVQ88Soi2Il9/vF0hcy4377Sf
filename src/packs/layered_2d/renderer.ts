@@ -39,9 +39,9 @@ function render_device_item
 /**
  * 2.5D 分層透視渲染函式。
  * 依照高程 Z 軸由低至高（Z 升序）分層渲染：
- * 1. 底層物件先畫，高層物件後畫覆蓋在上方。
- * 2. 當前焦點層（如 Z=0）以正常不透明度繪製。
- * 3. 非焦點層（如高架 Z=2）以半透明 Alpha 疊加覆蓋在焦點層上方。
+ * 1. 僅顯示與 [active_layer, active_layer + 3) 相交的可見層級。
+ * 2. 焦點層以正常不透明度繪製。
+ * 3. 疊加層（透視）以半透明 Alpha 繪製。
  */
 export function draw_layered_devices
 (
@@ -61,7 +61,7 @@ export function draw_layered_devices
 
     if (is_xy_plane)
     {
-        // 收集所有在水平視圖中可見的格點與所屬層級
+        // 收集所有在水平視圖中可見的格點與所屬層級（必須與 [active_layer, active_layer + 3) 相交）
         const items_by_layer = new Map<number, render_item[]>();
 
         for (const device of map.devices)
@@ -70,14 +70,17 @@ export function draw_layered_devices
             const local_cells = device.get_shape() as vector_3d[];
             const world_cells = local_cells.map(c => add_vector_3d(pos, c));
 
-            // 依 Z 軸層級分組（偶數座標層級: 0, 2, 4, ...）
+            // 依 Z 軸層級分組，並過濾落在 [active_layer, active_layer + 3) 範圍內的格點
             const layer_groups = new Map<number, vector_3d[]>();
             for (const cell of world_cells)
             {
                 const z_layer = cell[2];
-                const list = layer_groups.get(z_layer) || [];
-                list.push(cell);
-                layer_groups.set(z_layer, list);
+                if (z_layer < active_layer + 3 && z_layer + 2 > active_layer)
+                {
+                    const list = layer_groups.get(z_layer) || [];
+                    list.push(cell);
+                    layer_groups.set(z_layer, list);
+                }
             }
 
             for (const [layer, cells] of layer_groups.entries())
@@ -94,9 +97,9 @@ export function draw_layered_devices
         for (const layer of sorted_layers)
         {
             const items = items_by_layer.get(layer) || [];
-            const is_active = layer >= active_layer && layer < active_layer + 2;
+            const is_focus_layer = layer === active_layer || (layer >= active_layer && layer < active_layer + 2);
 
-            if (is_active)
+            if (is_focus_layer)
             {
                 // 焦點層：以正常不透明度繪製
                 for (const item of items)
@@ -106,7 +109,7 @@ export function draw_layered_devices
             }
             else if (show_inactive)
             {
-                // 非焦點層（如 Z=2 高架層覆蓋在 Z=0 上方）：以半透明 Alpha 疊加繪製
+                // 透視層：以半透明 Alpha 疊加繪製
                 ctx.save();
                 ctx.globalAlpha = inactive_alpha;
                 for (const item of items)
@@ -127,7 +130,7 @@ export function draw_layered_devices
                 cell.every((coord, i) =>
                     i === dim_h ||
                     i === dim_v ||
-                    (slices[i] >= coord && slices[i] < coord + 2)
+                    (coord < slices[i] + 3 && coord + 2 > slices[i])
                 )
             );
 

@@ -4,7 +4,8 @@ import { basic_renderer } from '@/packs/basic_renderer';
 
 /**
  * Renders the 2.5D Layer Switcher section in Info Bar.
- * Allows interactive switching between even Z elevation levels (Z=0, 2, 4, ...).
+ * Allows interactive switching across integer Z elevation levels (Z = 0, 1, 2, ...),
+ * showing content in the depth window [Z, Z + 3).
  */
 export function render_layer_selector_section(container: HTMLElement, map: game_map): void
 {
@@ -16,7 +17,7 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
 
     const max_z = map.size[2];
     const available_layers: number[] = [];
-    for (let z = 0; z < max_z; z += 2)
+    for (let z = 0; z < max_z; z++)
     {
         available_layers.push(z);
     }
@@ -29,7 +30,7 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
 
     const title_row = document.createElement('div');
     title_row.className = 'basic_ui_section_title';
-    title_row.textContent = 'Active Layer (Z-Level):';
+    title_row.textContent = 'Active Depth Window [Z, Z+3):';
 
     const control_row = document.createElement('div');
     control_row.className = 'basic_ui_lookup_row';
@@ -42,7 +43,7 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
         const z_val = available_layers[idx];
         const opt = document.createElement('option');
         opt.value = String(z_val);
-        opt.textContent = `Layer ${idx} (Z = ${z_val})`;
+        opt.textContent = `Z = ${z_val} (Depth [${z_val}, ${z_val + 3}))`;
         if (z_val === current_z)
         {
             opt.selected = true;
@@ -77,11 +78,11 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
     btn_down.type = 'button';
     btn_down.className = 'basic_ui_btn';
     btn_down.innerHTML = '▼';
-    btn_down.title = 'Previous Layer (Z - 2)';
+    btn_down.title = 'Previous Level (Z - 1)';
     btn_down.addEventListener('click', () =>
     {
         const cur = parseInt(select.value, 10) || 0;
-        const next_z = Math.max(0, cur - 2);
+        const next_z = Math.max(0, cur - 1);
         switch_layer(next_z);
     });
 
@@ -90,11 +91,11 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
     btn_up.type = 'button';
     btn_up.className = 'basic_ui_btn';
     btn_up.innerHTML = '▲';
-    btn_up.title = 'Next Layer (Z + 2)';
+    btn_up.title = 'Next Level (Z + 1)';
     btn_up.addEventListener('click', () =>
     {
         const cur = parseInt(select.value, 10) || 0;
-        const next_z = Math.min(available_layers[available_layers.length - 1], cur + 2);
+        const next_z = Math.min(available_layers[available_layers.length - 1], cur + 1);
         switch_layer(next_z);
     });
 

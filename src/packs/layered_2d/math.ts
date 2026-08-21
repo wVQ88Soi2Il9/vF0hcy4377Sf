@@ -11,9 +11,9 @@ export function normalize_rotation(steps: number): rotation_step
 
 /**
  * Applies a 2.5D D4 dihedral group transformation (rotation + optional reflection)
- * to a 3D vector [x, y, z], preserving the layer coordinate z.
+ * directly to a 3D point [x, y, z] (such as a port coordinate), preserving the layer coordinate z.
  */
-export function apply_d4_transform(v: vector_3d, transform: d4_transform): vector_3d
+export function apply_d4_point(v: vector_3d, transform: d4_transform): vector_3d
 {
     // 1. Apply reflection across X axis (y -> -y) if flipped is true
     const fx = v[0];
@@ -44,6 +44,22 @@ export function apply_d4_transform(v: vector_3d, transform: d4_transform): vecto
             return [fy, -fx, fz];
         }
     }
+}
+
+/**
+ * Alias for apply_d4_point.
+ */
+export const apply_d4_transform = apply_d4_point;
+
+/**
+ * Applies a 2.5D D4 transformation to a 2x2x2 cell anchor [x, y, z].
+ * Transforms the cell's geometric center (x+1, y+1) and maps back to the new top-left anchor.
+ */
+export function apply_d4_cell_anchor(anchor: vector_3d, transform: d4_transform): vector_3d
+{
+    const center: vector_3d = [anchor[0] + 1, anchor[1] + 1, anchor[2] + 1];
+    const transformed_center = apply_d4_point(center, transform);
+    return [transformed_center[0] - 1, transformed_center[1] - 1, anchor[2]];
 }
 
 /**

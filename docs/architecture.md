@@ -1,135 +1,70 @@
-# 系統架構設計 (Architecture)
+# 系統架構說明書 (Architecture Design)
 
----
+本專案採用 **三層單向架構 (Three-Layer Unidirectional Architecture)** 設計：
 
-## 三層單向架構 (Three-Layer Architecture)
-
-依賴方向：`packs` → `utils` → `core` (**嚴格單向, 禁止反向依賴**)
-
-```
-src/
-├── core/                   # 層 1：引擎核心
-│   ├── types.ts            # 全域型別(game_map, device, port...)
-│   ├── hooks.ts            # Hook 擴充點(所有副作用的唯一入口)
-│   ├── map_manager.ts      # 地圖狀態 CRUD
-│   ├── pack_manager.ts     # Pack 生命週期管理
-│   └── index.ts
-├── utils/                  # 層 2：純函數工具庫
-│   ├── math.ts             # 向量、座標運算
-│   ├── spatial_map.ts      # 空間索引
-│   └── device_utils.ts     # Device 衍生計算
-├── API.ts                  # 引擎公開事件契約(pack 的訂閱入口)
-├── runtime.ts              # 啟動期全域狀態(map / registry)
-├── main.ts                 # 應用啟動點
-└── packs/                  # 層 3：遊戲邏輯 / 渲染 / UI(均為 Mod)
-    ├── loader.ts           # 掃描 & 呼叫所有 pack 的 init_pack()
-    ├── basic_renderer/     # 內建基礎渲染 pack
-    │   ├── index.ts
-    │   ├── draw_device.ts
-    │   ├── draw_grid.ts
-    │   ├── draw_registry.ts
-    │   └── types.ts
-    ├── basic_ui/           # 內建基礎 UI pack
-    │   ├── index.ts
-    │   ├── layout.ts
-    │   ├── info_bar.ts
-    │   ├── cmd_bar.ts
-    │   └── cmd_executor.ts
-    ├── cmd_tool/           # 內建 CMD 指令與字串解析 pack (clean_flag_arg, tokenize_input 等)
-    │   └── index.ts
-    ├── vanilla/            # 內建基礎遊戲邏輯 pack
-    │   ├── index.ts
-    │   ├── overlap.ts
-    │   └── graph.ts
-    └── test/               # 測試用 pack(開發期)
+```text
+┌──────────────────────────────────────────────┐
+│  Packs Layer (遊戲邏輯插件 / Mod / 資料定義)  │
+│  - packs/vanilla/                            │
+│  - packs/test/                               │
+│  - packs/basic_ui/                           │
+│  - packs/basic_renderer/                     │
+│  - packs/layered_2d/                         │
+└──────────────────────┬───────────────────────┘
+                       │ 依賴 (只能透過 @/API 存取)
+                       ▼
+┌──────────────────────────────────────────────┐
+│  Utils Layer (純數學、演算法、座標輔助計算)    │
+│  - math.ts, spatial_map.ts, device_utils.ts  │
+└──────────────────────┬───────────────────────┘
+                       │ 依賴
+                       ▼
+┌──────────────────────────────────────────────┐
+│  Core Layer (核心引擎：純型別、狀態容器、Hooks)│
+│  - types.ts, map_manager.ts, hooks.ts        │
+└──────────────────────────────────────────────┘
 ```
 
 ---
 
-## 各層職責
+## 依賴與存取規範 (Dependency & Boundary Rules)
 
-### 層 1 - Core(引擎核心)
-
-*   **型別與抽象模型**：`game_map`、`device`（抽象基類）等全域核心型別的唯一來源(Single Source of Truth)。Core 僅定義基礎幾何與抽象狀態（`get_shape`, `get_port`），保持零 UI / 零外部依賴。
-*   **Hook 系統**：`hooks.ts` 是所有副作用的唯一擴充點。Core 不含任何具體遊戲規則。
-*   **地圖狀態**：`map_manager.ts` 管理設備的 CRUD，呼叫後觸發對應 Hook。
-*   **禁止**：import 任何 pack、直接執行遊戲規則或包含特定渲染 API。
-
-### 層 2 - Utils(工具庫)
-
-*   純函數，無副作用，無狀態。
-*   可被 core 或 packs 引用。
-*   **禁止**：import 任何 pack。
-
-### 層 3 - Packs(插件層)
-
-*   所有具體遊戲規則、渲染邏輯、UI 均在此層，以 pack 形式存在。
-*   **能力介面契約 (Capability Interface)**：各功能 Pack（如 `basic_renderer`）導出專屬能力介面（如 `drawable_device`），規範下游裝置必須具備的方法（如 `draw()`）。
-*   **多型與繼承規範**：業務 Pack 內部大膽使用 `extends` 進行類別階層與實作複用，跨 Pack 系統能力則透過 `implements` 多重實作能力介面。
-*   **禁止**：直接操作 `hooks` singleton(直接 push/splice)— 一律用 `@/API` 的函式訂閱。
+1. **依賴方向**：`packs` → `utils` → `core` (嚴格單向, 禁止反向依賴)。
+2. **Pack 邊界隔離**：所有 Pack **嚴格禁止** 直接 import `@/core/*`。Pack 只能 import `@/API` 與 `@/utils/*`。
+3. **Core 零業務邏輯**：Core 僅負責資料容器 (State Holder) 與擴充掛勾 (Hooks System)，不包含任何碰撞、連接圖或特定遊戲規則。
 
 ---
 
-## API 邊界(`src/API.ts`)
+## 網格與端口座標定義 (2× Grid & Face Ports)
 
-`API.ts` 是引擎的公開事件契約。後續開發者在此手動加入新的訂閱入口。
-
-| 函式 | 用途 |
-|------|------|
-| `create_device()` | 新增裝置至地圖 |
-| `delete_device()` | 刪除裝置 |
-| `move_device()` | 移動裝置 |
-| `select_recipe()` | 設定/清除裝置選擇之食譜 |
-| `on_device_create(cb)` | 訂閱裝置建立事件 |
-| `on_device_delete(cb)` | 訂閱裝置刪除事件 |
-| `on_device_move(cb)` | 訂閱裝置移動事件 |
-| `on_device_select_recipe(cb)` | 訂閱裝置食譜變更事件 |
-| `on_device_change(cb)` | 訂閱任何裝置生命週期與狀態變動 |
-| `register_overlap_check(fn)` | 註冊碰撞/越界檢查 Hook |
-| `register_graph_build(fn)` | 註冊連接圖建構 Hook |
-
----
-
-## 啟動期全域狀態(`src/runtime.ts`)
-
-`runtime.ts` 不是引擎事件 API，而是啟動順序的狀態容器。
-`main.ts` 在呼叫 `call_all_pack_inits()` 之前對其寫入，需要地圖狀態的 pack(如 basic_renderer)在 `init_pack()` 內讀取。
-
-| 函式 | 用途 |
-|------|------|
-| `set_map(map)` | 注冊全局地圖(main.ts 寫入) |
-| `get_map()` | 讀取全局地圖(pack 在 init_pack() 內使用) |
-| `set_registry(r)` | 注冊 Pack Registry(main.ts 寫入) |
-| `get_registry()` | 讀取 Pack Registry(pack 在 init_pack() 內使用) |
-
----
-
-## 網格與端口座標定義 (2× Grid & Edge Ports)
-
-為讓連接埠在 3D 空間中可以 **1:1 完美重合匹配**，採用雙倍解析度網格：
+為讓連接埠在 $N$ 維空間中可以 **1:1 完美重合匹配**，採用雙倍解析度網格：
 
 *   **裝置唯一 ID (`uid`)**：地圖 (`game_map`) 建立時 `uid` 預設從 **`1`** 開始遞增分配。
 
-*   **格子中心 (Position)**：固定為 **全偶數** 座標 `(2i, 2j, 2k)`。 CMD 指令（如 `create` 與 `move`）傳入的 position 強制驗證必須全為偶數座標。
+*   **裝置網格錨點 (Position)**：固定為 **全偶數** 座標 $(2i, 2j, 2k)$（注意：**position 是裝置網格錨點/頂點，不是中心**）。CMD 指令（如 `create` 與 `move`）傳入的 position 強制驗證必須全為偶數座標。
     例如 `(0,0,0)`、`(2,0,0)`、`(0,2,0)`。
 
-*   **裝置形狀 (Shape & Cell Block Size)**：`device_definition.shape` 內的每個格子錨點在世界座標中實際佔據 **2×2×2 格**。
-    例如 shape `[[0,0,0], [2,0,0], [0,2,0], [2,2,0]]` 於 position `[0,0,0]` 的實際涵蓋範圍為：
-    `{(x,y,z) : 0 ≤ x < 4, 0 ≤ y < 4, 0 ≤ z < 2}`。
+*   **裝置形狀 (Shape & Cell Block Size)**：`device_definition.shape` 內的每個單元格相對於 position 為偶數步長偏移（例如 `[0,0,0]`、`[2,0,0]`），在世界座標中實際佔據 **2×2×2 格**：
+    $[x, x+2) \times [y, y+2) \times [z, z+2)$。
 
-*   **連接埠 (Port)**：位在相鄰格子的交界面上，座標必為 **恰好 1 個奇數，其餘 2 個偶數**。
-    例如 X 軸方向的 Port：`(1, 0, 0)`、`(-1, 0, 0)`。
+*   **連接埠 (Port)**：位在相鄰單元格交界面的正中心，座標必為 **恰好 1 個偶數，其餘 $n-1$ 個奇數**：
+    $$\text{port} \in \{x \in \mathbb{Z}^n : \text{exactly one coordinate is even and } n-1 \text{ are odd}\}$$
+    例如：
+    - X 軸方向邊界面 Port：`(2, 1, 1)`、`(0, 1, 1)`（X 為偶數邊界面，Y/Z 為奇數中點）。
+    - Y 軸方向邊界面 Port：`(1, 2, 1)`、`(1, 0, 1)`（Y 為偶數邊界面，X/Z 為奇數中點）。
+    - Z 軸垂直跨層 Port：`(1, 1, 2)`、`(1, 1, 0)`（Z 為偶數樓板交界面，X/Y 為奇數中點）。
 
 ```text
-  (-2,0)         (0,0)          (2,0)          (4,0)  ← 設備中心(偶數)
-    |              |              |              |
- ───┼──────(-1,0)──┼──────(1,0)───┼──────(3,0)───┼─── ← 邊界 Port(奇數)
+  [0,0] 錨點          [2,0] 錨點          [4,0] 錨點  ← 設備網格錨點(全偶數)
+    |                   |                   |
+ ───┼──────(2,1)────────┼──────(4,1)────────┼─── ← 邊界 Port(X為偶數邊界面，Y為奇數中點)
+    │ (單元區間 [0,2])   │ (單元區間 [2,4])   │
 ```
 
 **連通判斷**：
 
-*   `(0,0,0)` 設備的右側 Output Port = `(1, 0, 0)`
-*   `(2,0,0)` 設備的左側 Input Port = `(2-1, 0, 0)` = `(1, 0, 0)`
+*   `[0,0,0]` 設備的右側 Output Port（偏移 `[2,1,1]`）= `[2, 1, 1]`
+*   `[2,0,0]` 設備的左側 Input Port（偏移 `[0,1,1]`）= `[2+0, 0+1, 0+1]` = `[2, 1, 1]`
 *   → 兩個 Port 的世界座標完全相同，只需比對 `portA.world_pos === portB.world_pos` 即可判斷連通。
 
 ---

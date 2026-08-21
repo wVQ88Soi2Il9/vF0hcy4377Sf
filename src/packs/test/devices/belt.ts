@@ -10,11 +10,11 @@ export class belt_device extends base_test_device
     ];
 
     protected readonly base_input_ports: vector_3d[] = [
-        [0, -1, 0]
+        [0, 1, 1]
     ];
 
     protected readonly base_output_ports: vector_3d[] = [
-        [0, 1, 0]
+        [2, 1, 1]
     ];
 
     protected get_color_theme(): device_color_theme

@@ -53,12 +53,12 @@ export function draw_devices
     {
         const world_cells = device.get_shape().map(pos => add_vector(device.position, pos));
 
-        // Filter cells that intersect the current slice plane along non-displayed dimensions
+        // Filter cells that intersect the current slice window [slices[i], slices[i] + 3) along non-displayed dimensions
         const visible_cells = world_cells.filter(cell =>
             cell.every((coord, i) =>
                 i === dim_h ||
                 i === dim_v ||
-                (slices[i] >= coord && slices[i] < coord + 2)
+                (coord < slices[i] + 3 && coord + 2 > slices[i])
             )
         );
 

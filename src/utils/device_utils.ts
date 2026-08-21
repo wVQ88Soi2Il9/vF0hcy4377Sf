@@ -1,50 +1,41 @@
 import type { vector } from '@/core/types';
 
 /**
- * Checks if a port coordinate is a vertical port (Z-axis direction).
- * Uses port_pos[2] % 2 !== 0 to properly support both positive and negative coordinates.
- */
-export function is_vertical_port(port_pos: vector): boolean
-{
-    return port_pos.length >= 3 && port_pos[2] % 2 !== 0;
-}
-
-/**
  * Resolves which axis index (0 for X, 1 for Y, 2 for Z, etc.) a port is oriented along.
- * Returns the dimension index where the coordinate is odd, or null if invalid.
+ * Returns the dimension index where the coordinate is even (the boundary plane), or null if invalid.
  */
 export function get_port_axis(port_pos: vector): number | null
 {
-    const odd_indices: number[] = [];
+    const even_indices: number[] = [];
     for (let i = 0; i < port_pos.length; i++)
     {
-        if (port_pos[i] % 2 !== 0)
+        if (port_pos[i] % 2 === 0)
         {
-            odd_indices.push(i);
+            even_indices.push(i);
         }
     }
-    return odd_indices.length === 1 ? odd_indices[0] : null;
+    return even_indices.length === 1 ? even_indices[0] : null;
 }
 
 /**
- * Validates whether a coordinate satisfies the 2x grid port invariant:
- * exactly ONE coordinate must be an odd integer, and all other coordinates must be even integers.
+ * Validates whether a coordinate satisfies the grid port invariant:
+ * port ∈ {x ∈ Z^n : exactly one coordinate is even and n - 1 are odd}.
  */
 export function is_valid_port_position(port_pos: vector): boolean
 {
-    let odd_count = 0;
+    let even_count = 0;
     for (let i = 0; i < port_pos.length; i++)
     {
-        if (port_pos[i] % 2 !== 0)
+        if (port_pos[i] % 2 === 0)
         {
-            odd_count++;
+            even_count++;
         }
     }
-    return odd_count === 1;
+    return even_count === 1;
 }
 
 /**
- * Validates whether a coordinate satisfies the 2x grid device center invariant:
+ * Validates whether a coordinate satisfies the device anchor invariant:
  * all coordinates must be even integers.
  */
 export function is_valid_device_position(pos: vector): boolean

@@ -7,7 +7,7 @@ import type
     rotatable_device,
     drawable_layered_device
 } from './types';
-import { apply_d4_transform, normalize_rotation, is_vector_3d } from './math';
+import { apply_d4_point, apply_d4_cell_anchor, normalize_rotation, is_vector_3d } from './math';
 
 /**
  * Abstract base class for all 2.5D layered devices.
@@ -46,11 +46,11 @@ export abstract class base_layered_device extends device implements drawable_lay
     }
 
     /**
-     * Computes the D4-transformed local shape cells.
+     * Computes the D4-transformed local shape cells (using cell anchor transformation).
      */
     public get_shape(): vector_3d[]
     {
-        return this.base_shape.map(v => apply_d4_transform(v, this.transform));
+        return this.base_shape.map(v => apply_d4_cell_anchor(v, this.transform));
     }
 
     public get_shape_3d(): vector_3d[]
@@ -59,12 +59,12 @@ export abstract class base_layered_device extends device implements drawable_lay
     }
 
     /**
-     * Computes the D4-transformed local port coordinates.
+     * Computes the D4-transformed local port coordinates (using direct point transformation).
      */
     public get_port(type: 'input' | 'output'): vector_3d[]
     {
         const ports = type === 'input' ? this.base_input_ports : this.base_output_ports;
-        return ports.map(v => apply_d4_transform(v, this.transform));
+        return ports.map(v => apply_d4_point(v, this.transform));
     }
 
     public get_port_3d(type: 'input' | 'output'): vector_3d[]

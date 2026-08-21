@@ -14,12 +14,12 @@ export class irregular_3d_device extends base_test_device
     ];
 
     protected readonly base_input_ports: vector_3d[] = [
-        [-1, 0, 0]
+        [0, 1, 1]
     ];
 
     protected readonly base_output_ports: vector_3d[] = [
-        [3, 0, 0],
-        [2, 2, 3]
+        [4, 1, 1],
+        [3, 3, 4]
     ];
 
     protected get_color_theme(): device_color_theme
