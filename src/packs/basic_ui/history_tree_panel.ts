@@ -49,10 +49,10 @@ const LANE_COLORS = [
     '#94e2d5'  // Teal
 ];
 
-const COL_WIDTH = 76;
-const ROW_HEIGHT = 42;
-const CARD_WIDTH = 58;
-const CARD_HEIGHT = 28;
+const COL_WIDTH = 44;
+const ROW_HEIGHT = 38;
+const CARD_WIDTH = 26;
+const CARD_HEIGHT = 26;
 const PAD_X = 14;
 const PAD_Y = 10;
 
@@ -218,7 +218,7 @@ export function create_cad_timeline(): cad_timeline_component
     btn_first.type = 'button';
     btn_first.className = 'basic_ui_btn';
     btn_first.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="2.5" height="16" rx="1"/><path d="M12.5 12l8.5 6.5V5.5z"/><path d="M5.5 12l8.5 6.5V5.5z"/></svg>';
-    btn_first.title = 'Jump to initial state (Root #0)';
+    btn_first.title = 'Jump to initial state (Root)';
 
     // 1.2 Jump to Previous Fork (⏪)
     const btn_prev_fork = document.createElement('button');
@@ -320,7 +320,7 @@ export function create_cad_timeline(): cad_timeline_component
             return;
         }
 
-        info_label.textContent = `Steps: ${layout.nodes.length} · Tracks: ${layout.max_lane + 1} · Current: #${tree.current_uid}`;
+        info_label.textContent = 'Timeline';
 
         const total_w = Math.max(layout.total_width + 30, viewport.clientWidth);
         const total_h = Math.max(layout.total_height + 16, 54);
@@ -378,19 +378,13 @@ export function create_cad_timeline(): cad_timeline_component
             const icon = get_action_icon(label_str);
 
             // Hover displays detailed action summary
-            card.title = `Step #${n.node.uid}: ${label_str} (Click to jump)`;
+            card.title = `${label_str} (Click to jump)`;
 
             const icon_span = document.createElement('span');
             icon_span.className = 'basic_ui_cad_chip_icon';
             icon_span.textContent = icon;
 
-            const num_span = document.createElement('span');
-            num_span.className = 'basic_ui_cad_chip_num';
-            num_span.style.color = color;
-            num_span.textContent = `#${n.node.uid}`;
-
             card.appendChild(icon_span);
-            card.appendChild(num_span);
 
             if (n.is_current)
             {

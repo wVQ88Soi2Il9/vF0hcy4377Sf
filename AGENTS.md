@@ -34,7 +34,7 @@ Before starting **any task or writing any code** in this repository, you MUST re
   1. **任務讀取**：接手特定任務（如 `<seq>#<n>`）時，自動執行 `python docs/history/plan-item.py <seq>#<n>` 讀取單一項目內文與依據，避免加載整份 Plan 檔。
   2. **狀態更新**：完成任務或變更狀態時，主動修改 Plan 檔對應項目的 `- **state:**`（如 `完成`），並記錄歷史沿革（`- H<n> · YYYY-MM-DD HH:MM <kind> —— ...`）。檔名統一精確至分鐘：`<seq>_<YYYYMMDDHHMM>_<topic>.md`。
   3. **自動同步**：任何 Plan 檔修訂後，強制執行 `python docs/history/update-head.py` 確保 0 衝突並自動更新 `head.md`。
-
+- **遇到不明確的指示，主動向我確認細節後再開始**
 
 ## Unknown / TBD Policy
 
