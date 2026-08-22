@@ -2,7 +2,6 @@ import { create_device_command, execute_command } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
-import { get_device_creation_options } from './extensions';
 
 export interface device_creator_component
 {
@@ -12,7 +11,7 @@ export interface device_creator_component
 
 /**
  * Renders the Device Creation panel inside Info Bar, supporting definition selection,
- * downstream custom creation option slots, even coordinate steppers, validation, and instantaneous creation callback.
+ * even coordinate steppers, validation, and instantaneous creation callback.
  */
 export function create_device_creator
 (
@@ -29,36 +28,6 @@ export function create_device_creator
     // 1. Definition Selector
     const def_select = document.createElement('select');
     def_select.className = 'basic_ui_select';
-
-    // Downstream custom creation options container
-    const custom_options_container = document.createElement('div');
-    custom_options_container.className = 'basic_ui_form_group';
-
-    let current_option_getters: (() => Record<string, unknown>)[] = [];
-
-    function update_creation_options(): void
-    {
-        custom_options_container.innerHTML = '';
-        current_option_getters = [];
-
-        const def_id = def_select.value.trim();
-        if (!def_id)
-        {
-            return;
-        }
-
-        const option_renderers = get_device_creation_options(def_id);
-        for (const render of option_renderers)
-        {
-            const handle = render(custom_options_container, def_id);
-            if (handle && typeof handle.get_other_info === 'function')
-            {
-                current_option_getters.push(handle.get_other_info);
-            }
-        }
-    }
-
-    def_select.addEventListener('change', update_creation_options);
 
     function refresh_definitions(): void
     {
@@ -80,8 +49,6 @@ export function create_device_creator
                 def_select.appendChild(opt);
             }
         }
-
-        update_creation_options();
     }
 
     refresh_definitions();
@@ -121,25 +88,9 @@ export function create_device_creator
             return;
         }
 
-        // Collect other_info from custom creation options
-        let merged_other_info: Record<string, unknown> = {};
-        for (const getter of current_option_getters)
-        {
-            try
-            {
-                const info = getter();
-                merged_other_info = { ...merged_other_info, ...info };
-            }
-            catch (err: unknown)
-            {
-                coords_group.show_error(`Error in creation options: ${(err as Error).message}`);
-                return;
-            }
-        }
-
         try
         {
-            const cmd = create_device_command(def_id, parsed.position, merged_other_info);
+            const cmd = create_device_command(def_id, parsed.position);
             execute_command(cmd);
             coords_group.hide_error();
 
@@ -163,7 +114,6 @@ export function create_device_creator
 
     card.appendChild(header);
     card.appendChild(def_select);
-    card.appendChild(custom_options_container);
     card.appendChild(coords_group.container);
 
     return {
