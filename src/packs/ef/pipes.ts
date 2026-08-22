@@ -113,60 +113,109 @@ export abstract class base_ef_pipe extends pipe implements drawable_device
         const canvas_height = ctx.canvas.height;
         const shape = this.get_shape() as vector_3d[];
 
-        const border_lw = Math.max(1, zoom * 0.04);
-        const half_border_lw = border_lw / 2;
-        const visible_cells: vector_3d[] = [];
+        // Pipe diameter: 60% of cell size (1.2 / 2.0 grid units), with border = outer - inner
+        const pipe_outer = Math.max(2, zoom * 0.6);
+        const pipe_inner = Math.max(1, zoom * 0.44);
 
-        for (const local_cell of shape)
+        // Compute ordered center points for each cell (null = off-slice / hidden)
+        const cell_centers: ({ x: number; y: number } | null)[] = shape.map(local_cell =>
         {
             const wp = add_vector_3d(this.position as vector_3d, local_cell);
-
-            let on_slice = true;
             for (let i = 0; i < slices.length; i++)
             {
                 if (i !== dim_h && i !== dim_v)
                 {
                     if (wp[i] < slices[i] || wp[i] >= slices[i] + 3)
                     {
-                        on_slice = false;
-                        break;
+                        return null;
                     }
                 }
             }
+            return {
+                x: camera.pan_x + (wp[dim_h] + 1) * zoom,
+                y: canvas_height + camera.pan_y - (wp[dim_v] + 1) * zoom
+            };
+        });
 
-            if (!on_slice)
-            {
-                continue;
-            }
-
-            visible_cells.push(wp);
-
-            const csx = camera.pan_x + wp[dim_h] * zoom;
-            const csy = canvas_height + camera.pan_y - (wp[dim_v] + 2) * zoom;
-            const csize = 2 * zoom;
-
-            ctx.fillStyle = this.theme.body_fill;
-            ctx.fillRect(csx, csy, csize, csize);
-
-            ctx.strokeStyle = this.theme.body_stroke;
-            ctx.lineWidth = border_lw;
-            ctx.strokeRect(csx + half_border_lw, csy + half_border_lw, csize - border_lw, csize - border_lw);
-        }
-
-        if (visible_cells.length > 0)
+        // Extend polyline endpoints to the actual port positions
+        // so the pipe graphic visually touches the port circles.
+        const port_to_canvas = (local_port: vector_3d): { x: number; y: number } =>
         {
-            const center_cell = visible_cells[Math.floor(visible_cells.length / 2)];
-            const label_sx = camera.pan_x + (center_cell[dim_h] + 1) * zoom;
-            const label_sy = canvas_height + camera.pan_y - (center_cell[dim_v] + 1) * zoom;
+            const wp = add_vector_3d(this.position as vector_3d, local_port);
+            return {
+                x: camera.pan_x + wp[dim_h] * zoom,
+                y: canvas_height + camera.pan_y - wp[dim_v] * zoom
+            };
+        };
 
+        const in_ports  = this.get_port('input');
+        const out_ports = this.get_port('output');
+
+        const centers: ({ x: number; y: number } | null)[] =
+        [
+            in_ports.length  > 0 ? port_to_canvas(in_ports[0])  : cell_centers[0] ?? null,
+            ...cell_centers,
+            out_ports.length > 0 ? port_to_canvas(out_ports[0]) : cell_centers[cell_centers.length - 1] ?? null
+        ];
+
+        // Draw pipe as polyline: first thick pass (border), then thin pass (fill)
+        const draw_pass = (line_width: number, color: string): void =>
+        {
+            ctx.lineWidth   = line_width;
+            ctx.strokeStyle = color;
+            ctx.lineCap     = 'round';
+            ctx.lineJoin    = 'round';
+
+            let in_path = false;
+            for (const pt of centers)
+            {
+                if (pt !== null)
+                {
+                    if (!in_path)
+                    {
+                        ctx.beginPath();
+                        ctx.moveTo(pt.x, pt.y);
+                        in_path = true;
+                    }
+                    else
+                    {
+                        ctx.lineTo(pt.x, pt.y);
+                    }
+                }
+                else
+                {
+                    if (in_path)
+                    {
+                        ctx.stroke();
+                        in_path = false;
+                    }
+                }
+            }
+            if (in_path)
+            {
+                ctx.stroke();
+            }
+        };
+
+        // 1. Outer pass → border colour
+        draw_pass(pipe_outer, this.theme.body_stroke);
+        // 2. Inner pass → fill colour
+        draw_pass(pipe_inner, this.theme.body_fill);
+
+        // 3. Label at centre of visible segment
+        const visible_centers = centers.filter((c): c is { x: number; y: number } => c !== null);
+        if (visible_centers.length > 0)
+        {
+            const mid = visible_centers[Math.floor(visible_centers.length / 2)];
             ctx.fillStyle = this.theme.text_color;
             ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`#${this.uid} ${this.display_name}`, label_sx, label_sy);
+            ctx.fillText(`#${this.uid} ${this.display_name}`, mid.x, mid.y);
         }
 
-        this.draw_ports(ctx, this.get_port('input'), '#38bdf8', '#0284c7', 'I', camera);
+        // 4. Ports
+        this.draw_ports(ctx, this.get_port('input'),  '#38bdf8', '#0284c7', 'I', camera);
         this.draw_ports(ctx, this.get_port('output'), '#f43f5e', '#be123c', 'O', camera);
 
         ctx.restore();
