@@ -21,7 +21,7 @@ export interface info_bar_component
 
 /**
  * Creates the right-side Info Bar panel supporting interactive UID lookup via dropdown,
- * device info inspection card, and downstream extension slots.
+ * device info inspection card, Git Graph visualizer, and downstream extension slots.
  */
 export function create_info_bar(): info_bar_component
 {
@@ -29,15 +29,16 @@ export function create_info_bar(): info_bar_component
         id:            'info_bar',
         tag:           'aside',
         position_css:  'top: 16px; right: 16px;',
-        default_width: '20%',
-        title:         'Map Status',
+        default_width: '22%',
+        title:         '🗺️ Map Status',
         collapsible:   true,
         resize: {
             left:       true,
-            min_width:  240,
-            max_width:  () => Math.min(window.innerWidth * 0.4, window.innerWidth - 32),
+            bottom:     true,
+            min_width:  260,
+            max_width:  () => Math.min(window.innerWidth * 0.45, window.innerWidth - 32),
             min_height: 200,
-            max_height: () => window.innerHeight - 120
+            max_height: () => window.innerHeight - 32
         }
     });
 
@@ -94,9 +95,18 @@ export function create_info_bar(): info_bar_component
     history_row.appendChild(undo_btn);
     history_row.appendChild(redo_btn);
 
+    let currently_inspected_uid: number | null = null;
+
     on_history_change(() =>
     {
         update_history_buttons();
+        const map = get_map();
+        if (map)
+        {
+            const device_count = map.devices.length;
+            const map_dimensions = map.size.join(' × ');
+            update_stats({ device_count, map_dimensions });
+        }
     });
 
     // Section 2: Downstream Custom Panel Sections Container
@@ -119,7 +129,8 @@ export function create_info_bar(): info_bar_component
 
     function refresh_uid_options(selected_uid?: number): void
     {
-        const current_val = selected_uid !== undefined ? String(selected_uid) : uid_select.value;
+        const target_uid = selected_uid !== undefined ? selected_uid : currently_inspected_uid;
+        const current_val = target_uid !== null ? String(target_uid) : '';
         uid_select.innerHTML = '<option value="">-- Select Device (#UID) --</option>';
 
         const map = get_map();
@@ -156,22 +167,31 @@ export function create_info_bar(): info_bar_component
     {
         map_info_el.innerHTML = `<span>Devices: <b>${stats.device_count}</b></span><span>Size: <b>${stats.map_dimensions}</b></span>`;
         update_history_buttons();
-        refresh_uid_options();
         creator.refresh_definitions();
 
-        const current_val = parseInt(uid_select.value, 10);
-        if (!isNaN(current_val))
+        if (currently_inspected_uid !== null)
         {
             const map = get_map();
-            const dev = map ? map.devices.find(d => d.uid === current_val) : undefined;
+            const dev = map ? map.devices.find(d => d.uid === currently_inspected_uid) : undefined;
             if (dev)
             {
-                display_device_info(dev.uid);
+                render_device_card(
+                    content_container,
+                    dev,
+                    () => display_device_info(dev.uid),
+                    () => clear_device_info()
+                );
+                refresh_uid_options(dev.uid);
             }
             else
             {
                 clear_device_info();
+                refresh_uid_options();
             }
+        }
+        else
+        {
+            refresh_uid_options();
         }
 
         // Render downstream custom sections
@@ -191,6 +211,7 @@ export function create_info_bar(): info_bar_component
         const map = get_map();
         if (!map)
         {
+            currently_inspected_uid = null;
             content_container.innerHTML = '<div class="basic_ui_error_msg">Error: Map not found</div>';
             return false;
         }
@@ -198,10 +219,12 @@ export function create_info_bar(): info_bar_component
         const dev = map.devices.find(d => d.uid === uid);
         if (!dev)
         {
+            currently_inspected_uid = null;
             content_container.innerHTML = `<div class="basic_ui_card" style="color:#f38ba8;">Device UID ${uid} not found.</div>`;
             return false;
         }
 
+        currently_inspected_uid = dev.uid;
         render_device_card(
             content_container,
             dev,
@@ -214,6 +237,7 @@ export function create_info_bar(): info_bar_component
 
     function clear_device_info(): void
     {
+        currently_inspected_uid = null;
         content_container.innerHTML = '';
         uid_select.value = '';
     }
