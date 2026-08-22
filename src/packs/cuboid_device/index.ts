@@ -2,7 +2,7 @@
  * cuboid_device Pack 進入點
  */
 
-import { cuboid_to_shape, validate_cuboid_dim } from './adapter';
+import { cuboid_to_shape, validate_cuboid_dimensions } from './adapter';
 import { base_cuboid_device } from './base_device';
 
 // ─── 導出核心類別與適配函式 ───────────────────────────────────────────────────
@@ -10,7 +10,7 @@ export
 {
     base_cuboid_device,
     cuboid_to_shape,
-    validate_cuboid_dim
+    validate_cuboid_dimensions
 };
 
 /**
@@ -20,7 +20,7 @@ export const cuboid_device =
 {
     base_cuboid_device,
     cuboid_to_shape,
-    validate_cuboid_dim
+    validate_cuboid_dimensions
 };
 
 /**
