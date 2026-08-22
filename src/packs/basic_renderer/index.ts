@@ -1,7 +1,7 @@
 import type { camera_type, view_plane, drawable_device } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { on_device_change } from '@/API';
+import { on_device_change, on_history_change } from '@/API';
 import { get_map } from '@/runtime';
 
 export type { camera_type, view_plane, drawable_device };
@@ -272,6 +272,7 @@ export function init_pack(): void
 
     setup_camera_control(renderer_canvas, draw);
     on_device_change(draw);
+    on_history_change(draw);
 
     // Initial render — wait one microtask so other packs' init_pack() can finish first.
     queueMicrotask(draw);

@@ -14,8 +14,21 @@ import type
     layered_render_options
 } from './types';
 
+import {
+    is_rotatable_device,
+    rotate_device_command,
+    flip_device_command,
+    set_device_transform_command
+} from './commands';
+
 export type { map_validation_result, device_node };
 export { base_layered_device } from './base_device';
+export {
+    is_rotatable_device,
+    rotate_device_command,
+    flip_device_command,
+    set_device_transform_command
+} from './commands';
 export { apply_d4_point, apply_d4_cell_anchor, apply_d4_transform, compose_d4, invert_d4, normalize_rotation, is_vector_3d, add_vector_3d } from './math';
 export { draw_layered_devices, get_render_options, set_render_options } from './renderer';
 export type
@@ -54,5 +67,9 @@ export const layered_2d =
     invert_d4,
     normalize_rotation,
     is_vector_3d,
-    add_vector_3d
+    add_vector_3d,
+    is_rotatable_device,
+    rotate_device_command,
+    flip_device_command,
+    set_device_transform_command
 };

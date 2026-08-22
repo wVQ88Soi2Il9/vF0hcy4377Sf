@@ -1,0 +1,119 @@
+import type { device, game_map, map_command } from '@/API';
+import type { d4_transform, rotatable_device } from './types';
+
+/**
+ * Type guard checking if a device implements rotatable_device interface.
+ */
+export function is_rotatable_device(dev: device): dev is rotatable_device
+{
+    return (
+        typeof (dev as any).rotate === 'function' &&
+        typeof (dev as any).flip === 'function' &&
+        typeof (dev as any).set_transform === 'function' &&
+        'transform' in dev
+    );
+}
+
+/**
+ * Command for rotating a 2.5D device by specified steps (default: 1 step = 90° counter-clockwise).
+ * Remembers previous transform so inverse (undo) can revert it.
+ */
+export function rotate_device_command(device_uid: number, steps: number = 1): map_command
+{
+    let previous_transform: d4_transform | null = null;
+    let target_dev: rotatable_device | null = null;
+
+    const sign_str = steps > 0 ? '+' : '';
+    const label_str = 'rotate #' + device_uid + ' (' + sign_str + (steps * 90) + 'deg)';
+
+    return {
+        label: label_str,
+        execute(map: game_map): void
+        {
+            const dev = map.devices.find(d => d.uid === device_uid);
+            if (dev && is_rotatable_device(dev))
+            {
+                target_dev = dev;
+                if (previous_transform === null)
+                {
+                    previous_transform = { ...dev.transform };
+                }
+                dev.rotate(steps);
+            }
+        },
+        inverse(_map: game_map): void
+        {
+            if (target_dev && previous_transform !== null)
+            {
+                target_dev.set_transform(previous_transform);
+            }
+        }
+    };
+}
+
+/**
+ * Command for flipping a 2.5D device across horizontal axis.
+ * Remembers previous transform so inverse (undo) can revert it.
+ */
+export function flip_device_command(device_uid: number): map_command
+{
+    let previous_transform: d4_transform | null = null;
+    let target_dev: rotatable_device | null = null;
+
+    return {
+        label: 'flip #' + device_uid,
+        execute(map: game_map): void
+        {
+            const dev = map.devices.find(d => d.uid === device_uid);
+            if (dev && is_rotatable_device(dev))
+            {
+                target_dev = dev;
+                if (previous_transform === null)
+                {
+                    previous_transform = { ...dev.transform };
+                }
+                dev.flip();
+            }
+        },
+        inverse(_map: game_map): void
+        {
+            if (target_dev && previous_transform !== null)
+            {
+                target_dev.set_transform(previous_transform);
+            }
+        }
+    };
+}
+
+/**
+ * Command for setting a 2.5D device transform directly.
+ */
+export function set_device_transform_command(device_uid: number, transform: d4_transform): map_command
+{
+    let previous_transform: d4_transform | null = null;
+    let target_dev: rotatable_device | null = null;
+
+    return {
+        label: 'set transform #' + device_uid + ' (' + (transform.rotation * 90) + 'deg, flipped: ' + transform.flipped + ')',
+        execute(map: game_map): void
+        {
+            const dev = map.devices.find(d => d.uid === device_uid);
+            if (dev && is_rotatable_device(dev))
+            {
+                target_dev = dev;
+                if (previous_transform === null)
+                {
+                    previous_transform = { ...dev.transform };
+                }
+                dev.set_transform(transform);
+            }
+        },
+        inverse(_map: game_map): void
+        {
+            if (target_dev && previous_transform !== null)
+            {
+                target_dev.set_transform(previous_transform);
+            }
+        }
+    };
+}
