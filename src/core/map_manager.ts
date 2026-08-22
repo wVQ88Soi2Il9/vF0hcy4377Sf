@@ -1,13 +1,14 @@
-import type { game_map, device, vector, dimensions } from '@/core/types';
+import type { game_map, device, vector } from '@/core/types';
 import type { device_constructor } from '@/core/pack_manager';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from '@/core/hooks';
 
 /**
  * Creates a new map instance with next uid starting from 1.
  */
-export function create_map(size: dimensions): game_map
+export function create_map(size: vector): game_map
 {
     return {
+        dimension: size.length,
         size,
         uid: 1,
         devices: []

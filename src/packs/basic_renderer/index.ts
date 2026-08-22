@@ -24,7 +24,7 @@ const camera: camera_type =
     pan_x: 0,
     pan_y: 0,
     zoom:  40,
-    // dim_h=0 (X→right), dim_v=1 (Y→up), slices dynamically adapt to map.size.length (default Z=1)
+    // dim_h=0 (X→right), dim_v=1 (Y→up), slices dynamically adapt to map.dimension (default Z=1)
     plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
 };
 
@@ -75,7 +75,7 @@ export function get_camera_plane(): view_plane
     const map = get_map();
     if (map)
     {
-        adapt_camera_plane(camera, map.size.length);
+        adapt_camera_plane(camera, map.dimension);
     }
     return {
         dim_h:  camera.plane.dim_h,
@@ -91,7 +91,7 @@ export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]
 {
     const map = get_map();
     const slice_count = slices ? slices.length : 0;
-    const target_dim = map ? map.size.length : Math.max(3, dim_h + 1, dim_v + 1, slice_count);
+    const target_dim = map ? map.dimension : Math.max(3, dim_h + 1, dim_v + 1, slice_count);
 
     if (dim_h >= 0 && dim_h < target_dim)
     {
@@ -245,7 +245,7 @@ export function init_pack(): void
         return;
     }
 
-    adapt_camera_plane(camera, map.size.length);
+    adapt_camera_plane(camera, map.dimension);
 
     // Build canvas without attaching it to DOM directly (managed by UI pack).
     renderer_canvas = document.createElement('canvas');
@@ -262,7 +262,7 @@ export function init_pack(): void
         {
             return;
         }
-        adapt_camera_plane(camera, map.size.length);
+        adapt_camera_plane(camera, map.dimension);
         ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
         draw_grid(ctx, renderer_canvas, camera, map);
         active_draw_devices_fn(ctx, map, camera, renderer_canvas);

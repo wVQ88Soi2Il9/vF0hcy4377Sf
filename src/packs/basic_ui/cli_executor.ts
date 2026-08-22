@@ -22,7 +22,7 @@ import { display_device_info } from './ui_state';
 function format_camera_equation(plane: view_plane): string
 {
     const map = get_map();
-    const num_dims = map ? map.size.length : Math.max(plane.slices.length, 3);
+    const num_dims = map ? map.dimension : Math.max(plane.slices.length, 3);
     const eq_parts: string[] = [];
     for (let i = 0; i < num_dims; i++)
     {
@@ -219,7 +219,7 @@ export function execute_command(input: string): string
                 return 'Error: Invalid camera format. Usage: camera --"d3=0" or camera --"d1=1, d3=0"';
             }
 
-            const num_dims = map.size.length;
+            const num_dims = map.dimension;
             const fixed_axes_set = new Set(fixed_map.keys());
             const free_dim_count = num_dims - fixed_axes_set.size;
 
@@ -257,7 +257,7 @@ export function execute_command(input: string): string
         case 'create':
         case 'add':
         {
-            const n_dim = map.size.length;
+            const n_dim = map.dimension;
             if (args.length < 2)
             {
                 return `Usage: create --"<def_id>" --"<position>" (e.g. create --"test:assembler" --"4, 4, 0")`;
@@ -315,7 +315,7 @@ export function execute_command(input: string): string
 
         case 'move':
         {
-            const n_dim = map.size.length;
+            const n_dim = map.dimension;
             if (args.length < 2)
             {
                 return `Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;

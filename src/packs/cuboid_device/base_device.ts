@@ -4,8 +4,8 @@
  * 繼承核心 device 並實作 cuboid_device_interface 能力契約。
  */
 
-import { device, type vector, type dimensions } from '@/API';
-import type { cuboid_device_interface } from './types';
+import { device, type vector } from '@/API';
+import type { cuboid_dimensions, cuboid_device_interface } from './types';
 import { cuboid_to_shape } from './adapter';
 
 /**
@@ -16,7 +16,7 @@ import { cuboid_to_shape } from './adapter';
 export abstract class base_cuboid_device extends device implements cuboid_device_interface
 {
     /** 各維度長度跨度 [delta_x, delta_y, delta_z, ...] */
-    public abstract readonly dimensions: dimensions;
+    public abstract readonly dimensions: cuboid_dimensions;
 
     constructor
     (

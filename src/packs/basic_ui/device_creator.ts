@@ -196,7 +196,7 @@ export function create_device_creator
 
     // 2. Position Inputs & Steppers
     const map = get_map();
-    const num_dims = map ? map.size.length : 3;
+    const num_dims = map ? map.dimension : 3;
     const cam_slices = basic_renderer.get_camera().slices;
     const initial_coords: number[] = [];
 

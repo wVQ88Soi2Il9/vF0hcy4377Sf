@@ -11,7 +11,7 @@ import { layered_2d } from '../index';
 export function render_layer_selector_section(container: HTMLElement, map: game_map): void
 {
     // Only show layer selector if map has 3 or more dimensions and height > 2
-    if (map.size.length < 3 || map.size[2] <= 2)
+    if (map.dimension < 3 || map.size[2] <= 2)
     {
         return;
     }

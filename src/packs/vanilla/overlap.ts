@@ -1,4 +1,4 @@
-import type { game_map, vector, dimensions, pack_registry } from '@/API';
+import type { game_map, vector, pack_registry } from '@/API';
 import type { map_validation_result } from './types';
 import { add_vector } from '@/utils/math';
 import { spatial_map } from '@/utils/spatial_map';
@@ -6,7 +6,7 @@ import { spatial_map } from '@/utils/spatial_map';
 /**
  * 檢查座標是否超出地圖邊界 (N 維通用)
  */
-export function is_out_of_bounds(pos: vector, map_size: dimensions): boolean
+export function is_out_of_bounds(pos: vector, map_size: vector): boolean
 {
     return pos.some((v, i) => v < 0 || v >= map_size[i]);
 }

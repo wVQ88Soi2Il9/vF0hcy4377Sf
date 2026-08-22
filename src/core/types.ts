@@ -5,12 +5,6 @@
  */
 export type vector = number[];
 
-/**
- * N-dimensional size/span vector per axis: [delta_x, delta_y, delta_z, ...].
- * Each component represents the size/extent along the corresponding dimension axis.
- */
-export type dimensions = vector;
-
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 
@@ -99,16 +93,22 @@ export abstract class device
 export interface game_map
 {
     /**
+     * Spatial dimension count N (e.g. 2 for 2D, 3 for 3D, 4 for 4D).
+     * Strictly equals size.length.
+     */
+    readonly dimension: number;
+
+    /**
      * Grid dimensions per axis.
      * Length of this array defines N (the number of spatial dimensions).
      * Valid cells satisfy: 0 <= pos[i] < size[i] for all i.
      */
-    size:            dimensions;
+    size:               vector;
 
     /** Auto-increment counter for device uid generation */
-    uid:             number;
+    uid:                number;
 
-    devices:         device[];
+    devices:            device[];
 }
 
 // ── History (Undo / Redo) ─────────────────────────────────────────────────────
