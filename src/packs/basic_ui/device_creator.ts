@@ -59,6 +59,8 @@ export function create_device_creator
     }
 
     def_select.addEventListener('change', update_creation_options);
+    def_select.addEventListener('pointerdown', () => refresh_definitions());
+    def_select.addEventListener('focus', () => refresh_definitions());
 
     function refresh_definitions(): void
     {

@@ -83,6 +83,7 @@ export function init_pack(): void
     }
 
     update_map_info();
+    queueMicrotask(() => update_map_info());
     cleanup_device_change = on_device_change(update_map_info);
 }
 
