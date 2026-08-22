@@ -1,7 +1,7 @@
 /**
  * cuboid_device 抽象基底類別
  *
- * 繼承核心 device 並封裝 dimensions 屬性與自動 Shape 計算。
+ * 繼承核心 device 並封裝 dim 屬性與自動 Shape 計算。
  */
 
 import { device, type vector } from '@/API';
@@ -9,13 +9,13 @@ import { cuboid_to_shape } from './adapter';
 
 /**
  * 長方體設備抽象基底類別
- * 下游設備僅需指定 dimensions: [delta_x, delta_y, delta_z, ...]，
+ * 下游設備僅需指定 dim: [delta_x, delta_y, delta_z, ...]，
  * 即自動由 Adapter 計算產生對應的 2× 網格單元格 shape 座標集合。
  */
 export abstract class base_cuboid_device extends device
 {
     /** 各維度長度跨度 [delta_x, delta_y, delta_z, ...] */
-    public abstract readonly dimensions: vector;
+    public abstract readonly dim: vector;
 
     constructor
     (
@@ -37,6 +37,6 @@ export abstract class base_cuboid_device extends device
      */
     public get_shape(): vector[]
     {
-        return cuboid_to_shape(this.dimensions);
+        return cuboid_to_shape(this.dim);
     }
 }
