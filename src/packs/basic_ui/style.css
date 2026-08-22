@@ -115,6 +115,7 @@
 
 .basic_ui_panel .basic_ui_title h3 {
     margin: 0;
+    margin-left: 6px;
     font-size: 14px;
     color: var(--basic-ui-blue);
     font-weight: 700;
@@ -988,6 +989,7 @@
     font-weight: 700;
     color: var(--basic-ui-subtext0);
     font-family: monospace;
+    padding-left: 6px;
 }
 
 .basic_ui_cad_btn_group {

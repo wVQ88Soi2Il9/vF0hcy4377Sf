@@ -187,17 +187,17 @@ export function create_cad_timeline(): cad_timeline_component
         id:             'cad_timeline_panel',
         tag:            'section',
         position_css:   'bottom: 16px; left: 16px;',
-        default_width:  'calc(100vw - 320px)',
-        default_height: '120px',
-        title:          '⏱️ CAD History Timeline',
+        default_width:  '40vw',
+        default_height: '15vh',
+        title:          'History Tree',
         collapsible:    true,
         resize: {
             top:        true,
             right:      true,
-            min_width:  360,
+            min_width:  280,
             max_width:  () => window.innerWidth - 32,
             min_height: 80,
-            max_height: () => Math.min(300, window.innerHeight - 100)
+            max_height: () => Math.min(window.innerHeight * 0.4, window.innerHeight - 80)
         }
     });
 

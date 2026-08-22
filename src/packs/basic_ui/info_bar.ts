@@ -30,7 +30,7 @@ export function create_info_bar(): info_bar_component
         tag:           'aside',
         position_css:  'top: 16px; right: 16px;',
         default_width: '22%',
-        title:         '🗺️ Map Status',
+        title:         'Map Status',
         collapsible:   true,
         resize: {
             left:       true,
