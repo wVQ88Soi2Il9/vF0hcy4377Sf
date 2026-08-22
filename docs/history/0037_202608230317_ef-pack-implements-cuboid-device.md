@@ -51,3 +51,4 @@ ef pack 的 machine / device 目前都能直接 implements cuboid_device。
 - H4 · 2026-08-23 03:33 落地 —— 徹底移除 base_shape, base_input_ports, base_output_ports 冗餘實例欄位，改以動態委派運算（Agent）
 - H5 · 2026-08-23 03:35 落地 —— 改為 extends device implements base_cuboid_device 並精簡整個 base_device.ts 實作（Agent）
 - H6 · 2026-08-23 03:38 落地 —— 全面移除 layered_2d 與 ef pack 中無意義的 get_shape_3d / get_port_3d 別名函式（Agent）
+- H7 · 2026-08-23 03:42 落地 —— 改為 extends base_layered_device 繼承 2.5D 幾何邏輯，大幅精簡 base_ef_device.ts 樣板方法（Agent）

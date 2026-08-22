@@ -2,20 +2,14 @@
  * EF Pack Base Device Class
  */
 
-import { device, type vector, type pack_registry, type device_constructor, register_device_class } from '@/API';
+import { type vector, type pack_registry, type device_constructor, register_device_class } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer';
 import type { base_cuboid_device } from '@/packs/cuboid_device';
 import { cuboid_to_shape } from '@/packs/cuboid_device';
 import
 {
-    type drawable_layered_device,
-    type rotatable_device,
+    base_layered_device,
     type vector_3d,
-    type d4_transform,
-    apply_d4_point,
-    apply_d4_cell_anchor,
-    normalize_rotation,
-    is_vector_3d,
     add_vector_3d
 } from '@/packs/layered_2d';
 import type { machine, port_def } from './types';
@@ -78,10 +72,12 @@ export function machine_to_shape_3d(w: number, h: number): vector_3d[]
 
 // ─── EF 設備基底類別 ──────────────────────────────────────────────────────────
 
-export class base_ef_device extends device implements base_cuboid_device, drawable_layered_device, rotatable_device
+export class base_ef_device extends base_layered_device implements base_cuboid_device
 {
-    public transform: d4_transform = { rotation: 0, flipped: false };
-    public readonly device_size: vector_3d;
+    public readonly device_size:        vector_3d;
+    protected readonly base_shape:        vector_3d[];
+    protected readonly base_input_ports:  vector_3d[];
+    protected readonly base_output_ports: vector_3d[];
 
     constructor
     (
@@ -91,10 +87,6 @@ export class base_ef_device extends device implements base_cuboid_device, drawab
         other_info?: Record<string, unknown>
     )
     {
-        if (!is_vector_3d(pos))
-        {
-            throw new Error(`[ef] Invalid device position: expected 3-element [x, y, z] vector, got ${JSON.stringify(pos)}`);
-        }
         super(uid, def_id, pos);
 
         const raw_id = def_id.includes(':') ? def_id.split(':')[1] : def_id;
@@ -105,7 +97,13 @@ export class base_ef_device extends device implements base_cuboid_device, drawab
         }
 
         const mode_id = (other_info?.mode_id as string) || m.modes[0]?.id || 'default';
+        const mode = m.modes.find(item => item.id === mode_id) || m.modes[0];
+
         this.device_size = [m.width * 2, m.height * 2, 2];
+        this.base_shape = machine_to_shape_3d(m.width, m.height);
+        this.base_input_ports = mode.input_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
+        this.base_output_ports = mode.output_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
+
         this.other_info =
         {
             name:    m.name,
@@ -121,48 +119,6 @@ export class base_ef_device extends device implements base_cuboid_device, drawab
     {
         const raw_id = this.definition_id.includes(':') ? this.definition_id.split(':')[1] : this.definition_id;
         return machine_map.get(raw_id) ?? get_machine(raw_id)!;
-    }
-
-    public get_layer(): number
-    {
-        return this.position[2];
-    }
-
-    public get_shape(): vector_3d[]
-    {
-        return (cuboid_to_shape(this.device_size) as vector_3d[]).map(v => apply_d4_cell_anchor(v, this.transform));
-    }
-
-    public rotate(steps: number = 1): void
-    {
-        this.transform.rotation = normalize_rotation(this.transform.rotation + steps);
-    }
-
-    public flip(): void
-    {
-        this.transform.flipped = !this.transform.flipped;
-    }
-
-    public set_transform(t: d4_transform): void
-    {
-        this.transform =
-        {
-            rotation: normalize_rotation(t.rotation),
-            flipped:  Boolean(t.flipped)
-        };
-    }
-
-    public get_port(type: 'input' | 'output'): vector_3d[]
-    {
-        const m = this.get_machine();
-        const mode_id = (this.other_info?.mode_id as string) || m.modes[0]?.id;
-        const mode = m.modes.find(item => item.id === mode_id) || m.modes[0];
-        if (!mode)
-        {
-            return [];
-        }
-        const port_defs = type === 'input' ? mode.input_ports : mode.output_ports;
-        return port_defs.map(p => apply_d4_point(port_def_to_vector_3d(p, m.width, m.height), this.transform));
     }
 
     public draw
