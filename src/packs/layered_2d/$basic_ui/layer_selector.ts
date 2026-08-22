@@ -123,7 +123,7 @@ export function render_layer_selector_section(container: HTMLElement, map: game_
     });
 
     const label_text = document.createElement('span');
-    label_text.textContent = '開關半透明層 (Translucent Layers)';
+    label_text.textContent = 'Translucent Layers';
 
     checkbox_label.appendChild(checkbox);
     checkbox_label.appendChild(label_text);
