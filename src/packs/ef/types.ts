@@ -145,39 +145,4 @@ export function rate_limit_for_media(media: port_media | null | undefined): numb
     return media === 'pipe' ? pipe_rate_limit : belt_rate_limit;
 }
 
-// ─── 4. 建造計畫型別 ─────────────────────────────────────────────────────────
 
-export interface material_rate
-{
-    name: string;
-    rate: number | null;
-}
-
-export interface machine_limit
-{
-    name:  string;
-    limit: number | null;
-}
-
-export interface product_value
-{
-    name:  string;
-    price: number;
-}
-
-export interface transport_item
-{
-    name:          string;
-    rate_per_hour: number;
-}
-
-export interface plan
-{
-    id:                string;
-    name:              string;
-    material_rates:    material_rate[];
-    machine_limits:    machine_limit[];
-    product_values:    product_value[];
-    priority_products: { name: string; max_rate: number | null }[];
-    transport_items?:  transport_item[];
-}
