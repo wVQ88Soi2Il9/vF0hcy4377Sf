@@ -1,0 +1,40 @@
+/* Pipe Creator Options Styles */
+.pipe_creator_desc {
+    margin-bottom: 6px;
+}
+
+.pipe_creator_list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pipe_creator_row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.pipe_creator_dir_select {
+    width: 80px;
+    flex: 0 0 80px;
+    min-width: 0;
+}
+
+.pipe_creator_stepper {
+    flex: 0 0 auto;
+}
+
+.pipe_creator_del_btn {
+    width: 26px;
+    height: 30px;
+    padding: 0;
+    flex: 0 0 26px;
+}
+
+.pipe_creator_btn_row {
+    margin-top: 6px;
+}

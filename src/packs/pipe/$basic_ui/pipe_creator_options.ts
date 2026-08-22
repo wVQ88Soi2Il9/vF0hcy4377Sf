@@ -1,3 +1,4 @@
+import './style.css';
 import { get_registry } from '@/runtime';
 import { basic_ui } from '@/packs/basic_ui';
 import { pipe, type pipe_segment } from '../pipe';
@@ -16,38 +17,32 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     title_row.textContent = 'Pipe Shape (Segments):';
 
     const desc = document.createElement('div');
-    desc.className = 'basic_ui_label_sub';
-    desc.style.marginBottom = '6px';
+    desc.className = 'basic_ui_label_sub pipe_creator_desc';
     desc.textContent = 'Define pipeline trajectory: [{axis, delta}, ...]';
 
     const segments_list = document.createElement('div');
-    segments_list.style.display = 'flex';
-    segments_list.style.flexDirection = 'column';
-    segments_list.style.gap = '4px';
+    segments_list.className = 'pipe_creator_list';
 
     const state_segments: { dir_select: HTMLSelectElement; offset_input: HTMLInputElement; row: HTMLElement }[] = [];
 
     function add_segment_row(initial_dir: number = 0, initial_offset: number = 4): void
     {
         const row = document.createElement('div');
-        row.className = 'basic_ui_lookup_row';
-        row.style.alignItems = 'center';
+        row.className = 'pipe_creator_row';
 
         const dir_select = document.createElement('select');
-        dir_select.className = 'basic_ui_select';
-        dir_select.style.flex = '1';
+        dir_select.className = 'basic_ui_select pipe_creator_dir_select';
         dir_select.innerHTML = `
-            <option value="0">D1 (+X / -X)</option>
-            <option value="1">D2 (+Y / -Y)</option>
-            <option value="2">D3 (+Z / -Z)</option>
+            <option value="0">D1 (X)</option>
+            <option value="1">D2 (Y)</option>
+            <option value="2">D3 (Z)</option>
         `;
         dir_select.value = String(initial_dir);
 
         const offset_wrap = document.createElement('div');
-        offset_wrap.className = 'basic_ui_stepper';
-        offset_wrap.style.flex = '1';
+        offset_wrap.className = 'basic_ui_stepper pipe_creator_stepper';
         offset_wrap.innerHTML = `
-            <input type="number" step="2" value="${initial_offset}" class="basic_ui_stepper_input" style="width:100%;" />
+            <input type="number" step="2" value="${initial_offset}" class="basic_ui_stepper_input" />
             <div class="basic_ui_stepper_btns">
                 <button type="button" class="basic_ui_stepper_btn up" title="+2">▲</button>
                 <button type="button" class="basic_ui_stepper_btn down" title="-2">▼</button>
@@ -70,7 +65,7 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
 
         const del_btn = document.createElement('button');
         del_btn.type = 'button';
-        del_btn.className = 'basic_ui_btn_danger';
+        del_btn.className = 'basic_ui_btn_danger pipe_creator_del_btn';
         del_btn.textContent = '✕';
         del_btn.title = 'Remove segment';
         del_btn.addEventListener('click', () =>
@@ -95,7 +90,7 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     add_segment_row(0, 4);
 
     const btn_add_row = document.createElement('div');
-    btn_add_row.style.marginTop = '6px';
+    btn_add_row.className = 'pipe_creator_btn_row';
 
     const add_btn = document.createElement('button');
     add_btn.type = 'button';
