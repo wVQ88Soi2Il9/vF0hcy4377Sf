@@ -13,6 +13,8 @@ import {
     unregister_device_inspector,
     register_device_action,
     unregister_device_action,
+    register_device_creation_option,
+    unregister_device_creation_option,
     register_panel_section,
     unregister_panel_section,
     clear_all_extensions
@@ -21,6 +23,7 @@ import {
 export type {
     device_action,
     device_inspector_fn,
+    device_creation_option_fn,
     panel_section_fn
 } from './extensions';
 
@@ -93,6 +96,8 @@ export const basic_ui = {
     unregister_device_inspector,
     register_device_action,
     unregister_device_action,
+    register_device_creation_option,
+    unregister_device_creation_option,
     register_panel_section,
     unregister_panel_section,
     clear_all_extensions
