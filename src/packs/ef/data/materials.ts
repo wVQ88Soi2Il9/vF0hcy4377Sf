@@ -2,9 +2,8 @@
  * 基礎材料資料
  */
 
-import type { material_def, item_form } from '../types/flow';
-import { form_to_port_media } from '../types/flow';
-import type { port_media } from '../types/machine';
+import type { material_def, item_form, port_media } from '../types';
+import { form_to_port_media } from '../types';
 
 // ─── 材料定義 ─────────────────────────────────────────────────────────────────
 

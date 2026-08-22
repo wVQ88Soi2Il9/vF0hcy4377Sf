@@ -6,7 +6,7 @@
 
 import type { recipe, recipe_evaluation, pack_registry } from '@/API';
 import { register_recipe } from '@/API';
-import type { recipe_def } from './types/flow';
+import type { recipe_def } from './types';
 import { product_list } from './data/products';
 
 /**

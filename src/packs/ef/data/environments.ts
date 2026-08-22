@@ -2,7 +2,7 @@
  * 環境標籤資料
  */
 
-import type { environment } from '../types/environment';
+import type { environment } from '../types';
 
 /** 全部環境標籤 */
 export const environment_list: readonly environment[] = [

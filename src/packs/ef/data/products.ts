@@ -8,9 +8,8 @@
  *   pnpm generate:src-data
  */
 
-import type { recipe_def, product_def, item_form } from '../types/flow';
-import { form_to_port_media } from '../types/flow';
-import type { port_media } from '../types/machine';
+import type { recipe_def, product_def, item_form, port_media } from '../types';
+import { form_to_port_media } from '../types';
 import { get_material_form } from './materials';
 
 // ─── 產品定義 ─────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
  * `-1` 在 TypeScript 面轉成 `null`（無上限）。
  */
 
-import type { plan } from '../types/plan';
+import type { plan } from '../types';
 
 /**
  * 所有可選建造計畫資料（武陵 / 四號谷地 等）。

@@ -9,8 +9,8 @@
  *   pnpm generate:src-data
  */
 
-import type { machine, machine_category } from '../types/machine';
-export { get_machine_mode } from '../types/machine';
+import type { machine, machine_category } from '../types';
+export { get_machine_mode } from '../types';
 
 // ─── 分類標籤（V9-C1）──────────────────────────────────────────────────────────
 

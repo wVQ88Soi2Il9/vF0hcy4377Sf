@@ -59,16 +59,17 @@ import
     pipe_rate_limit,
     form_to_port_media,
     rate_limit_for_media
-} from './types/flow';
+} from './types';
 
 import
 {
+    base_ef_device,
     port_def_to_vector_3d,
     machine_to_shape_3d,
     create_ef_device_class,
     register_all_ef_devices,
     get_tag_color_theme
-} from './device_adapter';
+} from './base_device';
 
 import
 {
@@ -78,9 +79,9 @@ import
 } from './recipe_adapter';
 
 // Re-export all types
-export type { environment } from './types/environment';
 export type
 {
+    environment,
     port_side,
     port_media,
     port_type,
@@ -93,29 +94,25 @@ export type
     machine_input_fn,
     machine_output_fn,
     machine_efficiency_fn,
-    machine
-} from './types/machine';
-export type
-{
+    machine,
     item_form,
     recipe_item,
     recipe_def,
     product_def,
-    material_def
-} from './types/flow';
-export type
-{
+    material_def,
     material_rate,
     machine_limit,
     product_value,
     transport_item,
     plan
-} from './types/plan';
-export type { ef_device_color_theme } from './device_adapter';
+} from './types';
+
+export type { ef_device_color_theme } from './base_device';
 
 // Re-export values & queries
 export
 {
+    base_ef_device,
     environment_list,
     get_environment,
     get_all_environments,
@@ -164,6 +161,7 @@ export
  */
 export const ef =
 {
+    base_ef_device,
     environment_list,
     get_environment,
     get_all_environments,
@@ -207,7 +205,6 @@ export const ef =
     register_all_ef_recipes
 };
 
-
 /**
  * Pack 初始化生命週期函式（由 loader.ts 自動發現並呼叫）
  */
@@ -220,4 +217,3 @@ export function init_pack(): void
         register_all_ef_recipes(registry);
     }
 }
-
