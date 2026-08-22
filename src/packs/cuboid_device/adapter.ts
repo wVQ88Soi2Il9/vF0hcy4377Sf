@@ -4,7 +4,7 @@
  * 依據目標世界空間維度 dim，將長方體跨度向量轉換為核心引擎的 2× 網格單元格座標集合。
  */
 
-import type { vector } from '@/API';
+import { type vector, get_dimension } from '@/API';
 
 /**
  * 嚴格驗證長方體維度跨度與目標空間維度 dim 是否完全匹配且合法
@@ -39,8 +39,9 @@ export function validate_cuboid_dimensions(device_size: vector, dim: number): vo
  * @param dim 目標世界空間維度數（由 game_map 決定）
  * @returns 單元格局部座標陣列
  */
-export function cuboid_to_shape(device_size: vector, dim: number): vector[]
+export function cuboid_to_shape(device_size: vector): vector[]
 {
+    const dim = get_dimension() ?? 0
     validate_cuboid_dimensions(device_size, dim);
 
     const shape: vector[] = [];

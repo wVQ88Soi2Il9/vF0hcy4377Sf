@@ -4,7 +4,7 @@
  * 繼承核心 device 並封裝 device_size 屬性、由 game_map 取得 dimension 與自動 Shape 計算。
  */
 
-import { device, type vector, get_dimension } from '@/API';
+import { device, type vector } from '@/API';
 import { cuboid_to_shape } from './adapter';
 
 /**
@@ -16,12 +16,6 @@ export abstract class base_cuboid_device extends device
 {
     /** 各維度長度跨度 [delta_x, delta_y, delta_z, ...] */
     public abstract readonly device_size: vector;
-
-    /** 空間維度數 N（直接由 active game_map 決定） */
-    public get dimension(): number
-    {
-        return get_dimension() ?? this.position.length;
-    }
 
     constructor
     (
@@ -43,6 +37,6 @@ export abstract class base_cuboid_device extends device
      */
     public get_shape(): vector[]
     {
-        return cuboid_to_shape(this.device_size, this.dimension);
+        return cuboid_to_shape(this.device_size);
     }
 }
