@@ -33,13 +33,13 @@ export function create_device_creator
 
     const ns_select = document.createElement('select');
     ns_select.className = 'basic_ui_select';
-    ns_select.style.flex = '1';
-    ns_select.title = 'Select Pack / Namespace';
+    ns_select.style.flex = '0.85';
+    ns_select.title = 'Pack Namespace';
 
     const dev_select = document.createElement('select');
     dev_select.className = 'basic_ui_select';
-    dev_select.style.flex = '1.3';
-    dev_select.title = 'Select Device ID';
+    dev_select.style.flex = '1.75';
+    dev_select.title = 'Device ID';
     dev_select.disabled = true;
 
     selector_container.appendChild(ns_select);
@@ -89,7 +89,7 @@ export function create_device_creator
     {
         const selected_ns = ns_select.value.trim();
         const current_id = dev_select.value.trim();
-        dev_select.innerHTML = '<option value="">-- Select Device --</option>';
+        dev_select.innerHTML = '<option value="">--device--</option>';
 
         if (!selected_ns)
         {
@@ -146,7 +146,7 @@ export function create_device_creator
         }
 
         // Populate Namespace Select
-        ns_select.innerHTML = '<option value="">-- Select Pack --</option>';
+        ns_select.innerHTML = '<option value="">--pack--</option>';
         const sorted_ns = Array.from(current_ns_groups.keys()).sort();
         for (const ns of sorted_ns)
         {
