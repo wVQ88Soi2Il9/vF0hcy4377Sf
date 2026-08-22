@@ -289,3 +289,36 @@ export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
     return false;
 }
 
+/**
+ * Finds the latest leaf node along the active child branch from start_uid.
+ */
+export function find_leaf_node(tree: history_tree, start_uid: number = tree.current_uid): number
+{
+    let curr: number = start_uid;
+    while (true)
+    {
+        const node = tree.nodes.get(curr);
+        if (!node || node.children_uids.length === 0)
+        {
+            break;
+        }
+        const next_uid = node.children_uids[node.children_uids.length - 1];
+        curr = next_uid;
+    }
+    return curr;
+}
+
+/**
+ * Transitions the map state to the latest leaf node on the current branch.
+ */
+export function jump_to_leaf(tree: history_tree, map: game_map): boolean
+{
+    const leaf_uid = find_leaf_node(tree, tree.current_uid);
+    if (leaf_uid !== tree.current_uid)
+    {
+        return jump_to_node(tree, map, leaf_uid);
+    }
+    return false;
+}
+
+

@@ -8,6 +8,7 @@ import {
     redo,
     jump_to_prev_fork,
     jump_to_next_fork,
+    jump_to_leaf,
     find_prev_fork_node,
     find_next_fork_node
 } from '@/API';
@@ -178,8 +179,7 @@ export function compute_cad_timeline_layout(tree: history_tree): {
 }
 
 /**
- * Creates the simplified CAD-style bottom History Timeline panel
- * displaying compact icon-only step chips with detailed hover tooltips.
+ * Creates the CAD-style bottom History Timeline panel with media player transport controls.
  */
 export function create_cad_timeline(): cad_timeline_component
 {
@@ -204,7 +204,7 @@ export function create_cad_timeline(): cad_timeline_component
     const body_container = panel.content_element;
     body_container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;padding:0;';
 
-    // 1. Controls Header Toolbar
+    // 1. Controls Header Toolbar (Player Transport Controls)
     const toolbar = document.createElement('div');
     toolbar.className = 'basic_ui_cad_toolbar';
 
@@ -215,47 +215,61 @@ export function create_cad_timeline(): cad_timeline_component
     const btn_group = document.createElement('div');
     btn_group.className = 'basic_ui_cad_btn_group';
 
+    // 1.1 Jump to Root (|◀◀)
     const btn_first = document.createElement('button');
     btn_first.type = 'button';
     btn_first.className = 'basic_ui_btn';
-    btn_first.innerHTML = '⏮ Root';
-    btn_first.title = 'Jump to initial root state (#0)';
+    btn_first.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="2.5" height="16" rx="1"/><path d="M12.5 12l8.5 6.5V5.5z"/><path d="M5.5 12l8.5 6.5V5.5z"/></svg>';
+    btn_first.title = 'Jump to initial state (Root #0)';
 
+    // 1.2 Jump to Previous Fork (⏪)
     const btn_prev_fork = document.createElement('button');
     btn_prev_fork.type = 'button';
     btn_prev_fork.className = 'basic_ui_btn';
-    btn_prev_fork.innerHTML = '⏪ Prev Fork';
+    btn_prev_fork.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 12l9.5 7V5z"/><path d="M2 12l9.5 7V5z"/></svg>';
     btn_prev_fork.title = 'Jump to previous fork / branch point';
 
+    // 1.3 Step Back / Undo (◀)
     const btn_undo = document.createElement('button');
     btn_undo.type = 'button';
     btn_undo.className = 'basic_ui_btn';
-    btn_undo.innerHTML = '◀ Step Back (Undo)';
-    btn_undo.title = 'Undo (Revert most recent step)';
+    btn_undo.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4.5v15l-13-7.5z"/></svg>';
+    btn_undo.title = 'Step back (Undo)';
 
+    // 1.4 Step Forward / Redo (▶)
     const btn_redo = document.createElement('button');
     btn_redo.type = 'button';
     btn_redo.className = 'basic_ui_btn';
-    btn_redo.innerHTML = 'Step Forward (Redo) ▶';
-    btn_redo.title = 'Redo (Advance one step)';
+    btn_redo.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>';
+    btn_redo.title = 'Step forward (Redo)';
 
+    // 1.5 Jump to Next Fork (⏩)
     const btn_next_fork = document.createElement('button');
     btn_next_fork.type = 'button';
     btn_next_fork.className = 'basic_ui_btn';
-    btn_next_fork.innerHTML = 'Next Fork ⏩';
-    btn_next_fork.title = 'Jump to next fork / branch point along active branch';
+    btn_next_fork.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 12L3.5 5v14z"/><path d="M22 12l-9.5-7v14z"/></svg>';
+    btn_next_fork.title = 'Jump to next fork / branch point';
+
+    // 1.6 Jump to Latest / Leaf (▶▶|)
+    const btn_leaf = document.createElement('button');
+    btn_leaf.type = 'button';
+    btn_leaf.className = 'basic_ui_btn';
+    btn_leaf.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="18.5" y="4" width="2.5" height="16" rx="1"/><path d="M11.5 12L3 5.5v13z"/><path d="M18.5 12L10 5.5v13z"/></svg>';
+    btn_leaf.title = 'Jump to latest step (End of branch)';
 
     btn_first.addEventListener('click', () => { jump_to_history(0); });
     btn_prev_fork.addEventListener('click', () => { jump_to_prev_fork(); });
     btn_undo.addEventListener('click', () => { undo(); });
     btn_redo.addEventListener('click', () => { redo(); });
     btn_next_fork.addEventListener('click', () => { jump_to_next_fork(); });
+    btn_leaf.addEventListener('click', () => { jump_to_leaf(); });
 
     btn_group.appendChild(btn_first);
     btn_group.appendChild(btn_prev_fork);
     btn_group.appendChild(btn_undo);
     btn_group.appendChild(btn_redo);
     btn_group.appendChild(btn_next_fork);
+    btn_group.appendChild(btn_leaf);
 
     toolbar.appendChild(info_label);
     toolbar.appendChild(btn_group);
@@ -284,6 +298,7 @@ export function create_cad_timeline(): cad_timeline_component
             btn_undo.disabled = true;
             btn_redo.disabled = true;
             btn_next_fork.disabled = true;
+            btn_leaf.disabled = true;
             return;
         }
 
@@ -298,6 +313,7 @@ export function create_cad_timeline(): cad_timeline_component
         btn_undo.disabled = !can_undo;
         btn_redo.disabled = !can_redo;
         btn_next_fork.disabled = !has_next_fork;
+        btn_leaf.disabled = !can_redo;
 
         const layout = compute_cad_timeline_layout(tree);
         if (layout.nodes.length === 0)

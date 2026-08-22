@@ -28,8 +28,10 @@ import
     jump_to_node as core_jump_to_node,
     find_prev_fork_node,
     find_next_fork_node,
+    find_leaf_node,
     jump_to_prev_fork as core_jump_to_prev_fork,
-    jump_to_next_fork as core_jump_to_next_fork
+    jump_to_next_fork as core_jump_to_next_fork,
+    jump_to_leaf as core_jump_to_leaf
 } from '@/core/history_manager';
 import { get_map, get_registry, get_history_tree } from '@/runtime';
 
@@ -152,10 +154,26 @@ export function jump_to_next_fork(): boolean
     return core_jump_to_next_fork(tree, map);
 }
 
+/**
+ * Transitions the global map state to the latest leaf step along the active branch.
+ * Returns true if jump succeeded.
+ */
+export function jump_to_leaf(): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_jump_to_leaf(tree, map);
+}
+
 export
 {
     find_prev_fork_node,
-    find_next_fork_node
+    find_next_fork_node,
+    find_leaf_node
 };
 
 /**

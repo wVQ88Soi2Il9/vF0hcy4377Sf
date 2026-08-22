@@ -993,13 +993,24 @@
 .basic_ui_cad_btn_group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .basic_ui_cad_btn_group > button {
-    font-size: 11px;
-    padding: 2px 8px;
+    width: 26px;
     height: 22px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: var(--basic-ui-text);
+}
+
+.basic_ui_cad_btn_group > button svg {
+    display: block;
+    width: 13px;
+    height: 13px;
 }
 
 .basic_ui_cad_viewport {
