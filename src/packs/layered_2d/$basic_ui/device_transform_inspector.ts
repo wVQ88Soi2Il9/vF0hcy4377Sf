@@ -71,7 +71,7 @@ export function render_d4_transform_inspector(container: HTMLElement, dev: devic
     const btn_rotate_ccw = document.createElement('button');
     btn_rotate_ccw.type = 'button';
     btn_rotate_ccw.className = 'basic_ui_btn';
-    btn_rotate_ccw.textContent = '↺ Rotate (CCW +90°)';
+    btn_rotate_ccw.textContent = '↺ Rotate';
     btn_rotate_ccw.title = 'Rotate 90° counter-clockwise';
     btn_rotate_ccw.addEventListener('click', () =>
     {
@@ -85,7 +85,7 @@ export function render_d4_transform_inspector(container: HTMLElement, dev: devic
     const btn_flip = document.createElement('button');
     btn_flip.type = 'button';
     btn_flip.className = 'basic_ui_btn';
-    btn_flip.textContent = '⇋ Flip X (0 ↔ 1)';
+    btn_flip.textContent = '⇋ Flip';
     btn_flip.title = 'Toggle flip across horizontal axis (0 / 1)';
     btn_flip.addEventListener('click', () =>
     {
