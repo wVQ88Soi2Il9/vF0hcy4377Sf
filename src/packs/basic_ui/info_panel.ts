@@ -29,13 +29,13 @@ export function create_info_bar(): info_bar_component
         id:            'info_bar',
         tag:           'aside',
         position_css:  'top: 16px; right: 16px;',
-        default_width: '22%',
+        default_width: '16%',
         title:         'Map Status',
         collapsible:   true,
         resize: {
             left:       true,
             bottom:     true,
-            min_width:  260,
+            min_width:  220,
             max_width:  () => Math.min(window.innerWidth * 0.45, window.innerWidth - 32),
             min_height: 200,
             max_height: () => window.innerHeight - 32

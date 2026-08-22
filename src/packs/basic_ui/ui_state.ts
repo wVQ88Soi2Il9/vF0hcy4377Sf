@@ -1,4 +1,4 @@
-import type { info_bar_component } from './info_bar';
+import type { info_bar_component } from './info_panel';
 
 let active_info_bar: info_bar_component | null = null;
 

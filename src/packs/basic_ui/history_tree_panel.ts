@@ -9,7 +9,6 @@ import {
     jump_to_prev_fork,
     jump_to_next_fork,
     jump_to_leaf,
-    find_prev_fork_node,
     find_next_fork_node
 } from '@/API';
 import { create_floating_panel } from './panel';
@@ -93,7 +92,6 @@ export function compute_cad_timeline_layout(tree: history_tree): {
     const layout_nodes: cad_node_layout[] = [];
     const layout_map = new Map<number, cad_node_layout>();
 
-    let current_col = 0;
     let next_available_lane = 1;
 
     function traverse(node: history_node, assigned_col: number, assigned_lane: number): void

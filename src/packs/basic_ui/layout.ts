@@ -1,6 +1,6 @@
-import { create_info_bar, type info_bar_component } from './info_bar';
-import { create_cli_bar, type cli_bar_component } from './cli_bar';
-import { create_cad_timeline, type cad_timeline_component } from './cad_timeline';
+import { create_info_bar, type info_bar_component } from './info_panel';
+import { create_cli_bar, type cli_bar_component } from './cli_panel';
+import { create_cad_timeline, type cad_timeline_component } from './history_tree_panel';
 
 export interface ui_layout_nodes
 {
