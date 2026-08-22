@@ -32,13 +32,11 @@ export function create_device_creator
     selector_container.className = 'basic_ui_lookup_row';
 
     const ns_select = document.createElement('select');
-    ns_select.className = 'basic_ui_select';
-    ns_select.style.flex = '0.85';
+    ns_select.className = 'basic_ui_select basic_ui_select_pack';
     ns_select.title = 'Pack Namespace';
 
     const dev_select = document.createElement('select');
-    dev_select.className = 'basic_ui_select';
-    dev_select.style.flex = '1.75';
+    dev_select.className = 'basic_ui_select basic_ui_select_device';
     dev_select.title = 'Device ID';
     dev_select.disabled = true;
 

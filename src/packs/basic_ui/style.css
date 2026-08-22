@@ -272,6 +272,16 @@
     font-weight: normal;
 }
 
+.basic_ui_select_pack {
+    flex: 0.85;
+    min-width: 70px;
+}
+
+.basic_ui_select_device {
+    flex: 1.75;
+    min-width: 110px;
+}
+
 .basic_ui_input {
     width: 100%;
     min-width: 36px;
