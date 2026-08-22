@@ -1,7 +1,7 @@
 /**
  * cuboid_device 抽象基底類別
  *
- * 繼承核心 device 並封裝 dimensions 屬性、dimension getter 與自動 Shape 計算。
+ * 繼承核心 device 並封裝 dimensions 屬性、dimension getter 與依據地圖維度自動 Shape 計算。
  */
 
 import { device, type vector } from '@/API';
@@ -17,10 +17,10 @@ export abstract class base_cuboid_device extends device
     /** 各維度長度跨度 [delta_x, delta_y, delta_z, ...] */
     public abstract readonly dimensions: vector;
 
-    /** 空間維度數 N（例如 2D=2, 3D=3） */
+    /** 空間維度數 N（由地圖所在位置座標長度決定） */
     public get dimension(): number
     {
-        return this.dimensions.length;
+        return this.position.length;
     }
 
     constructor
@@ -43,6 +43,6 @@ export abstract class base_cuboid_device extends device
      */
     public get_shape(): vector[]
     {
-        return cuboid_to_shape(this.dimensions);
+        return cuboid_to_shape(this.dimensions, this.dimension);
     }
 }
