@@ -1,4 +1,4 @@
-import type { game_map, device, vector } from '@/core/types';
+import type { game_map, device, vector, history_tree } from '@/core/types';
 import type { pack_registry } from '@/core/pack_manager';
 
 export type check_overlap_hook = (map: game_map, registry: pack_registry) => unknown;
@@ -19,6 +19,7 @@ export type device_select_recipe_hook =
     old_recipe_id: string | undefined,
     new_recipe_id: string | undefined
 ) => void;
+export type history_change_hook = (tree: history_tree) => void;
 
 export const hooks = 
 {
@@ -27,7 +28,8 @@ export const hooks =
     on_device_create:        [] as device_create_hook[],
     on_device_delete:        [] as device_delete_hook[],
     on_device_move:          [] as device_move_hook[],
-    on_device_select_recipe: [] as device_select_recipe_hook[]
+    on_device_select_recipe: [] as device_select_recipe_hook[],
+    on_history_change:       [] as history_change_hook[]
 };
 
 /**
@@ -117,5 +119,13 @@ export function trigger_select_recipe
     for (const hook of hooks.on_device_select_recipe)
     {
         hook(map, dev, old_recipe_id, new_recipe_id);
+    }
+}
+
+export function trigger_history_change(tree: history_tree): void
+{
+    for (const hook of hooks.on_history_change)
+    {
+        hook(tree);
     }
 }

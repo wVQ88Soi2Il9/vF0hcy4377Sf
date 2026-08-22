@@ -14,12 +14,20 @@ import
     type device_move_hook,
     type device_select_recipe_hook,
     type check_overlap_hook,
-    type build_graph_hook
+    type build_graph_hook,
+    type history_change_hook
 } from '@/core/hooks';
 import type { vector, map_command } from '@/core/types';
 import { get_device_class } from '@/core/pack_manager';
 import { create_device_command as core_create_device_command } from '@/core/commands';
-import { get_registry } from '@/runtime';
+import
+{
+    record_command as core_record_command,
+    undo as core_undo,
+    redo as core_redo,
+    jump_to_node as core_jump_to_node
+} from '@/core/history_manager';
+import { get_map, get_registry, get_history_tree } from '@/runtime';
 
 export
 {
@@ -33,10 +41,99 @@ export
 
 export
 {
+    create_history_tree,
+    record_command,
+    undo as core_undo,
+    redo as core_redo,
+    jump_to_node as core_jump_to_node,
+    compute_path_to_root,
+    find_lca
+} from '@/core/history_manager';
+
+export
+{
     delete_device_command,
     move_device_command,
     select_recipe_command
 } from '@/core/commands';
+
+export { get_history_tree } from '@/runtime';
+
+/**
+ * Executes a command on the active map and records it in the global history tree.
+ */
+export function execute_command(cmd: map_command): void
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        throw new Error('Global map or history tree not initialized.');
+    }
+    core_record_command(tree, map, cmd);
+}
+
+/**
+ * Reverts the most recent command in the global history tree.
+ * Returns true if undo succeeded.
+ */
+export function undo(): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_undo(tree, map);
+}
+
+/**
+ * Re-applies the latest undone command in the global history tree.
+ * Returns true if redo succeeded.
+ */
+export function redo(): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_redo(tree, map);
+}
+
+/**
+ * Transitions the global map state to a specific history node by UID.
+ * Returns true if jump succeeded.
+ */
+export function jump_to_history(target_node_uid: number): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_jump_to_node(tree, map, target_node_uid);
+}
+
+/**
+ * Subscribes to history tree changes (record, undo, redo, jump).
+ * Returns an unsubscribe function.
+ */
+export function on_history_change(callback: history_change_hook): unsubscribe_function
+{
+    hooks.on_history_change.push(callback);
+    return () =>
+    {
+        const index = hooks.on_history_change.indexOf(callback);
+        if (index !== -1)
+        {
+            hooks.on_history_change.splice(index, 1);
+        }
+    };
+}
 
 /**
  * Creates a reversible create_device command by looking up the device definition in the registry.

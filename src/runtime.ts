@@ -8,11 +8,12 @@
  * 這不是引擎的公開事件 API，不屬於 API.ts。
  */
 
-import type { game_map } from '@/core/types';
+import type { game_map, history_tree } from '@/core/types';
 import type { pack_registry } from '@/core/pack_manager';
 
-let _map:      game_map      | undefined = undefined;
-let _registry: pack_registry | undefined = undefined;
+let _map:          game_map          | undefined = undefined;
+let _registry:     pack_registry     | undefined = undefined;
+let _history_tree: history_tree     | undefined = undefined;
 
 export function set_map(map: game_map): void
 {
@@ -32,5 +33,15 @@ export function set_registry(registry: pack_registry): void
 export function get_registry(): pack_registry | undefined
 {
     return _registry;
+}
+
+export function set_history_tree(tree: history_tree): void
+{
+    _history_tree = tree;
+}
+
+export function get_history_tree(): history_tree | undefined
+{
+    return _history_tree;
 }
 
