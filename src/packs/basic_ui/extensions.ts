@@ -15,6 +15,14 @@ export interface device_inspector_entry
     render:    device_inspector_fn;
 }
 
+export type device_creation_option_fn = (container: HTMLElement, def_id: string) => { get_other_info: () => Record<string, unknown> };
+
+export interface device_creation_option_entry
+{
+    predicate: (def_id: string) => boolean;
+    render:    device_creation_option_fn;
+}
+
 export type panel_section_fn = (container: HTMLElement, map: game_map) => void;
 
 export interface panel_section_entry
@@ -24,9 +32,10 @@ export interface panel_section_entry
     render:   panel_section_fn;
 }
 
-const registered_inspectors: device_inspector_entry[] = [];
-const registered_actions:    device_action[]          = [];
-const registered_sections:   panel_section_entry[]    = [];
+const registered_inspectors:        device_inspector_entry[]       = [];
+const registered_actions:           device_action[]                 = [];
+const registered_sections:          panel_section_entry[]           = [];
+const registered_creation_options:  device_creation_option_entry[]  = [];
 
 /**
  * Registers a custom inspector slot for devices matching the predicate.
@@ -149,6 +158,46 @@ export function get_panel_sections(): panel_section_entry[]
 }
 
 /**
+ * Registers a custom creation options renderer for device definitions matching the predicate.
+ * Returns an unsubscribe function.
+ */
+export function register_device_creation_option
+(
+    predicate: (def_id: string) => boolean,
+    render:    device_creation_option_fn
+): unsubscribe_function
+{
+    const entry: device_creation_option_entry = { predicate, render };
+    registered_creation_options.push(entry);
+    return () =>
+    {
+        unregister_device_creation_option(entry);
+    };
+}
+
+/**
+ * Unregisters a previously registered device creation option entry.
+ */
+export function unregister_device_creation_option(entry: device_creation_option_entry | device_creation_option_fn): void
+{
+    const index = registered_creation_options.findIndex(e => e === entry || e.render === entry);
+    if (index !== -1)
+    {
+        registered_creation_options.splice(index, 1);
+    }
+}
+
+/**
+ * Retrieves all creation option renderers applicable to the specified definition ID.
+ */
+export function get_device_creation_options(def_id: string): device_creation_option_fn[]
+{
+    return registered_creation_options
+        .filter(entry => entry.predicate(def_id))
+        .map(entry => entry.render);
+}
+
+/**
  * Clears all registered extensions (useful for teardown or resets).
  */
 export function clear_all_extensions(): void
@@ -156,4 +205,5 @@ export function clear_all_extensions(): void
     registered_inspectors.length = 0;
     registered_actions.length = 0;
     registered_sections.length = 0;
+    registered_creation_options.length = 0;
 }
