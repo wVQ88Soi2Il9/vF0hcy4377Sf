@@ -57,11 +57,6 @@ export abstract class base_layered_device extends device implements drawable_lay
         return this.base_shape.map(v => apply_d4_cell_anchor(v, this.transform));
     }
 
-    public get_shape_3d(): vector_3d[]
-    {
-        return this.get_shape();
-    }
-
     /**
      * Computes the D4-transformed local port coordinates (using direct point transformation).
      */
@@ -73,11 +68,6 @@ export abstract class base_layered_device extends device implements drawable_lay
             return [];
         }
         return ports.map(v => apply_d4_point(v, this.transform));
-    }
-
-    public get_port_3d(type: 'input' | 'output'): vector_3d[]
-    {
-        return this.get_port(type);
     }
 
     /**

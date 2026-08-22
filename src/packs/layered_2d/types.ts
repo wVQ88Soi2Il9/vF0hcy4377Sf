@@ -79,18 +79,12 @@ export interface rotatable_device extends device
 
 /**
  * 2.5D 分層裝置能力介面契約 (Capability Interface)
- * 規範下游裝置必須具備 2.5D 專屬形狀、端口與層級特性。
+ * 規範下游裝置必須具備 2.5D 專屬層級特性。
  */
 export interface layered_device extends device
 {
     /** 取得裝置所屬層級 z (通常對應 position[2]) */
     get_layer(): number;
-
-    /** 取得符合 [x, y, z] 格式之局部形狀格點 */
-    get_shape_3d(): vector_3d[];
-
-    /** 取得符合 [x, y, z] 格式之局部連接埠 */
-    get_port_3d(type: 'input' | 'output'): vector_3d[];
 }
 
 /**
