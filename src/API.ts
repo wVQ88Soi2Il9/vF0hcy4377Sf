@@ -25,7 +25,11 @@ import
     record_command as core_record_command,
     undo as core_undo,
     redo as core_redo,
-    jump_to_node as core_jump_to_node
+    jump_to_node as core_jump_to_node,
+    find_prev_fork_node,
+    find_next_fork_node,
+    jump_to_prev_fork as core_jump_to_prev_fork,
+    jump_to_next_fork as core_jump_to_next_fork
 } from '@/core/history_manager';
 import { get_map, get_registry, get_history_tree } from '@/runtime';
 
@@ -117,6 +121,42 @@ export function jump_to_history(target_node_uid: number): boolean
     }
     return core_jump_to_node(tree, map, target_node_uid);
 }
+
+/**
+ * Transitions the global map state to the previous fork/branch point.
+ * Returns true if jump succeeded.
+ */
+export function jump_to_prev_fork(): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_jump_to_prev_fork(tree, map);
+}
+
+/**
+ * Transitions the global map state to the next fork/branch point along the active branch.
+ * Returns true if jump succeeded.
+ */
+export function jump_to_next_fork(): boolean
+{
+    const map  = get_map();
+    const tree = get_history_tree();
+    if (!map || !tree)
+    {
+        return false;
+    }
+    return core_jump_to_next_fork(tree, map);
+}
+
+export
+{
+    find_prev_fork_node,
+    find_next_fork_node
+};
 
 /**
  * Subscribes to history tree changes (record, undo, redo, jump).

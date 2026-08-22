@@ -190,3 +190,102 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
     trigger_history_change(tree);
     return true;
 }
+
+/**
+ * Finds the closest ancestor node from start_uid that has multiple branches (> 1 children).
+ */
+export function find_prev_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
+{
+    const start_node = tree.nodes.get(start_uid);
+    if (!start_node || start_node.parent_uid === null)
+    {
+        return null;
+    }
+
+    let curr: number | null = start_node.parent_uid;
+    while (curr !== null)
+    {
+        const node = tree.nodes.get(curr);
+        if (!node)
+        {
+            break;
+        }
+
+        if (node.children_uids.length > 1)
+        {
+            return node.uid;
+        }
+
+        curr = node.parent_uid;
+    }
+
+    return null;
+}
+
+/**
+ * Finds the closest downstream descendant node along the active child branch that has multiple branches (> 1 children).
+ */
+export function find_next_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
+{
+    let curr: number = start_uid;
+
+    while (true)
+    {
+        const node = tree.nodes.get(curr);
+        if (!node || node.children_uids.length === 0)
+        {
+            break;
+        }
+
+        const next_uid = node.children_uids[node.children_uids.length - 1];
+        const next_node = tree.nodes.get(next_uid);
+        if (!next_node)
+        {
+            break;
+        }
+
+        if (next_node.children_uids.length > 1)
+        {
+            return next_node.uid;
+        }
+
+        curr = next_uid;
+    }
+
+    return null;
+}
+
+/**
+ * Transitions the map state to the previous fork/branch point.
+ * If no previous fork exists but not at root, jumps to root.
+ */
+export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
+{
+    const prev_fork_uid = find_prev_fork_node(tree, tree.current_uid);
+    if (prev_fork_uid !== null)
+    {
+        return jump_to_node(tree, map, prev_fork_uid);
+    }
+
+    if (tree.current_uid !== 0)
+    {
+        return jump_to_node(tree, map, 0);
+    }
+
+    return false;
+}
+
+/**
+ * Transitions the map state to the next downstream fork/branch point along the active branch.
+ */
+export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
+{
+    const next_fork_uid = find_next_fork_node(tree, tree.current_uid);
+    if (next_fork_uid !== null)
+    {
+        return jump_to_node(tree, map, next_fork_uid);
+    }
+
+    return false;
+}
+

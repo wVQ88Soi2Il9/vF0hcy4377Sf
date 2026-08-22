@@ -8,6 +8,8 @@ import
     undo as api_undo,
     redo as api_redo,
     jump_to_history,
+    jump_to_prev_fork,
+    jump_to_next_fork,
     get_history_tree
 } from '@/API';
 import { get_map } from '@/runtime';
@@ -88,7 +90,7 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, history, jump --"<node_uid>", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", help';
         }
 
         case 'undo':
@@ -109,6 +111,30 @@ export function execute_command(input: string): string
                 return 'Nothing to redo (at latest node in current branch).';
             }
             return 'Redo successful.';
+        }
+
+        case 'prev-fork':
+        case 'prevfork':
+        case 'fork-prev':
+        {
+            const success = jump_to_prev_fork();
+            if (!success)
+            {
+                return 'No previous fork found (already at or before first branch point).';
+            }
+            return 'Jumped to previous fork point.';
+        }
+
+        case 'next-fork':
+        case 'nextfork':
+        case 'fork-next':
+        {
+            const success = jump_to_next_fork();
+            if (!success)
+            {
+                return 'No downstream fork found along current branch.';
+            }
+            return 'Jumped to next fork point.';
         }
 
         case 'history':

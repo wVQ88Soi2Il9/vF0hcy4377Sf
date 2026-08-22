@@ -25,6 +25,36 @@
     --basic-ui-surface2: #585b70;
 }
 
+/* Custom Sleek Dark Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(17, 17, 27, 0.4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--basic-ui-surface1);
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--basic-ui-surface2);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--basic-ui-surface1) rgba(17, 17, 27, 0.4);
+}
+
 /* Floating Panel */
 .basic_ui_panel {
     position: absolute;
@@ -939,4 +969,107 @@
     border: 1px solid rgba(166, 227, 161, 0.4);
     flex-shrink: 0;
     line-height: 1.2;
+}
+
+/* CAD-Style Bottom History Timeline */
+.basic_ui_cad_toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--basic-ui-bg-mantle);
+    border-bottom: 1px solid var(--basic-ui-border);
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.basic_ui_cad_info {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--basic-ui-subtext0);
+    font-family: monospace;
+}
+
+.basic_ui_cad_btn_group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.basic_ui_cad_btn_group > button {
+    font-size: 11px;
+    padding: 2px 8px;
+    height: 22px;
+}
+
+.basic_ui_cad_viewport {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    position: relative;
+    background: rgba(17, 17, 27, 0.6);
+}
+
+.basic_ui_cad_canvas {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+.basic_ui_cad_svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.basic_ui_cad_chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--basic-ui-bg-mantle);
+    border: 1.5px solid var(--basic-ui-surface1);
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.basic_ui_cad_chip:hover {
+    transform: translateY(-2px);
+    background: var(--basic-ui-surface0);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border-color: var(--basic-ui-blue) !important;
+}
+
+.basic_ui_cad_chip.is_current {
+    background: rgba(137, 180, 250, 0.2);
+    box-shadow: 0 0 10px rgba(137, 180, 250, 0.35);
+    transform: translateY(-1px);
+}
+
+.basic_ui_cad_chip_icon {
+    font-size: 11px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.basic_ui_cad_chip_num {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace;
+    line-height: 1;
+}
+
+.basic_ui_cad_chip_dot {
+    font-size: 9px;
+    line-height: 1;
+    flex-shrink: 0;
 }

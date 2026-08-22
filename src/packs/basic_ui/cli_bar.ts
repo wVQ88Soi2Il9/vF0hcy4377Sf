@@ -14,13 +14,13 @@ export function create_cli_bar(): cli_bar_component
     const panel = create_floating_panel({
         id:             'cli_bar',
         tag:            'footer',
-        position_css:   'left: 16px; bottom: 16px;',
-        default_width:  '580px',
+        position_css:   'top: 16px; left: 16px;',
+        default_width:  '440px',
         default_height: '68px',
         collapsible:       true,
         default_collapsed: true,
         resize: {
-            top:        true,
+            bottom:     true,
             right:      true,
             min_width:  320,
             max_width:  () => window.innerWidth - 32,
