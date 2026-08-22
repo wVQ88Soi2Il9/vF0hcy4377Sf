@@ -1,6 +1,6 @@
 # 0033_202608230209_ef-pack-oop-simplification-and-pipes
 
-- **status:** in-progress
+- **status:** done
 - **prev:** ./0032_202608222202_layered-2d-rotate-flip-api-and-ui.md
 - **skill:** plan-history v3
 
@@ -47,7 +47,7 @@
 - H2 · 2026-08-23 02:13 落地 —— 將 base_ef_device 重構為 implements 能力契約並精簡欄位（Agent） → O1
 
 ### 2 EF Pack 新增 3 種管線設備 (solidpipe, liquidpipe, gaspipe)
-- **state:** 待實作
+- **state:** 完成
 - **basis:** → O1
 
 於 EF Pack 中實作並註冊 `solidpipe`（固體管）、`liquidpipe`（液體管）、`gaspipe`（氣體管），支援 2.5D 管道連線與對應物態傳輸。
@@ -55,3 +55,4 @@
 **沿革**
 
 - H1 · 2026-08-23 02:09 決斷 —— 開立待辦實作 EF 專屬的三種物態管線（使用者）
+- H2 · 2026-08-23 03:46 落地 —— 繼承 packs/pipe 實作 solidpipe, liquidpipe, gaspipe 設備並完成註冊與建構驗證（Agent） → O1

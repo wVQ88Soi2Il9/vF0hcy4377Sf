@@ -9,10 +9,12 @@ import * as machines from './data/machines';
 import * as products from './data/products';
 import { base_ef_device, register_all_ef_devices, port_def_to_vector_3d, machine_to_shape_3d, get_tag_color_theme } from './base_device';
 import { register_all_ef_recipes, recipe_def_to_recipe, get_all_ef_recipes } from './recipe_adapter';
+import { solidpipe, liquidpipe, gaspipe, base_ef_pipe, register_all_ef_pipes } from './pipes';
 
 // ─── 導出型別 ─────────────────────────────────────────────────────────────────
 export type * from './types';
 export type { ef_device_color_theme } from './base_device';
+export type { ef_pipe_color_theme } from './pipes';
 
 // ─── 導出資料模組與適配邏輯 ───────────────────────────────────────────────────
 export
@@ -22,11 +24,16 @@ export
     machines,
     products,
     base_ef_device,
+    base_ef_pipe,
+    solidpipe,
+    liquidpipe,
+    gaspipe,
     port_def_to_vector_3d,
     machine_to_shape_3d,
     get_tag_color_theme,
     recipe_def_to_recipe,
-    get_all_ef_recipes
+    get_all_ef_recipes,
+    register_all_ef_pipes
 };
 
 /**
@@ -35,6 +42,10 @@ export
 export const ef =
 {
     base_ef_device,
+    base_ef_pipe,
+    solidpipe,
+    liquidpipe,
+    gaspipe,
     environments,
     materials,
     machines,
@@ -43,7 +54,8 @@ export const ef =
     machine_to_shape_3d,
     get_tag_color_theme,
     recipe_def_to_recipe,
-    get_all_ef_recipes
+    get_all_ef_recipes,
+    register_all_ef_pipes
 };
 
 /**
@@ -55,6 +67,7 @@ export function init_pack(): void
     if (registry)
     {
         register_all_ef_devices(registry);
+        register_all_ef_pipes(registry);
         register_all_ef_recipes(registry);
     }
 }
