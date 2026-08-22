@@ -16,15 +16,50 @@ import
     type check_overlap_hook,
     type build_graph_hook
 } from '@/core/hooks';
+import type { vector, map_command } from '@/core/types';
+import { get_device_class } from '@/core/pack_manager';
+import { create_device_command as core_create_device_command } from '@/core/commands';
+import { get_registry } from '@/runtime';
 
 export
 {
     create_map,
     create_device,
+    restore_device,
     delete_device,
     move_device,
     select_recipe
 } from '@/core/map_manager';
+
+export
+{
+    delete_device_command,
+    move_device_command,
+    select_recipe_command
+} from '@/core/commands';
+
+/**
+ * Creates a reversible create_device command by looking up the device definition in the registry.
+ */
+export function create_device_command
+(
+    definition_id: string,
+    position:      vector,
+    other_info:    Record<string, unknown> = {}
+): map_command
+{
+    const registry = get_registry();
+    if (!registry)
+    {
+        throw new Error('Global pack registry not found.');
+    }
+    const dev_class = get_device_class(registry, definition_id);
+    if (!dev_class)
+    {
+        throw new Error(`Device definition ID "${definition_id}" not found in registry.`);
+    }
+    return core_create_device_command(dev_class, definition_id, position, other_info);
+}
 
 export
 {
@@ -55,7 +90,10 @@ export type
     recipe_evaluation,
     recipe_fn,
     recipe,
-    game_map
+    game_map,
+    map_command,
+    history_node,
+    history_tree
 } from '@/core/types';
 
 export

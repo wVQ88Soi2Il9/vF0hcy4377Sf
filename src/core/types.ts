@@ -104,3 +104,74 @@ export interface game_map
 
     devices:         device[];
 }
+
+// ── History (Undo / Redo) ─────────────────────────────────────────────────────
+
+/**
+ * An encapsulated, reversible map mutation.
+ * `execute` applies the change; `inverse` reverts it exactly.
+ *
+ * Factories in API.ts close over any additional context (e.g. registry)
+ * via runtime, keeping this interface free of circular dependencies with
+ * `pack_manager`.
+ */
+export interface map_command
+{
+    /** Human-readable label shown in history panels and CLI output. */
+    label:   string;
+
+    /** Apply the change to the map. */
+    execute(map: game_map): void;
+
+    /** Revert the change to the map. Must be the exact logical inverse of execute(). */
+    inverse(map: game_map): void;
+}
+
+/**
+ * A single node in the Undo Tree.
+ * The root node has `parent_uid === null` and `command === null`.
+ */
+export interface history_node
+{
+    /** Unique numeric ID of this node within the tree. */
+    uid:          number;
+
+    /**
+     * Parent node UID.
+     * `null` only for the root node (which represents the initial empty state).
+     */
+    parent_uid:   number | null;
+
+    /**
+     * UIDs of all child nodes in creation order.
+     * Each child represents a diverging edit branch created after this node.
+     * Redo naturally follows the latest child (children_uids.at(-1)).
+     */
+    children_uids: number[];
+
+    /**
+     * The command that produced this node's state from its parent's state.
+     * `null` only for the root node.
+     */
+    command:      map_command | null;
+}
+
+/**
+ * The Undo Tree: a persistent, branching record of all map mutations.
+ *
+ * Invariants:
+ *   - `nodes` always contains at least one entry (the root, uid = 0).
+ *   - `current_uid` always refers to a key that exists in `nodes`.
+ *   - `next_node_uid` is strictly increasing and never reused.
+ */
+export interface history_tree
+{
+    /** All nodes keyed by their numeric UID. */
+    nodes:         Map<number, history_node>;
+
+    /** UID of the node that represents the current map state. */
+    current_uid:   number;
+
+    /** Counter used to assign the next unique node UID. Starts at 1 (root = 0). */
+    next_node_uid: number;
+}

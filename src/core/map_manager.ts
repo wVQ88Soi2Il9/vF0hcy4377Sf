@@ -38,10 +38,29 @@ export function create_device
 }
 
 /**
- * Removes a device by its uid.
- * Modifies the map in place.
+ * Restores an existing device instance to the map without reassigning its uid.
+ * If dev.uid is >= map.uid, map.uid is updated to dev.uid + 1.
+ * Modifies the map in place and triggers create hook.
  */
-export function delete_device(map: game_map, device_uid: number): void
+export function restore_device(map: game_map, dev: device): void
+{
+    const exists = map.devices.some(d => d.uid === dev.uid);
+    if (!exists)
+    {
+        map.devices.push(dev);
+        if (dev.uid >= map.uid)
+        {
+            map.uid = dev.uid + 1;
+        }
+        trigger_create_device(map, dev);
+    }
+}
+
+/**
+ * Removes a device by its uid.
+ * Modifies the map in place and returns the removed device instance if found.
+ */
+export function delete_device(map: game_map, device_uid: number): device | undefined
 {
     const index = map.devices.findIndex(d => d.uid === device_uid);
     if (index !== -1)
@@ -49,7 +68,9 @@ export function delete_device(map: game_map, device_uid: number): void
         const dev = map.devices[index];
         map.devices.splice(index, 1);
         trigger_delete_device(map, dev);
+        return dev;
     }
+    return undefined;
 }
 
 /**
