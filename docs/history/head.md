@@ -4,17 +4,15 @@
 
 ## 目前使用中
 
-[0031_202608222126_add-pipeline-device](./0031_202608222126_add-pipeline-device.md) — `in-progress`，待辦待決剩 1/1
+[0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/6
 
 ## 現在開著的（逐格）
 
-- `0031#1` · **待實作** — 實作並註冊管線類裝置（pipe）
 - `0028#6` · **待實作** — 實作歷史分支修剪（Prune / Trim History Branches）
 
-> 要做某一格：`python3 docs/history/plan-item.py 0031#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0028#6`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0031** [0031_202608222126_add-pipeline-device](./0031_202608222126_add-pipeline-device.md) — `in-progress`，待辦待決剩 1/1
 - **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/6
