@@ -1,6 +1,16 @@
 import type { view_plane } from '@/packs/basic_renderer/types';
-import { create_device, delete_device, move_device, get_device_class } from '@/API';
-import { get_map, get_registry } from '@/runtime';
+import
+{
+    create_device_command,
+    delete_device_command,
+    move_device_command,
+    execute_command as api_execute_command,
+    undo as api_undo,
+    redo as api_redo,
+    jump_to_history,
+    get_history_tree
+} from '@/API';
+import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
@@ -23,6 +33,34 @@ function format_camera_equation(plane: view_plane): string
     }
     const eq_str = eq_parts.length > 0 ? eq_parts.join(', ') : '';
     return `camera --"${eq_str}"`;
+}
+
+/**
+ * Formats a summary of the current branch in the history tree.
+ */
+function format_history_summary(): string
+{
+    const tree = get_history_tree();
+    if (!tree)
+    {
+        return 'History tree not initialized.';
+    }
+
+    const lines: string[] = [`History Tree (Current UID: ${tree.current_uid}, Total Nodes: ${tree.nodes.size}):`];
+    
+    // Sort nodes by UID for clean display
+    const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);
+    for (const node of sorted_nodes)
+    {
+        const is_current = node.uid === tree.current_uid;
+        const prefix = is_current ? '-> ' : '   ';
+        const label = node.command ? node.command.label : 'root (initial)';
+        const parent_info = node.parent_uid !== null ? ` (parent: ${node.parent_uid})` : '';
+        const branches = node.children_uids.length > 1 ? ` [branches: ${node.children_uids.join(', ')}]` : '';
+        lines.push(`${prefix}[#${node.uid}] ${label}${parent_info}${branches}`);
+    }
+
+    return lines.join('\n');
 }
 
 /**
@@ -50,7 +88,54 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, history, jump --"<node_uid>", help';
+        }
+
+        case 'undo':
+        {
+            const success = api_undo();
+            if (!success)
+            {
+                return 'Nothing to undo (already at root).';
+            }
+            return 'Undo successful.';
+        }
+
+        case 'redo':
+        {
+            const success = api_redo();
+            if (!success)
+            {
+                return 'Nothing to redo (at latest node in current branch).';
+            }
+            return 'Redo successful.';
+        }
+
+        case 'history':
+        case 'tree':
+        {
+            return format_history_summary();
+        }
+
+        case 'jump':
+        case 'checkout':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: jump --"<node_uid>" (e.g. jump --"2")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const target_uid = parseInt(uid_str, 10);
+            if (isNaN(target_uid))
+            {
+                return 'Error: Invalid node UID. Must be a number (e.g. jump --"2").';
+            }
+            const success = jump_to_history(target_uid);
+            if (!success)
+            {
+                return `Error: Failed to jump to history node #${target_uid}. Node does not exist.`;
+            }
+            return `Jumped to history node #${target_uid}.`;
         }
 
         case 'info':
@@ -166,20 +251,17 @@ export function execute_command(input: string): string
                 return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "4, 4, 0").`;
             }
 
-            const registry = get_registry();
-            if (!registry)
+            try
             {
-                return 'Error: Global pack registry not found.';
+                const cmd_obj = create_device_command(def_id, coords);
+                api_execute_command(cmd_obj);
+                const created = map.devices[map.devices.length - 1];
+                return `Created device ${def_id} (ID: ${created.uid}) at [${coords.join(', ')}]`;
             }
-
-            const dev_class = get_device_class(registry, def_id);
-            if (!dev_class)
+            catch (err: unknown)
             {
-                return `Error: Device definition ID "${def_id}" not found in registry.`;
+                return `Error: ${(err as Error).message}`;
             }
-
-            const dev = create_device(map, dev_class, def_id, coords);
-            return `Created device ${dev.definition_id} (ID: ${dev.uid}) at [${coords.join(', ')}]`;
         }
 
         case 'delete':
@@ -200,7 +282,8 @@ export function execute_command(input: string): string
             {
                 return `Error: Device ID ${id} not found.`;
             }
-            delete_device(map, id);
+            const cmd_obj = delete_device_command(id);
+            api_execute_command(cmd_obj);
             return `Deleted device ID ${id}`;
         }
 
@@ -232,7 +315,8 @@ export function execute_command(input: string): string
             {
                 return `Error: Device ID ${id} not found.`;
             }
-            move_device(map, id, coords);
+            const cmd_obj = move_device_command(id, coords);
+            api_execute_command(cmd_obj);
             return `Moved device ID ${id} to [${coords.join(', ')}]`;
         }
 
