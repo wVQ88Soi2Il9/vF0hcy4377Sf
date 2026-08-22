@@ -1,16 +1,26 @@
 /**
  * EF Pack Base Device Class
  *
- * 繼承 layered_2d 的 base_layered_device，
+ * 實作 layered_2d 的 drawable_layered_device 與 rotatable_device 能力契約，
  * 自動處理 2.5D 網格座標、D4 幾何旋轉/翻轉變換、分類主題色彩與 Canvas 多型繪圖。
  */
 
-import { base_layered_device, add_vector_3d } from '@/packs/layered_2d';
-import type { vector_3d } from '@/packs/layered_2d';
-import type { camera_type } from '@/packs/basic_renderer';
-import type { vector, pack_registry, device_constructor } from '@/API';
+import { device, type vector, type pack_registry, type device_constructor } from '@/API';
 import { register_device_class } from '@/API';
-import type { machine, machine_mode, port_def } from './types';
+import type { camera_type } from '@/packs/basic_renderer';
+import
+{
+    type drawable_layered_device,
+    type rotatable_device,
+    type vector_3d,
+    type d4_transform,
+    apply_d4_point,
+    apply_d4_cell_anchor,
+    normalize_rotation,
+    is_vector_3d,
+    add_vector_3d
+} from '@/packs/layered_2d';
+import type { machine, port_def } from './types';
 import { machine_list, machine_map, get_machine } from './data/machines';
 
 /**
@@ -89,15 +99,17 @@ export function get_tag_color_theme(tags: readonly string[]): ef_device_color_th
 
 /**
  * EF 設備抽象/具體基底類別
- * 繼承 layered_2d 的 base_layered_device
+ * 實作 drawable_layered_device 與 rotatable_device 能力契約
  */
-export class base_ef_device extends base_layered_device
+export class base_ef_device extends device implements drawable_layered_device, rotatable_device
 {
-    public readonly machine_def: machine;
-    public readonly active_mode: machine_mode;
-    protected readonly base_shape: vector_3d[];
-    protected readonly base_input_ports: vector_3d[];
-    protected readonly base_output_ports: vector_3d[];
+    public transform: d4_transform = { rotation: 0, flipped: false };
+
+    private readonly base_shape:        vector_3d[];
+    private readonly base_input_ports:  vector_3d[];
+    private readonly base_output_ports: vector_3d[];
+    private readonly display_name:      string;
+    private readonly theme:             ef_device_color_theme;
 
     constructor
     (
@@ -107,6 +119,10 @@ export class base_ef_device extends base_layered_device
         other_info?:   Record<string, unknown>
     )
     {
+        if (!is_vector_3d(position))
+        {
+            throw new Error(`[ef] Invalid device position: expected 3-element [x, y, z] vector, got ${JSON.stringify(position)}`);
+        }
         super(uid, definition_id, position);
 
         // 解析 machine 定義
@@ -120,9 +136,8 @@ export class base_ef_device extends base_layered_device
             throw new Error(`[ef] Unknown machine definition: "${definition_id}"`);
         }
 
-        this.machine_def = m;
         const mode_id = (other_info?.mode_id as string) || m.modes[0]?.id;
-        this.active_mode = m.modes.find(mode => mode.id === mode_id) || m.modes[0] || {
+        const mode = m.modes.find(item => item.id === mode_id) || m.modes[0] || {
             id:           'default',
             label:        'Default',
             input_ports:  [],
@@ -130,20 +145,63 @@ export class base_ef_device extends base_layered_device
             loss:         null
         };
 
+        this.display_name = m.name;
+        this.theme = get_tag_color_theme(m.tags);
         this.base_shape = machine_to_shape_3d(m.width, m.height);
-        this.base_input_ports = this.active_mode.input_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
-        this.base_output_ports = this.active_mode.output_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
+        this.base_input_ports = mode.input_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
+        this.base_output_ports = mode.output_ports.map(p => port_def_to_vector_3d(p, m.width, m.height));
 
         this.other_info = {
             name:    m.name,
-            tag:     m.tags[0] ?? '設備',
             power:   m.power,
             width:   m.width,
             height:  m.height,
-            modes:   m.modes,
-            mode_id: this.active_mode.id,
-            ...m.other_info,
+            mode_id: mode.id,
             ...other_info
+        };
+    }
+
+    public get_layer(): number
+    {
+        return this.position[2];
+    }
+
+    public get_shape(): vector_3d[]
+    {
+        return this.base_shape.map(v => apply_d4_cell_anchor(v, this.transform));
+    }
+
+    public get_shape_3d(): vector_3d[]
+    {
+        return this.get_shape();
+    }
+
+    public get_port(type: 'input' | 'output'): vector_3d[]
+    {
+        const ports = type === 'input' ? this.base_input_ports : this.base_output_ports;
+        return ports.map(v => apply_d4_point(v, this.transform));
+    }
+
+    public get_port_3d(type: 'input' | 'output'): vector_3d[]
+    {
+        return this.get_port(type);
+    }
+
+    public rotate(steps: number = 1): void
+    {
+        this.transform.rotation = normalize_rotation(this.transform.rotation + steps);
+    }
+
+    public flip(): void
+    {
+        this.transform.flipped = !this.transform.flipped;
+    }
+
+    public set_transform(transform: d4_transform): void
+    {
+        this.transform = {
+            rotation: normalize_rotation(transform.rotation),
+            flipped:  Boolean(transform.flipped)
         };
     }
 
@@ -161,14 +219,13 @@ export class base_ef_device extends base_layered_device
         ctx.save();
         ctx.globalAlpha *= 0.85;
 
-        const theme = get_tag_color_theme(this.machine_def.tags);
         const { dim_h, dim_v } = camera.plane;
         const canvas_height = ctx.canvas.height;
         const transformed_shape = this.get_shape();
 
         // 1. 繪製所有多單元格本體
-        ctx.fillStyle = theme.body_fill;
-        ctx.strokeStyle = theme.body_stroke;
+        ctx.fillStyle = this.theme.body_fill;
+        ctx.strokeStyle = this.theme.body_stroke;
         const border_lw = Math.max(1, zoom * 0.04);
         ctx.lineWidth = border_lw;
 
@@ -187,12 +244,12 @@ export class base_ef_device extends base_layered_device
         }
 
         // 2. 繪製中心標籤與 UID
-        ctx.fillStyle = theme.text_color;
+        ctx.fillStyle = this.theme.text_color;
         ctx.font = `bold ${Math.max(8, zoom * 0.25)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const label_text = `#${this.uid} ${this.machine_def.name}`;
+        const label_text = `#${this.uid} ${this.display_name}`;
         ctx.fillText(label_text, sx + sw / 2, sy + sh / 2);
 
         // 3. 繪製輸入與輸出連接埠

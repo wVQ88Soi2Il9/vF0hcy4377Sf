@@ -36,7 +36,7 @@
 ## 待辦
 
 ### 1 重構 base_ef_device 為 implements 能力契約並精簡欄位
-- **state:** 待實作
+- **state:** 完成
 - **basis:** → O1
 
 將 `base_ef_device` 重構為直接繼承 `device` 並 `implements drawable_layered_device, rotatable_device`，移除 `public readonly machine_def` 等多餘欄位，極致精簡物件屬性。
@@ -44,6 +44,7 @@
 **沿革**
 
 - H1 · 2026-08-23 02:09 決斷 —— 開立待辦進行 base_ef_device 能力介面轉型與欄位精簡（使用者）
+- H2 · 2026-08-23 02:13 落地 —— 將 base_ef_device 重構為 implements 能力契約並精簡欄位（Agent） → O1
 
 ### 2 EF Pack 新增 3 種管線設備 (solidpipe, liquidpipe, gaspipe)
 - **state:** 待實作
