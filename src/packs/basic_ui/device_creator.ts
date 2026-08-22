@@ -11,8 +11,9 @@ export interface device_creator_component
 }
 
 /**
- * Renders the Device Creation panel inside Info Bar, supporting definition selection,
- * downstream custom creation option slots, even coordinate steppers, validation, and instantaneous creation callback.
+ * Renders the Device Creation panel inside Info Bar, supporting cascading two-tier
+ * namespace + device ID dropdowns, downstream custom creation option slots,
+ * even coordinate steppers, validation, and instantaneous creation callback.
  */
 export function create_device_creator
 (
@@ -26,22 +27,48 @@ export function create_device_creator
     header.className = 'basic_ui_section_title';
     header.textContent = 'Create Device:';
 
-    // 1. Definition Selector
-    const def_select = document.createElement('select');
-    def_select.className = 'basic_ui_select';
+    // 1. Two-Tier Cascading Selector: Namespace (Pack) -> Device ID
+    const selector_container = document.createElement('div');
+    selector_container.className = 'basic_ui_lookup_row';
+
+    const ns_select = document.createElement('select');
+    ns_select.className = 'basic_ui_select';
+    ns_select.style.flex = '1';
+    ns_select.title = 'Select Pack / Namespace';
+
+    const dev_select = document.createElement('select');
+    dev_select.className = 'basic_ui_select';
+    dev_select.style.flex = '1.3';
+    dev_select.title = 'Select Device ID';
+    dev_select.disabled = true;
+
+    selector_container.appendChild(ns_select);
+    selector_container.appendChild(dev_select);
 
     // Downstream custom creation options container
     const custom_options_container = document.createElement('div');
     custom_options_container.className = 'basic_ui_form_group';
 
     let current_option_getters: (() => Record<string, unknown>)[] = [];
+    const current_ns_groups = new Map<string, Array<{ def_id: string; local_id: string }>>();
+
+    function get_current_def_id(): string
+    {
+        const ns = ns_select.value.trim();
+        const id = dev_select.value.trim();
+        if (!ns || !id)
+        {
+            return '';
+        }
+        return ns === 'global' ? id : `${ns}:${id}`;
+    }
 
     function update_creation_options(): void
     {
         custom_options_container.innerHTML = '';
         current_option_getters = [];
 
-        const def_id = def_select.value.trim();
+        const def_id = get_current_def_id();
         if (!def_id)
         {
             return;
@@ -58,20 +85,45 @@ export function create_device_creator
         }
     }
 
-    def_select.addEventListener('change', update_creation_options);
-    def_select.addEventListener('pointerdown', () => refresh_definitions());
-    def_select.addEventListener('focus', () => refresh_definitions());
+    function populate_device_select(): void
+    {
+        const selected_ns = ns_select.value.trim();
+        const current_id = dev_select.value.trim();
+        dev_select.innerHTML = '<option value="">-- Select Device --</option>';
+
+        if (!selected_ns)
+        {
+            dev_select.disabled = true;
+            update_creation_options();
+            return;
+        }
+
+        dev_select.disabled = false;
+        const list = current_ns_groups.get(selected_ns) || [];
+        for (const item of list)
+        {
+            const opt = document.createElement('option');
+            opt.value = item.local_id;
+            opt.textContent = item.local_id;
+            if (item.local_id === current_id)
+            {
+                opt.selected = true;
+            }
+            dev_select.appendChild(opt);
+        }
+
+        update_creation_options();
+    }
 
     function refresh_definitions(): void
     {
-        const current_val = def_select.value;
-        def_select.innerHTML = '<option value="">-- Select Device Type --</option>';
+        const prev_ns = ns_select.value.trim();
+        const prev_id = dev_select.value.trim();
 
+        current_ns_groups.clear();
         const registry = get_registry();
         if (registry)
         {
-            const ns_groups = new Map<string, Array<{ def_id: string; local_id: string }>>();
-
             for (const [def_id] of registry.device_classes)
             {
                 let ns = 'global';
@@ -83,39 +135,64 @@ export function create_device_creator
                     id = def_id.slice(idx + 1);
                 }
 
-                let list = ns_groups.get(ns);
+                let list = current_ns_groups.get(ns);
                 if (!list)
                 {
                     list = [];
-                    ns_groups.set(ns, list);
+                    current_ns_groups.set(ns, list);
                 }
                 list.push({ def_id, local_id: id });
             }
-
-            const sorted_ns = Array.from(ns_groups.keys()).sort();
-            for (const ns of sorted_ns)
-            {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = `[${ns}]`;
-
-                const items = ns_groups.get(ns)!.sort((a, b) => a.local_id.localeCompare(b.local_id));
-                for (const item of items)
-                {
-                    const opt = document.createElement('option');
-                    opt.value = item.def_id;
-                    opt.textContent = `${ns}:${item.local_id}`;
-                    if (item.def_id === current_val)
-                    {
-                        opt.selected = true;
-                    }
-                    optgroup.appendChild(opt);
-                }
-                def_select.appendChild(optgroup);
-            }
         }
 
+        // Populate Namespace Select
+        ns_select.innerHTML = '<option value="">-- Select Pack --</option>';
+        const sorted_ns = Array.from(current_ns_groups.keys()).sort();
+        for (const ns of sorted_ns)
+        {
+            const opt = document.createElement('option');
+            opt.value = ns;
+            opt.textContent = ns;
+            if (ns === prev_ns)
+            {
+                opt.selected = true;
+            }
+            ns_select.appendChild(opt);
+        }
+
+        // Sort items within each namespace
+        for (const [, items] of current_ns_groups)
+        {
+            items.sort((a, b) => a.local_id.localeCompare(b.local_id));
+        }
+
+        populate_device_select();
+        if (prev_id)
+        {
+            dev_select.value = prev_id;
+        }
         update_creation_options();
     }
+
+    ns_select.addEventListener('change', () =>
+    {
+        populate_device_select();
+    });
+
+    dev_select.addEventListener('change', () =>
+    {
+        update_creation_options();
+    });
+
+    ns_select.addEventListener('pointerdown', () => refresh_definitions());
+    ns_select.addEventListener('focus', () => refresh_definitions());
+    dev_select.addEventListener('pointerdown', () =>
+    {
+        if (!ns_select.value.trim())
+        {
+            refresh_definitions();
+        }
+    });
 
     refresh_definitions();
 
@@ -140,10 +217,10 @@ export function create_device_creator
 
     create_btn.addEventListener('click', () =>
     {
-        const def_id = def_select.value.trim();
+        const def_id = get_current_def_id();
         if (!def_id)
         {
-            coords_group.show_error('Error: Please select a device type.');
+            coords_group.show_error('Error: Please select a pack namespace and device ID.');
             return;
         }
 
@@ -195,7 +272,7 @@ export function create_device_creator
     coords_group.row.appendChild(create_btn);
 
     card.appendChild(header);
-    card.appendChild(def_select);
+    card.appendChild(selector_container);
     card.appendChild(custom_options_container);
     card.appendChild(coords_group.container);
 
