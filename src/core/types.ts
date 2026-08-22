@@ -5,6 +5,12 @@
  */
 export type vector = number[];
 
+/**
+ * N-dimensional size/span vector per axis: [delta_x, delta_y, delta_z, ...].
+ * Each component represents the size/extent along the corresponding dimension axis.
+ */
+export type dimensions = vector;
+
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 

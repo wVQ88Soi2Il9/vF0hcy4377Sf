@@ -239,6 +239,7 @@ export
 export type
 {
     vector,
+    dimensions,
     pack,
     item_definition,
     item_stack,

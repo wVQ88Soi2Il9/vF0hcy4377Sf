@@ -4,22 +4,21 @@
  * 將 [delta_x, delta_y, delta_z, ...] 長方體維度跨度轉換為核心引擎的 2× 網格單元格座標集合。
  */
 
-import type { vector } from '@/API';
-import type { cuboid_dimensions } from './types';
+import type { vector, dimensions } from '@/API';
 
 /**
  * 驗證長方體維度向量是否合法（必須為非空且每個元素皆為正整數）
  */
-export function validate_cuboid_dimensions(dimensions: cuboid_dimensions): void
+export function validate_cuboid_dimensions(dims: dimensions): void
 {
-    if (!Array.isArray(dimensions) || dimensions.length === 0)
+    if (!Array.isArray(dims) || dims.length === 0)
     {
-        throw new Error(`[cuboid_device] Invalid cuboid dimensions: expected non-empty vector, got ${JSON.stringify(dimensions)}`);
+        throw new Error(`[cuboid_device] Invalid cuboid dimensions: expected non-empty vector, got ${JSON.stringify(dims)}`);
     }
 
-    for (let i = 0; i < dimensions.length; i++)
+    for (let i = 0; i < dims.length; i++)
     {
-        const val = dimensions[i];
+        const val = dims[i];
         if (!Number.isInteger(val) || val <= 0)
         {
             throw new Error(`[cuboid_device] Invalid dimension at index ${i}: expected positive integer, got ${val}`);
@@ -31,14 +30,14 @@ export function validate_cuboid_dimensions(dimensions: cuboid_dimensions): void
  * 將 N 維長方體跨度 [delta_x, delta_y, delta_z, ...]
  * 轉換為核心引擎 2× 網格單元格錨點集合：[2*i_0, 2*i_1, ..., 2*i_{n-1}]。
  *
- * @param dimensions 長方體跨度向量 [d_0, d_1, ..., d_{n-1}]
+ * @param dims 長方體跨度向量 [d_0, d_1, ..., d_{n-1}]
  * @returns 單元格局部座標陣列
  */
-export function cuboid_to_shape(dimensions: cuboid_dimensions): vector[]
+export function cuboid_to_shape(dims: dimensions): vector[]
 {
-    validate_cuboid_dimensions(dimensions);
+    validate_cuboid_dimensions(dims);
 
-    const n = dimensions.length;
+    const n = dims.length;
     const shape: vector[] = [];
     const current: number[] = new Array(n).fill(0);
 
@@ -50,7 +49,7 @@ export function cuboid_to_shape(dimensions: cuboid_dimensions): vector[]
             return;
         }
 
-        const count = dimensions[dim_index];
+        const count = dims[dim_index];
         for (let i = 0; i < count; i++)
         {
             current[dim_index] = i * 2;
