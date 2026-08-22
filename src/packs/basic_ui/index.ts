@@ -3,7 +3,6 @@ import { get_map } from '@/runtime';
 import type { unsubscribe_function } from '@/API';
 import { on_device_change } from '@/API';
 import { create_ui_layout } from './layout';
-import { init_keybindings } from './keybindings';
 import {
     set_active_info_bar,
     display_device_info,
@@ -31,7 +30,6 @@ export {
 } from './ui_state';
 
 let cleanup_device_change: unsubscribe_function | null = null;
-let cleanup_keybindings:   (() => void) | null         = null;
 
 /**
  * basic_ui entry point.
@@ -46,14 +44,6 @@ export function init_pack(): void
         cleanup_device_change();
         cleanup_device_change = null;
     }
-
-    if (cleanup_keybindings)
-    {
-        cleanup_keybindings();
-        cleanup_keybindings = null;
-    }
-
-    cleanup_keybindings = init_keybindings();
 
     const host = document.getElementById('app') ?? document.body;
     const { root, viewport, info_bar } = create_ui_layout();
