@@ -25,6 +25,16 @@ export function get_map(): game_map | undefined
     return _map;
 }
 
+export function get_dimension(): number | undefined
+{
+    return _map?.dimension;
+}
+
+export function get_dim(): number | undefined
+{
+    return _map?.dimension;
+}
+
 export function set_registry(registry: pack_registry): void
 {
     _registry = registry;

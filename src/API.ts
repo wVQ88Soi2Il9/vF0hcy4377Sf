@@ -63,7 +63,7 @@ export
     select_recipe_command
 } from '@/core/commands';
 
-export { get_map, get_registry, get_history_tree } from '@/runtime';
+export { get_map, get_dimension, get_dim, get_registry, get_history_tree } from '@/runtime';
 
 /**
  * Executes a command on the active map and records it in the global history tree.

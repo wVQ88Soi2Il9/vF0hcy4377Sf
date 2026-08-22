@@ -4,13 +4,13 @@
  * 繼承核心 device 並封裝 device_size 屬性、由 game_map 取得 dimension 與自動 Shape 計算。
  */
 
-import { device, type vector, get_map } from '@/API';
+import { device, type vector, get_dimension } from '@/API';
 import { cuboid_to_shape } from './adapter';
 
 /**
  * 長方體設備抽象基底類別
  * 下游設備僅需指定 device_size: [delta_x, delta_y, delta_z, ...]，
- * 即自動依據 game_map.dimension 由 Adapter 計算產生對應的 2× 網格單元格 shape 座標集合。
+ * 即自動依據 get_dimension() 由 Adapter 計算產生對應的 2× 網格單元格 shape 座標集合。
  */
 export abstract class base_cuboid_device extends device
 {
@@ -20,12 +20,7 @@ export abstract class base_cuboid_device extends device
     /** 空間維度數 N（直接由 active game_map 決定） */
     public get dimension(): number
     {
-        const map = get_map();
-        if (map)
-        {
-            return map.dimension;
-        }
-        return this.position.length;
+        return get_dimension() ?? this.position.length;
     }
 
     constructor
