@@ -27,11 +27,10 @@ export function cuboid_to_shape(device_size: vector): vector[]
             shape.push([...current]);
             return;
         }
-
-        const count = device_size[dim_index];
-        for (let i = 0; i < count; i++)
+        const span = device_size[dim_index];
+        for (let offset = 0; offset < span; offset += 2)
         {
-            current[dim_index] = i * 2;
+            current[dim_index] = offset;
             generate(dim_index + 1);
         }
     }
