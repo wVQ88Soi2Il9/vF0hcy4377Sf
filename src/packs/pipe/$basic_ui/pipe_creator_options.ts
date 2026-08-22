@@ -95,7 +95,7 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     const add_btn = document.createElement('button');
     add_btn.type = 'button';
     add_btn.className = 'basic_ui_btn';
-    add_btn.textContent = '➕ Add Segment';
+    add_btn.textContent = '➕';
     add_btn.addEventListener('click', () =>
     {
         // Suggest next orthogonal direction
