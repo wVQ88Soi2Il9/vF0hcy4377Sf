@@ -5,9 +5,6 @@
 import { cuboid_to_shape, validate_cuboid_dimensions } from './adapter';
 import { base_cuboid_device } from './base_device';
 
-// ─── 導出型別 ─────────────────────────────────────────────────────────────────
-export type * from './types';
-
 // ─── 導出核心類別與適配函式 ───────────────────────────────────────────────────
 export
 {

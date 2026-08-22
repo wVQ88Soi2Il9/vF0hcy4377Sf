@@ -5,12 +5,11 @@
  */
 
 import type { vector } from '@/API';
-import type { cuboid_dimensions } from './types';
 
 /**
  * 驗證長方體維度向量是否合法（必須為非空且每個元素皆為正整數）
  */
-export function validate_cuboid_dimensions(dimensions: cuboid_dimensions): void
+export function validate_cuboid_dimensions(dimensions: vector): void
 {
     if (!Array.isArray(dimensions) || dimensions.length === 0)
     {
@@ -34,7 +33,7 @@ export function validate_cuboid_dimensions(dimensions: cuboid_dimensions): void
  * @param dimensions 長方體跨度向量 [d_0, d_1, ..., d_{n-1}]
  * @returns 單元格局部座標陣列
  */
-export function cuboid_to_shape(dimensions: cuboid_dimensions): vector[]
+export function cuboid_to_shape(dimensions: vector): vector[]
 {
     validate_cuboid_dimensions(dimensions);
 
