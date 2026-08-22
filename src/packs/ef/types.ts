@@ -144,5 +144,3 @@ export function rate_limit_for_media(media: port_media | null | undefined): numb
 {
     return media === 'pipe' ? pipe_rate_limit : belt_rate_limit;
 }
-
-

@@ -4,15 +4,18 @@
 
 ## 目前使用中
 
-[0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/6
+[0033_202608230209_ef-pack-oop-simplification-and-pipes](./0033_202608230209_ef-pack-oop-simplification-and-pipes.md) — `in-progress`，待辦待決剩 2/2
 
 ## 現在開著的（逐格）
 
+- `0033#1` · **待實作** — 重構 base_ef_device 為 implements 能力契約並精簡欄位
+- `0033#2` · **待實作** — EF Pack 新增 3 種管線設備 (solidpipe, liquidpipe, gaspipe)
 - `0028#6` · **待實作** — 實作歷史分支修剪（Prune / Trim History Branches）
 
-> 要做某一格：`python3 docs/history/plan-item.py 0028#6`
+> 要做某一格：`python3 docs/history/plan-item.py 0033#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0033** [0033_202608230209_ef-pack-oop-simplification-and-pipes](./0033_202608230209_ef-pack-oop-simplification-and-pipes.md) — `in-progress`，待辦待決剩 2/2
 - **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/6
