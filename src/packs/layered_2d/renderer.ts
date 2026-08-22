@@ -137,10 +137,9 @@ export function draw_layered_devices
             }
             else if (show_inactive)
             {
-                // 透視層：以半透明 Alpha 與灰階濾鏡疊加繪製
+                // 透視層：以半透明 Alpha 疊加繪製（避免 ctx.filter 造成的即時點陣濾鏡運算瓶頸）
                 ctx.save();
                 ctx.globalAlpha = inactive_alpha;
-                ctx.filter = 'grayscale(70%)';
                 for (const item of items)
                 {
                     render_device_item(ctx, item, camera, canvas);

@@ -207,11 +207,20 @@ export abstract class base_ef_pipe extends pipe implements drawable_device
         if (visible_centers.length > 0)
         {
             const mid = visible_centers[Math.floor(visible_centers.length / 2)];
-            ctx.fillStyle = this.theme.text_color;
+            const text = `#${this.uid} ${this.display_name}`;
             ctx.font = `bold ${Math.max(8, zoom * 0.25)}px monospace`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`#${this.uid} ${this.display_name}`, mid.x, mid.y);
+
+            // 黑色外框描邊 (Black Outline)
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = Math.max(2, zoom * 0.06);
+            ctx.lineJoin = 'round';
+            ctx.strokeText(text, mid.x, mid.y);
+
+            // 文字填色 (Fill)
+            ctx.fillStyle = this.theme.text_color;
+            ctx.fillText(text, mid.x, mid.y);
         }
 
         // 4. Ports

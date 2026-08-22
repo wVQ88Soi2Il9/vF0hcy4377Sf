@@ -13,9 +13,15 @@ import
     add_vector_3d
 } from '@/packs/layered_2d';
 import type { machine, port_def } from './types';
-import { machine_list, machine_map, get_machine } from './data/machines';
+import { machine_list, get_machine, get_machine_by_id } from './data/machines';
 
 // ─── 輔助函式與主題配置 ────────────────────────────────────────────────────────
+
+export function resolve_machine(id_or_name: string): machine | undefined
+{
+    const raw_id = id_or_name.includes(':') ? id_or_name.split(':')[1] : id_or_name;
+    return get_machine_by_id(raw_id) ?? get_machine(raw_id);
+}
 
 export interface ef_device_color_theme
 {
@@ -89,8 +95,7 @@ export class base_ef_device extends base_layered_device implements base_cuboid_d
     {
         super(uid, def_id, pos);
 
-        const raw_id = def_id.includes(':') ? def_id.split(':')[1] : def_id;
-        const m = machine_map.get(raw_id) ?? get_machine(raw_id);
+        const m = resolve_machine(def_id);
         if (!m)
         {
             throw new Error(`[ef] Unknown machine: "${def_id}"`);
@@ -117,8 +122,7 @@ export class base_ef_device extends base_layered_device implements base_cuboid_d
 
     private get_machine(): machine
     {
-        const raw_id = this.definition_id.includes(':') ? this.definition_id.split(':')[1] : this.definition_id;
-        return machine_map.get(raw_id) ?? get_machine(raw_id)!;
+        return resolve_machine(this.definition_id)!;
     }
 
     public draw
@@ -143,21 +147,32 @@ export class base_ef_device extends base_layered_device implements base_cuboid_d
         ctx.strokeStyle = theme.body_stroke;
         ctx.lineWidth = Math.max(1, zoom * 0.04);
 
-        // 1. 繪製單元格本體
+        // 1. 繪製單元格本體（填滿內部）
         for (const cell of this.get_shape())
         {
             const cell_sx = camera.pan_x + (this.position[dim_h] + cell[dim_h]) * camera.zoom;
             const cell_sy = canvas_h + camera.pan_y - (this.position[dim_v] + cell[dim_v] + 2) * camera.zoom;
             ctx.fillRect(cell_sx, cell_sy, 2 * camera.zoom, 2 * camera.zoom);
-            ctx.strokeRect(cell_sx, cell_sy, 2 * camera.zoom, 2 * camera.zoom);
         }
 
+        // 外圍邊框
+        ctx.strokeRect(sx, sy, sw, sh);
+
         // 2. 繪製標籤
-        ctx.fillStyle = theme.text_color;
+        const text = `#${this.uid} ${m.name}`;
         ctx.font = `bold ${Math.max(8, zoom * 0.25)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`#${this.uid} ${m.name}`, sx + sw / 2, sy + sh / 2);
+
+        // 黑色外框描邊 (Black Outline)
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = Math.max(2, zoom * 0.06);
+        ctx.lineJoin = 'round';
+        ctx.strokeText(text, sx + sw / 2, sy + sh / 2);
+
+        // 文字填色
+        ctx.fillStyle = theme.text_color;
+        ctx.fillText(text, sx + sw / 2, sy + sh / 2);
 
         // 3. 繪製連接埠
         this.draw_ports(ctx, this.get_port('input'), '#38bdf8', '#0284c7', 'I', camera);

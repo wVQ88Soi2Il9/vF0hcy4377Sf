@@ -7,7 +7,7 @@ import * as environments from './data/environments';
 import * as materials from './data/materials';
 import * as machines from './data/machines';
 import * as products from './data/products';
-import { base_ef_device, register_all_ef_devices, port_def_to_vector_3d, machine_to_shape_3d, get_tag_color_theme } from './base_device';
+import { base_ef_device, register_all_ef_devices, port_def_to_vector_3d, machine_to_shape_3d, get_tag_color_theme, resolve_machine } from './base_device';
 import { register_all_ef_recipes, recipe_def_to_recipe, get_all_ef_recipes } from './recipe_adapter';
 import { solidpipe, liquidpipe, gaspipe, base_ef_pipe, register_all_ef_pipes } from './pipes';
 
@@ -31,6 +31,7 @@ export
     port_def_to_vector_3d,
     machine_to_shape_3d,
     get_tag_color_theme,
+    resolve_machine,
     recipe_def_to_recipe,
     get_all_ef_recipes,
     register_all_ef_pipes
@@ -53,6 +54,7 @@ export const ef =
     port_def_to_vector_3d,
     machine_to_shape_3d,
     get_tag_color_theme,
+    resolve_machine,
     recipe_def_to_recipe,
     get_all_ef_recipes,
     register_all_ef_pipes

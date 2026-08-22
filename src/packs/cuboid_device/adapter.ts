@@ -8,7 +8,7 @@ import { type vector, get_dimension } from '@/API';
 
 export function cuboid_to_shape(device_size: vector): vector[]
 {
-    const dim = get_dimension();
+    const dim = get_dimension() ?? device_size.length;
     const shape: vector[] = [];
     const current: number[] = new Array(dim).fill(0);
 
@@ -20,7 +20,7 @@ export function cuboid_to_shape(device_size: vector): vector[]
             return;
         }
         const span = device_size[dim_index];
-        for (let offset = 0; offset <= span; offset += 2)
+        for (let offset = 0; offset < span; offset += 2)
         {
             current[dim_index] = offset;
             generate(dim_index + 1);
