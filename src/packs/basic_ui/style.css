@@ -257,6 +257,21 @@
     border-color: var(--basic-ui-blue);
 }
 
+.basic_ui_select optgroup {
+    background: var(--basic-ui-bg-crust);
+    color: var(--basic-ui-sapphire);
+    font-weight: bold;
+    font-style: normal;
+    padding: 4px 0;
+}
+
+.basic_ui_select option {
+    background: var(--basic-ui-bg-mantle);
+    color: var(--basic-ui-text);
+    padding: 3px 6px;
+    font-weight: normal;
+}
+
 .basic_ui_input {
     width: 100%;
     min-width: 36px;

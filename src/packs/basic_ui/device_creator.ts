@@ -70,16 +70,47 @@ export function create_device_creator
         const registry = get_registry();
         if (registry)
         {
+            const ns_groups = new Map<string, Array<{ def_id: string; local_id: string }>>();
+
             for (const [def_id] of registry.device_classes)
             {
-                const opt = document.createElement('option');
-                opt.value = def_id;
-                opt.textContent = def_id;
-                if (def_id === current_val)
+                let ns = 'global';
+                let id = def_id;
+                if (def_id.includes(':'))
                 {
-                    opt.selected = true;
+                    const idx = def_id.indexOf(':');
+                    ns = def_id.slice(0, idx);
+                    id = def_id.slice(idx + 1);
                 }
-                def_select.appendChild(opt);
+
+                let list = ns_groups.get(ns);
+                if (!list)
+                {
+                    list = [];
+                    ns_groups.set(ns, list);
+                }
+                list.push({ def_id, local_id: id });
+            }
+
+            const sorted_ns = Array.from(ns_groups.keys()).sort();
+            for (const ns of sorted_ns)
+            {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `[${ns}]`;
+
+                const items = ns_groups.get(ns)!.sort((a, b) => a.local_id.localeCompare(b.local_id));
+                for (const item of items)
+                {
+                    const opt = document.createElement('option');
+                    opt.value = item.def_id;
+                    opt.textContent = `${ns}:${item.local_id}`;
+                    if (item.def_id === current_val)
+                    {
+                        opt.selected = true;
+                    }
+                    optgroup.appendChild(opt);
+                }
+                def_select.appendChild(optgroup);
             }
         }
 
