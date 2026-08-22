@@ -3,7 +3,7 @@ import { create_device, delete_device, move_device, get_device_class } from '@/A
 import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 
-import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cmd_tool';
+import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 
 import { display_device_info } from './ui_state';
 

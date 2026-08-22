@@ -4,15 +4,15 @@
 
 ## 目前使用中
 
-[0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/4
+[0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/1
 
 ## 現在開著的（逐格）
 
-- `0024#4` · **待實作** — 優化 UI Bar
+- `0028#1` · **待實作** — 設計與實作 Redo / Undo 功能
 
-> 要做某一格：`python3 docs/history/plan-item.py 0024#4`
+> 要做某一格：`python3 docs/history/plan-item.py 0028#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0024** [0024_202608212235_generic-2-5d-pack](./0024_202608212235_generic-2-5d-pack.md) — `in-progress`，待辦待決剩 1/4
+- **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/1

@@ -74,9 +74,9 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 
 因此，判斷兩台裝置是否連通，只需比較兩者的埠世界座標是否相等即可，詳見 `docs/architecture.md`。
 
-## UI 指令系統 (CMD System)
+## UI 命令列系統 (CLI System)
 
-引擎由 `packs/basic_ui` 提供基於網頁底部的指令列介面 (`cmd_bar`)，所有指令均採統一的 Flag 格式規範：
+引擎由 `packs/basic_ui` 提供基於網頁底部的命令列介面 (`cli_bar`)，所有指令均採統一的 Flag 格式規範：
 
 ### 指令語法規範
 
@@ -104,7 +104,7 @@ Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — �
 | Vanilla Pack - 連接圖建構 | ✅ 已完成 |
 | Pack Loader(自動掃描 JSON)| ✅ 已完成 |
 | 畫布渲染(Renderer)       | ✅ 已完成 (basic_renderer) |
-| UI (CMD / Viewport)      | ✅ 已完成 (basic_ui) |
+| UI (CLI / Viewport)      | ✅ 已完成 (basic_ui) |
 
 ## 快速開始
 

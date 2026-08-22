@@ -633,8 +633,8 @@
     padding-top: 8px;
 }
 
-/* CMD Bar Specific Styles */
-.basic_ui_cmd_prompt {
+/* CLI Bar Specific Styles */
+.basic_ui_cli_prompt {
     font-weight: 700;
     color: var(--basic-ui-blue);
     user-select: none;
@@ -645,11 +645,11 @@
     flex-shrink: 0;
 }
 
-.basic_ui_cmd_prompt_icon {
+.basic_ui_cli_prompt_icon {
     color: var(--basic-ui-sky);
 }
 
-.basic_ui_cmd_input {
+.basic_ui_cli_input {
     flex: 1;
     min-width: 0;
     background: transparent;
@@ -660,14 +660,14 @@
     font-size: 13px;
 }
 
-.basic_ui_cmd_kbd {
+.basic_ui_cli_kbd {
     font-size: 11px;
     color: var(--basic-ui-overlay0);
     user-select: none;
     flex-shrink: 0;
 }
 
-.basic_ui_cmd_kbd kbd {
+.basic_ui_cli_kbd kbd {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--basic-ui-border);
     padding: 2px 6px;
@@ -676,7 +676,7 @@
     font-family: inherit;
 }
 
-.basic_ui_cmd_output {
+.basic_ui_cli_output {
     font-size: 12px;
     color: var(--basic-ui-subtext0);
     overflow-y: auto;
@@ -687,10 +687,10 @@
     box-sizing: border-box;
 }
 
-.basic_ui_cmd_output.success {
+.basic_ui_cli_output.success {
     color: var(--basic-ui-green);
 }
 
-.basic_ui_cmd_output.error {
+.basic_ui_cli_output.error {
     color: var(--basic-ui-red);
 }

@@ -1,18 +1,18 @@
-import { execute_command } from './cmd_executor';
+import { execute_command } from './cli_executor';
 import { create_floating_panel } from './panel';
 
-export interface cmd_bar_component
+export interface cli_bar_component
 {
     element: HTMLElement;
 }
 
 /**
- * Creates the bottom Command Bar panel with an inline input header and flexible output area.
+ * Creates the bottom Command Line Interface (CLI) panel with an inline input header and flexible output area.
  */
-export function create_cmd_bar(): cmd_bar_component
+export function create_cli_bar(): cli_bar_component
 {
     const panel = create_floating_panel({
-        id:             'cmd_bar',
+        id:             'cli_bar',
         tag:            'footer',
         position_css:   'left: 16px; bottom: 16px;',
         default_width:  '580px',
@@ -31,17 +31,17 @@ export function create_cmd_bar(): cmd_bar_component
 
     // Header: Prompt + Input + Enter badge
     const prompt_title = document.createElement('div');
-    prompt_title.className = 'basic_ui_cmd_prompt';
-    prompt_title.innerHTML = '<span class="basic_ui_cmd_prompt_icon">&gt;_</span> CMD';
+    prompt_title.className = 'basic_ui_cli_prompt';
+    prompt_title.innerHTML = '<span class="basic_ui_cli_prompt_icon">&gt;_</span> CLI';
 
     const input_el = document.createElement('input');
-    input_el.id = 'cmd_input';
+    input_el.id = 'cli_input';
     input_el.type = 'text';
-    input_el.className = 'basic_ui_cmd_input';
+    input_el.className = 'basic_ui_cli_input';
     input_el.placeholder = 'Type command (e.g. create --"test:assembler" --"4, 4, 0") or help...';
 
     const enter_badge = document.createElement('div');
-    enter_badge.className = 'basic_ui_cmd_kbd';
+    enter_badge.className = 'basic_ui_cli_kbd';
     enter_badge.innerHTML = '<kbd>Enter</kbd>';
 
     panel.title_container.appendChild(prompt_title);
@@ -50,8 +50,8 @@ export function create_cmd_bar(): cmd_bar_component
 
     // Body: Command output log
     const output_el = document.createElement('div');
-    output_el.id = 'cmd_output';
-    output_el.className = 'basic_ui_cmd_output';
+    output_el.id = 'cli_output';
+    output_el.className = 'basic_ui_cli_output';
 
     panel.content_element.appendChild(output_el);
 
