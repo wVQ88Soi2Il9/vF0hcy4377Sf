@@ -1,6 +1,13 @@
 import type { device, item_stack } from '@/API';
-import { evaluate_recipe, delete_device, move_device, select_recipe } from '@/API';
-import { get_map, get_registry } from '@/runtime';
+import
+{
+    evaluate_recipe,
+    delete_device_command,
+    move_device_command,
+    select_recipe_command,
+    execute_command
+} from '@/API';
+import { get_registry } from '@/runtime';
 import { get_device_inspectors, get_device_actions } from './extensions';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
@@ -85,12 +92,16 @@ export function render_device_card
             return;
         }
 
-        const current_map = get_map();
-        if (current_map)
+        try
         {
-            move_device(current_map, dev.uid, parsed.position);
+            const cmd = move_device_command(dev.uid, parsed.position);
+            execute_command(cmd);
             coords_group.hide_error();
             refresh_callback();
+        }
+        catch (err: unknown)
+        {
+            coords_group.show_error(`Error: ${(err as Error).message}`);
         }
     });
 
@@ -130,13 +141,10 @@ export function render_device_card
 
     recipe_select.addEventListener('change', () =>
     {
-        const current_map = get_map();
-        if (current_map)
-        {
-            const new_rec = recipe_select.value === '' ? undefined : recipe_select.value;
-            select_recipe(current_map, dev.uid, new_rec);
-            refresh_callback();
-        }
+        const new_rec = recipe_select.value === '' ? undefined : recipe_select.value;
+        const cmd = select_recipe_command(dev.uid, new_rec);
+        execute_command(cmd);
+        refresh_callback();
     });
 
     recipe_container.appendChild(recipe_title);
@@ -276,12 +284,9 @@ export function render_device_card
 
     delete_btn.addEventListener('click', () =>
     {
-        const current_map = get_map();
-        if (current_map)
-        {
-            delete_device(current_map, dev.uid);
-            delete_callback();
-        }
+        const cmd = delete_device_command(dev.uid);
+        execute_command(cmd);
+        delete_callback();
     });
 
     actions_container.appendChild(delete_btn);

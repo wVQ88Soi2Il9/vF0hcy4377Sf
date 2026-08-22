@@ -1,4 +1,4 @@
-import { create_device, get_device_class } from '@/API';
+import { create_device_command, execute_command } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
@@ -88,20 +88,25 @@ export function create_device_creator
             return;
         }
 
-        const current_map = get_map();
-        const registry = get_registry();
-        const dev_class = registry ? get_device_class(registry, def_id) : undefined;
-        if (!current_map || !registry || !dev_class)
+        try
         {
-            coords_group.show_error(`Error: Device class "${def_id}" or map not ready.`);
-            return;
-        }
+            const cmd = create_device_command(def_id, parsed.position);
+            execute_command(cmd);
+            coords_group.hide_error();
 
-        coords_group.hide_error();
-        const new_dev = create_device(current_map, dev_class, def_id, parsed.position);
-        if (on_device_created)
+            const current_map = get_map();
+            if (current_map && on_device_created)
+            {
+                const latest_dev = current_map.devices[current_map.devices.length - 1];
+                if (latest_dev)
+                {
+                    on_device_created(latest_dev.uid);
+                }
+            }
+        }
+        catch (err: unknown)
         {
-            on_device_created(new_dev.uid);
+            coords_group.show_error(`Error: ${(err as Error).message}`);
         }
     });
 

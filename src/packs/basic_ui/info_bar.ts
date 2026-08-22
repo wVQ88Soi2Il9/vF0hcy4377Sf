@@ -51,7 +51,10 @@ export function create_info_bar(): info_bar_component
     custom_sections_el.className = 'basic_ui_form_group';
 
     // Section 3: Device Creator Section
-    const creator = create_device_creator();
+    const creator = create_device_creator((uid) =>
+    {
+        display_device_info(uid);
+    });
 
     // Section 4: Dropdown select for UID -> Get & Display Info
     const lookup_container = document.createElement('div');
