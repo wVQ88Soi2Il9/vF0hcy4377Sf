@@ -50,6 +50,10 @@ export abstract class base_layered_device extends device implements drawable_lay
      */
     public get_shape(): vector_3d[]
     {
+        if (!this.base_shape)
+        {
+            return [];
+        }
         return this.base_shape.map(v => apply_d4_cell_anchor(v, this.transform));
     }
 
@@ -64,6 +68,10 @@ export abstract class base_layered_device extends device implements drawable_lay
     public get_port(type: 'input' | 'output'): vector_3d[]
     {
         const ports = type === 'input' ? this.base_input_ports : this.base_output_ports;
+        if (!ports)
+        {
+            return [];
+        }
         return ports.map(v => apply_d4_point(v, this.transform));
     }
 

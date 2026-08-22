@@ -118,6 +118,11 @@ export function load_all_device_classes(registry: pack_registry): void
 
         const namespace = parts[1];
         const filename = parts[3].replace('.ts', '');
+        if (filename.startsWith('base_') || filename.startsWith('_'))
+        {
+            continue;
+        }
+
         const mod = device_modules[path];
         const cls = mod.device_class || mod.default || mod[filename];
 

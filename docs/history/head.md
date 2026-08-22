@@ -4,15 +4,15 @@
 
 ## 目前使用中
 
-[0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/4
+[0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/5
 
 ## 現在開著的（逐格）
 
-- `0028#4` · **待實作** — 整合 UI 互動面板與全域快捷鍵監聽
+- `0028#5` · **待實作** — 實作 History 樹狀圖視覺化繪製
 
-> 要做某一格：`python3 docs/history/plan-item.py 0028#4`
+> 要做某一格：`python3 docs/history/plan-item.py 0028#5`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/4
+- **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/5

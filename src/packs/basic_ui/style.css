@@ -301,6 +301,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     box-sizing: border-box;
     transition: all 0.15s ease;
     user-select: none;
@@ -367,8 +368,28 @@
     background: #612b3d;
 }
 
-.basic_ui_btn_danger:active {
-    transform: scale(0.96);
+.basic_ui_btn:disabled,
+.basic_ui_btn_primary:disabled,
+.basic_ui_btn_danger:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.basic_ui_history_row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.basic_ui_history_row > button {
+    width: 26px;
+    height: 24px;
+    padding: 0;
+    flex: 0 0 auto;
 }
 
 /* Card and Form Structure */
