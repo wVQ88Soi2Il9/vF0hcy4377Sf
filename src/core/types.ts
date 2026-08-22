@@ -103,7 +103,7 @@ export interface game_map
      * Length of this array defines N (the number of spatial dimensions).
      * Valid cells satisfy: 0 <= pos[i] < size[i] for all i.
      */
-    size:            vector;
+    size:            dimensions;
 
     /** Auto-increment counter for device uid generation */
     uid:             number;
