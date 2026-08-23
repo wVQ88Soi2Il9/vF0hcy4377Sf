@@ -14,7 +14,7 @@ import
 } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
 
-export interface cad_timeline_component
+export interface history_tree_component
 {
     element:       HTMLElement;
     refresh:       () => void;
@@ -77,87 +77,47 @@ function parse_command_details(label: string): {
         return {
             icon:        '🔷',
             action_type: 'root',
-            target:      'Initial State',
-            params:      'Empty map'
+            target:      label || 'root (initial state)',
+            params:      ''
         };
     }
 
     if (label.startsWith('create'))
     {
-        const match = label.match(/^create\s+(\S+)\s+at\s+(\(.+\))/);
-        if (match)
-        {
-            return {
-                icon:        '➕',
-                action_type: 'create',
-                target:      match[1],
-                params:      `at ${match[2]}`
-            };
-        }
         return {
             icon:        '➕',
             action_type: 'create',
-            target:      label.replace(/^create\s*/, ''),
+            target:      label,
             params:      ''
         };
     }
 
     if (label.startsWith('move'))
     {
-        const match = label.match(/^move\s+(#\d+)\s+(.+)/);
-        if (match)
-        {
-            return {
-                icon:        '🔄',
-                action_type: 'move',
-                target:      match[1],
-                params:      match[2]
-            };
-        }
         return {
             icon:        '🔄',
             action_type: 'move',
-            target:      label.replace(/^move\s*/, ''),
+            target:      label,
             params:      ''
         };
     }
 
     if (label.startsWith('select recipe'))
     {
-        const match = label.match(/^select recipe\s+(#\d+)\s*->\s*(.+)/);
-        if (match)
-        {
-            return {
-                icon:        '⚙️',
-                action_type: 'recipe',
-                target:      match[1],
-                params:      `-> ${match[2]}`
-            };
-        }
         return {
             icon:        '⚙️',
             action_type: 'recipe',
-            target:      label.replace(/^select recipe\s*/, ''),
+            target:      label,
             params:      ''
         };
     }
 
     if (label.startsWith('delete'))
     {
-        const match = label.match(/^delete\s+(#\d+)\s*(.*)/);
-        if (match)
-        {
-            return {
-                icon:        '🗑️',
-                action_type: 'delete',
-                target:      match[1],
-                params:      match[2]
-            };
-        }
         return {
             icon:        '🗑️',
             action_type: 'delete',
-            target:      label.replace(/^delete\s*/, ''),
+            target:      label,
             params:      ''
         };
     }
@@ -326,7 +286,7 @@ export function compute_git_graph_layout(tree: history_tree): {
 /**
  * Creates the vertical Git Graph History Tree panel.
  */
-export function create_cad_timeline(on_collapse_change?: (collapsed: boolean) => void): cad_timeline_component
+export function create_history_tree(on_collapse_change?: (collapsed: boolean) => void): history_tree_component
 {
     const panel = basic_ui.create_floating_panel({
         id:          'history_tree_panel',

@@ -1,7 +1,7 @@
 import { basic_ui, type splitter_component } from '@/packs/basic_ui';
 import { create_info_bar, type info_bar_component } from './info_panel';
 import { create_cli_bar, type cli_bar_component } from './cli_panel';
-import { create_cad_timeline, type cad_timeline_component } from './history_tree_panel';
+import { create_history_tree, type history_tree_component } from './history_tree_panel';
 import { create_viewport_panel, type viewport_panel_component } from './viewport_panel';
 
 export interface shirones_ui_layout_nodes
@@ -9,7 +9,7 @@ export interface shirones_ui_layout_nodes
     root:           HTMLElement;
     viewport_panel: viewport_panel_component;
     info_bar:       info_bar_component;
-    cad_timeline:   cad_timeline_component;
+    cad_timeline:   history_tree_component;
     cli_bar:        cli_bar_component;
 }
 
@@ -46,7 +46,7 @@ export function create_ui_layout(): shirones_ui_layout_nodes
     let h_splitter: splitter_component | null = null;
 
     // 2. Components
-    const cad_timeline = create_cad_timeline((collapsed: boolean) =>
+    const cad_timeline = create_history_tree((collapsed: boolean) =>
     {
         if (collapsed)
         {

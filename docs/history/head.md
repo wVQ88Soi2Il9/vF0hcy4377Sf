@@ -4,20 +4,22 @@
 
 ## 目前使用中
 
-[0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4
+[0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/3
 
 ## 現在開著的（逐格）
 
+- `0046#1` · **待實作** — 實作歷史分支刪除（Delete Branch）
+- `0046#2` · **待實作** — 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
+- `0046#3` · **待實作** — 實作歷史分支合併（Merge Branch）
 - `0042#1` · **待實作** — 實作視口座標逆變換 (screen_to_grid) 與裝置拾取檢測
 - `0042#2` · **待實作** — 實作畫布內裝置拖曳移動 (Drag to Move) 與偶數座標吸附
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
-- `0028#6` · **待實作** — 實作歷史分支修剪（Prune / Trim History Branches）
 
-> 要做某一格：`python3 docs/history/plan-item.py 0042#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0046#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/3
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4
-- **0028** [0028_202608221453_redo-undo-feature](./0028_202608221453_redo-undo-feature.md) — `in-progress`，待辦待決剩 1/6

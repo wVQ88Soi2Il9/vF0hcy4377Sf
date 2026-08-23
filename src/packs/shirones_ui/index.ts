@@ -7,14 +7,14 @@ import { on_device_change } from '@/API';
 import { create_ui_layout, type shirones_ui_layout_nodes } from './layout';
 import { create_info_bar, type info_bar_component } from './info_panel';
 import { create_cli_bar, type cli_bar_component } from './cli_panel';
-import { create_cad_timeline, type cad_timeline_component } from './history_tree_panel';
+import { create_history_tree, type history_tree_component } from './history_tree_panel';
 import { create_viewport_panel, type viewport_panel_component } from './viewport_panel';
 
 export type {
     shirones_ui_layout_nodes,
     info_bar_component,
     cli_bar_component,
-    cad_timeline_component,
+    history_tree_component as cad_timeline_component,
     viewport_panel_component
 };
 
@@ -22,7 +22,7 @@ export {
     create_ui_layout,
     create_info_bar,
     create_cli_bar,
-    create_cad_timeline,
+    create_history_tree as create_cad_timeline,
     create_viewport_panel
 };
 
@@ -96,6 +96,6 @@ export const shirones_ui = {
     create_ui_layout,
     create_info_bar,
     create_cli_bar,
-    create_cad_timeline,
+    create_cad_timeline: create_history_tree,
     create_viewport_panel
 };

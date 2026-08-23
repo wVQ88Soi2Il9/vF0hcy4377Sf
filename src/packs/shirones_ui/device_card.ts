@@ -9,19 +9,23 @@ import { create_coordinate_stepper_group } from './coordinate_stepper';
  */
 function format_ports_summary(dev: device): string
 {
-    const ports = (dev as any).ports;
-    if (!ports || !Array.isArray(ports) || ports.length === 0)
+    const inputs = dev.get_port('input');
+    const outputs = dev.get_port('output');
+    if (inputs.length === 0 && outputs.length === 0)
     {
         return 'None';
     }
 
-    return ports.map((p: any) =>
+    const parts: string[] = [];
+    if (inputs.length > 0)
     {
-        const id = p.id || 'port';
-        const type = p.type || 'io';
-        const pos = p.position ? `(${p.position.join(', ')})` : '';
-        return `${id} [${type}] ${pos}`;
-    }).join('; ');
+        parts.push(`In: ${inputs.map(p => `(${p.join(', ')})`).join(', ')}`);
+    }
+    if (outputs.length > 0)
+    {
+        parts.push(`Out: ${outputs.map(p => `(${p.join(', ')})`).join(', ')}`);
+    }
+    return parts.join('; ');
 }
 
 /**
@@ -79,7 +83,7 @@ export function render_device_card
     header.appendChild(uid_span);
     header.appendChild(def_span);
 
-    // 2. Position & Move + Delete controls (Delete is on the far right of the move row)
+    // 2. Position & Move + Delete controls
     const coords_group = create_coordinate_stepper_group(dev.position, undefined, false);
 
     const move_btn = document.createElement('button');
@@ -93,7 +97,7 @@ export function render_device_card
         const parsed = coords_group.get_values();
         if (!parsed.success)
         {
-            coords_group.show_error(parsed.error ?? 'Error: Invalid coordinates.');
+            coords_group.show_error(parsed.error);
             return;
         }
 
@@ -137,7 +141,7 @@ export function render_device_card
     const recipe_select = document.createElement('select');
     recipe_select.className = 'basic_ui_select';
 
-    const current_recipe_id = (dev as any).selected_recipe_id || (dev as any).recipe_id || '';
+    const current_recipe_id = dev.selected_recipe_id || '';
     const available_recipes = get_available_recipes(dev.definition_id);
 
     recipe_select.innerHTML = '<option value="">(None / Pass-through)</option>';
@@ -207,9 +211,9 @@ export function render_device_card
     status_row.appendChild(badge);
     eval_card.appendChild(status_row);
 
-    // Extract dynamic keys (state, inputs, outputs, etc.)
+    // Extract dynamic keys
     const extra_keys = Object.keys(dev).filter(k =>
-        !['uid', 'definition_id', 'position', 'recipe_id', 'selected_recipe_id', 'ports', 'other_info'].includes(k)
+        !['uid', 'definition_id', 'position', 'selected_recipe_id', 'other_info'].includes(k)
     );
 
     if (extra_keys.length > 0)
