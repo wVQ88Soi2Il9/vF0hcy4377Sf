@@ -14,10 +14,8 @@ import
 } from '@/API';
 import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
-
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
-
-import { display_device_info } from './ui_state';
+import { basic_ui } from '@/packs/basic_ui';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -178,7 +176,7 @@ export function execute_command(input: string): string
             {
                 return 'Error: Invalid device UID. Must be a number (e.g. info --"1").';
             }
-            const success = display_device_info(id);
+            const success = basic_ui.display_device_info(id);
             if (!success)
             {
                 return `Error: Device ID ${id} not found.`;

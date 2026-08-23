@@ -1,26 +1,30 @@
-import type { info_bar_component } from './info_panel';
-
-let active_info_bar: info_bar_component | null = null;
-
-export function set_active_info_bar(bar: info_bar_component | null): void
+export interface device_info_handler
 {
-    active_info_bar = bar;
+    display_device_info: (uid: number) => boolean;
+    clear_device_info:   () => void;
 }
 
-export function get_active_info_bar(): info_bar_component | null
+let active_handler: device_info_handler | null = null;
+
+export function set_device_info_handler(handler: device_info_handler | null): void
 {
-    return active_info_bar;
+    active_handler = handler;
+}
+
+export function get_device_info_handler(): device_info_handler | null
+{
+    return active_handler;
 }
 
 export function display_device_info(uid: number): boolean
 {
-    return active_info_bar ? active_info_bar.display_device_info(uid) : false;
+    return active_handler ? active_handler.display_device_info(uid) : false;
 }
 
 export function clear_device_info(): void
 {
-    if (active_info_bar)
+    if (active_handler)
     {
-        active_info_bar.clear_device_info();
+        active_handler.clear_device_info();
     }
 }

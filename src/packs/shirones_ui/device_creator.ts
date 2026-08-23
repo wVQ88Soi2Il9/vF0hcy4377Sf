@@ -1,8 +1,8 @@
 import { create_device_command, execute_command } from '@/API';
 import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
+import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
-import { get_device_creation_options } from './extensions';
 
 export interface device_creator_component
 {
@@ -72,7 +72,7 @@ export function create_device_creator
             return;
         }
 
-        const option_renderers = get_device_creation_options(def_id);
+        const option_renderers = basic_ui.get_device_creation_options(def_id);
         for (const render of option_renderers)
         {
             const handle = render(custom_options_container, def_id);

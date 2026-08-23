@@ -1,7 +1,7 @@
 import type { camera_type, view_plane, drawable_device } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { on_device_change, on_history_change } from '@/API';
+import { on_device_change, on_history_change, type unsubscribe_function } from '@/API';
 import { get_map } from '@/runtime';
 
 export type { camera_type, view_plane, drawable_device };
@@ -9,6 +9,18 @@ export type { camera_type, view_plane, drawable_device };
 let renderer_canvas: HTMLCanvasElement | null = null;
 let current_draw_fn: (() => void) | null = null;
 let active_draw_devices_fn: typeof draw_devices = draw_devices;
+let is_redraw_scheduled = false;
+
+const camera_listeners = new Set<(cam: camera_type) => void>();
+
+function notify_camera_change(): void
+{
+    const snapshot = get_camera_state();
+    for (const listener of camera_listeners)
+    {
+        listener(snapshot);
+    }
+}
 
 /**
  * Registers a custom device drawing function for the renderer.
@@ -85,6 +97,73 @@ export function get_camera_plane(): view_plane
 }
 
 /**
+ * Returns a snapshot of the current camera state.
+ */
+export function get_camera_state(): camera_type
+{
+    const map = get_map();
+    if (map)
+    {
+        adapt_camera_plane(camera, map.dimension);
+    }
+    return {
+        pan_x: camera.pan_x,
+        pan_y: camera.pan_y,
+        zoom:  camera.zoom,
+        plane: {
+            dim_h:  camera.plane.dim_h,
+            dim_v:  camera.plane.dim_v,
+            slices: [...camera.plane.slices]
+        }
+    };
+}
+
+/**
+ * Subscribes to camera pan/zoom/plane state changes.
+ */
+export function on_camera_change(listener: (cam: camera_type) => void): unsubscribe_function
+{
+    camera_listeners.add(listener);
+    return () =>
+    {
+        camera_listeners.delete(listener);
+    };
+}
+
+/**
+ * Updates camera pan position.
+ */
+export function set_camera_pan(pan_x: number, pan_y: number): void
+{
+    camera.pan_x = pan_x;
+    camera.pan_y = pan_y;
+    notify_camera_change();
+    redraw_renderer();
+}
+
+/**
+ * Updates camera zoom factor.
+ */
+export function set_camera_zoom(zoom: number): void
+{
+    camera.zoom = Math.max(10, Math.min(200, zoom));
+    notify_camera_change();
+    redraw_renderer();
+}
+
+/**
+ * Sets full camera transform (pan and zoom).
+ */
+export function set_camera_transform(pan_x: number, pan_y: number, zoom: number): void
+{
+    camera.pan_x = pan_x;
+    camera.pan_y = pan_y;
+    camera.zoom  = Math.max(10, Math.min(200, zoom));
+    notify_camera_change();
+    redraw_renderer();
+}
+
+/**
  * Updates the camera view plane and triggers a redraw.
  */
 export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
@@ -119,6 +198,7 @@ export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]
         adapt_camera_plane(camera, target_dim);
     }
 
+    notify_camera_change();
     redraw_renderer();
 }
 
@@ -127,21 +207,20 @@ export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]
  */
 export function resize_renderer_canvas(width: number, height: number): void
 {
-    if (!renderer_canvas)
+    if (!renderer_canvas || width <= 0 || height <= 0)
+    {
+        return;
+    }
+
+    if (renderer_canvas.width === width && renderer_canvas.height === height)
     {
         return;
     }
 
     renderer_canvas.width = width;
     renderer_canvas.height = height;
-    redraw_renderer();
-}
 
-/**
- * Triggers a manual redraw of the renderer.
- */
-export function redraw_renderer(): void
-{
+    // Redraw immediately to avoid blank buffer flash between resize and next rAF
     if (current_draw_fn)
     {
         current_draw_fn();
@@ -149,13 +228,27 @@ export function redraw_renderer(): void
 }
 
 /**
+ * Triggers a debounced redraw of the renderer via requestAnimationFrame.
+ */
+export function redraw_renderer(): void
+{
+    if (is_redraw_scheduled)
+    {
+        return;
+    }
+    is_redraw_scheduled = true;
+    requestAnimationFrame(() =>
+    {
+        is_redraw_scheduled = false;
+        if (current_draw_fn)
+        {
+            current_draw_fn();
+        }
+    });
+}
+
+/**
  * Maps an N-dimensional world grid position to a 2-D canvas position.
- *
- * The two displayed dimensions are determined by camera.plane.dim_h and dim_v.
- * All other dimensions are ignored (they were already filtered by the caller).
- *
- * The vertical axis is negated so that positive values go upward on screen.
- * The canvas origin (pan_x, pan_y) corresponds to world coordinate [0, 0, ...].
  */
 export function grid_to_screen
 (
@@ -167,8 +260,6 @@ export function grid_to_screen
     const h = pos[cam.plane.dim_h];  // world → screen X
     const v = pos[cam.plane.dim_v];  // world → screen Y (will be flipped)
 
-    // Flip v: Canvas Y increases downward, but we want positive values to go upward.
-    // The canvas origin (pan_x, canvas_height + pan_y) corresponds to world coordinate [0, 0, ...].
     const sx = cam.pan_x + h * cam.zoom;
     const sy = canvas_height + cam.pan_y - v * cam.zoom;
     return { sx, sy };
@@ -187,7 +278,7 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
         drag_start_y = e.clientY - camera.pan_y;
     });
 
-    canvas.addEventListener('mousemove', (e) =>
+    window.addEventListener('mousemove', (e) =>
     {
         if (!is_dragging)
         {
@@ -195,15 +286,11 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
         }
         camera.pan_x = e.clientX - drag_start_x;
         camera.pan_y = e.clientY - drag_start_y;
+        notify_camera_change();
         redraw();
     });
 
-    canvas.addEventListener('mouseup', () =>
-    {
-        is_dragging = false;
-    });
-
-    canvas.addEventListener('mouseleave', () =>
+    window.addEventListener('mouseup', () =>
     {
         is_dragging = false;
     });
@@ -212,20 +299,21 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
     {
         e.preventDefault();
 
-        // Compute mouse position in world-horizontal/world-vertical units before zoom.
-        // sx = pan_x + h * zoom  →  h = (offsetX - pan_x) / zoom
-        // sy = canvas.height + pan_y - v * zoom  →  v = (canvas.height + pan_y - offsetY) / zoom  (Y is flipped)
-        const mouse_h = (e.offsetX - camera.pan_x) / camera.zoom;
-        const mouse_v = (canvas.height + camera.pan_y - e.offsetY) / camera.zoom;
+        const canvas_h = canvas.height;
+        const rect = canvas.getBoundingClientRect();
+        const offset_x = e.clientX - rect.left;
+        const offset_y = e.clientY - rect.top;
 
-        // Adjust zoom.
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const mouse_h = (offset_x - camera.pan_x) / camera.zoom;
+        const mouse_v = (canvas_h + camera.pan_y - offset_y) / camera.zoom;
+
+        const factor = e.deltaY < 0 ? 1.12 : 0.88;
         camera.zoom = Math.max(10, Math.min(200, camera.zoom * factor));
 
-        // Keep the world point under the mouse cursor fixed.
-        camera.pan_x = e.offsetX - mouse_h * camera.zoom;
-        camera.pan_y = e.offsetY - canvas.height + mouse_v * camera.zoom;
+        camera.pan_x = offset_x - mouse_h * camera.zoom;
+        camera.pan_y = offset_y - canvas_h + mouse_v * camera.zoom;
 
+        notify_camera_change();
         redraw();
     }, { passive: false });
 }
@@ -233,7 +321,6 @@ function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): vo
 /**
  * Standard pack entry point.
  * Creates the canvas, sets up camera controls and redraw loop.
- * Reads game_map from API (set by main.ts before calling init_pack).
  */
 export function init_pack(): void
 {
@@ -270,12 +357,12 @@ export function init_pack(): void
 
     current_draw_fn = draw;
 
-    setup_camera_control(renderer_canvas, draw);
-    on_device_change(draw);
-    on_history_change(draw);
+    setup_camera_control(renderer_canvas, redraw_renderer);
+    on_device_change(redraw_renderer);
+    on_history_change(redraw_renderer);
 
     // Initial render — wait one microtask so other packs' init_pack() can finish first.
-    queueMicrotask(draw);
+    queueMicrotask(redraw_renderer);
 }
 
 /**
@@ -283,13 +370,18 @@ export function init_pack(): void
  */
 export const basic_renderer = {
     // Canvas & Redraw
-    get_canvas:        get_renderer_canvas,
-    resize_canvas:     resize_renderer_canvas,
-    redraw:            redraw_renderer,
-    set_device_drawer: set_device_drawer,
+    get_canvas:           get_renderer_canvas,
+    resize_canvas:        resize_renderer_canvas,
+    redraw:               redraw_renderer,
+    set_device_drawer:    set_device_drawer,
 
     // Camera & Viewport
-    get_camera:        get_camera_plane,
-    set_camera:        set_camera_plane,
-    grid_to_screen:    grid_to_screen
+    get_camera:           get_camera_plane,
+    get_camera_state:     get_camera_state,
+    set_camera:           set_camera_plane,
+    set_camera_pan:       set_camera_pan,
+    set_camera_zoom:      set_camera_zoom,
+    set_camera_transform: set_camera_transform,
+    on_camera_change:     on_camera_change,
+    grid_to_screen:       grid_to_screen
 };

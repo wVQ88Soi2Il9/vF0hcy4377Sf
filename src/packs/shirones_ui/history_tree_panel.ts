@@ -11,7 +11,7 @@ import {
     jump_to_leaf,
     find_next_fork_node
 } from '@/API';
-import { create_floating_panel } from './panel';
+import { basic_ui } from '@/packs/basic_ui';
 
 export interface cad_timeline_component
 {
@@ -74,11 +74,11 @@ function get_action_icon(label: string): string
  * Computes horizontal CAD timeline coordinates (column, lane) and Bézier connector curves.
  */
 export function compute_cad_timeline_layout(tree: history_tree): {
-    nodes:       cad_node_layout[];
-    edges:       cad_edge_layout[];
-    max_col:     number;
-    max_lane:    number;
-    total_width: number;
+    nodes:        cad_node_layout[];
+    edges:        cad_edge_layout[];
+    max_col:      number;
+    max_lane:     number;
+    total_width:  number;
     total_height: number;
 }
 {
@@ -181,22 +181,11 @@ export function compute_cad_timeline_layout(tree: history_tree): {
  */
 export function create_cad_timeline(): cad_timeline_component
 {
-    const panel = create_floating_panel({
-        id:             'cad_timeline_panel',
-        tag:            'section',
-        position_css:   'bottom: 16px; left: 16px;',
-        default_width:  '40vw',
-        default_height: '15vh',
-        title:          'History Tree',
-        collapsible:    true,
-        resize: {
-            top:        true,
-            right:      true,
-            min_width:  280,
-            max_width:  () => window.innerWidth - 32,
-            min_height: 80,
-            max_height: () => Math.min(window.innerHeight * 0.4, window.innerHeight - 80)
-        }
+    const panel = basic_ui.create_floating_panel({
+        id:          'cad_timeline_panel',
+        tag:         'section',
+        title:       'History Tree',
+        collapsible: false
     });
 
     const body_container = panel.content_element;

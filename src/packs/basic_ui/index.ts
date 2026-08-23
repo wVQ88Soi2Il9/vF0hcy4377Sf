@@ -1,12 +1,22 @@
-import { basic_renderer } from '@/packs/basic_renderer';
-import { get_map } from '@/runtime';
-import type { unsubscribe_function } from '@/API';
-import { on_device_change } from '@/API';
-import { create_ui_layout } from './layout';
+import './style.css';
+import { get_ui_root, create_ui_container } from './layout';
 import {
-    set_active_info_bar,
+    create_floating_panel,
+    type panel_options,
+    type panel_component,
+    type resize_config
+} from './panel';
+import {
+    create_splitter,
+    type splitter_options,
+    type splitter_component
+} from './splitter';
+import {
+    set_device_info_handler,
+    get_device_info_handler,
     display_device_info,
-    clear_device_info
+    clear_device_info,
+    type device_info_handler
 } from './ui_state';
 import {
     register_device_inspector,
@@ -17,80 +27,43 @@ import {
     unregister_device_creation_option,
     register_panel_section,
     unregister_panel_section,
-    clear_all_extensions
+    get_device_inspectors,
+    get_device_actions,
+    get_panel_sections,
+    get_device_creation_options,
+    clear_all_extensions,
+    type device_action,
+    type device_inspector_fn,
+    type device_inspector_entry,
+    type device_creation_option_fn,
+    type device_creation_option_entry,
+    type panel_section_fn,
+    type panel_section_entry
 } from './extensions';
 
 export type {
+    panel_options,
+    panel_component,
+    resize_config,
+    splitter_options,
+    splitter_component,
+    device_info_handler,
     device_action,
     device_inspector_fn,
+    device_inspector_entry,
     device_creation_option_fn,
-    panel_section_fn
-} from './extensions';
+    device_creation_option_entry,
+    panel_section_fn,
+    panel_section_entry
+};
 
 export {
-    display_device_info,
-    clear_device_info
-} from './ui_state';
-
-let cleanup_device_change: unsubscribe_function | null = null;
-
-/**
- * basic_ui entry point.
- * Initializes the main UI layout, attaches it to the DOM host (#app),
- * embeds the canvas element into the viewport container, and sets up ResizeObserver
- * to sync viewport dimensions with the renderer.
- */
-export function init_pack(): void
-{
-    if (cleanup_device_change)
-    {
-        cleanup_device_change();
-        cleanup_device_change = null;
-    }
-
-    const host = document.getElementById('app') ?? document.body;
-    const { root, viewport, info_bar } = create_ui_layout();
-    set_active_info_bar(info_bar);
-
-    host.appendChild(root);
-
-    const canvas = basic_renderer.get_canvas();
-    if (canvas)
-    {
-        viewport.appendChild(canvas);
-    }
-
-    const observer = new ResizeObserver((entries) =>
-    {
-        for (const entry of entries)
-        {
-            const { width, height } = entry.contentRect;
-            basic_renderer.resize_canvas(Math.floor(width), Math.floor(height));
-        }
-    });
-
-    observer.observe(viewport);
-
-    function update_map_info(): void
-    {
-        const map = get_map();
-        if (map)
-        {
-            const device_count = map.devices.length;
-            const map_dimensions = map.size.join(' × ');
-            info_bar.update_stats({ device_count, map_dimensions });
-        }
-    }
-
-    update_map_info();
-    queueMicrotask(() => update_map_info());
-    cleanup_device_change = on_device_change(update_map_info);
-}
-
-/**
- * Object export for basic_ui pack interface.
- */
-export const basic_ui = {
+    get_ui_root,
+    create_ui_container,
+    create_floating_panel,
+    create_splitter,
+    set_device_info_handler,
+    get_device_info_handler,
     display_device_info,
     clear_device_info,
     register_device_inspector,
@@ -101,5 +74,46 @@ export const basic_ui = {
     unregister_device_creation_option,
     register_panel_section,
     unregister_panel_section,
+    get_device_inspectors,
+    get_device_actions,
+    get_panel_sections,
+    get_device_creation_options,
+    clear_all_extensions
+};
+
+/**
+ * basic_ui framework entry point.
+ * Initializes the root UI container if needed.
+ */
+export function init_pack(): void
+{
+    // Ensure base root container is ready
+    get_ui_root();
+}
+
+/**
+ * Object export for basic_ui framework interface.
+ */
+export const basic_ui = {
+    get_ui_root,
+    create_ui_container,
+    create_floating_panel,
+    create_splitter,
+    set_device_info_handler,
+    get_device_info_handler,
+    display_device_info,
+    clear_device_info,
+    register_device_inspector,
+    unregister_device_inspector,
+    register_device_action,
+    unregister_device_action,
+    register_device_creation_option,
+    unregister_device_creation_option,
+    register_panel_section,
+    unregister_panel_section,
+    get_device_inspectors,
+    get_device_actions,
+    get_panel_sections,
+    get_device_creation_options,
     clear_all_extensions
 };

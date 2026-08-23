@@ -1,9 +1,8 @@
 import { get_map } from '@/runtime';
 import { on_history_change } from '@/API';
-import { create_floating_panel } from './panel';
+import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';
 import { create_device_creator } from './device_creator';
-import { get_panel_sections } from './extensions';
 
 export interface info_bar_stats
 {
@@ -25,21 +24,11 @@ export interface info_bar_component
  */
 export function create_info_bar(): info_bar_component
 {
-    const panel = create_floating_panel({
-        id:            'info_bar',
-        tag:           'aside',
-        position_css:  'top: 16px; right: 16px;',
-        default_width: '16%',
-        title:         'Map Status',
-        collapsible:   true,
-        resize: {
-            left:       true,
-            bottom:     true,
-            min_width:  220,
-            max_width:  () => Math.min(window.innerWidth * 0.45, window.innerWidth - 32),
-            min_height: 200,
-            max_height: () => window.innerHeight - 32
-        }
+    const panel = basic_ui.create_floating_panel({
+        id:          'info_bar',
+        tag:         'aside',
+        title:       'Map Status',
+        collapsible: false
     });
 
     const body = panel.content_element;
@@ -149,7 +138,7 @@ export function create_info_bar(): info_bar_component
         const map = get_map();
         if (map)
         {
-            for (const section of get_panel_sections())
+            for (const section of basic_ui.get_panel_sections())
             {
                 section.render(custom_sections_el, map);
             }

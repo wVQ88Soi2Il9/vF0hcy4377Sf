@@ -1,13 +1,12 @@
-import grid_svg_url from './assets/grid.svg';   // Vite 幫你轉成 URL
 import type { game_map } from '@/API';
 import type { camera_type } from './types';
 
-const SVG_TILE_SIZE = 64;   // SVG 總尺寸 128×128，內部為 2×2 網格，每格為 64px
+const GRID_STEP = 2;   // 每個網格區塊跨度為 2 單位
 
-// 圖片只載入一次（模組層級）
-const grid_img = new Image();
-grid_img.src = grid_svg_url;
-
+/**
+ * Renders the viewport background grid matching another_grid.svg (#333333 with #b0b0b0 grid lines)
+ * using procedural vector rendering to eliminate scaling distortion, subpixel aliasing, and moiré artifacts at any zoom level.
+ */
 export function draw_grid
 (
     ctx:    CanvasRenderingContext2D,
@@ -16,25 +15,57 @@ export function draw_grid
     map:    game_map
 ): void
 {
-    if (!grid_img.complete)
+    const w = canvas.width;
+    const h = canvas.height;
+    const zoom = camera.zoom;
+
+    // 1. 填滿背景底色 (another_grid.svg: #333333)
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(0, 0, w, h);
+
+    if (zoom <= 0)
     {
-        return;  // 還沒載入完就跳過
+        return;
     }
 
-    ctx.imageSmoothingEnabled = false;
+    const step_px = GRID_STEP * zoom;
+    const line_width = Math.max(1, Math.round(zoom * 0.03));
 
-    const pattern = ctx.createPattern(grid_img, 'repeat')!;
+    // 2. 計算目前視窗可見的世界座標範圍
+    const min_x_units = Math.floor((-camera.pan_x) / step_px) * GRID_STEP;
+    const max_x_units = Math.ceil((w - camera.pan_x) / step_px) * GRID_STEP;
 
-    // 讓 pattern 跟著 camera 移動和縮放
-    pattern.setTransform(new DOMMatrix()
-        .translate(camera.pan_x, canvas.height + camera.pan_y)
-        .scale(camera.zoom / SVG_TILE_SIZE)
-    );
+    const min_y_units = Math.floor((camera.pan_y) / step_px) * GRID_STEP;
+    const max_y_units = Math.ceil((h + camera.pan_y) / step_px) * GRID_STEP;
 
-    ctx.fillStyle = pattern;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 3. 繪製精確的網格線 (無失真、無模糊、無變形)
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(176, 176, 176, 0.45)';
+    ctx.lineWidth = line_width;
 
-    // 在地圖邊界繪製黑線 (依據 camera.plane.dim_h 與 dim_v 動態取得世界長度)
+    const offset = (line_width % 2 === 1 ? 0.5 : 0);
+
+    // 垂直網格線
+    for (let x = min_x_units; x <= max_x_units; x += GRID_STEP)
+    {
+        const sx = Math.floor(camera.pan_x + x * zoom) + offset;
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx, h);
+    }
+
+    // 水平網格線
+    for (let y = min_y_units; y <= max_y_units; y += GRID_STEP)
+    {
+        const sy = Math.floor(h + camera.pan_y - y * zoom) + offset;
+        ctx.moveTo(0, sy);
+        ctx.lineTo(w, sy);
+    }
+
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. 在地圖邊界繪製黑線 (依據 camera.plane.dim_h 與 dim_v 動態取得世界長度)
     const dim_h  = camera.plane.dim_h;
     const dim_v  = camera.plane.dim_v;
     const size_h = map.size[dim_h];
@@ -43,11 +74,11 @@ export function draw_grid
     if (size_h > 0 && size_v > 0)
     {
         const sx = camera.pan_x;
-        const sy = canvas.height + camera.pan_y - size_v * camera.zoom;
-        const sw = size_h * camera.zoom;
-        const sh = size_v * camera.zoom;
+        const sy = h + camera.pan_y - size_v * zoom;
+        const sw = size_h * zoom;
+        const sh = size_v * zoom;
 
-        const border_lw = Math.max(4, camera.zoom * 0.08);
+        const border_lw = Math.max(3, zoom * 0.08);
         const half_border_lw = border_lw / 2;
 
         ctx.strokeStyle = '#000000';

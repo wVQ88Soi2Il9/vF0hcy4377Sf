@@ -8,7 +8,7 @@ import
     execute_command
 } from '@/API';
 import { get_registry } from '@/runtime';
-import { get_device_inspectors, get_device_actions } from './extensions';
+import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
 function render_item_stacks(container: HTMLElement, label_text: string, stacks: item_stack[]): void
@@ -248,7 +248,7 @@ export function render_device_card
     }
 
     // 6. Downstream Custom Inspectors Slot
-    const inspectors = get_device_inspectors(dev);
+    const inspectors = basic_ui.get_device_inspectors(dev);
     if (inspectors.length > 0)
     {
         const inspectors_slot = document.createElement('div');
@@ -264,7 +264,7 @@ export function render_device_card
     const actions_container = document.createElement('div');
     actions_container.className = 'basic_ui_actions_row';
 
-    const custom_actions = get_device_actions();
+    const custom_actions = basic_ui.get_device_actions();
     for (const act of custom_actions)
     {
         const act_btn = document.createElement('button');

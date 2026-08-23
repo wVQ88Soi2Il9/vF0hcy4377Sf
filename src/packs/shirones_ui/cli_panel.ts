@@ -1,5 +1,5 @@
 import { execute_command } from './cli_executor';
-import { create_floating_panel } from './panel';
+import { basic_ui } from '@/packs/basic_ui';
 
 export interface cli_bar_component
 {
@@ -11,22 +11,10 @@ export interface cli_bar_component
  */
 export function create_cli_bar(): cli_bar_component
 {
-    const panel = create_floating_panel({
-        id:             'cli_bar',
-        tag:            'footer',
-        position_css:   'top: 16px; left: 16px;',
-        default_width:  '440px',
-        default_height: '68px',
-        collapsible:       true,
-        default_collapsed: true,
-        resize: {
-            bottom:     true,
-            right:      true,
-            min_width:  320,
-            max_width:  () => window.innerWidth - 32,
-            min_height: 68,
-            max_height: () => window.innerHeight - 32
-        }
+    const panel = basic_ui.create_floating_panel({
+        id:          'cli_bar',
+        tag:         'footer',
+        collapsible: false
     });
 
     // Header: Prompt + Input + Enter badge

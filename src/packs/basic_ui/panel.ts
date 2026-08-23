@@ -16,8 +16,8 @@ export interface panel_options
 {
     id:                 string;
     tag?:               string;
-    position_css:       string;
-    default_width:      string;
+    position_css?:      string;
+    default_width?:     string;
     default_height?:    string;
     title?:             string | HTMLElement;
     collapsible?:       boolean;
@@ -99,7 +99,28 @@ export function create_floating_panel(options: panel_options): panel_component
     const element = document.createElement(options.tag ?? 'aside');
     element.id = options.id;
     element.className = 'basic_ui_panel';
-    element.style.cssText = `${options.position_css} width: ${options.default_width}; ${options.default_height ? `height: ${options.default_height};` : ''} ${options.extra_css ?? ''}`;
+
+    let inline_css = '';
+    if (options.position_css)
+    {
+        inline_css += `${options.position_css} `;
+    }
+    if (options.default_width)
+    {
+        inline_css += `width: ${options.default_width}; `;
+    }
+    if (options.default_height)
+    {
+        inline_css += `height: ${options.default_height}; `;
+    }
+    if (options.extra_css)
+    {
+        inline_css += `${options.extra_css} `;
+    }
+    if (inline_css)
+    {
+        element.style.cssText = inline_css;
+    }
 
     if (options.resize?.min_width !== undefined)
     {
