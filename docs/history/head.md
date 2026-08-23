@@ -4,10 +4,13 @@
 
 ## 目前使用中
 
-[0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/3
+[0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
 
 ## 現在開著的（逐格）
 
+- `0047#1` · **待實作** — 抽離導航按鈕定義與共用按鈕工廠
+- `0047#2` · **待實作** — 重構與大幅精簡 history_tree_panel.ts
+- `0047#3` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
 - `0046#1` · **待實作** — 實作歷史分支刪除（Delete Branch）
 - `0046#2` · **待實作** — 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
 - `0046#3` · **待實作** — 實作歷史分支合併（Merge Branch）
@@ -16,10 +19,11 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0046#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0047#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
 - **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/3
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4
