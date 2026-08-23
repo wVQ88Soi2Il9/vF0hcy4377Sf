@@ -57,24 +57,16 @@ npm run build    # 編譯建構
 
 ---
 
-## 3. Something Very Important
+## 3. Something Important
 
 1. 依賴邊界隔離：
    - Pack 僅透過 `@/API` 與 `@/utils/*` 存取，不直接引用 `@/core/*`。
    - 透過 `@/API` 函式訂閱事件，不直接修改 `hooks` 物件。
-2. 無隱性補齊 (No Implicit Zero-Padding)：
-   - 不使用 `?? 0` 修補缺漏維度，向量長度須與運算維度一致。
-3. CLI 格式與偶數座標規範：
-   - 參數格式為 `--"<arg>"`，軸向為 `d<n>`，無指令別名。
-   - 裝置錨點座標各軸為偶數整數（`coord % 2 === 0`）。
-4. 物件導向與繪圖內聚：
-   - 階層繼承使用 `extends`，能力介面使用 `implements`。
-   - 裝置類別實作 `draw()` 方法，渲染器不包含特定裝置的 fallback 邏輯。
-5. Rely-Pack 單向擴充目錄 (`$<rely_pack>/`)：
+2. Rely-Pack 單向擴充目錄 (`$<rely_pack>/`)：
    - 擴充被依賴 Pack 時，建立 `$<pack_name>/` 目錄，由自身的 `index.ts` 掃描並註冊。
-6. Pack 物件導出：
+3. Pack 物件導出：
    - Pack 對外介面封裝為命名物件導出（例：`export const basic_renderer = { ... }`）。
-7. 程式碼風格：
+4. 程式碼風格：
    - Allman 大括號（`{` 換行）。
    - 命名使用 `snake_case`（型別、函式、變數、檔案、JSON key）。
    - 陳述句結尾使用分號 `;`，使用半形標點。
