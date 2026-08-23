@@ -1,24 +1,15 @@
 /**
- * Strips leading '--' and outer double quotes from flag arguments.
- * Supports: --"value", --"key=value", --key="value", --"val1, val2"
+ * Strips leading '--' and outer double quotes from strict flag arguments.
+ * Strict format: --"<value>"
  */
 export function clean_flag_arg(arg: string): string
 {
-    let clean = arg.trim();
-    if (clean.startsWith('--'))
+    const trimmed = arg.trim();
+    if (trimmed.startsWith('--"') && trimmed.endsWith('"') && trimmed.length >= 4)
     {
-        clean = clean.substring(2);
+        return trimmed.substring(3, trimmed.length - 1);
     }
-    const eq_match = clean.match(/^[a-zA-Z0-9_]+="(.*)"$/);
-    if (eq_match)
-    {
-        return eq_match[1].trim();
-    }
-    if (clean.startsWith('"') && clean.endsWith('"') && clean.length >= 2)
-    {
-        clean = clean.substring(1, clean.length - 1);
-    }
-    return clean.trim();
+    return trimmed;
 }
 
 /**
@@ -59,34 +50,12 @@ export function tokenize_input(input: string): string[]
 }
 
 /**
- * Translation Layer: Human (1-indexed) → Internal Code (0-indexed).
- *
- * Input examples:
- *   "x" / "1" / "d1" → 0
- *   "y" / "2" / "d2" → 1
- *   "z" / "3" / "d3" → 2
- *   "w" / "4" / "d4" → 3
- *   "5" / "d5"       → 4
+ * Translation Layer: Human (1-indexed d[n]) → Internal Code (0-indexed).
+ * Strict input format: "d1", "d2", "d3", ...
  */
 export function parse_axis_name(name: string): number | null
 {
     const lower = name.trim().toLowerCase();
-    if (lower === 'x')
-    {
-        return 0;
-    }
-    if (lower === 'y')
-    {
-        return 1;
-    }
-    if (lower === 'z')
-    {
-        return 2;
-    }
-    if (lower === 'w')
-    {
-        return 3;
-    }
     if (lower.startsWith('d'))
     {
         const human_idx = parseInt(lower.substring(1), 10);
@@ -94,11 +63,6 @@ export function parse_axis_name(name: string): number | null
         {
             return human_idx - 1;
         }
-    }
-    const direct_human_idx = parseInt(lower, 10);
-    if (!isNaN(direct_human_idx) && direct_human_idx >= 1)
-    {
-        return direct_human_idx - 1;
     }
     return null;
 }
@@ -111,7 +75,6 @@ export function parse_axis_name(name: string): number | null
  *   1 → "d2"
  *   2 → "d3"
  *   3 → "d4"
- *   4 → "d5"
  */
 export function get_axis_label(internal_idx: number): string
 {
@@ -123,7 +86,7 @@ export function get_axis_label(internal_idx: number): string
  * guaranteeing a Right-Oriented (正定向/右手性, det > 0) coordinate system.
  * Returns null if remaining free dimensions count is not exactly 2.
  */
-export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number>): { dim_h: number, dim_v: number } | null
+export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number>): { dim_h: number; dim_v: number } | null
 {
     const all_axes = Array.from({ length: num_dims }, (_, i) => i);
     const remaining = all_axes.filter(a => !fixed_axes.has(a));
@@ -166,5 +129,4 @@ export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number
  */
 export function init_pack(): void
 {
-    // Pack initialization logic if needed.
 }

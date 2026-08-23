@@ -20,18 +20,18 @@ import { basic_ui } from '@/packs/basic_ui';
 function format_camera_equation(plane: view_plane): string
 {
     const map = get_map();
-    const num_dims = map ? map.dimension : Math.max(plane.slices.length, 3);
+    const num_dims = map ? map.dimension : plane.slices.length;
     const eq_parts: string[] = [];
     for (let i = 0; i < num_dims; i++)
     {
         if (i !== plane.dim_h && i !== plane.dim_v)
         {
             const axis_name = get_axis_label(i);
-            const depth = plane.slices[i] ?? 0;
+            const depth = plane.slices[i];
             eq_parts.push(`${axis_name}=${depth}`);
         }
     }
-    const eq_str = eq_parts.length > 0 ? eq_parts.join(', ') : '';
+    const eq_str = eq_parts.join(', ');
     return `camera --"${eq_str}"`;
 }
 
@@ -47,8 +47,6 @@ function format_history_summary(): string
     }
 
     const lines: string[] = [`History Tree (Current UID: ${tree.current_uid}, Total Nodes: ${tree.nodes.size}):`];
-    
-    // Sort nodes by UID for clean display
     const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);
     for (const node of sorted_nodes)
     {
@@ -94,55 +92,33 @@ export function execute_command(input: string): string
         case 'undo':
         {
             const success = api_undo();
-            if (!success)
-            {
-                return 'Nothing to undo (already at root).';
-            }
-            return 'Undo successful.';
+            return success ? 'Undo successful.' : 'Nothing to undo (already at root).';
         }
 
         case 'redo':
         {
             const success = api_redo();
-            if (!success)
-            {
-                return 'Nothing to redo (at latest node in current branch).';
-            }
-            return 'Redo successful.';
+            return success ? 'Redo successful.' : 'Nothing to redo (at latest node in current branch).';
         }
 
         case 'prev-fork':
-        case 'prevfork':
-        case 'fork-prev':
         {
             const success = jump_to_prev_fork();
-            if (!success)
-            {
-                return 'No previous fork found (already at or before first branch point).';
-            }
-            return 'Jumped to previous fork point.';
+            return success ? 'Jumped to previous fork point.' : 'No previous fork found.';
         }
 
         case 'next-fork':
-        case 'nextfork':
-        case 'fork-next':
         {
             const success = jump_to_next_fork();
-            if (!success)
-            {
-                return 'No downstream fork found along current branch.';
-            }
-            return 'Jumped to next fork point.';
+            return success ? 'Jumped to next fork point.' : 'No downstream fork found.';
         }
 
         case 'history':
-        case 'tree':
         {
             return format_history_summary();
         }
 
         case 'jump':
-        case 'checkout':
         {
             if (args.length < 1)
             {
@@ -155,16 +131,10 @@ export function execute_command(input: string): string
                 return 'Error: Invalid node UID. Must be a number (e.g. jump --"2").';
             }
             const success = jump_to_history(target_uid);
-            if (!success)
-            {
-                return `Error: Failed to jump to history node #${target_uid}. Node does not exist.`;
-            }
-            return `Jumped to history node #${target_uid}.`;
+            return success ? `Jumped to history node #${target_uid}.` : `Error: Failed to jump to history node #${target_uid}.`;
         }
 
         case 'info':
-        case 'get':
-        case 'inspect':
         {
             if (args.length < 1)
             {
@@ -177,11 +147,7 @@ export function execute_command(input: string): string
                 return 'Error: Invalid device UID. Must be a number (e.g. info --"1").';
             }
             const success = basic_ui.display_device_info(id);
-            if (!success)
-            {
-                return `Error: Device ID ${id} not found.`;
-            }
-            return `Displayed info for device UID ${id}`;
+            return success ? `Displayed info for device UID ${id}` : `Error: Device ID ${id} not found.`;
         }
 
         case 'camera':
@@ -192,11 +158,9 @@ export function execute_command(input: string): string
                 return format_camera_equation(current);
             }
 
-            const raw = args.join(' ');
-            const clean = clean_flag_arg(raw);
-
+            const clean = clean_flag_arg(args.join(' '));
             const fixed_map = new Map<number, number>();
-            const parts = clean.split(',');
+            const parts = clean.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
             for (const part of parts)
             {
@@ -214,7 +178,7 @@ export function execute_command(input: string): string
 
             if (fixed_map.size === 0)
             {
-                return 'Error: Invalid camera format. Usage: camera --"d3=0" or camera --"d1=1, d3=0"';
+                return 'Error: Invalid camera format. Usage: camera --"d3=0"';
             }
 
             const num_dims = map.dimension;
@@ -223,21 +187,16 @@ export function execute_command(input: string): string
 
             if (free_dim_count !== 2)
             {
-                return `Error: Camera requires exactly 2 free dimensions to form a 2D view plane (currently ${free_dim_count} free dimensions). Expected ${num_dims - 2} fixed axes for a ${num_dims}D map.`;
+                return `Error: Camera requires exactly 2 free dimensions (currently ${free_dim_count}). Expected ${num_dims - 2} fixed axes.`;
             }
 
             const axes = get_right_oriented_axes(num_dims, fixed_axes_set);
             if (!axes)
             {
-                return `Error: Unable to resolve 2D view plane. Free dimensions count must equal 2.`;
+                return 'Error: Unable to resolve 2D view plane.';
             }
 
             const new_slices = [...current.slices];
-            while (new_slices.length < num_dims)
-            {
-                new_slices.push(0);
-            }
-
             fixed_map.forEach((depth, axis_idx) =>
             {
                 if (axis_idx < num_dims)
@@ -247,32 +206,28 @@ export function execute_command(input: string): string
             });
 
             basic_renderer.set_camera(axes.dim_h, axes.dim_v, new_slices);
-
-            const updated = basic_renderer.get_camera();
-            return format_camera_equation(updated);
+            return format_camera_equation(basic_renderer.get_camera());
         }
 
         case 'create':
-        case 'add':
         {
             const n_dim = map.dimension;
             if (args.length < 2)
             {
-                return `Usage: create --"<def_id>" --"<position>" (e.g. create --"test:assembler" --"4, 4, 0")`;
+                return 'Usage: create --"<def_id>" --"<position>" (e.g. create --"test:assembler" --"4, 4, 0")';
             }
             const def_id = clean_flag_arg(args[0]);
             const pos_str = clean_flag_arg(args[1]);
+            const coords = pos_str.split(',').map(s => Number(s.trim()));
 
-            const coords = pos_str.split(/[\s,]+/).filter(s => s !== '').map(s => parseInt(s, 10));
-
-            if (coords.length !== n_dim || coords.some(c => isNaN(c)))
+            if (coords.length !== n_dim || coords.some(isNaN))
             {
-                return `Error: Invalid position format. Expected ${n_dim} numbers (e.g. create --"${def_id}" --"4, 4, 0").`;
+                return `Error: Invalid position format. Expected ${n_dim} comma-separated numbers (e.g. "4, 4, 0").`;
             }
 
             if (coords.some(c => Math.abs(c) % 2 !== 0))
             {
-                return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "4, 4, 0").`;
+                return 'Error: Invalid position. Position coordinates must all be even numbers (e.g. "4, 4, 0").';
             }
 
             try
@@ -289,7 +244,6 @@ export function execute_command(input: string): string
         }
 
         case 'delete':
-        case 'del':
         {
             if (args.length < 1)
             {
@@ -316,22 +270,21 @@ export function execute_command(input: string): string
             const n_dim = map.dimension;
             if (args.length < 2)
             {
-                return `Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;
+                return 'Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")';
             }
             const uid_str = clean_flag_arg(args[0]);
             const pos_str = clean_flag_arg(args[1]);
-
             const id = parseInt(uid_str, 10);
-            const coords = pos_str.split(/[\s,]+/).filter(s => s !== '').map(s => parseInt(s, 10));
+            const coords = pos_str.split(',').map(s => Number(s.trim()));
 
-            if (isNaN(id) || coords.length !== n_dim || coords.some(c => isNaN(c)))
+            if (isNaN(id) || coords.length !== n_dim || coords.some(isNaN))
             {
                 return `Error: Invalid arguments. Usage: move --"<uid>" --"<pos>" (e.g. move --"1" --"6, 2, 0")`;
             }
 
             if (coords.some(c => Math.abs(c) % 2 !== 0))
             {
-                return `Error: Invalid position. Position coordinates must all be even numbers (e.g. "6, 2, 0").`;
+                return 'Error: Invalid position. Position coordinates must all be even numbers (e.g. "6, 2, 0").';
             }
 
             const existing = map.devices.find(d => d.uid === id);

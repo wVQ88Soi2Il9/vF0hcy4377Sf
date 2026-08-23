@@ -1,117 +1,80 @@
 # Factory Engine
 
-一個以 **TypeScript** 撰寫的 3D 網格工廠模擬引擎。
-核心本體極簡，只提供地圖狀態與擴充點(畫布)，其餘所有遊戲邏輯(碰撞檢測, 節點連接圖, 配方系統...)皆以 **Mod / Pack** 的形式外掛進來。
+基於 TypeScript 的模組化 $N$ 維網格工廠模擬引擎。
+核心負責地圖狀態、擴充掛勾（Hooks）與分支歷史樹（Undo Tree）；遊戲規則、渲染、UI 與資料由 Pack 擴充。
 
-## 特色
+---
 
-- 🧱 **三層單向架構**：`core` → `utils` → `packs`，核心零依賴、純型別 + 狀態容器。
-- 🔌 **Hooks 擴充系統**：`on_check_overlap`、`on_build_graph` 等掛勾，讓 Pack 以外掛方式注入邏輯，核心不寫死任何遊戲規則。
-- 📦 **資料驅動**：裝置、物品、配方皆由 Pack 內的 JSON 定義，並自動以資料夾名稱作為 namespace 前綴，避免 ID 衝突，支援熱插拔( `load_pack` / `unload_pack` )。
-- 📐 **半格解析度座標系統**：裝置錨點固定為偶數座標、連接埠固定為交界面中心（恰 1 軸為偶數其餘奇數），讓相鄰裝置的埠可用世界座標 `===` 直接比對是否連通，無需額外的鄰接判斷邏輯。
+## 1. How to Use
 
-## 專案結構
-
-```text
-src/
-├── core/                 # 純 TS 型別定義、地圖狀態與 Hooks 擴充點
-│   ├── types.ts          # vector / pack / device / game_map ...
-│   ├── map_manager.ts    # create / delete / move device
-│   ├── pack_manager.ts   # pack registry：載入、卸載、查詢定義
-│   └── hooks.ts          # on_check_overlap / on_build_graph 掛勾與觸發器
-│
-├── utils/                # 衍生的純數學與座標計算輔助函數
-│   ├── math.ts           # 向量加法、3D 旋轉、座標序列化
-│   ├── device_utils.ts   # 取得裝置世界座標格子 / 埠位置
-│   └── spatial_map.ts    # 以座標為 key 的通用空間查找表
-│
-└── packs/                # 遊戲邏輯插件與 Mod 資料包 (Plugins & Mods)
-    ├── loader.ts         # 自動掃描 packs/*/data/*.json 並載入為 pack
-    └── vanilla/          # 基本包
-        ├── index.ts      # 註冊 vanilla 的邏輯至 core hooks
-        ├── overlap.ts    # 出界 / 重疊檢測
-        ├── graph.ts      # 依據埠座標比對，建立裝置間的有向連接圖
-        ├── renderer/     # (待開發)
-        └── ui/           # (待開發)
-```
-
-## 核心概念
-
-### Core 引擎核心
-
-只負責：
-
-- **狀態載體**：`game_map`、`device`、`device_definition`、`pack` 等純型別與地圖操作函式。
-- **擴充點(Hooks)**：`hooks.on_check_overlap`、`hooks.on_build_graph`，任何 Pack 都能 `push` 自己的邏輯進去，並透過 `trigger_check_overlap` / `trigger_build_graph` 統一觸發、合併結果。
-
-Core 完全不包含具體遊戲規則，也不讀取 `device.other_info` — 該欄位保留給 Mod 自由擴充動態資料(如庫存、運作狀態、進度)。
-
-### Packs 插件層
-
-每個 Pack 是一個資料夾(如 `packs/vanilla`)，內含：
-
-- `data/*.json`：靜態定義(items / recipes / devices)，由 `loader.ts` 自動掃描並以資料夾名稱為 namespace 加上前綴(例如 `vanilla:belt`)。
-- `index.ts` + 邏輯檔案：動態邏輯，透過 `hooks` 註冊進 core。
-
-以 `vanilla` 為例：
-
-- `overlap.ts`：掃描地圖上所有裝置，回報出界(`out_of_bounds`)與重疊(`overlapped`)的 `uid`。
-- `graph.ts`：依裝置輸出埠與輸入埠的世界座標是否完全重合，建立裝置之間的有向連接圖(`device_node[]`)。
-
-### 網格與端口座標定義(Grid & Face Ports)
-
-採用雙倍解析度網格，讓連接埠能 1:1 完美重合匹配：
-
-- **裝置錨點(Position)**：固定為全部偶數座標 `(2i, 2j, 2k)`（為裝置網格錨點/頂點，非中心）。每個單元格實際佔據空間 $[x, x+2) \times [y, y+2) \times [z, z+2)$。
-- **連接埠(Port)**：固定位在單元格的交界面正中心，座標必為**恰有 1 軸為偶數、其餘 n-1 軸為奇數**（$\text{port} \in \{x \in \mathbb{Z}^n : \text{exactly one coordinate is even and } n-1 \text{ are odd}\}$）。
-
-```text
-  [0,0] 錨點          [2,0] 錨點          [4,0] 錨點  ← 設備網格錨點(全偶數)
-    |                   |                   |
- ───┼──────(2,1)────────┼──────(4,1)────────┼─── ← 邊界 Port(X為偶數邊界面，Y為奇數中點)
-    │ (單元區間 [0,2])   │ (單元區間 [2,4])   │
-```
-
-因此，判斷兩台裝置是否連通，只需比較兩者的埠世界座標是否相等即可，詳見 `docs/architecture.md`。
-
-## UI 命令列系統 (CLI System)
-
-引擎由 `packs/basic_ui` 提供基於網頁底部的命令列介面 (`cli_bar`)，所有指令均採統一的 Flag 格式規範：
-
-### 指令語法規範
-
-| 指令 (Command) | 語法格式 | 說明與範例 |
-| :--- | :--- | :--- |
-| `create` | `create --"<def_id>" --"<position>"` | 建立裝置至指定世界座標（**錨點座標必須全為偶數**）。<br>例：`create --"test:assembler" --"4, 4, 0"` |
-| `move` | `move --"<uid>" --"<pos>"` | 移動指定唯一 ID (`uid`) 之裝置（**錨點座標必須全為偶數**）。<br>例：`move --"1" --"6, 2, 0"` |
-| `delete` | `delete --"<uid>"` | 刪除指定唯一 ID 之裝置。<br>例：`delete --"1"` |
-| `info` | `info --"<uid>"` | 於右側 UI 面板顯示指定唯一 ID 之裝置詳細資訊。<br>例：`info --"1"` |
-| `camera` | `camera --"<axis>=<depth>"` | 調整渲染切面視角與切片深度。<br>例：`camera --"d3=1"` 或 `camera --"d1=1, d3=1"` |
-| `help` | `help` | 顯示所有可用的指令說明。 |
-
-## 開發規範
-
-- 大括號一律獨立成行(Allman style)。
-- 命名一律使用全小寫 `snake_case`(包含型別、函式、介面)。
-- 所有陳述句結尾強制加上分號 `;`。
-
-## 目前進度
-
-| 模組                     | 狀態      |
-| ------------------------ | --------- |
-| Core(型別 / 地圖 / Hooks) | ✅ 已完成 |
-| Vanilla Pack - 重疊檢測   | ✅ 已完成 |
-| Vanilla Pack - 連接圖建構 | ✅ 已完成 |
-| Pack Loader(自動掃描 JSON)| ✅ 已完成 |
-| 畫布渲染(Renderer)       | ✅ 已完成 (basic_renderer) |
-| UI (CLI / Viewport)      | ✅ 已完成 (basic_ui) |
-
-## 快速開始
+### 1.1 啟動與建構
 
 ```bash
-# 安裝依賴
-npm install
-
-# 啟動開發伺服器
-npm run dev
+npm install      # 安裝依賴
+npm run dev      # 啟動開發伺服器
+npm run build    # 編譯建構
 ```
+
+### 1.2 CLI 命令列
+
+參數採用 Flag 格式（`--"<arg>"`）：
+
+| 指令 | 語法格式 | 說明 |
+| :--- | :--- | :--- |
+| `create` | `create --"<def_id>" --"<pos>"` | 建立裝置（座標全為偶數，例：`create --"test:assembler" --"4, 4, 0"`） |
+| `move` | `move --"<uid>" --"<pos>"` | 移動裝置（座標全為偶數，例：`move --"1" --"6, 2, 0"`） |
+| `delete` | `delete --"<uid>"` | 刪除指定 UID 裝置（例：`delete --"1"`） |
+| `info` | `info --"<uid>"` | 查詢指定 UID 裝置詳細資訊（例：`info --"1"`） |
+| `camera` | `camera --"<axis>=<depth>"` | 調整觀察視角與切片深度（軸向為 `d<n>`，例：`camera --"d3=0"`） |
+| `undo` / `redo` | `undo` / `redo` | 復原 / 重做地圖操作 |
+| `jump` | `jump --"<node_uid>"` | 跳轉至指定歷史節點（例：`jump --"2"`） |
+| `prev-fork` / `next-fork` | `prev-fork` / `next-fork` | 跳轉至前/後分支分叉點 |
+| `history` | `history` | 檢視歷史樹節點清單 |
+| `help` | `help` | 顯示所有可用指令 |
+
+### 1.3 Pack 開發基礎
+
+擴充包放置於 `src/packs/{pack_name}/`，啟動時由 `loader.ts` 自動掃描載入：
+
+- 資料定義：`data/items.json`（物品）、`recipes/*.ts`（配方）、`devices/*.ts`（裝置）。
+- 邏輯注入：`index.ts` 匯出 `init_pack(): void`，透過 `@/API` 訂閱事件與掛勾。
+- 詳細功能：見各 Pack 目錄下之 `README.md`。
+
+---
+
+## 2. Features
+
+- 三層單向架構：`packs` → `utils` → `core`。核心無業務邏輯，提供狀態容器與擴充點。
+- 半格解析度網格系統：
+  - 裝置錨點為全偶數座標 $(2i, 2j, 2k, \dots)$。
+  - 連接埠位於單元格交界面中心，恰 1 軸為偶數、其餘 $n-1$ 軸為奇數。
+  - 連通判定比對埠世界座標（`portA === portB`）。
+- 分支歷史樹 (Undo Tree)：
+  - 基於 `map_command`（`execute` / `inverse`）運作。
+  - 支援非線性分支記錄與節點跳轉（透過 LCA 計算重放路徑）。
+- 動態配方評估：依據裝置實例狀態計算耗時與輸入/輸出堆疊。
+- 切片渲染與 UI：提供 $N$ 維空間 2D 切面 Canvas 投影、樹狀歷史與屬性檢視器。
+
+---
+
+## 3. Something Very Important
+
+1. 依賴邊界隔離：
+   - Pack 僅透過 `@/API` 與 `@/utils/*` 存取，不直接引用 `@/core/*`。
+   - 透過 `@/API` 函式訂閱事件，不直接修改 `hooks` 物件。
+2. 無隱性補齊 (No Implicit Zero-Padding)：
+   - 不使用 `?? 0` 修補缺漏維度，向量長度須與運算維度一致。
+3. CLI 格式與偶數座標規範：
+   - 參數格式為 `--"<arg>"`，軸向為 `d<n>`，無指令別名。
+   - 裝置錨點座標各軸為偶數整數（`coord % 2 === 0`）。
+4. 物件導向與繪圖內聚：
+   - 階層繼承使用 `extends`，能力介面使用 `implements`。
+   - 裝置類別實作 `draw()` 方法，渲染器不包含特定裝置的 fallback 邏輯。
+5. Rely-Pack 單向擴充目錄 (`$<rely_pack>/`)：
+   - 擴充被依賴 Pack 時，建立 `$<pack_name>/` 目錄，由自身的 `index.ts` 掃描並註冊。
+6. Pack 物件導出：
+   - Pack 對外介面封裝為命名物件導出（例：`export const basic_renderer = { ... }`）。
+7. 程式碼風格：
+   - Allman 大括號（`{` 換行）。
+   - 命名使用 `snake_case`（型別、函式、變數、檔案、JSON key）。
+   - 陳述句結尾使用分號 `;`，使用半形標點。
