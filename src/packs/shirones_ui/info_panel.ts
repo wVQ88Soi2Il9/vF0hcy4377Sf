@@ -72,7 +72,7 @@ export function create_info_bar(): info_bar_component
     {
         const target_uid = selected_uid !== undefined ? selected_uid : currently_inspected_uid;
         const current_val = target_uid !== null ? String(target_uid) : '';
-        uid_select.innerHTML = '<option value="">-- Select Device (#UID) --</option>';
+        uid_select.innerHTML = '<option value="">Select Device (#UID)</option>';
 
         const map = get_map();
         if (map)

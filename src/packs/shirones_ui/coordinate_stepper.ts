@@ -14,16 +14,21 @@ const axis_names = ['X', 'Y', 'Z'];
  */
 export function create_coordinate_stepper_group
 (
-    initial_coords: number[],
-    title_text:     string = 'Position (Even Coords):'
+    initial_coords:   number[],
+    title_text?:      string,
+    show_axis_labels: boolean = true
 ): coordinate_stepper_group
 {
     const container = document.createElement('div');
     container.className = 'basic_ui_form_group';
 
-    const title = document.createElement('div');
-    title.className = 'basic_ui_section_title';
-    title.textContent = title_text;
+    if (title_text)
+    {
+        const title = document.createElement('div');
+        title.className = 'basic_ui_section_title';
+        title.textContent = title_text;
+        container.appendChild(title);
+    }
 
     const row = document.createElement('div');
     row.className = 'basic_ui_pos_row';
@@ -35,7 +40,12 @@ export function create_coordinate_stepper_group
         const axis = i < axis_names.length ? axis_names[i] : `D${i + 1}`;
         const wrap = document.createElement('div');
         wrap.className = 'basic_ui_pos_field';
-        wrap.innerHTML = `<span class="basic_ui_pos_label">${axis}:</span><div class="basic_ui_stepper"><input type="number" step="2" value="${initial_coords[i]}" class="basic_ui_stepper_input" /><div class="basic_ui_stepper_btns"><button type="button" class="basic_ui_stepper_btn up" title="Increase by 2">▲</button><button type="button" class="basic_ui_stepper_btn down" title="Decrease by 2">▼</button></div></div>`;
+
+        const label_html = show_axis_labels
+            ? `<span class="basic_ui_pos_label">${axis}:</span>`
+            : '';
+
+        wrap.innerHTML = `${label_html}<div class="basic_ui_stepper"><input type="number" step="2" value="${initial_coords[i]}" class="basic_ui_stepper_input" placeholder="${axis}" title="${axis}" /><div class="basic_ui_stepper_btns"><button type="button" class="basic_ui_stepper_btn up" title="Increase by 2">▲</button><button type="button" class="basic_ui_stepper_btn down" title="Decrease by 2">▼</button></div></div>`;
 
         const inp = wrap.querySelector('input') as HTMLInputElement;
         const btn_up = wrap.querySelector('.up') as HTMLButtonElement;
@@ -59,7 +69,6 @@ export function create_coordinate_stepper_group
     error_el.className = 'basic_ui_error_msg';
     error_el.style.display = 'none';
 
-    container.appendChild(title);
     container.appendChild(row);
     container.appendChild(error_el);
 

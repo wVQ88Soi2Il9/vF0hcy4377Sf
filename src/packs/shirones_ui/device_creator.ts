@@ -87,7 +87,7 @@ export function create_device_creator
     {
         const selected_ns = ns_select.value.trim();
         const current_id = dev_select.value.trim();
-        dev_select.innerHTML = '<option value="">--device--</option>';
+        dev_select.innerHTML = '<option value="">device</option>';
 
         if (!selected_ns)
         {
@@ -144,7 +144,7 @@ export function create_device_creator
         }
 
         // Populate Namespace Select
-        ns_select.innerHTML = '<option value="">--pack--</option>';
+        ns_select.innerHTML = '<option value="">pack</option>';
         const sorted_ns = Array.from(current_ns_groups.keys()).sort();
         for (const ns of sorted_ns)
         {
@@ -206,11 +206,11 @@ export function create_device_creator
         initial_coords.push(initial_val);
     }
 
-    const coords_group = create_coordinate_stepper_group(initial_coords, 'Position (Even Coords):');
+    const coords_group = create_coordinate_stepper_group(initial_coords, undefined, false);
 
     const create_btn = document.createElement('button');
     create_btn.type = 'button';
-    create_btn.textContent = '➕ Create';
+    create_btn.textContent = '➕';
     create_btn.className = 'basic_ui_btn_primary';
 
     create_btn.addEventListener('click', () =>

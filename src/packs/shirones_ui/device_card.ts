@@ -76,7 +76,7 @@ export function render_device_card
     header.appendChild(def_span);
 
     // 2. Position & Move controls
-    const coords_group = create_coordinate_stepper_group(dev.position, 'Position (Even Coords):');
+    const coords_group = create_coordinate_stepper_group(dev.position, undefined, false);
 
     const move_btn = document.createElement('button');
     move_btn.type = 'button';
@@ -120,7 +120,7 @@ export function render_device_card
 
     const none_opt = document.createElement('option');
     none_opt.value = '';
-    none_opt.textContent = '-- None --';
+    none_opt.textContent = 'None';
     recipe_select.appendChild(none_opt);
 
     const registry = get_registry();

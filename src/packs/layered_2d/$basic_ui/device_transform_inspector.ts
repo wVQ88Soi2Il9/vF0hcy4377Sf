@@ -81,12 +81,12 @@ export function render_d4_transform_inspector(container: HTMLElement, dev: devic
         basic_ui.display_device_info(dev.uid);
     });
 
-    // Flip (Toggle 0 / 1)
+    // Flip (Toggle 0 / 1) - 上下翻轉 (y -> -y)
     const btn_flip = document.createElement('button');
     btn_flip.type = 'button';
     btn_flip.className = 'basic_ui_btn';
-    btn_flip.textContent = '⇋ Flip';
-    btn_flip.title = 'Toggle flip across horizontal axis (0 / 1)';
+    btn_flip.textContent = '↕ Flip';
+    btn_flip.title = 'Toggle vertical flip';
     btn_flip.addEventListener('click', () =>
     {
         const cmd = flip_device_command(dev.uid);
