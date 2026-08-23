@@ -71,7 +71,17 @@
     gap: 0;
 }
 
-.basic_ui_left_col {
+.basic_ui_history_sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.basic_ui_center_col {
     display: flex;
     flex-direction: column;
     min-width: 280px;
@@ -84,11 +94,12 @@
 .basic_ui_right_col {
     display: flex;
     flex-direction: column;
-    min-width: 200px;
+    min-width: 38px;
     height: 100%;
     min-height: 0;
     overflow: hidden;
     pointer-events: auto;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Base Panel */
@@ -411,12 +422,13 @@
 
 .basic_ui_btn_primary {
     height: 30px;
+    width: 36px;
     background: rgba(137, 180, 250, 0.15);
     border: 1px solid rgba(137, 180, 250, 0.4);
     border-radius: 4px;
     color: var(--basic-ui-blue);
-    padding: 0 12px;
-    font-size: 11px;
+    padding: 0;
+    font-size: 13px;
     cursor: pointer;
     font-weight: 700;
     display: inline-flex;
@@ -425,6 +437,7 @@
     box-sizing: border-box;
     transition: all 0.15s ease;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .basic_ui_btn_primary:hover {
@@ -439,14 +452,14 @@
 }
 
 .basic_ui_btn_danger {
-    flex: 1;
     height: 30px;
-    background: #45212e;
-    border: 1px solid var(--basic-ui-red);
+    width: 36px;
+    background: rgba(243, 139, 168, 0.15);
+    border: 1px solid rgba(243, 139, 168, 0.4);
     border-radius: 4px;
     color: var(--basic-ui-red);
-    padding: 0 10px;
-    font-size: 11px;
+    padding: 0;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     display: inline-flex;
@@ -455,10 +468,18 @@
     box-sizing: border-box;
     transition: all 0.15s ease;
     user-select: none;
+    flex-shrink: 0;
 }
 
 .basic_ui_btn_danger:hover {
-    background: #612b3d;
+    background: rgba(243, 139, 168, 0.28);
+    border-color: var(--basic-ui-red);
+    color: #ffffff;
+}
+
+.basic_ui_btn_danger:active {
+    transform: scale(0.96);
+    background: rgba(243, 139, 168, 0.38);
 }
 
 .basic_ui_btn:disabled,
@@ -790,6 +811,38 @@
     font-family: inherit;
 }
 
+.basic_ui_cli_panel_root {
+    transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.basic_ui_cli_panel_root.is_cli_collapsed .basic_ui_content {
+    display: none !important;
+}
+
+.basic_ui_cli_toggle_btn {
+    background: transparent;
+    border: 1px solid var(--basic-ui-surface1);
+    border-radius: 4px;
+    color: var(--basic-ui-subtext0);
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    margin-left: 4px;
+}
+
+.basic_ui_cli_toggle_btn:hover {
+    background: var(--basic-ui-surface0);
+    color: var(--basic-ui-blue);
+    border-color: var(--basic-ui-blue);
+}
+
 .basic_ui_cli_output {
     font-size: 12px;
     color: var(--basic-ui-subtext0);
@@ -1034,64 +1087,318 @@
     line-height: 1.2;
 }
 
-/* CAD-Style Bottom History Timeline */
-.basic_ui_cad_toolbar {
+/* ─── Left Sidebar & Git Graph History Panel ────────────────────────────────── */
+
+.history_tree_panel_root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding: 8px 10px;
+    box-sizing: border-box;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 10px;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.history_tree_panel_root.is_sidebar_collapsed {
+    padding: 6px 2px;
     background: var(--basic-ui-bg-mantle);
-    border-bottom: 1px solid var(--basic-ui-border);
-    flex-shrink: 0;
+    align-items: center;
+}
+
+.history_tree_panel_root.is_sidebar_collapsed .basic_ui_header,
+.history_tree_panel_root.is_sidebar_collapsed .basic_ui_content {
+    display: none !important;
+}
+
+.history_collapsed_strip {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    gap: 8px;
+    padding-top: 4px;
     user-select: none;
+    cursor: pointer;
 }
 
-.basic_ui_cad_info {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--basic-ui-subtext0);
-    font-family: monospace;
-    padding-left: 6px;
-}
-
-.basic_ui_cad_btn_group {
+.history_tree_panel_root.is_sidebar_collapsed .history_collapsed_strip {
     display: flex;
+}
+
+.history_expand_btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--basic-ui-surface0);
+    border: 1px solid var(--basic-ui-border);
+    border-radius: 6px;
+    color: var(--basic-ui-blue);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.history_expand_btn:hover {
+    background: var(--basic-ui-surface1);
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.history_strip_btn_group {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
+    margin-top: 4px;
 }
 
-.basic_ui_cad_btn_group > button {
+.history_strip_btn {
     width: 26px;
     height: 22px;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    border: 1px solid var(--basic-ui-surface1);
     border-radius: 4px;
     color: var(--basic-ui-text);
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.basic_ui_cad_btn_group > button svg {
+.history_strip_btn:hover:not(:disabled) {
+    background: var(--basic-ui-surface0);
+    color: var(--basic-ui-blue);
+    border-color: var(--basic-ui-blue);
+}
+
+.history_strip_btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.history_strip_btn svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+}
+
+.history_strip_badge {
+    font-size: 10px;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--basic-ui-blue);
+    background: rgba(137, 180, 250, 0.15);
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-top: auto;
+    margin-bottom: 6px;
+}
+
+.history_header_collapse_btn {
+    background: transparent;
+    border: none;
+    color: var(--basic-ui-overlay0);
+    font-size: 14px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.history_header_collapse_btn:hover {
+    color: var(--basic-ui-text);
+    background-color: var(--basic-ui-surface0);
+}
+
+/* ─── Right Sidebar & Map Status Panel ───────────────────────────────────────── */
+
+.info_bar_root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.info_bar_root.is_sidebar_collapsed {
+    padding: 6px 2px;
+    background: var(--basic-ui-bg-mantle);
+    align-items: center;
+}
+
+.info_bar_root.is_sidebar_collapsed .basic_ui_header,
+.info_bar_root.is_sidebar_collapsed .basic_ui_content {
+    display: none !important;
+}
+
+.info_collapsed_strip {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    gap: 8px;
+    padding-top: 4px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.info_bar_root.is_sidebar_collapsed .info_collapsed_strip {
+    display: flex;
+}
+
+.info_expand_btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--basic-ui-surface0);
+    border: 1px solid var(--basic-ui-border);
+    border-radius: 6px;
+    color: var(--basic-ui-green);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.info_expand_btn:hover {
+    background: var(--basic-ui-surface1);
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.info_strip_title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--basic-ui-subtext0);
+    letter-spacing: 2px;
+    margin: 8px 0;
+    text-transform: uppercase;
+}
+
+.info_strip_badge {
+    font-size: 10px;
+    font-weight: 700;
+    font-family: monospace;
+    color: var(--basic-ui-green);
+    background: rgba(166, 227, 161, 0.15);
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-top: auto;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
+
+.history_expanded_wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.history_git_toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px;
+    margin-bottom: 6px;
+    background: var(--basic-ui-bg-mantle);
+    border-radius: 6px;
+    border: 1px solid var(--basic-ui-border);
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.history_git_toolbar .basic_ui_cad_info {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--basic-ui-subtext0);
+    font-family: monospace;
+    padding-left: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.history_git_toolbar .basic_ui_cad_btn_group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.history_git_toolbar .basic_ui_cad_btn_group > button {
+    width: 26px;
+    height: 22px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--basic-ui-surface1);
+    border-radius: 4px;
+    color: var(--basic-ui-text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.history_git_toolbar .basic_ui_cad_btn_group > button:hover:not(:disabled) {
+    background: var(--basic-ui-surface0);
+    color: var(--basic-ui-blue);
+    border-color: var(--basic-ui-blue);
+}
+
+.history_git_toolbar .basic_ui_cad_btn_group > button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.history_git_toolbar .basic_ui_cad_btn_group > button svg {
     display: block;
     width: 13px;
     height: 13px;
+    fill: currentColor;
+    flex-shrink: 0;
 }
 
-.basic_ui_cad_viewport {
+.history_git_viewport {
     flex: 1;
     overflow-x: auto;
     overflow-y: auto;
     position: relative;
-    background: rgba(17, 17, 27, 0.6);
+    background: rgba(17, 17, 27, 0.45);
+    border-radius: 8px;
+    border: 1px solid var(--basic-ui-border);
+    min-height: 0;
 }
 
-.basic_ui_cad_canvas {
+.history_git_canvas {
     position: relative;
-    min-width: 100%;
+    width: 100%;
     min-height: 100%;
 }
 
-.basic_ui_cad_svg {
+.history_git_svg {
     position: absolute;
     top: 0;
     left: 0;
@@ -1099,50 +1406,103 @@
     z-index: 1;
 }
 
-.basic_ui_cad_chip {
+.history_git_row {
     position: absolute;
+    left: 0;
+    right: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     justify-content: center;
-    border-radius: 6px;
-    background: var(--basic-ui-bg-mantle);
-    border: 1.5px solid var(--basic-ui-surface1);
     box-sizing: border-box;
+    padding-right: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     cursor: pointer;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
+    transition: background-color 0.15s ease;
     z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    padding: 0;
+    user-select: none;
 }
 
-.basic_ui_cad_chip:hover {
-    transform: translateY(-2px);
-    background: var(--basic-ui-surface0);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-    border-color: var(--basic-ui-blue) !important;
+.history_git_row:hover {
+    background: rgba(137, 180, 250, 0.08);
 }
 
-.basic_ui_cad_chip.is_current {
-    background: rgba(137, 180, 250, 0.2);
-    box-shadow: 0 0 10px rgba(137, 180, 250, 0.35);
-    transform: translateY(-1px);
+.history_git_row.is_current {
+    background: rgba(137, 180, 250, 0.16);
+    border-left: 3px solid var(--basic-ui-blue);
 }
 
-.basic_ui_cad_chip_icon {
-    font-size: 12px;
-    line-height: 1;
+.history_git_row.is_active_path {
+    font-weight: 500;
+}
+
+.history_git_main_line {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--basic-ui-text);
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-.basic_ui_cad_chip_dot {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    font-size: 8px;
+.history_git_icon {
+    font-size: 13px;
     line-height: 1;
+    flex-shrink: 0;
+}
+
+.history_git_target {
+    font-weight: 600;
+    color: var(--basic-ui-text);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.history_git_head_badge {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--basic-ui-blue);
+    color: var(--basic-ui-bg-crust);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.history_git_uid_badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--basic-ui-subtext0);
+    font-family: monospace;
+    flex-shrink: 0;
+}
+
+.history_git_sub_line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--basic-ui-subtext0);
+    margin-top: 1px;
+}
+
+.history_git_param {
+    font-family: monospace;
+    color: var(--basic-ui-subtext1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history_git_branch_badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    flex-shrink: 0;
+    opacity: 0.85;
 }
 
 /* ─── Viewport Panel & Zoom Controls ────────────────────────────────────────── */
@@ -1264,5 +1624,107 @@
 .basic_ui_splitter.is_dragging::after {
     background-color: var(--basic-ui-sapphire);
     transform: scale(1.4);
+}
+
+/* ─── Pipe Creator Options Styles ────────────────────────────────────────────── */
+
+.pipe_creator_desc {
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--basic-ui-subtext0);
+}
+
+.pipe_creator_list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pipe_creator_row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.pipe_creator_row select.pipe_creator_dir_select {
+    width: 84px !important;
+    min-width: 84px !important;
+    max-width: 84px !important;
+    flex: 0 0 84px !important;
+    font-size: 12px;
+    padding: 2px 6px;
+    height: 30px !important;
+    box-sizing: border-box;
+}
+
+.pipe_creator_row .pipe_creator_stepper {
+    width: 62px !important;
+    min-width: 62px !important;
+    max-width: 62px !important;
+    flex: 0 0 62px !important;
+    height: 30px !important;
+    box-sizing: border-box;
+}
+
+.pipe_creator_row .pipe_creator_stepper .basic_ui_stepper_input {
+    width: 44px !important;
+    height: 100% !important;
+    font-size: 13px !important;
+    font-weight: bold;
+    text-align: center;
+    padding: 0 4px;
+}
+
+.pipe_creator_row .pipe_creator_stepper .basic_ui_stepper_btn {
+    width: 18px !important;
+    font-size: 8px;
+}
+
+.pipe_creator_row button.pipe_creator_del_btn {
+    width: 36px !important;
+    height: 30px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    flex: 0 0 36px !important;
+    margin-left: 8px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.pipe_creator_btn_row {
+    margin-top: 4px;
+    display: flex;
+}
+
+button.pipe_creator_add_btn {
+    width: 36px !important;
+    height: 30px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    flex: 0 0 36px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+button.pipe_creator_add_btn svg {
+    display: block;
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
 }
 

@@ -16,13 +16,15 @@ export interface info_bar_component
     update_stats:        (stats: info_bar_stats) => void;
     display_device_info: (uid: number) => boolean;
     clear_device_info:   () => void;
+    is_collapsed:        () => boolean;
+    set_collapsed:       (collapsed: boolean) => void;
 }
 
 /**
  * Creates the right-side Info Bar panel supporting interactive UID lookup via dropdown,
- * device info inspection card, and downstream extension slots.
+ * device info inspection card, downstream extension slots, and collapsible sidebar.
  */
-export function create_info_bar(): info_bar_component
+export function create_info_bar(on_collapse_change?: (collapsed: boolean) => void): info_bar_component
 {
     const panel = basic_ui.create_floating_panel({
         id:          'info_bar',
@@ -31,6 +33,59 @@ export function create_info_bar(): info_bar_component
         collapsible: false
     });
 
+    const root_element = panel.element;
+    root_element.classList.add('info_bar_root');
+    root_element.classList.add('is_sidebar_collapsed');
+
+    // Header Collapse Button (▶ collapses to the right)
+    const header_collapse_btn = document.createElement('button');
+    header_collapse_btn.type = 'button';
+    header_collapse_btn.className = 'history_header_collapse_btn';
+    header_collapse_btn.title = 'Collapse Map Status';
+    header_collapse_btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>';
+    header_collapse_btn.addEventListener('click', (e) =>
+    {
+        e.stopPropagation();
+        set_collapsed(true);
+    });
+
+    panel.header_element.appendChild(header_collapse_btn);
+
+    // Collapsed Strip (Shown when collapsed)
+    const collapsed_strip = document.createElement('div');
+    collapsed_strip.className = 'info_collapsed_strip';
+
+    const expand_btn = document.createElement('button');
+    expand_btn.type = 'button';
+    expand_btn.className = 'info_expand_btn';
+    expand_btn.title = 'Expand Map Status';
+    expand_btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
+
+    const strip_title = document.createElement('div');
+    strip_title.className = 'info_strip_title';
+    strip_title.textContent = 'Status';
+
+    const strip_badge = document.createElement('span');
+    strip_badge.className = 'info_strip_badge';
+    strip_badge.textContent = '0 dev';
+
+    expand_btn.addEventListener('click', (e) =>
+    {
+        e.stopPropagation();
+        set_collapsed(false);
+    });
+
+    collapsed_strip.addEventListener('click', () =>
+    {
+        set_collapsed(false);
+    });
+
+    collapsed_strip.appendChild(expand_btn);
+    collapsed_strip.appendChild(strip_title);
+    collapsed_strip.appendChild(strip_badge);
+
+    root_element.appendChild(collapsed_strip);
+
     const body = panel.content_element;
 
     // Section 1: Map stats summary
@@ -38,6 +93,17 @@ export function create_info_bar(): info_bar_component
     map_info_el.className = 'basic_ui_stats_row';
 
     let currently_inspected_uid: number | null = null;
+    let is_currently_collapsed = true;
+
+    function set_collapsed(collapsed: boolean): void
+    {
+        is_currently_collapsed = collapsed;
+        root_element.classList.toggle('is_sidebar_collapsed', collapsed);
+        if (on_collapse_change)
+        {
+            on_collapse_change(collapsed);
+        }
+    }
 
     on_history_change(() =>
     {
@@ -106,6 +172,7 @@ export function create_info_bar(): info_bar_component
     function update_stats(stats: info_bar_stats): void
     {
         map_info_el.innerHTML = `<span>Devices: <b>${stats.device_count}</b></span><span>Size: <b>${stats.map_dimensions}</b></span>`;
+        strip_badge.textContent = `${stats.device_count} dev`;
         creator.refresh_definitions();
 
         if (currently_inspected_uid !== null)
@@ -163,6 +230,12 @@ export function create_info_bar(): info_bar_component
             return false;
         }
 
+        // If sidebar is collapsed, expand it when inspecting a device
+        if (is_currently_collapsed)
+        {
+            set_collapsed(false);
+        }
+
         currently_inspected_uid = dev.uid;
         render_device_card(
             content_container,
@@ -195,9 +268,11 @@ export function create_info_bar(): info_bar_component
     });
 
     return {
-        element: panel.element,
+        element:             panel.element,
         update_stats,
         display_device_info,
-        clear_device_info
+        clear_device_info,
+        is_collapsed:        () => is_currently_collapsed,
+        set_collapsed
     };
 }

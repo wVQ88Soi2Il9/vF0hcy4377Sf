@@ -1,51 +1,55 @@
-import type { device, item_stack } from '@/API';
-import
-{
-    evaluate_recipe,
-    delete_device_command,
-    move_device_command,
-    select_recipe_command,
-    execute_command
-} from '@/API';
+import type { device } from '@/core/types';
+import { move_device_command, delete_device_command, select_recipe_command, execute_command } from '@/API';
 import { get_registry } from '@/runtime';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
-function render_item_stacks(container: HTMLElement, label_text: string, stacks: item_stack[]): void
+/**
+ * Parses and formats port names, direction, and dimensions.
+ */
+function format_ports_summary(dev: device): string
 {
-    const row = document.createElement('div');
-    row.className = 'basic_ui_eval_row';
-
-    const label = document.createElement('span');
-    label.className = 'basic_ui_label_io';
-    label.textContent = `${label_text}:`;
-    row.appendChild(label);
-
-    if (stacks.length === 0)
+    const ports = (dev as any).ports;
+    if (!ports || !Array.isArray(ports) || ports.length === 0)
     {
-        const empty_span = document.createElement('span');
-        empty_span.className = 'basic_ui_label_sub';
-        empty_span.textContent = ' (None)';
-        row.appendChild(empty_span);
-        container.appendChild(row);
-        return;
+        return 'None';
     }
 
-    const list = document.createElement('div');
-    list.className = 'basic_ui_kv_list';
-    for (const st of stacks)
+    return ports.map((p: any) =>
     {
-        const item_el = document.createElement('div');
-        item_el.textContent = `${st.item_id} × ${st.quantity}`;
-        list.appendChild(item_el);
-    }
-    row.appendChild(list);
-    container.appendChild(row);
+        const id = p.id || 'port';
+        const type = p.type || 'io';
+        const pos = p.position ? `(${p.position.join(', ')})` : '';
+        return `${id} [${type}] ${pos}`;
+    }).join('; ');
 }
 
 /**
- * Renders the device inspection card, including position editor, recipe selector,
- * geometry metadata, downstream extension inspectors, and action buttons.
+ * Extracts available recipes matching the device definition ID.
+ */
+function get_available_recipes(_def_id: string): Array<{ id: string; label: string }>
+{
+    const registry = get_registry();
+    if (!registry)
+    {
+        return [];
+    }
+
+    const matched: Array<{ id: string; label: string }> = [];
+    for (const [rec_id] of registry.recipes)
+    {
+        const local_id = rec_id.includes(':') ? rec_id.split(':')[1] : rec_id;
+        matched.push({
+            id:    rec_id,
+            label: local_id
+        });
+    }
+
+    return matched;
+}
+
+/**
+ * Renders the comprehensive Device Inspector card inside Info Bar.
  */
 export function render_device_card
 (
@@ -75,13 +79,14 @@ export function render_device_card
     header.appendChild(uid_span);
     header.appendChild(def_span);
 
-    // 2. Position & Move controls
+    // 2. Position & Move + Delete controls (Delete is on the far right of the move row)
     const coords_group = create_coordinate_stepper_group(dev.position, undefined, false);
 
     const move_btn = document.createElement('button');
     move_btn.type = 'button';
-    move_btn.textContent = 'Move';
+    move_btn.textContent = '🔄';
     move_btn.className = 'basic_ui_btn_primary';
+    move_btn.title = `Move Device #${dev.uid} to coordinates`;
 
     move_btn.addEventListener('click', () =>
     {
@@ -105,7 +110,21 @@ export function render_device_card
         }
     });
 
+    const delete_btn = document.createElement('button');
+    delete_btn.type = 'button';
+    delete_btn.textContent = '🗑️';
+    delete_btn.className = 'basic_ui_btn_danger';
+    delete_btn.title = `Delete Device #${dev.uid}`;
+
+    delete_btn.addEventListener('click', () =>
+    {
+        const cmd = delete_device_command(dev.uid);
+        execute_command(cmd);
+        delete_callback();
+    });
+
     coords_group.row.appendChild(move_btn);
+    coords_group.row.appendChild(delete_btn);
 
     // 3. Recipe Selector
     const recipe_container = document.createElement('div');
@@ -118,122 +137,110 @@ export function render_device_card
     const recipe_select = document.createElement('select');
     recipe_select.className = 'basic_ui_select';
 
-    const none_opt = document.createElement('option');
-    none_opt.value = '';
-    none_opt.textContent = 'None';
-    recipe_select.appendChild(none_opt);
+    const current_recipe_id = (dev as any).selected_recipe_id || (dev as any).recipe_id || '';
+    const available_recipes = get_available_recipes(dev.definition_id);
 
-    const registry = get_registry();
-    if (registry)
+    recipe_select.innerHTML = '<option value="">(None / Pass-through)</option>';
+    for (const r of available_recipes)
     {
-        for (const [rec_id] of registry.recipes)
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = r.label;
+        if (r.id === current_recipe_id)
         {
-            const opt = document.createElement('option');
-            opt.value = rec_id;
-            opt.textContent = rec_id;
-            if (dev.selected_recipe_id === rec_id)
-            {
-                opt.selected = true;
-            }
-            recipe_select.appendChild(opt);
+            opt.selected = true;
         }
+        recipe_select.appendChild(opt);
     }
 
     recipe_select.addEventListener('change', () =>
     {
-        const new_rec = recipe_select.value === '' ? undefined : recipe_select.value;
-        const cmd = select_recipe_command(dev.uid, new_rec);
-        execute_command(cmd);
-        refresh_callback();
+        const new_rec_id = recipe_select.value.trim();
+        try
+        {
+            const cmd = select_recipe_command(dev.uid, new_rec_id);
+            execute_command(cmd);
+            refresh_callback();
+        }
+        catch (err: unknown)
+        {
+            console.error('Failed to select recipe:', err);
+        }
     });
 
     recipe_container.appendChild(recipe_title);
     recipe_container.appendChild(recipe_select);
 
-    // 4. Geometry and Ports Info
-    const shape_row = document.createElement('div');
-    const shape_label = document.createElement('span');
-    shape_label.className = 'basic_ui_label_key';
-    shape_label.textContent = 'Shape: ';
-    shape_row.appendChild(shape_label);
-    shape_row.appendChild(document.createTextNode(JSON.stringify(dev.get_shape())));
+    // 4. Ports Specification List
+    const ports_container = document.createElement('div');
+    ports_container.className = 'basic_ui_form_group';
 
-    const in_ports_row = document.createElement('div');
-    const in_label = document.createElement('span');
-    in_label.className = 'basic_ui_label_key';
-    in_label.textContent = 'Input Ports: ';
-    in_ports_row.appendChild(in_label);
-    in_ports_row.appendChild(document.createTextNode(JSON.stringify(dev.get_port('input'))));
+    const ports_title = document.createElement('div');
+    ports_title.className = 'basic_ui_section_title';
+    ports_title.textContent = 'Ports Specification:';
 
-    const out_ports_row = document.createElement('div');
-    const out_label = document.createElement('span');
-    out_label.className = 'basic_ui_label_key';
-    out_label.textContent = 'Output Ports: ';
-    out_ports_row.appendChild(out_label);
-    out_ports_row.appendChild(document.createTextNode(JSON.stringify(dev.get_port('output'))));
+    const ports_text = document.createElement('div');
+    ports_text.className = 'basic_ui_label_sub';
+    ports_text.style.wordBreak = 'break-word';
+    ports_text.textContent = format_ports_summary(dev);
+
+    ports_container.appendChild(ports_title);
+    ports_container.appendChild(ports_text);
+
+    // 5. Dynamic Evaluation Status Card
+    const eval_card = document.createElement('div');
+    eval_card.className = 'basic_ui_eval_card';
+
+    const status_row = document.createElement('div');
+    status_row.className = 'basic_ui_eval_row';
+
+    const status_label = document.createElement('span');
+    status_label.className = 'basic_ui_label_key';
+    status_label.textContent = 'Evaluation Status:';
+
+    const is_valid = typeof (dev as any).validate === 'function' ? (dev as any).validate() : true;
+    const badge = document.createElement('span');
+    badge.className = is_valid ? 'basic_ui_badge basic_ui_badge_valid' : 'basic_ui_badge basic_ui_badge_invalid';
+    badge.textContent = is_valid ? 'VALID' : 'INVALID';
+
+    status_row.appendChild(status_label);
+    status_row.appendChild(badge);
+    eval_card.appendChild(status_row);
+
+    // Extract dynamic keys (state, inputs, outputs, etc.)
+    const extra_keys = Object.keys(dev).filter(k =>
+        !['uid', 'definition_id', 'position', 'recipe_id', 'selected_recipe_id', 'ports', 'other_info'].includes(k)
+    );
+
+    if (extra_keys.length > 0)
+    {
+        const kv_list = document.createElement('div');
+        kv_list.className = 'basic_ui_kv_list';
+        for (const k of extra_keys)
+        {
+            const row = document.createElement('div');
+            row.className = 'basic_ui_eval_row';
+            const key_span = document.createElement('span');
+            key_span.className = 'basic_ui_label_key';
+            key_span.textContent = `${k}:`;
+            const val_span = document.createElement('span');
+            val_span.className = 'basic_ui_label_eval';
+            val_span.textContent = JSON.stringify((dev as any)[k]);
+            row.appendChild(key_span);
+            row.appendChild(val_span);
+            kv_list.appendChild(row);
+        }
+        eval_card.appendChild(kv_list);
+    }
 
     card.appendChild(header);
     card.appendChild(coords_group.container);
     card.appendChild(recipe_container);
-    card.appendChild(shape_row);
-    card.appendChild(in_ports_row);
-    card.appendChild(out_ports_row);
+    card.appendChild(ports_container);
 
-    // 5. Recipe Evaluation Card
-    if (dev.selected_recipe_id && registry)
+    if (typeof (dev as any).validate === 'function' || extra_keys.length > 0)
     {
-        const evaluation = evaluate_recipe(registry, dev.selected_recipe_id, dev.uid);
-        if (evaluation)
-        {
-            const eval_card = document.createElement('div');
-            eval_card.className = 'basic_ui_eval_card';
-
-            const eval_status_row = document.createElement('div');
-            eval_status_row.className = 'basic_ui_eval_row';
-
-            const eval_label = document.createElement('span');
-            eval_label.className = 'basic_ui_label_eval';
-            eval_label.textContent = 'Evaluation: ';
-
-            const eval_badge = document.createElement('span');
-            eval_badge.className = evaluation.valid
-                ? 'basic_ui_badge basic_ui_badge_valid'
-                : 'basic_ui_badge basic_ui_badge_invalid';
-            eval_badge.textContent = evaluation.valid ? 'VALID' : 'INVALID';
-
-            eval_status_row.appendChild(eval_label);
-            eval_status_row.appendChild(eval_badge);
-
-            const duration_row = document.createElement('div');
-            duration_row.className = 'basic_ui_eval_row';
-
-            const dur_label = document.createElement('span');
-            dur_label.className = 'basic_ui_label_dur';
-            dur_label.textContent = 'Duration: ';
-            duration_row.appendChild(dur_label);
-            duration_row.appendChild(document.createTextNode(`${evaluation.duration}s`));
-
-            eval_card.appendChild(eval_status_row);
-            eval_card.appendChild(duration_row);
-
-            render_item_stacks(eval_card, 'Inputs', evaluation.inputs);
-            render_item_stacks(eval_card, 'Outputs', evaluation.outputs);
-
-            if (evaluation.other_info && Object.keys(evaluation.other_info).length > 0)
-            {
-                const extra_row = document.createElement('div');
-                extra_row.className = 'basic_ui_eval_row';
-
-                const extra_label = document.createElement('span');
-                extra_label.className = 'basic_ui_label_extra';
-                extra_label.textContent = 'Extra: ';
-                extra_row.appendChild(extra_label);
-                extra_row.appendChild(document.createTextNode(JSON.stringify(evaluation.other_info)));
-                eval_card.appendChild(extra_row);
-            }
-
-            card.appendChild(eval_card);
-        }
+        card.appendChild(eval_card);
     }
 
     if (dev.other_info && Object.keys(dev.other_info).length > 0)
@@ -260,37 +267,28 @@ export function render_device_card
         card.appendChild(inspectors_slot);
     }
 
-    // 7. Actions Row (Custom downstream actions + Delete Button)
-    const actions_container = document.createElement('div');
-    actions_container.className = 'basic_ui_actions_row';
-
+    // 7. Custom Actions Row (if any)
     const custom_actions = basic_ui.get_device_actions();
-    for (const act of custom_actions)
+    if (custom_actions.length > 0)
     {
-        const act_btn = document.createElement('button');
-        act_btn.textContent = act.label;
-        act_btn.className = act.is_danger ? 'basic_ui_btn_danger' : 'basic_ui_btn';
-        act_btn.addEventListener('click', () =>
+        const actions_container = document.createElement('div');
+        actions_container.className = 'basic_ui_actions_row';
+
+        for (const act of custom_actions)
         {
-            act.on_click(dev);
-            refresh_callback();
-        });
-        actions_container.appendChild(act_btn);
+            const act_btn = document.createElement('button');
+            act_btn.textContent = act.label;
+            act_btn.className = act.is_danger ? 'basic_ui_btn_danger' : 'basic_ui_btn';
+            act_btn.addEventListener('click', () =>
+            {
+                act.on_click(dev);
+                refresh_callback();
+            });
+            actions_container.appendChild(act_btn);
+        }
+
+        card.appendChild(actions_container);
     }
-
-    const delete_btn = document.createElement('button');
-    delete_btn.textContent = '🗑️ Delete Device';
-    delete_btn.className = 'basic_ui_btn_danger';
-
-    delete_btn.addEventListener('click', () =>
-    {
-        const cmd = delete_device_command(dev.uid);
-        execute_command(cmd);
-        delete_callback();
-    });
-
-    actions_container.appendChild(delete_btn);
-    card.appendChild(actions_container);
 
     container.appendChild(card);
 }

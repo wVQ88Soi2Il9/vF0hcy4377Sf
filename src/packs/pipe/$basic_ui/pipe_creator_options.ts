@@ -92,10 +92,12 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     const btn_add_row = document.createElement('div');
     btn_add_row.className = 'pipe_creator_btn_row';
 
+    // Downward triangle add button (▼)
     const add_btn = document.createElement('button');
     add_btn.type = 'button';
-    add_btn.className = 'basic_ui_btn';
-    add_btn.textContent = '➕';
+    add_btn.className = 'basic_ui_btn pipe_creator_add_btn';
+    add_btn.title = 'Add next segment (▼)';
+    add_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
     add_btn.addEventListener('click', () =>
     {
         // Suggest next orthogonal direction
