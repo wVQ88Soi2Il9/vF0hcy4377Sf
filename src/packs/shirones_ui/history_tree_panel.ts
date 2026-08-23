@@ -257,9 +257,11 @@ export function compute_git_graph_layout(tree: history_tree): {
     const layout_nodes: git_node_layout[] = [];
     const node_coords = new Map<number, { row: number; lane: number }>();
 
-    for (let row = 0; row < sorted_nodes.length; row++)
+    // Assign rows: Newest nodes at Top (row 0), Root at Bottom (row N - 1)
+    for (let i = 0; i < sorted_nodes.length; i++)
     {
-        const node = sorted_nodes[row];
+        const node = sorted_nodes[i];
+        const row = sorted_nodes.length - 1 - i;
         const lane = node_lanes.get(node.uid) ?? 0;
         const is_current = node.uid === tree.current_uid;
         const is_on_active_path = active_path_set.has(node.uid);
@@ -274,6 +276,9 @@ export function compute_git_graph_layout(tree: history_tree): {
 
         node_coords.set(node.uid, { row, lane });
     }
+
+    // Sort layout nodes by visual row (0 to N - 1) for DOM order
+    layout_nodes.sort((a, b) => a.row - b.row);
 
     let max_lane = 0;
     for (const n of layout_nodes)
@@ -622,11 +627,12 @@ export function create_cad_timeline(on_collapse_change?: (collapsed: boolean) =>
             }
             else
             {
-                // Smooth Bézier elbow for branch out (Image 2 style)
-                const curve_h = Math.min(ROW_HEIGHT, edge.y2 - edge.y1);
-                const cy1 = edge.y1 + curve_h * 0.65;
-                const cy2 = edge.y1 + curve_h * 0.35;
-                const turn_y = edge.y1 + curve_h;
+                // Smooth Bézier elbow for branch out upwards
+                const dy = Math.abs(edge.y1 - edge.y2);
+                const curve_h = Math.min(ROW_HEIGHT, dy);
+                const cy1 = edge.y1 - curve_h * 0.65;
+                const cy2 = edge.y1 - curve_h * 0.35;
+                const turn_y = edge.y1 - curve_h;
 
                 if (edge.y2 === turn_y)
                 {
