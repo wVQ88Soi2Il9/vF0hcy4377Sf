@@ -237,7 +237,6 @@ export
 {
     create_pack_registry,
     load_pack,
-    unload_pack,
     get_item,
     get_recipe,
     register_recipe,

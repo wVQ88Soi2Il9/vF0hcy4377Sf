@@ -70,11 +70,6 @@ export function create_pack_registry(): pack_registry
  */
 export function load_pack(registry: pack_registry, new_pack: pack): void
 {
-    if (registry.loaded_packs.has(new_pack.id))
-    {
-        unload_pack(registry, new_pack.id);
-    }
-
     registry.loaded_packs.set(new_pack.id, new_pack);
 
     let pack_items = registry.items.get(new_pack.id);
@@ -106,18 +101,6 @@ export function load_pack(registry: pack_registry, new_pack: pack): void
         rec.id = resolved.id;
         pack_recipes.set(resolved.id, rec);
     }
-}
-
-/**
- * 將指定的 pack 從 registry 中移除，支援熱插拔。
- * 直接以 O(1) 刪除整個 pack 專屬子 Map。
- */
-export function unload_pack(registry: pack_registry, pack_id: string): void
-{
-    registry.loaded_packs.delete(pack_id);
-    registry.items.delete(pack_id);
-    registry.recipes.delete(pack_id);
-    registry.device_classes.delete(pack_id);
 }
 
 /**
