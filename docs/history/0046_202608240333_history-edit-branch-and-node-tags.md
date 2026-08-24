@@ -216,6 +216,7 @@
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 型別擴充與差異分析模組（human: wVQ88Soi2Il9）
 - H2 · 2026-08-25 03:04 落地 —— 更正 map_command.id，擴充 history_node.other_info，實作 extract_branch_path 路徑提取器，徹底移除字串正則剖析（agent: gemini-3.7-flash） → O1
 - H3 · 2026-08-25 03:10 決斷 —— 確立命名空間 4 大型態與 other_info[pack_id] 擴充標準（移除 $ 前綴），紀錄於 docs/QA/0002（human: wVQ88Soi2Il9）
+- H4 · 2026-08-25 03:14 決斷 —— 全面重構為結構化 namespaced_id（{ pack, id }）與兩層 Map 階層註冊表（Map<pack, Map<id, T>>），支援 O(1) Mod 卸載（human: wVQ88Soi2Il9）
 
 ### 18 3-Way 衝突檢測器（3-Way Conflict Detector）
 - **state:** 待實作

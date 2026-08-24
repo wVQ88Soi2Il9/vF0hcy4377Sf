@@ -5,6 +5,20 @@
  */
 export type vector = number[];
 
+// ── Identifier ───────────────────────────────────────────────────────────────
+
+/**
+ * Structured two-tier resource identifier (pack + id).
+ */
+export interface namespaced_id
+{
+    /** Identifier of the owning pack / mod (e.g. 'core', 'test', 'pipe'). */
+    pack: string;
+
+    /** Unique resource name within the pack (e.g. 'assembler', 'iron_plate'). */
+    id:   string;
+}
+
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 
@@ -21,8 +35,9 @@ export interface pack
 
 export interface item_definition
 {
+    pack?:       string;
     id:          string;
-    other_info:  Record<string, unknown>;
+    other_info?: Record<string, unknown>;
 }
 
 export interface item_stack
@@ -59,6 +74,7 @@ export type recipe_fn = (uid?: number) => recipe_evaluation;
 
 export interface recipe
 {
+    pack?:       string;
     id:          string;
     evaluate:    recipe_fn;
     other_info?: Record<string, unknown>;
@@ -69,16 +85,41 @@ export interface recipe
 export abstract class device
 {
     public readonly uid:         number;
+    public pack:                 string;
     public definition_id:        string;
     public position:             vector;
     public selected_recipe_id?:  string;
     public other_info?:          Record<string, unknown>;
 
-    constructor(uid: number, definition_id: string, position: vector)
+    constructor
+    (
+        uid:           number,
+        definition_id: string,
+        position:      vector,
+        other_info?:   Record<string, unknown>,
+        pack:          string = 'core'
+    )
     {
         this.uid = uid;
-        this.definition_id = definition_id;
+        if (definition_id.includes(':'))
+        {
+            const idx = definition_id.indexOf(':');
+            this.pack = definition_id.slice(0, idx);
+            this.definition_id = definition_id.slice(idx + 1);
+        }
+        else
+        {
+            this.pack = pack;
+            this.definition_id = definition_id;
+        }
         this.position = position;
+        this.other_info = other_info;
+    }
+
+    /** 取得完整冒號識別字串 (Full Namespaced ID: `<pack>:<id>`) */
+    public get full_id(): string
+    {
+        return `${this.pack}:${this.definition_id}`;
     }
 
     /** 取得局部形狀格點 (Local Coordinates) */
@@ -116,14 +157,13 @@ export interface game_map
 /**
  * An encapsulated, reversible map mutation.
  * `execute` applies the change; `inverse` reverts it exactly.
- *
- * Factories in API.ts close over any additional context (e.g. registry)
- * via runtime, keeping this interface free of circular dependencies with
- * `pack_manager`.
  */
 export interface map_command
 {
-    /** Unique command identifier or type ID (e.g. 'core:create_device', 'core:move_device'). */
+    /** Identifier of the pack that defines this command (e.g. 'core', 'layered_2d'). */
+    pack:        string;
+
+    /** Unique command identifier within the pack (e.g. 'create_device', 'move_device'). */
     id:          string;
 
     /** Apply the change to the map. */

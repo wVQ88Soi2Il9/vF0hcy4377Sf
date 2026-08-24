@@ -122,24 +122,19 @@ export function create_device_creator
         const registry = get_registry();
         if (registry)
         {
-            for (const [def_id] of registry.device_classes)
+            for (const [pack_name, pack_devices] of registry.device_classes)
             {
-                let ns = 'global';
-                let id = def_id;
-                if (def_id.includes(':'))
-                {
-                    const idx = def_id.indexOf(':');
-                    ns = def_id.slice(0, idx);
-                    id = def_id.slice(idx + 1);
-                }
-
-                let list = current_ns_groups.get(ns);
+                let list = current_ns_groups.get(pack_name);
                 if (!list)
                 {
                     list = [];
-                    current_ns_groups.set(ns, list);
+                    current_ns_groups.set(pack_name, list);
                 }
-                list.push({ def_id, local_id: id });
+
+                for (const [dev_id] of pack_devices)
+                {
+                    list.push({ def_id: `${pack_name}:${dev_id}`, local_id: dev_id });
+                }
             }
         }
 

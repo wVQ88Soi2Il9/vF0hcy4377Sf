@@ -55,11 +55,11 @@ export function load_all_packs(): pack[]
             {
                 for (const raw_item of file_data)
                 {
-                    const full_id = resolve_id(raw_item.id, namespace);
                     current_pack.items.push
                     ({
                         ...raw_item,
-                        id: full_id
+                        pack: namespace,
+                        id:   raw_item.id
                     } as item_definition);
                 }
             }
@@ -84,13 +84,14 @@ export function load_all_packs(): pack[]
 
         if (rec_candidate && typeof rec_candidate.evaluate === 'function')
         {
-            const full_id = resolve_id(rec_candidate.id || filename, namespace);
             const current_pack = get_or_create_pack(namespace);
+            const recipe_id = rec_candidate.id || filename;
 
             const processed_recipe: recipe =
             {
                 ...rec_candidate,
-                id: full_id,
+                pack:     namespace,
+                id:       recipe_id,
                 evaluate: rec_candidate.evaluate
             };
 
@@ -128,8 +129,8 @@ export function load_all_device_classes(registry: pack_registry): void
 
         if (cls && typeof cls === 'function')
         {
-            const full_id = resolve_id(mod.device_id || filename, namespace);
-            register_device_class(registry, full_id, cls);
+            const device_id = mod.device_id || filename;
+            register_device_class(registry, namespace, device_id, cls);
         }
     }
 }

@@ -15,7 +15,8 @@ import { product_list } from './data/products';
 export function recipe_def_to_recipe(def: recipe_def): recipe
 {
     return {
-        id:       `ef:${def.id}`,
+        pack:     'ef',
+        id:       def.id,
         evaluate: (_uid?: number): recipe_evaluation =>
         {
             return {

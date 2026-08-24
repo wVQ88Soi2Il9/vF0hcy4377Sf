@@ -55,7 +55,7 @@ function format_history_summary(): string
     {
         const is_current = node.uid === tree.current_uid;
         const prefix = is_current ? '-> ' : '   ';
-        const label = node.command ? node.command.id : 'root (initial)';
+        const label = node.command ? `${node.command.pack}:${node.command.id}` : 'root (initial)';
         const parent_info = node.parent_uid !== null ? ` (parent: ${node.parent_uid})` : '';
         const branches = node.children_uids.length > 1 ? ` [branches: ${node.children_uids.join(', ')}]` : '';
         lines.push(`${prefix}[#${node.uid}] ${label}${parent_info}${branches}`);
