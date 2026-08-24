@@ -39,15 +39,125 @@
 
 ## 待辦
 
-### 1 實作歷史分支刪除（Delete Branch）
-- **state:** 待實作
+### 1 實作歷史分支與節點刪除（Delete Branch & Delete Node）
+- **state:** 移交
+- **移交:** 0046#4、0046#5
 - **basis:** → O1
 
-在 Core 與 API 實作 `delete_branch` 機制，支援修剪指定分岔節點及其子樹，並妥善處理當前 HEAD 落在被刪除分支時的 LCA 回退跳轉；同步支援 CLI 與 UI 操作。
+在 Core 與 API 實作 `delete_branch`（修剪子樹）與 `delete_node`（單節點剔除與子節點重新掛載）雙機制，妥善處理當前 HEAD 的倒帶與重播跳轉；同步支援 CLI 指令與 UI 操作。
 
 **沿革**
 
 - H1 · 2026-08-24 03:32 決斷 —— 新增 Edit Branch 系列待辦，包含刪除分支（使用者）
+- H2 · 2026-08-25 01:05 改題 —— 擴充涵蓋單節點剔除（原題：實作歷史分支刪除（Delete Branch））
+- H3 · 2026-08-25 01:05 決斷 —— 確定同時實作分支刪除 (Delete Branch) 與單節點剔除嫁接 (Delete Node)（使用者）
+- H4 · 2026-08-25 01:07 拆格 —— 拆分為 0046#4（Delete Branch）與 0046#5（Delete Node）
+
+### 4 實作歷史分支刪除（Delete Branch）
+- **state:** 移交
+- **移交:** 0046#6、0046#7、0046#8
+- **承接:** 0046#1
+- **basis:** → O1
+
+在 Core 與 API 實作 `delete_branch` 機制，支援修剪指定節點及其所有子孫節點；若目標節點位於當前活躍分支（為當前 HEAD 或其祖先）或為 Root 節點時嚴格拒絕刪除；同步支援 CLI（`delete-branch --"<uid>"`）與 UI 操作。
+
+**沿革**
+
+- H1 · 2026-08-25 01:07 決斷 —— 承接 0046#1 分支刪除任務，明定拒絕刪除當前活躍分支/HEAD（使用者）
+- H2 · 2026-08-25 01:08 拆格 —— 細拆為 0046#6（Core/API）、0046#7（CLI）、0046#8（UI）
+
+### 5 實作歷史單節點刪除與嫁接（Delete Node）
+- **state:** 移交
+- **移交:** 0046#9、0046#10、0046#11、0046#12
+- **承接:** 0046#1
+- **basis:** → O1
+
+在 Core 與 API 實作 `delete_node` 機制，支援剔除單一節點並將其所有子節點就地重新掛載至父節點；若目標節點為當前 HEAD（`target_uid === current_uid`）或為 Root 節點時嚴格拒絕刪除；同步支援 CLI（`delete-node --"<uid>"`）與 UI 操作。
+
+**沿革**
+
+- H1 · 2026-08-25 01:07 決斷 —— 承接 0046#1 單節點刪除任務，明定拒絕刪除當前節點（使用者）
+- H2 · 2026-08-25 01:08 拆格 —— 細拆為 0046#9（Core/API）、0046#10（CLI）、0046#11（UI）、0046#12（測試）
+
+### 6 Core 與 API 實作 delete_branch 演算法
+- **state:** 待實作
+- **承接:** 0046#4
+- **basis:** → O1
+
+基於 `delete_node` 實作 `delete_branch(tree, target_uid)` 與 `src/API.ts` 匯出；若目標子樹包含當前活躍路徑（`current_uid`）或為 Root 節點則拒絕刪除；由下而上多次呼叫 `delete_node` 依序修剪子樹節點。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 核心演算法實作（使用者）
+- H2 · 2026-08-25 01:14 決斷 —— 確立 delete branch = 多次 delete node 架構（使用者）
+
+### 7 CLI 實作 delete-branch 指令
+- **state:** 待實作
+- **承接:** 0046#4
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/cli_executor.ts` 實作 `delete-branch --"<uid>"` 指令；解析參數並呼叫 `delete_branch`，針對 Root 節點與活躍分支提供明確報錯訊息，並更新 help 說明。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 CLI 指令實作（使用者）
+
+### 8 Shirones UI 實作分支刪除按鈕與互動
+- **state:** 待實作
+- **承接:** 0046#4
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/history_tree_panel.ts` 節點行 DOM 提供「刪除分支 🗑️」按鈕；若為當前活躍分支或 Root 節點自動禁用按鈕，點擊執行 `delete_branch` 並刷新 Git Graph。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 UI 介面實作（使用者）
+
+### 9 Core 與 API 實作 delete_node 演算法
+- **state:** 實作中
+- **承接:** 0046#5
+- **basis:** → O1
+
+在 `src/core/history_manager.ts` 實作唯一的 `delete_node(tree, target_uid)` 演算法與 `src/API.ts` 匯出；不分類模式，若子節點為空則直接移除，若有子節點則自動就地重新掛載至 `parent_node`；若為 Root 節點或當前節點（`target_uid === current_uid`）嚴格拒絕刪除。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 核心演算法實作（使用者）
+- H2 · 2026-08-25 01:14 決斷 —— 確立 delete_node 唯一基礎演算法（無子節點直接刪除、有子節點自動就地嫁接）（使用者）
+- H3 · 2026-08-25 01:18 落地 —— 在 src/core/history_manager.ts 與 src/API.ts 實作 delete_node 演算法 → O1
+
+### 10 CLI 實作 delete-node 指令
+- **state:** 待實作
+- **承接:** 0046#5
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/cli_executor.ts` 實作 `delete-node --"<uid>"` 指令；解析參數並呼叫 `delete_node`，針對 Root 節點與當前節點提供明確報錯訊息，並更新 help 說明。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 CLI 指令實作（使用者）
+
+### 11 Shirones UI 實作單節點刪除按鈕與互動
+- **state:** 待實作
+- **承接:** 0046#5
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/history_tree_panel.ts` 節點行 DOM 提供「刪除節點 ✂️」按鈕；若為當前節點或 Root 節點自動禁用按鈕，點擊執行 `delete_node` 並刷新 Git Graph。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 UI 介面實作（使用者）
+
+### 12 歷史刪除功能之單元測試與端到端驗證
+- **state:** 待實作
+- **承接:** 0046#5
+- **basis:** → O1
+
+建立完整測試腳本驗證 `delete_branch` 與 `delete_node` 之各層邏輯：活躍分支防護、當前節點防護、Root 防護、子樹修剪、子節點嫁接以及 UI/CLI 呼叫正確性。
+
+**沿革**
+
+- H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 測試驗證任務（使用者）
 
 ### 2 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
 - **state:** 待實作

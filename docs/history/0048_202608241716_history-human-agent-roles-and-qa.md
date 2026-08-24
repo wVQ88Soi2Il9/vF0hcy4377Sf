@@ -36,7 +36,7 @@
 ## 待辦
 
 ### 1 更新 AGENTS.md 與 docs/history/readme.md 規範
-- **state:** 實作中
+- **state:** 完成
 - **basis:** → O1
 
 修訂專案開發規範與 Plan History 文件，明確劃分 Human/Agent 權限、限制完成/否決之設定權限，並完整定義提問與回答之格式及身分標記（Agent 須附帶模型與強度）。
@@ -47,7 +47,7 @@
 - H2 · 2026-08-24 17:17 落地 —— 完成 AGENTS.md 與 readme.md 規範更新 → O1
 
 ### 2 更新 plan_parse.py 解析與防呆驗證
-- **state:** 實作中
+- **state:** 完成
 - **basis:** → O1
 
 在 `plan_parse.py` 中將 `提問` 與 `回答` 納入 `HIST_KINDS`，並實作身分標記檢查邏輯（支援全形/半形括號、Human 標記與 Agent 模型強度標記），若格式不符發出 `BAD_ITEM_FORMAT`。
@@ -58,7 +58,7 @@
 - H2 · 2026-08-24 17:17 落地 —— 完成 plan_parse.py HIST_KINDS 與 ACTOR_TAG_RE 防呆驗證 → O1
 
 ### 3 驗證全庫解析與身分標記測試
-- **state:** 實作中
+- **state:** 完成
 - **basis:** → O1
 
 執行 `update-head.py` 與 `plan-item.py`，進行邊界條件與格式錯誤防呆測試，確保全庫無報錯且正確運作。

@@ -347,10 +347,10 @@ item-local; `取代 H1` always means this item's H1).
 | `回答` | an answer given — Human 與 Agent 均有權使用，末尾必須標明身分（Agent 須附帶模型與強度） |
 
 - **`提問` 與 `回答` 身分標記格式**：
-  - Human 標記：`（human）`、`（human: <name>）` 或 `（使用者）`。
+  - Human 標記：優先讀取本地 `git config user.name`，標記為 `（human: <git_user_name>）`（例：`（human: alice）`、`（human: bob）`）；亦相容通用 `（human）` 或 `（使用者）`。
   - Agent 標記：必須明確註明使用的模型與強度，例如 `（agent: gemini-3.7-flash）`、`（agent: sonnet-3.7）`。
-  - 例：`- H1 · 2026-08-24 17:10 提問 —— 端口驗證是否需擴充至 4 維？（agent: gemini-3.7-flash）`
-  - 例：`- H2 · 2026-08-24 17:15 回答 —— 是，需支援 4 維以上（human）`
+  - 例：`- H1 · 2026-08-25 01:30 提問 —— 端口驗證是否需擴充至 4 維？（agent: gemini-3.7-flash）`
+  - 例：`- H2 · 2026-08-25 01:35 回答 —— 是，需支援 4 維以上（human: wVQ88Soi2Il9）`
 - **Ordering is positional**, not by the date string: entries are appended, so the
   bottom one is the newest. The date is for the reader; the order is the file's.
 - **`推翻` is not a 沿革 kind.** It is an observation-to-observation relation and it

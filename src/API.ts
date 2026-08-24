@@ -31,7 +31,8 @@ import
     find_leaf_node,
     jump_to_prev_fork as core_jump_to_prev_fork,
     jump_to_next_fork as core_jump_to_next_fork,
-    jump_to_leaf as core_jump_to_leaf
+    jump_to_leaf as core_jump_to_leaf,
+    delete_node as core_delete_node
 } from '@/core/history_manager';
 import { get_map, get_registry, get_history_tree } from '@/runtime';
 
@@ -53,7 +54,8 @@ export
     redo as core_redo,
     jump_to_node as core_jump_to_node,
     compute_path_to_root,
-    find_lca
+    find_lca,
+    delete_node as core_delete_node
 } from '@/core/history_manager';
 
 export
@@ -175,6 +177,21 @@ export
     find_next_fork_node,
     find_leaf_node
 };
+
+/**
+ * Deletes a single history node and re-parents its children.
+ * Refuses deletion if target is root (uid 0) or current active node (current_uid).
+ * Returns true if deletion succeeded.
+ */
+export function delete_node(target_uid: number): boolean
+{
+    const tree = get_history_tree();
+    if (!tree)
+    {
+        return false;
+    }
+    return core_delete_node(tree, target_uid);
+}
 
 /**
  * Subscribes to history tree changes (record, undo, redo, jump).

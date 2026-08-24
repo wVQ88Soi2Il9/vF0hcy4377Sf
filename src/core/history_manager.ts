@@ -321,4 +321,52 @@ export function jump_to_leaf(tree: history_tree, map: game_map): boolean
     return false;
 }
 
+/**
+ * Deletes a single history node and re-parents its children (if any) to its parent node.
+ * Refuses deletion if target is root (uid 0) or current active node (current_uid).
+ * Returns true if deletion succeeded, false otherwise.
+ */
+export function delete_node(tree: history_tree, target_uid: number): boolean
+{
+    if (target_uid === 0 || target_uid === tree.current_uid)
+    {
+        return false;
+    }
+
+    const target_node = tree.nodes.get(target_uid);
+    if (!target_node || target_node.parent_uid === null)
+    {
+        return false;
+    }
+
+    const parent_node = tree.nodes.get(target_node.parent_uid);
+    if (!parent_node)
+    {
+        return false;
+    }
+
+    // 1. Re-parent children to target_node's parent
+    for (const child_uid of target_node.children_uids)
+    {
+        const child = tree.nodes.get(child_uid);
+        if (child)
+        {
+            child.parent_uid = parent_node.uid;
+        }
+    }
+
+    // 2. In parent_node.children_uids, replace target_uid with target_node.children_uids
+    const idx = parent_node.children_uids.indexOf(target_uid);
+    if (idx !== -1)
+    {
+        parent_node.children_uids.splice(idx, 1, ...target_node.children_uids);
+    }
+
+    // 3. Remove target_node from tree
+    tree.nodes.delete(target_uid);
+    trigger_history_change(tree);
+    return true;
+}
+
+
 
