@@ -92,7 +92,8 @@ ADDR_RE = re.compile(r"\b(\d{4})#(\d+)\b")
 
 ITEM_STATES = ("待決斷", "待實作", "實作中", "完成", "否決", "移交")
 TERMINAL_STATES = ("完成", "否決", "移交")
-HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交")
+HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交", "提問", "回答")
+ACTOR_TAG_RE = re.compile(r"[（\(]([^（\(\)）]+)[）\)](?:\s*→\s*O\d+)?\s*$")
 
 BODY_MAX_LINES = 15
 BASIS_MAX_REFS = 3
@@ -434,6 +435,22 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
             hnum, kind, text = int(hm.group(1)), hm.group(3), hm.group(4)
             if kind not in HIST_KINDS:
                 bad(f"{item.addr} H{hnum} kind {kind!r} not one of {', '.join(HIST_KINDS)}")
+            if kind in ("提問", "回答"):
+                tag_m = ACTOR_TAG_RE.search(text)
+                if not tag_m:
+                    bad(f"{item.addr} H{hnum} {kind} 必須在結尾標明身分，例如 `（human）` 或 `（agent: <model>）`")
+                else:
+                    actor = tag_m.group(1).strip()
+                    if actor.lower() in ("human", "使用者") or actor.lower().startswith("human:") or actor.startswith("使用者:"):
+                        pass
+                    elif actor.lower().startswith("agent:"):
+                        model_part = actor.split(":", 1)[1].strip()
+                        if not model_part:
+                            bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
+                    elif actor.lower() == "agent":
+                        bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
+                    else:
+                        bad(f"{item.addr} H{hnum} {kind} 身分標記 {actor!r} 不符規範，須為 `（human）`、`（使用者）` 或 `（agent: <model>）`")
             if any(h.num == hnum for h in item.history):
                 bad(f"{item.addr} H{hnum} used twice")
             refs = [int(n) for n in OBS_REF_RE.findall(line)]

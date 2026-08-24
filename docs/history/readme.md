@@ -269,12 +269,13 @@ nothing can check. Bare `#14` is not a reference; it will not be resolved.
 | `待決斷` | a question is open and **the user owes the answer** |
 | `待實作` | decided, not started |
 | `實作中` | started, partially landed |
-| `完成` | done |
-| `否決` | decided not to do it — the reason is in 正文 and in a `否決` 沿革 entry |
+| `完成` | done — **Human（使用者）專屬判定**，Agent 無權主動標記 |
+| `否決` | decided not to do it — **Human（使用者）專屬判定**，the reason is in 正文 and in a `否決` 沿革 entry |
 | `移交` | another item owns it now; `- **移交:**` names which |
 
 - **There is no `owner` field.** It is derivable: `待決斷` is the user's move,
   `待實作` / `實作中` is the agent's.
+- **`完成` 與 `否決` 是 Human 專屬權限**：Agent 嚴禁將待辦狀態改為 `完成` 或 `否決`。Agent 完成實作後，僅在該待辦追加 `落地` 沿革（附依據 `→ O<n>`），狀態保持 `實作中`，由 Human 檢視驗收後主動設定 `完成` 或 `否決`。
 - **There is no `阻塞` state.** It is computed from `needs`: an item whose prerequisite
   is not in a terminal state is blocked. Storing it would drift the moment a
   prerequisite lands.
@@ -338,11 +339,18 @@ item-local; `取代 H1` always means this item's H1).
 | `決斷` | a question in this item got answered — name the source: the user, or an observation |
 | `落地` | implementation reached the tree → O |
 | `修正` | the basis changed and 正文 was rewritten → O; name what it 取代, if anything |
-| `否決` | this item, or a named alternative inside it, is rejected |
+| `否決` | this item, or a named alternative inside it, is rejected（Human 專屬） |
 | `拆格` / `合併` | structure changed; name the other item ids |
 | `改題` | records the previous title |
 | `移交` | names the target item |
+| `提問` | a question raised — Human 與 Agent 均有權使用，末尾必須標明身分（Agent 須附帶模型與強度） |
+| `回答` | an answer given — Human 與 Agent 均有權使用，末尾必須標明身分（Agent 須附帶模型與強度） |
 
+- **`提問` 與 `回答` 身分標記格式**：
+  - Human 標記：`（human）`、`（human: <name>）` 或 `（使用者）`。
+  - Agent 標記：必須明確註明使用的模型與強度，例如 `（agent: gemini-3.7-flash）`、`（agent: sonnet-3.7）`。
+  - 例：`- H1 · 2026-08-24 17:10 提問 —— 端口驗證是否需擴充至 4 維？（agent: gemini-3.7-flash）`
+  - 例：`- H2 · 2026-08-24 17:15 回答 —— 是，需支援 4 維以上（human）`
 - **Ordering is positional**, not by the date string: entries are appended, so the
   bottom one is the newest. The date is for the reader; the order is the file's.
 - **`推翻` is not a 沿革 kind.** It is an observation-to-observation relation and it

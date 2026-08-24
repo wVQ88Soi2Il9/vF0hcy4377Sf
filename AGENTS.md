@@ -88,4 +88,10 @@ trigger: always_on
 2. **自動化處理**：Agent 自行維護 Plan 檔，不必向使用者請求確認。
 3. **任務讀取**：執行 `python docs/history/plan-item.py <seq>#<n>` 讀取單一待辦。
 4. **狀態更新**：即時修訂 `- **state:**` 與追加沿革紀錄（`- H<n> · ...`）。
-5. **強制同步 Head**：任何 Plan 檔異動後，強制執行 `python docs/history/update-head.py` 更新 `head.md`。
+5. **Human / Agent 角色與權限邊界**：
+   - **完成 / 否決權限（Human 專屬）**：`state: 完成` 與 `state: 否決` 只能由 **Human（使用者）** 主動勾選/判定，**Agent 無權**將待辦狀態改為 `完成` 或 `否決`。
+   - **Agent 交付流程**：Agent 實作完成後，在該待辦追加 `落地` 沿革（附帶觀測依據 `→ O<n>`），狀態保持 `實作中` 或標註待驗收，由 Human 驗收確認後手動設定 `完成` 或 `否決`。
+   - **提問與回答機制**：沿革支援 `提問` 與 `回答` 類別，Human 與 Agent 雙方皆有權使用，但**必須在結尾標明身分**：
+     - Human 格式：`（human）` 或 `（使用者）`（例如：`- H1 · 2026-08-24 17:00 回答 —— 採用方案 A（human）`）。
+     - Agent 格式：必須包含模型名稱與強度 `（agent: <model>）`（例如：`- H2 · 2026-08-24 17:05 提問 —— 是否需支援雙向鏈結？（agent: gemini-3.7-flash）`）。
+6. **強制同步 Head**：任何 Plan 檔異動後，強制執行 `python docs/history/update-head.py` 更新 `head.md`。
