@@ -37,11 +37,74 @@ export
     register_all_ef_pipes
 };
 
+import type { pack_module, item_definition, recipe, device_constructor } from '@/API';
+import { machine_list } from './data/machines';
+import { material_list } from './data/materials';
+import { product_list } from './data/products';
+import { create_ef_device_class } from './base_device';
+
+// Build unified items dictionary for ef pack
+const ef_items: Record<string, item_definition> = {};
+for (const mat of material_list)
+{
+    ef_items[mat.id] = {
+        pack:       'ef',
+        id:         mat.id,
+        other_info: { ef: { name: mat.name, form: mat.form } }
+    };
+    if (mat.name && mat.name !== mat.id)
+    {
+        ef_items[mat.name] = {
+            pack:       'ef',
+            id:         mat.name,
+            other_info: { ef: { name: mat.name, form: mat.form, alias_of: mat.id } }
+        };
+    }
+}
+for (const prod of product_list)
+{
+    ef_items[prod.id] = {
+        pack:       'ef',
+        id:         prod.id,
+        other_info: { ef: { name: prod.name, form: prod.form } }
+    };
+    if (prod.name && prod.name !== prod.id)
+    {
+        ef_items[prod.name] = {
+            pack:       'ef',
+            id:         prod.name,
+            other_info: { ef: { name: prod.name, form: prod.form, alias_of: prod.id } }
+        };
+    }
+}
+
+// Build unified recipes dictionary for ef pack
+const ef_recipes: Record<string, recipe> = {};
+for (const r of get_all_ef_recipes())
+{
+    ef_recipes[r.id] = r;
+}
+
+// Build unified devices dictionary for ef pack
+const ef_devices: Record<string, device_constructor> = {
+    solidpipe,
+    liquidpipe,
+    gaspipe
+};
+for (const m of machine_list)
+{
+    ef_devices[m.id] = create_ef_device_class(m);
+}
+
 /**
  * EF Pack 統一導出物件
  */
-export const ef =
+export const ef: pack_module =
 {
+    id: 'ef',
+    items: ef_items,
+    recipes: ef_recipes,
+    devices: ef_devices,
     base_ef_device,
     base_ef_pipe,
     solidpipe,

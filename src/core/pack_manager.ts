@@ -93,22 +93,21 @@ export function get_device_class(registry: pack_registry, identifier: namespaced
  */
 export function register_recipe
 (
-    registry:   pack_registry,
-    identifier: namespaced_id,
-    recipe:     recipe
+    registry: pack_registry,
+    recipe:   recipe
 ): void
 {
-    let mod = registry.packs.get(identifier.pack);
+    let mod = registry.packs.get(recipe.pack);
     if (!mod)
     {
-        mod = { id: identifier.pack, recipes: {} };
-        registry.packs.set(identifier.pack, mod);
+        mod = { id: recipe.pack, recipes: {} };
+        registry.packs.set(recipe.pack, mod);
     }
     if (!mod.recipes)
     {
         mod.recipes = {};
     }
-    mod.recipes[identifier.id] = recipe;
+    mod.recipes[recipe.id] = recipe;
 }
 
 /**

@@ -124,6 +124,17 @@ export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number
     }
 }
 
+import type { pack_module } from '@/API';
+
+export const cli_tool: pack_module = {
+    id: 'cli_tool',
+    clean_flag_arg,
+    tokenize_input,
+    parse_axis_name,
+    get_axis_label,
+    get_right_oriented_axes
+};
+
 /**
  * Pack entry point called automatically by pack loader.
  */

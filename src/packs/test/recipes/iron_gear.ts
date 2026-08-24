@@ -8,14 +8,15 @@ import { get_map } from '@/runtime';
  */
 export const recipe: recipe_type =
 {
-    id: 'iron_gear',
+    pack: 'test',
+    id:   'iron_gear',
     evaluate(uid?: number): recipe_evaluation
     {
         if (uid !== undefined)
         {
             const map = get_map();
             const dev = map?.devices.find(d => d.uid === uid);
-            if (dev && dev.definition_id !== 'test:assembler')
+            if (dev && (dev.definition_id.pack !== 'test' || dev.definition_id.id !== 'assembler'))
             {
                 return {
                     valid: false,
@@ -31,11 +32,11 @@ export const recipe: recipe_type =
             duration: 2.0,
             inputs:
             [
-                { item_id: 'test:iron_plate', quantity: 2 }
+                { item_id: { pack: 'test', id: 'iron_plate' }, quantity: 2 }
             ],
             outputs:
             [
-                { item_id: 'test:iron_gear', quantity: 1 }
+                { item_id: { pack: 'test', id: 'iron_gear' }, quantity: 1 }
             ]
         };
     }

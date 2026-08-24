@@ -1,4 +1,4 @@
-import { device, type vector } from '@/API';
+import { device, type vector, type namespaced_id } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer';
 import type
 {
@@ -28,7 +28,7 @@ export abstract class base_layered_device extends device implements drawable_lay
     /** Base local output port coordinates (at rotation = 0, flipped = false) */
     protected abstract readonly base_output_ports: vector_3d[];
 
-    constructor(uid: number, definition_id: string, position: vector)
+    constructor(uid: number, definition_id: namespaced_id, position: vector)
     {
         if (!is_vector_3d(position))
         {

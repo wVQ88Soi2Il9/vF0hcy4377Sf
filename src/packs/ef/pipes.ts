@@ -336,7 +336,7 @@ export class gaspipe extends base_ef_pipe
  */
 export function register_all_ef_pipes(registry: pack_registry): void
 {
-    register_device_class(registry, 'ef:solidpipe', solidpipe);
-    register_device_class(registry, 'ef:liquidpipe', liquidpipe);
-    register_device_class(registry, 'ef:gaspipe', gaspipe);
+    register_device_class(registry, { pack: 'ef', id: 'solidpipe' }, solidpipe);
+    register_device_class(registry, { pack: 'ef', id: 'liquidpipe' }, liquidpipe);
+    register_device_class(registry, { pack: 'ef', id: 'gaspipe' }, gaspipe);
 }

@@ -38,8 +38,11 @@ export
     extract_branch_path
 };
 
-export const vanilla =
+import type { pack_module } from '@/API';
+
+export const vanilla: pack_module =
 {
+    id: 'vanilla',
     get_available_recipes,
     check_map_overlap,
     build_device_graph,

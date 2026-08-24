@@ -1,4 +1,4 @@
-import { device, type vector } from '@/API';
+import { device, type vector, type namespaced_id } from '@/API';
 
 export interface pipe_segment
 {
@@ -82,7 +82,7 @@ export abstract class pipe extends device
     constructor
     (
         uid:           number,
-        definition_id: string,
+        definition_id: namespaced_id,
         position:      vector,
         other_info?:   Record<string, unknown>
     )

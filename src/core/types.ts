@@ -41,9 +41,8 @@ export interface pack_module
 
 // ── Item ─────────────────────────────────────────────────────────────────────
 
-export interface item_definition
+export interface item_definition extends namespaced_id
 {
-    id:          namespaced_id;
     other_info?: Record<string, unknown>;
 }
 
@@ -79,9 +78,8 @@ export interface recipe_evaluation
  */
 export type recipe_fn = (uid?: number) => recipe_evaluation;
 
-export interface recipe
+export interface recipe extends namespaced_id
 {
-    id:          namespaced_id;
     evaluate:    recipe_fn;
     other_info?: Record<string, unknown>;
 }
@@ -143,11 +141,8 @@ export interface game_map
  * via runtime, keeping this interface free of circular dependencies with
  * `pack_manager`.
  */
-export interface map_command
+export interface map_command extends namespaced_id
 {
-    /** Unique command identifier (e.g. { pack: 'core', id: 'create_device' }). */
-    id:          namespaced_id;
-
     /** Apply the change to the map. */
     execute(map: game_map): void;
 
@@ -187,7 +182,7 @@ export interface history_node
     command:      map_command | null;
 
     /**
-     * Mod-extensible metadata for this history node (e.g. $vanilla tags, pin, merge info).
+     * Mod-extensible metadata for this history node (e.g. vanilla tags, pin, merge info).
      */
     other_info?:  Record<string, unknown>;
 }

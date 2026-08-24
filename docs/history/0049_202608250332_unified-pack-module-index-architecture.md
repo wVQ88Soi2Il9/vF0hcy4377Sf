@@ -17,7 +17,7 @@
 將 Pack 視為獨立完整的物件（包含 items, recipes, devices, 工具函式），可大幅簡化 Core 底層 Registry 結構（從多個分散 Map 簡化為單一 Pack 模組 Map），並提供極佳的 TypeScript 靜態型別自動補全與安全重構體驗。
 
 ### O2 · 2026-08-25 04:25:00+08:00 — Core 層極致純粹與全面 namespaced_id 契約
-Core 註冊表、map_command、item_definition、recipe、device 全面採 namespaced_id 純物件識別子，所有字串轉換統一移至 src/utils/identifier.ts；查詢函式（get_item, get_recipe, get_device_class）採 Fail-Fast 嚴格拋錯，不帶 | undefined；提供專用 has_* 函式進行探索性判斷。
+Core 註冊表、map_command、item_definition、recipe 全面直接 `extends namespaced_id`（物件自身即為 identifier），所有字串轉換統一移至 src/utils/identifier.ts；查詢函式（get_item, get_recipe, get_device_class）採 Fail-Fast 嚴格拋錯，不帶 | undefined；提供專用 has_* 函式進行探索性判斷。
 
 ## 待辦
 
@@ -31,16 +31,18 @@ Core 註冊表、map_command、item_definition、recipe、device 全面採 names
 
 - H1 · 2026-08-25 03:32 決斷 —— 確立統一 Pack 模組物件與底層精簡方案（human: wVQ88Soi2Il9）
 - H2 · 2026-08-25 04:28 落地 —— 全面完成 Core 型別（map_command, item_definition, recipe, device）與註冊表之 namespaced_id 重構，字串轉換收斂至 utils/identifier，查詢採嚴格 Fail-Fast 且無 undefined（agent: gemini-3.7-flash） → O2
+- H3 · 2026-08-25 04:35 落地 —— 將 item_definition、recipe、map_command 改為直接 extends namespaced_id，消除多餘巢狀包裝（agent: gemini-3.7-flash） → O2
 
 ### 2 Pack Index 統一模組化封裝（Packs Index Harmonization）
-- **state:** 待實作
-- **basis:** → O1
+- **state:** 等待確認
+- **basis:** → O1, O2
 
-重構現有各 Pack（`vanilla`, `basic_ui`, `layered_2d`, `pipe`, `ef`, `shirones_ui`, `cuboid_device`）的 `index.ts`，統一以符合 `pack_module` 規範的命名物件匯出其 items、recipes、devices 與工具函式。
+重構現有各 Pack（`vanilla`, `basic_ui`, `layered_2d`, `pipe`, `ef`, `shirones_ui`, `cuboid_device`, `test`, `cli_tool`）的 `index.ts`，統一以符合 `pack_module` 規範的命名物件匯出其 items、recipes、devices 與工具函式。
 
 **沿革**
 
 - H1 · 2026-08-25 03:32 決斷 —— 承接各 Pack index 統一封裝任務（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 04:41 落地 —— 完成所有 Pack（vanilla, basic_ui, layered_2d, pipe, ef, shirones_ui, cuboid_device, test, cli_tool）之 index.ts 與指令/配方/裝置對齊 pack_module 契約，清除 $ 前綴污染（agent: gemini-3.7-flash） → O1, O2
 
 ### 3 Loader 自動載入器簡化（Loader Streamlining）
 - **state:** 待實作

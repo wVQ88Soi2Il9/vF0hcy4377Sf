@@ -12,11 +12,14 @@ export
     cuboid_to_shape,
 };
 
+import type { pack_module } from '@/API';
+
 /**
  * cuboid_device Pack 統一導出物件
  */
-export const cuboid_device =
+export const cuboid_device: pack_module =
 {
+    id: 'cuboid_device',
     base_cuboid_device,
     cuboid_to_shape,
 };

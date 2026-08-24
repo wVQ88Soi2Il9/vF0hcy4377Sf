@@ -2,7 +2,7 @@
  * EF Pack Base Device Class
  */
 
-import { type vector, type pack_registry, type device_constructor, register_device_class } from '@/API';
+import { type vector, type pack_registry, type device_constructor, register_device_class, type namespaced_id } from '@/API';
 import type { camera_type } from '@/packs/basic_renderer';
 import type { base_cuboid_device } from '@/packs/cuboid_device';
 import { cuboid_to_shape } from '@/packs/cuboid_device';
@@ -88,20 +88,21 @@ export class base_ef_device extends base_layered_device implements base_cuboid_d
     constructor
     (
         uid:         number,
-        def_id:      string,
+        def_id:      namespaced_id,
         pos:         vector,
         other_info?: Record<string, unknown>
     )
     {
         super(uid, def_id, pos);
 
-        const m = resolve_machine(def_id);
+        const m = resolve_machine(def_id.id);
         if (!m)
         {
-            throw new Error(`[ef] Unknown machine: "${def_id}"`);
+            throw new Error(`[ef] Unknown machine: "${def_id.pack}:${def_id.id}"`);
         }
 
-        const mode_id = (other_info?.mode_id as string) || m.modes[0]?.id || 'default';
+        const ef_info = (other_info?.ef as Record<string, unknown> | undefined) || {};
+        const mode_id = (ef_info.mode_id as string) || (other_info?.mode_id as string) || m.modes[0]?.id || 'default';
         const mode = m.modes.find(item => item.id === mode_id) || m.modes[0];
 
         this.device_size = [m.width * 2, m.height * 2, 2];
@@ -111,18 +112,22 @@ export class base_ef_device extends base_layered_device implements base_cuboid_d
 
         this.other_info =
         {
-            name:    m.name,
-            power:   m.power,
-            width:   m.width,
-            height:  m.height,
-            mode_id,
-            ...other_info
+            ...other_info,
+            ef:
+            {
+                ...ef_info,
+                name:    m.name,
+                power:   m.power,
+                width:   m.width,
+                height:  m.height,
+                mode_id
+            }
         };
     }
 
     private get_machine(): machine
     {
-        return resolve_machine(this.definition_id)!;
+        return resolve_machine(this.definition_id.id)!;
     }
 
     public draw
@@ -226,7 +231,7 @@ export function create_ef_device_class(m: machine, mode_id?: string): device_con
 {
     return class extends base_ef_device
     {
-        constructor(uid: number, def_id: string, pos: vector, info?: Record<string, unknown>)
+        constructor(uid: number, def_id: namespaced_id, pos: vector, info?: Record<string, unknown>)
         {
             super(uid, def_id, pos, { mode_id: mode_id || m.modes[0]?.id, ...info });
         }
@@ -237,6 +242,6 @@ export function register_all_ef_devices(registry: pack_registry): void
 {
     for (const m of machine_list)
     {
-        register_device_class(registry, `ef:${m.id}`, create_ef_device_class(m));
+        register_device_class(registry, { pack: 'ef', id: m.id }, create_ef_device_class(m));
     }
 }

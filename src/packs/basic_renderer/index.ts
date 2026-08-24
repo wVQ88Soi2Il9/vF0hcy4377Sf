@@ -365,10 +365,13 @@ export function init_pack(): void
     queueMicrotask(redraw_renderer);
 }
 
+import type { pack_module } from '@/API';
+
 /**
  * Unified Object Export for basic_renderer pack API.
  */
-export const basic_renderer = {
+export const basic_renderer: pack_module = {
+    id:                   'basic_renderer',
     // Canvas & Redraw
     get_canvas:           get_renderer_canvas,
     resize_canvas:        resize_renderer_canvas,

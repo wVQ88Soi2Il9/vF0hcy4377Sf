@@ -91,10 +91,13 @@ export function init_pack(): void
     get_ui_root();
 }
 
+import type { pack_module } from '@/API';
+
 /**
  * Object export for basic_ui framework interface.
  */
-export const basic_ui = {
+export const basic_ui: pack_module = {
+    id: 'basic_ui',
     get_ui_root,
     create_ui_container,
     create_floating_panel,

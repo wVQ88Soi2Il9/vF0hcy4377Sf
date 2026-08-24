@@ -15,28 +15,35 @@ import { product_list } from './data/products';
 export function recipe_def_to_recipe(def: recipe_def): recipe
 {
     return {
-        id:       `ef:${def.id}`,
+        pack:     'ef',
+        id:       def.id,
         evaluate: (_uid?: number): recipe_evaluation =>
         {
             return {
                 valid:      true,
                 duration:   def.time_seconds,
-                inputs:     def.inputs.map((i) => ({ item_id: i.item_id, quantity: i.quantity })),
-                outputs:    def.outputs.map((o) => ({ item_id: o.item_id, quantity: o.quantity })),
+                inputs:     def.inputs.map((i) => ({ item_id: { pack: 'ef', id: i.item_id }, quantity: i.quantity })),
+                outputs:    def.outputs.map((o) => ({ item_id: { pack: 'ef', id: o.item_id }, quantity: o.quantity })),
                 other_info:
                 {
-                    machine:      def.machine,
-                    machine_mode: def.machine_mode,
-                    environment:  def.environment
+                    ef:
+                    {
+                        machine:      def.machine,
+                        machine_mode: def.machine_mode,
+                        environment:  def.environment
+                    }
                 }
             };
         },
         other_info:
         {
-            machine:      def.machine,
-            machine_mode: def.machine_mode,
-            environment:  def.environment,
-            time_seconds: def.time_seconds
+            ef:
+            {
+                machine:      def.machine,
+                machine_mode: def.machine_mode,
+                environment:  def.environment,
+                time_seconds: def.time_seconds
+            }
         }
     };
 }

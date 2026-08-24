@@ -55,8 +55,11 @@ export function init_pack(): void
     import.meta.glob('./$*/*.ts', { eager: true });
 }
 
-export const layered_2d =
+import type { pack_module } from '@/API';
+
+export const layered_2d: pack_module =
 {
+    id: 'layered_2d',
     draw_layered_devices,
     get_render_options,
     set_render_options,

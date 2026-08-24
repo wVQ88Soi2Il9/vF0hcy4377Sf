@@ -1,5 +1,4 @@
 import './style.css';
-import { get_registry, get_device_class } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
 import { pipe, type pipe_segment } from '../pipe';
 
@@ -133,6 +132,8 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     };
 }
 
+import { get_registry, get_device_class, parse_namespaced_id, has_device_class } from '@/API';
+
 /**
  * Checks if a device definition inherits from abstract class pipe.
  */
@@ -143,11 +144,12 @@ export function is_pipe_definition(def_id: string): boolean
     {
         return false;
     }
-    const cls = get_device_class(registry, def_id);
-    if (!cls)
+    const ns_id = parse_namespaced_id(def_id);
+    if (!has_device_class(registry, ns_id))
     {
         return false;
     }
+    const cls = get_device_class(registry, ns_id);
     return cls.prototype instanceof pipe || (cls as any) === pipe;
 }
 
