@@ -25,7 +25,11 @@ export abstract class base_cuboid_device extends device
         other_info?:   Record<string, unknown>
     )
     {
-        super(uid, definition_id, position, other_info);
+        super(uid, definition_id, position);
+        if (other_info)
+        {
+            this.other_info = other_info;
+        }
     }
 
     /**

@@ -244,7 +244,6 @@ export
     register_device_class,
     get_device_class,
     evaluate_recipe,
-    resolve_namespaced_id,
     type pack_registry,
     type device_constructor
 } from '@/core/pack_manager';
@@ -257,7 +256,6 @@ export
 export type
 {
     vector,
-    namespaced_id,
     pack,
     item_definition,
     item_stack,

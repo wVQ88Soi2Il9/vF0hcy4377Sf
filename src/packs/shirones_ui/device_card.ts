@@ -40,15 +40,13 @@ function get_available_recipes(_def_id: string): Array<{ id: string; label: stri
     }
 
     const matched: Array<{ id: string; label: string }> = [];
-    for (const [pack_id, pack_recipes] of registry.recipes)
+    for (const [rec_id] of registry.recipes)
     {
-        for (const [rec_id] of pack_recipes)
-        {
-            matched.push({
-                id:    `${pack_id}:${rec_id}`,
-                label: rec_id
-            });
-        }
+        const local_id = rec_id.includes(':') ? rec_id.split(':')[1] : rec_id;
+        matched.push({
+            id:    rec_id,
+            label: local_id
+        });
     }
 
     return matched;

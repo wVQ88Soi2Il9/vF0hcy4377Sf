@@ -216,10 +216,9 @@
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 型別擴充與差異分析模組（human: wVQ88Soi2Il9）
 - H2 · 2026-08-25 03:04 落地 —— 更正 map_command.id，擴充 history_node.other_info，實作 extract_branch_path 路徑提取器，徹底移除字串正則剖析（agent: gemini-3.7-flash） → O1
 - H3 · 2026-08-25 03:10 決斷 —— 確立命名空間 4 大型態與 other_info[pack_id] 擴充標準（移除 $ 前綴），紀錄於 docs/QA/0002（human: wVQ88Soi2Il9）
-- H4 · 2026-08-25 03:14 決斷 —— 全面重構為結構化 namespaced_id（{ pack, id }）與兩層 Map 階層註冊表（Map<pack, Map<id, T>>），支援 O(1) Mod 卸載（human: wVQ88Soi2Il9）
 
 ### 18 3-Way 衝突檢測器（3-Way Conflict Detector）
-- **state:** 等待確認
+- **state:** 待實作
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -228,10 +227,9 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 衝突檢測模組（human: wVQ88Soi2Il9）
-- H2 · 2026-08-25 03:17 落地 —— 在 src/packs/vanilla/history.ts 實作 aggregate_branch_mutations 與 check_merge_conflicts 嚴格原子性衝突檢測器並由 vanilla 匯出（agent: gemini-3.7-flash） → O1
 
 ### 19 UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
-- **state:** 等待確認
+- **state:** 待實作
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -240,10 +238,9 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 重映射與指令重放模組（human: wVQ88Soi2Il9）
-- H2 · 2026-08-25 03:18 落地 —— 在 src/packs/vanilla/history.ts 實作 replay_branch_commands，動態重映射來源分支新建立 UID 與後續 move/recipe/delete 指令（agent: gemini-3.7-flash） → O1
 
 ### 20 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
-- **state:** 等待確認
+- **state:** 待實作
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -252,7 +249,6 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 複合指令與主流程調度模組（human: wVQ88Soi2Il9）
-- H2 · 2026-08-25 03:18 落地 —— 實作 composite_map_command 與 merge_branch 完整調度演算法，支援 Fast-forward、衝突拒絕與雙親節點紀錄（agent: gemini-3.7-flash） → O1
 
 ### 14 CLI 實作 merge 指令與參數解析
 - **state:** 待實作

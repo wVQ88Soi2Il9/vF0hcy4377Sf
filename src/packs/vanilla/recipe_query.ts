@@ -24,19 +24,16 @@ export function get_available_recipes
 
     const results: available_recipe_entry[] = [];
 
-    for (const pack_map of target_registry.recipes.values())
+    for (const rec of target_registry.recipes.values())
     {
-        for (const rec of pack_map.values())
+        const eval_result = rec.evaluate(uid);
+        if (eval_result.valid)
         {
-            const eval_result = rec.evaluate(uid);
-            if (eval_result.valid)
-            {
-                results.push
-                ({
-                    recipe: rec,
-                    evaluation: eval_result
-                });
-            }
+            results.push
+            ({
+                recipe: rec,
+                evaluation: eval_result
+            });
         }
     }
 

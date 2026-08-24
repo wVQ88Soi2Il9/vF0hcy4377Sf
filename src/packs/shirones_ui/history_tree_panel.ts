@@ -93,7 +93,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'create_device')
+    if (cmd.id === 'core:create_device')
     {
         const def = (cmd.other_info?.definition_id as string) ?? 'device';
         const pos = cmd.other_info?.position ? ` at [${(cmd.other_info.position as number[]).join(', ')}]` : '';
@@ -105,7 +105,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'move_device')
+    if (cmd.id === 'core:move_device')
     {
         const uid = cmd.other_info?.device_uid ?? '';
         const pos = cmd.other_info?.position ? ` to [${(cmd.other_info.position as number[]).join(', ')}]` : '';
@@ -117,7 +117,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'select_recipe')
+    if (cmd.id === 'core:select_recipe')
     {
         const uid = cmd.other_info?.device_uid ?? '';
         const recipe = cmd.other_info?.new_recipe_id ?? 'none';
@@ -129,7 +129,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'delete_device')
+    if (cmd.id === 'core:delete_device')
     {
         const uid = cmd.other_info?.device_uid ?? '';
         return {
@@ -143,7 +143,7 @@ function parse_command_details(cmd: map_command | null): {
     return {
         icon:        '🔹',
         action_type: 'command',
-        target:      `${cmd.pack}:${cmd.id}`,
+        target:      cmd.id,
         params:      ''
     };
 }
