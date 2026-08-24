@@ -24,7 +24,7 @@ export function create_device_command
 {
     let created_dev: device | null = null;
 
-    return {
+    const cmd: map_command = {
         pack: 'core',
         id:   'create_device',
         other_info: { definition_id, position: [...position], ...other_info },
@@ -33,6 +33,10 @@ export function create_device_command
             if (!created_dev)
             {
                 created_dev = create_device(map, device_class, definition_id, position, other_info);
+                if (created_dev && cmd.other_info)
+                {
+                    cmd.other_info.device_uid = created_dev.uid;
+                }
             }
             else
             {
@@ -47,6 +51,8 @@ export function create_device_command
             }
         }
     };
+
+    return cmd;
 }
 
 /**

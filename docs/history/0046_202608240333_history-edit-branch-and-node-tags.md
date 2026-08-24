@@ -219,7 +219,7 @@
 - H4 · 2026-08-25 03:14 決斷 —— 全面重構為結構化 namespaced_id（{ pack, id }）與兩層 Map 階層註冊表（Map<pack, Map<id, T>>），支援 O(1) Mod 卸載（human: wVQ88Soi2Il9）
 
 ### 18 3-Way 衝突檢測器（3-Way Conflict Detector）
-- **state:** 待實作
+- **state:** 等待確認
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -228,6 +228,7 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 衝突檢測模組（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 03:17 落地 —— 在 src/packs/vanilla/history.ts 實作 aggregate_branch_mutations 與 check_merge_conflicts 嚴格原子性衝突檢測器並由 vanilla 匯出（agent: gemini-3.7-flash） → O1
 
 ### 19 UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
 - **state:** 待實作

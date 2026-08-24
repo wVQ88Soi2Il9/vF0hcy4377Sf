@@ -14,7 +14,7 @@
 - `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
 - `0046#10` · **等待確認** — CLI 實作 delete-node 指令
 - `0046#17` · **等待確認** — 歷史節點型別擴充與三方路徑提取器（Path Extractor）
-- `0046#18` · **待實作** — 3-Way 衝突檢測器（3-Way Conflict Detector）
+- `0046#18` · **等待確認** — 3-Way 衝突檢測器（3-Way Conflict Detector）
 - `0046#19` · **待實作** — UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
 - `0046#20` · **待實作** — 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
 - `0046#14` · **待實作** — CLI 實作 merge 指令與參數解析
