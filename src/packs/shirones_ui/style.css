@@ -1112,6 +1112,14 @@
     border-left: 3px solid var(--basic-ui-blue);
 }
 
+.history_git_row.is_highlighted {
+    background: rgba(249, 226, 175, 0.08);
+}
+
+.history_git_row.is_highlighted:not(.is_current) {
+    border-left: 3px solid #f9e2af;
+}
+
 .history_git_row.is_active_path {
     font-weight: 500;
 }
@@ -1223,17 +1231,40 @@
     cursor: not-allowed;
 }
 
+/* 0. Pin Button */
+.history_git_row_btn.pin_btn.is_active {
+    opacity: 0.95 !important;
+    color: #f9e2af;
+}
+
+.history_git_row_btn.pin_btn:hover:not(:disabled) {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.history_git_row_btn.pin_btn.is_active:hover:not(:disabled) {
+    opacity: 1 !important;
+    background: rgba(249, 226, 175, 0.22);
+    color: #f9e2af;
+    border-color: rgba(249, 226, 175, 0.55);
+}
+
+.history_git_row_btn.pin_btn:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(0.92);
+}
+
 /* 1. Delete Node Hover: Soft pastel red */
-.history_git_row_btn.delete_node_btn:hover:not(:disabled),
-.history_git_row_btn:not(.delete_branch_btn):hover:not(:disabled) {
+.history_git_row_btn.delete_node_btn:hover:not(:disabled) {
     opacity: 1 !important;
     background: rgba(243, 139, 168, 0.18);
     color: var(--basic-ui-red);
     border-color: rgba(243, 139, 168, 0.4);
 }
 
-.history_git_row_btn.delete_node_btn:active:not(:disabled),
-.history_git_row_btn:not(.delete_branch_btn):active:not(:disabled) {
+.history_git_row_btn.delete_node_btn:active:not(:disabled) {
     background: rgba(243, 139, 168, 0.35);
     color: #ffffff;
     border-color: var(--basic-ui-red);

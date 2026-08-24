@@ -14,7 +14,14 @@ import
     find_next_fork_node
 } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
-import { delete_branch } from '@/packs/vanilla';
+import
+{
+    delete_branch,
+    is_node_pinned,
+    toggle_node_pin
+} from '@/packs/vanilla';
+
+const HIGHLIGHT_COLOR = '#f9e2af';
 
 export interface history_tree_component
 {
@@ -642,12 +649,27 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                 svg.appendChild(halo);
             }
 
+            // Golden / amber halo for pinned / highlighted nodes
+            const is_pinned = is_node_pinned(n.node.uid);
+            if (is_pinned)
+            {
+                const pin_halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                pin_halo.setAttribute('cx', String(cx));
+                pin_halo.setAttribute('cy', String(cy));
+                pin_halo.setAttribute('r', '11.5');
+                pin_halo.setAttribute('fill', 'rgba(249, 226, 175, 0.2)');
+                pin_halo.setAttribute('stroke', HIGHLIGHT_COLOR);
+                pin_halo.setAttribute('stroke-width', '2');
+                pin_halo.setAttribute('stroke-dasharray', '3,2');
+                svg.appendChild(pin_halo);
+            }
+
             const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             circle.setAttribute('cx', String(cx));
             circle.setAttribute('cy', String(cy));
             circle.setAttribute('r', String(n.is_current ? NODE_RADIUS + 0.8 : NODE_RADIUS));
-            circle.setAttribute('fill', n.is_current ? '#ffffff' : color);
-            circle.setAttribute('stroke', color);
+            circle.setAttribute('fill', n.is_current ? '#ffffff' : (is_pinned ? HIGHLIGHT_COLOR : color));
+            circle.setAttribute('stroke', is_pinned ? HIGHLIGHT_COLOR : color);
             circle.setAttribute('stroke-width', '2.5');
             svg.appendChild(circle);
         }
@@ -661,6 +683,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             const label_str = n.node.command ? n.node.command.label : 'root (initial state)';
             const details = parse_command_details(label_str);
             const color = get_lane_color(n.lane);
+            const is_pinned = is_node_pinned(n.node.uid);
 
             const row = document.createElement('div');
             row.className = 'history_git_row';
@@ -671,6 +694,10 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             if (n.is_on_active_path)
             {
                 row.classList.add('is_active_path');
+            }
+            if (is_pinned)
+            {
+                row.classList.add('is_highlighted');
             }
 
             row.style.top = `${row_y}px`;
@@ -706,12 +733,26 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             uid_badge.textContent = `#${n.node.uid}`;
             main_line.appendChild(uid_badge);
 
+            const actions_group = document.createElement('span');
+            actions_group.className = 'history_git_actions';
+
+            // 1. Toggle Pin (📌)
+            const pin_btn = document.createElement('button');
+            pin_btn.type = 'button';
+            pin_btn.className = `history_git_row_btn pin_btn${is_pinned ? ' is_active' : ''}`;
+            pin_btn.title = is_pinned ? `Unpin node #${n.node.uid}` : `Pin node #${n.node.uid} (highlight)`;
+            pin_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>';
+            pin_btn.addEventListener('click', (e) =>
+            {
+                e.stopPropagation();
+                toggle_node_pin(n.node.uid);
+                refresh();
+            });
+            actions_group.appendChild(pin_btn);
+
             if (n.node.uid !== 0)
             {
-                const actions_group = document.createElement('span');
-                actions_group.className = 'history_git_actions';
-
-                // 1. Delete single node (✂️)
+                // 2. Delete single node (✂️)
                 const delete_node_btn = document.createElement('button');
                 delete_node_btn.type = 'button';
                 delete_node_btn.className = 'history_git_row_btn delete_node_btn';
@@ -731,7 +772,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                     });
                 }
 
-                // 2. Delete branch (🗑️)
+                // 3. Delete branch (🗑️)
                 const delete_branch_btn = document.createElement('button');
                 delete_branch_btn.type = 'button';
                 delete_branch_btn.className = 'history_git_row_btn delete_branch_btn';
@@ -753,8 +794,8 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
 
                 actions_group.appendChild(delete_node_btn);
                 actions_group.appendChild(delete_branch_btn);
-                main_line.appendChild(actions_group);
             }
+            main_line.appendChild(actions_group);
 
             const sub_line = document.createElement('div');
             sub_line.className = 'history_git_sub_line';

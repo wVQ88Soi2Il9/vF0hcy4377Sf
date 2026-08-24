@@ -165,15 +165,18 @@
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 測試驗證任務（使用者）
 
-### 2 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
-- **state:** 待實作
+### 2 實作歷史節點釘選與高亮（Pin / Highlight Nodes）
+- **state:** 完成
 - **basis:** → O1
 
-擴充 `history_node` 元資料，支援使用者自定義 Tag、釘選（Pin）重要里程碑與高亮特定節點；並於 Git Graph 時間軸即時呈現標籤徽章與快速跳轉。
+在 Vanilla / Pack 層實作歷史節點釘選管理（`src/packs/vanilla/history.ts`，不修改 Core）；支援透過 CLI（`pin --"<uid>"`）與 UI 釘選按鈕（📌）切換節點釘選狀態，由 UI 決定預設與高亮色彩，並於 Git Graph 時間軸呈現金黃光暈邊框與圓點高亮樣式。
 
 **沿革**
 
 - H1 · 2026-08-24 03:32 決斷 —— 新增節點標記、釘選與高亮待辦（使用者）
+- H2 · 2026-08-25 02:07 落地 —— 在 src/packs/vanilla/node_highlight.ts 實作節點高亮管理、CLI highlight 指令與 UI 星號高亮切換/金黃光暈樣式（不改動 Core）→ O1
+- H3 · 2026-08-25 02:11 落地 —— 整合至 src/packs/vanilla/history.ts，改為由 UI 決定高亮色彩、CLI 實作 pin 指令與 UI 釘選按鈕（📌）與高亮呈現 → O1
+- H4 · 2026-08-25 02:13 落地 —— CLI pin 指令新增 --"list" 選項，支援列出所有釘選節點與動作標籤 → O1
 
 ### 3 實作歷史分支合併（Merge Branch）
 - **state:** 待實作

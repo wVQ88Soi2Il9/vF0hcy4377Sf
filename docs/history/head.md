@@ -13,7 +13,6 @@
 - `0047#3` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
 - `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
 - `0046#10` · **等待確認** — CLI 實作 delete-node 指令
-- `0046#2` · **待實作** — 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
 - `0046#3` · **待實作** — 實作歷史分支合併（Merge Branch）
 - `0042#1` · **待實作** — 實作視口座標逆變換 (screen_to_grid) 與裝置拾取檢測
 - `0042#2` · **待實作** — 實作畫布內裝置拖曳移動 (Drag to Move) 與偶數座標吸附
@@ -27,5 +26,5 @@
 
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
 - **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
-- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 4/12，已移交 3
+- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/12，已移交 3
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4

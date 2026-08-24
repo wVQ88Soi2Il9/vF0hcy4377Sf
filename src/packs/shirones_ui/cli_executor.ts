@@ -18,7 +18,7 @@ import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
-import { delete_branch } from '@/packs/vanilla';
+import { delete_branch, toggle_node_pin, set_node_pin, get_pinned_nodes } from '@/packs/vanilla';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -89,7 +89,47 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", delete-node --"<node_uid>", delete-branch --"<node_uid>", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", delete-node --"<node_uid>", delete-branch --"<node_uid>", pin --"<node_uid>|list", help';
+        }
+
+        case 'pin':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: pin --"<node_uid>" or pin --"list" (e.g. pin --"2", pin --"list")';
+            }
+            const arg_str = clean_flag_arg(args[0]);
+            if (arg_str.toLowerCase() === 'list')
+            {
+                const pinned = get_pinned_nodes().sort((a, b) => a - b);
+                if (pinned.length === 0)
+                {
+                    return 'No nodes are currently pinned.';
+                }
+                const tree = get_history_tree();
+                const lines = ['Pinned History Nodes:'];
+                for (const uid of pinned)
+                {
+                    const node = tree?.nodes.get(uid);
+                    const label = node ? (node.command ? node.command.label : 'root (initial state)') : 'unknown';
+                    lines.push(`- [#${uid}] ${label}`);
+                }
+                return lines.join('\n');
+            }
+
+            const target_uid = parseInt(arg_str, 10);
+            if (isNaN(target_uid))
+            {
+                return 'Error: Invalid node UID. Must be a number or "list" (e.g. pin --"2", pin --"list").';
+            }
+            const res = toggle_node_pin(target_uid);
+            if (res === null)
+            {
+                return `Error: History node #${target_uid} not found.`;
+            }
+            return res
+                ? `Node #${target_uid} is now pinned (highlighted).`
+                : `Node #${target_uid} unpinned.`;
         }
 
         case 'delete-node':
