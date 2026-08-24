@@ -179,7 +179,8 @@
 - H4 · 2026-08-25 02:13 落地 —— CLI pin 指令新增 --"list" 選項，支援列出所有釘選節點與動作標籤 → O1
 
 ### 3 實作歷史分支合併（Merge Branch）
-- **state:** 待實作
+- **state:** 移交
+- **移交:** 0046#13、0046#14、0046#15、0046#16
 - **basis:** → O1
 
 設計並實作分支合併演算法，支援將來源分支的變更指令序列依序應用並合併至目標分支（生成 Merge Node 或 Squash Replay），連動 CLI 與 UI Git Graph 拓撲線條展示。
@@ -187,3 +188,98 @@
 **沿革**
 
 - H1 · 2026-08-24 03:32 決斷 —— 新增分支合併機制待辦（使用者）
+- H2 · 2026-08-25 02:30 決斷 —— 確立放置於 vanilla 層，採嚴格原子性 3-Way 衝突檢測（兩端同時歧異修改同一裝置時判定衝突報錯，空間重疊不列衝突）（human: wVQ88Soi2Il9）
+- H3 · 2026-08-25 02:36 拆格 —— 細拆為 0046#13（Vanilla/API）、0046#14（CLI）、0046#15（UI）、0046#16（測試）
+
+### 13 Vanilla 層實作 merge_branch 演算法與 3-Way 衝突檢測
+- **state:** 移交
+- **移交:** 0046#17、0046#18、0046#19、0046#20
+- **承接:** 0046#3
+- **basis:** → O1
+
+在 `src/packs/vanilla/history.ts` 實作 `merge_branch(source_uid, target_uid?)` 演算法並由 `vanilla` 匯出；支援 Fast-forward、三方衝突檢測（嚴格檢測兩端同時修改同一裝置或目標裝置已被刪除，空間重疊不列衝突）、UID 重映射與複合指令（Composite Merge Command）封裝。
+
+**沿革**
+
+- H1 · 2026-08-25 02:36 決斷 —— 承接 0046#3 演算法核心實作任務（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 02:46 拆格 —— 細拆為 0046#17（路徑與差異分析）、0046#18（3-Way 衝突檢測）、0046#19（UID 重映射與重放）、0046#20（複合指令與主流程整合）
+
+### 17 歷史節點型別擴充與三方路徑提取器（Path Extractor）
+- **state:** 等待確認
+- **承接:** 0046#13
+- **basis:** → O1
+
+在 `src/core/types.ts` 將 `map_command.label` 更正為標準 `id: string`（附帶 `other_info`），並擴充 `history_node.other_info?: Record<string, unknown>`；於 `src/packs/vanilla/history.ts` 實作三方路徑提取器（`extract_branch_path`），提取 $\text{LCA} \to S$ 與 $\text{LCA} \to T$ 的節點與指令序列（零字串解析），並支援標準 `vanilla` 命名空間（移除 `$` 前綴，參閱 QA 0002）之 `pinned` 與 `merged_from` 元資料存取。
+
+**沿革**
+
+- H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 型別擴充與差異分析模組（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 03:04 落地 —— 更正 map_command.id，擴充 history_node.other_info，實作 extract_branch_path 路徑提取器，徹底移除字串正則剖析（agent: gemini-3.7-flash） → O1
+- H3 · 2026-08-25 03:10 決斷 —— 確立命名空間 4 大型態與 other_info[pack_id] 擴充標準（移除 $ 前綴），紀錄於 docs/QA/0002（human: wVQ88Soi2Il9）
+
+### 18 3-Way 衝突檢測器（3-Way Conflict Detector）
+- **state:** 待實作
+- **承接:** 0046#13
+- **basis:** → O1
+
+在 `src/packs/vanilla/history.ts` 實作嚴格原子性 3-Way 衝突檢測函式：比對來源分支與目標分支相對於 LCA 的差異集，若檢測到雙端同時修改同一裝置（座標歧異或配方歧異）或來源端嘗試修改/刪除已被目標端刪除的裝置，判定為衝突並生成詳細衝突報告；空間重疊則放行不列衝突。
+
+**沿革**
+
+- H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 衝突檢測模組（human: wVQ88Soi2Il9）
+
+### 19 UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
+- **state:** 待實作
+- **承接:** 0046#13
+- **basis:** → O1
+
+在 `src/packs/vanilla/history.ts` 實作 UID 重映射與指令重放機制：維護 `source_to_target_uid_map`，將來源分支建立裝置分配到的新 UID 記錄並精準轉換後續的 `move`、`select_recipe` 與 `delete` 指令，生成一組適用於目標地圖狀態的全新可逆指令序列。
+
+**沿革**
+
+- H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 重映射與指令重放模組（human: wVQ88Soi2Il9）
+
+### 20 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
+- **state:** 待實作
+- **承接:** 0046#13
+- **basis:** → O1
+
+在 `src/packs/vanilla/history.ts` 實作 `composite_map_command`（正向依序執行、反向由後往前撤銷）與 `merge_branch(source_uid, target_uid?)` 完整調度主流程：整合 Fast-forward、衝突檢測、UID 重映射重放與 Merge 節點寫入（設定 `merged_from_uid` 並觸發 history 變更 Hook），由 `vanilla` 匯出。
+
+**沿革**
+
+- H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 複合指令與主流程調度模組（human: wVQ88Soi2Il9）
+
+### 14 CLI 實作 merge 指令與參數解析
+- **state:** 待實作
+- **承接:** 0046#3
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/cli_executor.ts` 實作 `merge --"<source_uid>" [--"<target_uid>"]` 指令；解析參數並呼叫 `merge_branch`，針對 Fast-forward、合併衝突與非法節點提供明確提示與報錯，並更新 help 說明。
+
+**沿革**
+
+- H1 · 2026-08-25 02:36 決斷 —— 承接 0046#3 CLI 指令實作任務（human: wVQ88Soi2Il9）
+
+### 15 Shirones UI 實作分支合併按鈕與 Git Graph 雙親拓撲線條
+- **state:** 待實作
+- **承接:** 0046#3
+- **basis:** → O1
+
+在 `src/packs/shirones_ui/history_tree_panel.ts` 節點行 DOM 提供「合併分支 🔀」按鈕（若為活躍路徑或祖先節點自動禁用），並在 Git Graph SVG 渲染中繪製雙親合併匯入弧線（Merge Curves）與標記 `MERGE` 徽章。
+
+**沿革**
+
+- H1 · 2026-08-25 02:36 決斷 —— 承接 0046#3 UI 介面實作任務（human: wVQ88Soi2Il9）
+
+### 16 歷史分支合併功能之整合測試與驗證
+- **state:** 待實作
+- **承接:** 0046#3
+- **basis:** → O1
+
+建立測試腳本驗證 `merge_branch` 之各情境：Fast-forward、分歧分支合併、UID 重映射連續操作、3-Way 衝突拒絕、Undo/Redo 完整性以及 UI/CLI 呼叫正確性。
+
+**沿革**
+
+- H1 · 2026-08-25 02:36 決斷 —— 承接 0046#3 測試驗證任務（human: wVQ88Soi2Il9）
+

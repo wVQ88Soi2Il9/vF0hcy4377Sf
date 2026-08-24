@@ -13,7 +13,13 @@
 - `0047#3` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
 - `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
 - `0046#10` · **等待確認** — CLI 實作 delete-node 指令
-- `0046#3` · **待實作** — 實作歷史分支合併（Merge Branch）
+- `0046#17` · **等待確認** — 歷史節點型別擴充與三方路徑提取器（Path Extractor）
+- `0046#18` · **待實作** — 3-Way 衝突檢測器（3-Way Conflict Detector）
+- `0046#19` · **待實作** — UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
+- `0046#20` · **待實作** — 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
+- `0046#14` · **待實作** — CLI 實作 merge 指令與參數解析
+- `0046#15` · **待實作** — Shirones UI 實作分支合併按鈕與 Git Graph 雙親拓撲線條
+- `0046#16` · **待實作** — 歷史分支合併功能之整合測試與驗證
 - `0042#1` · **待實作** — 實作視口座標逆變換 (screen_to_grid) 與裝置拾取檢測
 - `0042#2` · **待實作** — 實作畫布內裝置拖曳移動 (Drag to Move) 與偶數座標吸附
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
@@ -26,5 +32,5 @@
 
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
 - **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
-- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 3/12，已移交 3
+- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 9/20，已移交 5
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4

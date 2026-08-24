@@ -55,7 +55,7 @@ function format_history_summary(): string
     {
         const is_current = node.uid === tree.current_uid;
         const prefix = is_current ? '-> ' : '   ';
-        const label = node.command ? node.command.label : 'root (initial)';
+        const label = node.command ? node.command.id : 'root (initial)';
         const parent_info = node.parent_uid !== null ? ` (parent: ${node.parent_uid})` : '';
         const branches = node.children_uids.length > 1 ? ` [branches: ${node.children_uids.join(', ')}]` : '';
         lines.push(`${prefix}[#${node.uid}] ${label}${parent_info}${branches}`);
@@ -111,7 +111,7 @@ export function execute_command(input: string): string
                 for (const uid of pinned)
                 {
                     const node = tree?.nodes.get(uid);
-                    const label = node ? (node.command ? node.command.label : 'root (initial state)') : 'unknown';
+                    const label = node ? (node.command ? node.command.id : 'root (initial state)') : 'unknown';
                     lines.push(`- [#${uid}] ${label}`);
                 }
                 return lines.join('\n');

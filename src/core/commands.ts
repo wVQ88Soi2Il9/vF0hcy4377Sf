@@ -25,7 +25,8 @@ export function create_device_command
     let created_dev: device | null = null;
 
     return {
-        label: `create "${definition_id}" at [${position.join(', ')}]`,
+        id: 'core:create_device',
+        other_info: { definition_id, position: [...position], ...other_info },
         execute(map: game_map): void
         {
             if (!created_dev)
@@ -56,7 +57,8 @@ export function delete_device_command(device_uid: number): map_command
     let deleted_dev: device | null = null;
 
     return {
-        label: `delete #${device_uid}`,
+        id: 'core:delete_device',
+        other_info: { device_uid },
         execute(map: game_map): void
         {
             const target_uid = deleted_dev ? deleted_dev.uid : device_uid;
@@ -85,7 +87,8 @@ export function move_device_command(device_uid: number, new_position: vector): m
     let previous_position: vector | null = null;
 
     return {
-        label: `move #${device_uid} to [${new_position.join(', ')}]`,
+        id: 'core:move_device',
+        other_info: { device_uid, position: [...new_position] },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
@@ -118,7 +121,8 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: string
     let initialized = false;
 
     return {
-        label: `select recipe "${new_recipe_id ?? 'none'}" for #${device_uid}`,
+        id: 'core:select_recipe',
+        other_info: { device_uid, new_recipe_id },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);

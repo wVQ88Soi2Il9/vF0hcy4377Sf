@@ -123,14 +123,17 @@ export interface game_map
  */
 export interface map_command
 {
-    /** Human-readable label shown in history panels and CLI output. */
-    label:   string;
+    /** Unique command identifier or type ID (e.g. 'core:create_device', 'core:move_device'). */
+    id:          string;
 
     /** Apply the change to the map. */
     execute(map: game_map): void;
 
     /** Revert the change to the map. Must be the exact logical inverse of execute(). */
     inverse(map: game_map): void;
+
+    /** Optional mod-extensible metadata associated with this command instance. */
+    other_info?: Record<string, unknown>;
 }
 
 /**
@@ -160,6 +163,11 @@ export interface history_node
      * `null` only for the root node.
      */
     command:      map_command | null;
+
+    /**
+     * Mod-extensible metadata for this history node (e.g. $vanilla tags, pin, merge info).
+     */
+    other_info?:  Record<string, unknown>;
 }
 
 /**

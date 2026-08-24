@@ -9,11 +9,17 @@ import
     set_node_pin,
     toggle_node_pin,
     get_pinned_nodes,
-    clear_all_pinned_nodes
+    clear_all_pinned_nodes,
+    get_vanilla_node_info,
+    set_vanilla_node_info,
+    get_node_merged_from,
+    set_node_merged_from,
+    extract_branch_path
 } from './history';
 
 export type { available_recipe_entry } from './recipe_query';
 export type { map_validation_result, device_node } from './types';
+export type { vanilla_history_node_info } from './history';
 export { get_available_recipes } from './recipe_query';
 export { check_map_overlap, is_out_of_bounds } from './overlap';
 export { build_device_graph } from './graph';
@@ -24,7 +30,12 @@ export
     set_node_pin,
     toggle_node_pin,
     get_pinned_nodes,
-    clear_all_pinned_nodes
+    clear_all_pinned_nodes,
+    get_vanilla_node_info,
+    set_vanilla_node_info,
+    get_node_merged_from,
+    set_node_merged_from,
+    extract_branch_path
 };
 
 export const vanilla =
@@ -38,7 +49,12 @@ export const vanilla =
     set_node_pin,
     toggle_node_pin,
     get_pinned_nodes,
-    clear_all_pinned_nodes
+    clear_all_pinned_nodes,
+    get_vanilla_node_info,
+    set_vanilla_node_info,
+    get_node_merged_from,
+    set_node_merged_from,
+    extract_branch_path
 };
 
 /**

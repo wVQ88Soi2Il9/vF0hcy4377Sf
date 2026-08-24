@@ -74,59 +74,68 @@ function get_lane_color(lane: number): string
     return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
-function parse_command_details(label: string): {
+import type { map_command } from '@/API';
+
+function parse_command_details(cmd: map_command | null): {
     icon:        string;
     action_type: string;
     target:      string;
     params:      string;
 }
 {
-    if (!label || label === 'root' || label.startsWith('root'))
+    if (!cmd)
     {
         return {
             icon:        '🔷',
             action_type: 'root',
-            target:      label || 'root (initial state)',
+            target:      'root (initial state)',
             params:      ''
         };
     }
 
-    if (label.startsWith('create'))
+    if (cmd.id === 'core:create_device')
     {
+        const def = (cmd.other_info?.definition_id as string) ?? 'device';
+        const pos = cmd.other_info?.position ? ` at [${(cmd.other_info.position as number[]).join(', ')}]` : '';
         return {
             icon:        '➕',
             action_type: 'create',
-            target:      label,
+            target:      `create "${def}"${pos}`,
             params:      ''
         };
     }
 
-    if (label.startsWith('move'))
+    if (cmd.id === 'core:move_device')
     {
+        const uid = cmd.other_info?.device_uid ?? '';
+        const pos = cmd.other_info?.position ? ` to [${(cmd.other_info.position as number[]).join(', ')}]` : '';
         return {
             icon:        '🔄',
             action_type: 'move',
-            target:      label,
+            target:      `move #${uid}${pos}`,
             params:      ''
         };
     }
 
-    if (label.startsWith('select recipe'))
+    if (cmd.id === 'core:select_recipe')
     {
+        const uid = cmd.other_info?.device_uid ?? '';
+        const recipe = cmd.other_info?.new_recipe_id ?? 'none';
         return {
             icon:        '⚙️',
             action_type: 'recipe',
-            target:      label,
+            target:      `select recipe "${recipe}" for #${uid}`,
             params:      ''
         };
     }
 
-    if (label.startsWith('delete'))
+    if (cmd.id === 'core:delete_device')
     {
+        const uid = cmd.other_info?.device_uid ?? '';
         return {
             icon:        '🗑️',
             action_type: 'delete',
-            target:      label,
+            target:      `delete #${uid}`,
             params:      ''
         };
     }
@@ -134,7 +143,7 @@ function parse_command_details(label: string): {
     return {
         icon:        '🔹',
         action_type: 'command',
-        target:      label,
+        target:      cmd.id,
         params:      ''
     };
 }
@@ -680,8 +689,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         for (const n of layout.nodes)
         {
             const row_y = PAD_Y + n.row * ROW_HEIGHT;
-            const label_str = n.node.command ? n.node.command.label : 'root (initial state)';
-            const details = parse_command_details(label_str);
+            const details = parse_command_details(n.node.command);
             const color = get_lane_color(n.lane);
             const is_pinned = is_node_pinned(n.node.uid);
 
@@ -715,7 +723,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             const target_span = document.createElement('span');
             target_span.className = 'history_git_target';
             target_span.textContent = details.target;
-            target_span.title = label_str;
+            target_span.title = details.target;
 
             main_line.appendChild(icon_span);
             main_line.appendChild(target_span);
