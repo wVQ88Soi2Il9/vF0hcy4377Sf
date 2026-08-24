@@ -1,218 +1,149 @@
-import type { pack, item_definition, recipe, recipe_evaluation, device, vector, namespaced_id } from '@/core/types';
+import type { item_definition, recipe, recipe_evaluation, namespaced_id, pack_module, device_constructor } from '@/core/types';
 
-export type device_constructor = new
-(
-    uid:           number,
-    definition_id: string,
-    position:      vector,
-    other_info?:   Record<string, unknown>
-) => device;
-
-/**
- * Parses a string or namespaced_id object into a structured namespaced_id.
- */
-export function resolve_namespaced_id(identifier: string | namespaced_id, default_pack: string = 'core'): namespaced_id
-{
-    if (typeof identifier !== 'string')
-    {
-        return identifier;
-    }
-    if (identifier.includes(':'))
-    {
-        const idx = identifier.indexOf(':');
-        return {
-            pack: identifier.slice(0, idx),
-            id:   identifier.slice(idx + 1)
-        };
-    }
-    return {
-        pack: default_pack,
-        id:   identifier
-    };
-}
-
-/**
- * Formats a namespaced_id or string into standard "pack:id" format.
- */
-export function format_namespaced_id(identifier: string | namespaced_id): string
-{
-    if (typeof identifier === 'string')
-    {
-        return identifier;
-    }
-    return `${identifier.pack}:${identifier.id}`;
-}
+export type { device_constructor };
 
 export interface pack_registry
 {
-    loaded_packs:   Map<string, pack>;
-    items:          Map<string, Map<string, item_definition>>;
-    recipes:        Map<string, Map<string, recipe>>;
-    device_classes: Map<string, Map<string, device_constructor>>;
+    packs: Map<string, pack_module>;
 }
 
 /**
- * 建立一個空的 registry，採用兩層 Map 結構 (Pack ID -> Resource ID -> Definition)
+ * 建立一個空的 registry，採用單一 pack_module 字典結構
  */
 export function create_pack_registry(): pack_registry
 {
     return {
-        loaded_packs:   new Map(),
-        items:          new Map(),
-        recipes:        new Map(),
-        device_classes: new Map()
+        packs: new Map()
     };
 }
 
 /**
- * 載入一個新的 pack 進 registry。
- * 若載入相同 ID 的 pack，會先將舊的解除安裝，支援熱插拔。
+ * 註冊一個 pack_module 物件進 registry。
  */
-export function load_pack(registry: pack_registry, new_pack: pack): void
+export function register_pack(registry: pack_registry, mod: pack_module): void
 {
-    registry.loaded_packs.set(new_pack.id, new_pack);
-
-    let pack_items = registry.items.get(new_pack.id);
-    if (!pack_items)
-    {
-        pack_items = new Map();
-        registry.items.set(new_pack.id, pack_items);
-    }
-
-    for (const item of new_pack.items)
-    {
-        const resolved = resolve_namespaced_id(item.id, new_pack.id);
-        item.pack = resolved.pack;
-        item.id = resolved.id;
-        pack_items.set(resolved.id, item);
-    }
-
-    let pack_recipes = registry.recipes.get(new_pack.id);
-    if (!pack_recipes)
-    {
-        pack_recipes = new Map();
-        registry.recipes.set(new_pack.id, pack_recipes);
-    }
-
-    for (const rec of new_pack.recipes)
-    {
-        const resolved = resolve_namespaced_id(rec.id, new_pack.id);
-        rec.pack = resolved.pack;
-        rec.id = resolved.id;
-        pack_recipes.set(resolved.id, rec);
-    }
+    registry.packs.set(mod.id, mod);
 }
 
 /**
- * 取得物品定義，支援字串 ("test:iron_plate") 或物件 ({ pack: "test", id: "iron_plate" })
+ * 檢查物品定義是否存在於指定 registry
  */
-export function get_item(registry: pack_registry, identifier: string | namespaced_id, optional_id?: string): item_definition | undefined
+export function has_item(registry: pack_registry, identifier: namespaced_id): boolean
 {
-    if (typeof identifier === 'string' && optional_id !== undefined)
-    {
-        return registry.items.get(identifier)?.get(optional_id);
-    }
-    const resolved = resolve_namespaced_id(identifier);
-    return registry.items.get(resolved.pack)?.get(resolved.id);
+    return Boolean(registry.packs.get(identifier.pack)?.items?.[identifier.id]);
 }
 
 /**
- * 取得配方定義，支援字串 ("test:smelt_iron") 或物件 ({ pack: "test", id: "smelt_iron" })
+ * 取得物品定義，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_recipe(registry: pack_registry, identifier: string | namespaced_id, optional_id?: string): recipe | undefined
+export function get_item(registry: pack_registry, identifier: namespaced_id): item_definition
 {
-    if (typeof identifier === 'string' && optional_id !== undefined)
+    const item = registry.packs.get(identifier.pack)?.items?.[identifier.id];
+    if (!item)
     {
-        return registry.recipes.get(identifier)?.get(optional_id);
+        throw new Error(`Item "${identifier.pack}:${identifier.id}" not found in registry.`);
     }
-    const resolved = resolve_namespaced_id(identifier);
-    return registry.recipes.get(resolved.pack)?.get(resolved.id);
+    return item;
+}
+
+/**
+ * 檢查配方定義是否存在於指定 registry
+ */
+export function has_recipe(registry: pack_registry, identifier: namespaced_id): boolean
+{
+    return Boolean(registry.packs.get(identifier.pack)?.recipes?.[identifier.id]);
+}
+
+/**
+ * 取得配方定義，若不存在則拋出例外 (Fail-Fast)
+ */
+export function get_recipe(registry: pack_registry, identifier: namespaced_id): recipe
+{
+    const rec = registry.packs.get(identifier.pack)?.recipes?.[identifier.id];
+    if (!rec)
+    {
+        throw new Error(`Recipe "${identifier.pack}:${identifier.id}" not found in registry.`);
+    }
+    return rec;
+}
+
+/**
+ * 檢查裝置類別是否存在於指定 registry
+ */
+export function has_device_class(registry: pack_registry, identifier: namespaced_id): boolean
+{
+    return Boolean(registry.packs.get(identifier.pack)?.devices?.[identifier.id]);
+}
+
+/**
+ * 取得裝置類別建構子，若不存在則拋出例外 (Fail-Fast)
+ */
+export function get_device_class(registry: pack_registry, identifier: namespaced_id): device_constructor
+{
+    const cls = registry.packs.get(identifier.pack)?.devices?.[identifier.id];
+    if (!cls)
+    {
+        throw new Error(`Device class "${identifier.pack}:${identifier.id}" not found in registry.`);
+    }
+    return cls;
 }
 
 /**
  * 註冊單一配方至 registry
  */
-export function register_recipe(registry: pack_registry, recipe: recipe): void
+export function register_recipe
+(
+    registry:   pack_registry,
+    identifier: namespaced_id,
+    recipe:     recipe
+): void
 {
-    const resolved = resolve_namespaced_id(recipe.id, recipe.pack ?? 'core');
-    recipe.pack = resolved.pack;
-    recipe.id = resolved.id;
-
-    let pack_map = registry.recipes.get(resolved.pack);
-    if (!pack_map)
+    let mod = registry.packs.get(identifier.pack);
+    if (!mod)
     {
-        pack_map = new Map();
-        registry.recipes.set(resolved.pack, pack_map);
+        mod = { id: identifier.pack, recipes: {} };
+        registry.packs.set(identifier.pack, mod);
     }
-    pack_map.set(resolved.id, recipe);
+    if (!mod.recipes)
+    {
+        mod.recipes = {};
+    }
+    mod.recipes[identifier.id] = recipe;
 }
 
 /**
- * 註冊單一裝置類別至 registry，支援 (registry, "test:assembler", class) 或 (registry, "test", "assembler", class)
+ * 註冊單一裝置類別至 registry
  */
 export function register_device_class
 (
-    registry:      pack_registry,
-    identifier:    string | namespaced_id,
-    device_class:  device_constructor,
-    optional_cls?: device_constructor
+    registry:     pack_registry,
+    identifier:   namespaced_id,
+    device_class: device_constructor
 ): void
 {
-    let pack_name: string;
-    let local_id: string;
-    let cls: device_constructor;
-
-    if (typeof identifier === 'string' && typeof device_class === 'string' && optional_cls)
+    let mod = registry.packs.get(identifier.pack);
+    if (!mod)
     {
-        pack_name = identifier;
-        local_id = device_class as unknown as string;
-        cls = optional_cls;
+        mod = { id: identifier.pack, devices: {} };
+        registry.packs.set(identifier.pack, mod);
     }
-    else
+    if (!mod.devices)
     {
-        const resolved = resolve_namespaced_id(identifier);
-        pack_name = resolved.pack;
-        local_id = resolved.id;
-        cls = device_class;
+        mod.devices = {};
     }
-
-    let pack_map = registry.device_classes.get(pack_name);
-    if (!pack_map)
-    {
-        pack_map = new Map();
-        registry.device_classes.set(pack_name, pack_map);
-    }
-    pack_map.set(local_id, cls);
-}
-
-/**
- * 透過 ID 取得裝置類別建構子，支援字串 ("test:assembler") 或物件 ({ pack: "test", id: "assembler" })
- */
-export function get_device_class(registry: pack_registry, identifier: string | namespaced_id, optional_id?: string): device_constructor | undefined
-{
-    if (typeof identifier === 'string' && optional_id !== undefined)
-    {
-        return registry.device_classes.get(identifier)?.get(optional_id);
-    }
-    const resolved = resolve_namespaced_id(identifier);
-    return registry.device_classes.get(resolved.pack)?.get(resolved.id);
+    mod.devices[identifier.id] = device_class;
 }
 
 /**
  * 評估指定配方在指定裝置實體（uid）或全局上下文中的結果。
- * 若配方不存在則回傳 undefined。
  */
 export function evaluate_recipe
 (
     registry:   pack_registry,
-    identifier: string | namespaced_id,
+    identifier: namespaced_id,
     uid?:       number
-): recipe_evaluation | undefined
+): recipe_evaluation
 {
     const rec = get_recipe(registry, identifier);
-    if (!rec)
-    {
-        return undefined;
-    }
     return rec.evaluate(uid);
 }

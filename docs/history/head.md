@@ -8,7 +8,7 @@
 
 ## 現在開著的（逐格）
 
-- `0049#1` · **待實作** — Core 型別與 Registry 重構（Core Types & Unified Registry）
+- `0049#1` · **等待確認** — Core 型別與 Registry 重構（Core Types & Unified Registry）
 - `0049#2` · **待實作** — Pack Index 統一模組化封裝（Packs Index Harmonization）
 - `0049#3` · **待實作** — Loader 自動載入器簡化（Loader Streamlining）
 - `0049#4` · **待實作** — 下游 UI / CLI 對齊與功能整合驗證（UI / CLI Alignment & Verification）

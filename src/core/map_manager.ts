@@ -1,4 +1,4 @@
-import type { game_map, device, vector } from '@/core/types';
+import type { game_map, device, vector, namespaced_id } from '@/core/types';
 import type { device_constructor } from '@/core/pack_manager';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from '@/core/hooks';
 
@@ -24,7 +24,7 @@ export function create_device
 (
     map:           game_map, 
     device_class:  device_constructor,
-    definition_id: string, 
+    definition_id: namespaced_id, 
     position:      vector, 
     other_info:    Record<string, unknown> = {}
 ): device
@@ -99,7 +99,7 @@ export function move_device(map: game_map, device_uid: number, new_position: vec
  * Sets or clears the selected recipe for a device.
  * Modifies the device in place.
  */
-export function select_recipe(map: game_map, device_uid: number, recipe_id?: string): void
+export function select_recipe(map: game_map, device_uid: number, recipe_id?: namespaced_id): void
 {
     const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)

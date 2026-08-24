@@ -16,30 +16,40 @@ export interface namespaced_id
     id:   string;
 }
 
-// ── Pack ─────────────────────────────────────────────────────────────────────
+// ── Pack Module ──────────────────────────────────────────────────────────────
 
-/** 
- * 代表一個從 JSON 載入的資料包 (Mod / Base Game)
+export type device_constructor = new
+(
+    uid:           number,
+    definition_id: namespaced_id,
+    position:      vector,
+    other_info?:   Record<string, unknown>
+) => device;
+
+/**
+ * 模組命名空間物件 (Pack-as-a-Module-Object)
  */
-export interface pack
+export interface pack_module
 {
-    id:       string;
-    items:    item_definition[];
-    recipes:  recipe[];
+    id:            string;
+    items?:        Record<string, item_definition>;
+    recipes?:      Record<string, recipe>;
+    devices?:      Record<string, device_constructor>;
+    init_pack?:    () => void;
+    [key: string]: unknown;
 }
 
 // ── Item ─────────────────────────────────────────────────────────────────────
 
 export interface item_definition
 {
-    pack?:       string;
-    id:          string;
-    other_info:  Record<string, unknown>;
+    id:          namespaced_id;
+    other_info?: Record<string, unknown>;
 }
 
 export interface item_stack
 {
-    item_id:   string;
+    item_id:   namespaced_id;
     quantity:  number;
 }
 
@@ -71,8 +81,7 @@ export type recipe_fn = (uid?: number) => recipe_evaluation;
 
 export interface recipe
 {
-    pack?:       string;
-    id:          string;
+    id:          namespaced_id;
     evaluate:    recipe_fn;
     other_info?: Record<string, unknown>;
 }
@@ -82,12 +91,12 @@ export interface recipe
 export abstract class device
 {
     public readonly uid:         number;
-    public definition_id:        string;
+    public definition_id:        namespaced_id;
     public position:             vector;
-    public selected_recipe_id?:  string;
+    public selected_recipe_id?:  namespaced_id;
     public other_info?:          Record<string, unknown>;
 
-    constructor(uid: number, definition_id: string, position: vector)
+    constructor(uid: number, definition_id: namespaced_id, position: vector)
     {
         this.uid = uid;
         this.definition_id = definition_id;
@@ -136,8 +145,8 @@ export interface game_map
  */
 export interface map_command
 {
-    /** Unique command identifier or type ID (e.g. 'core:create_device', 'core:move_device'). */
-    id:          string;
+    /** Unique command identifier (e.g. { pack: 'core', id: 'create_device' }). */
+    id:          namespaced_id;
 
     /** Apply the change to the map. */
     execute(map: game_map): void;

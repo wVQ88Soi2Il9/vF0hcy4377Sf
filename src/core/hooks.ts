@@ -1,4 +1,4 @@
-import type { game_map, device, vector, history_tree } from '@/core/types';
+import type { game_map, device, vector, history_tree, namespaced_id } from '@/core/types';
 import type { pack_registry } from '@/core/pack_manager';
 
 export type check_overlap_hook = (map: game_map, registry: pack_registry) => unknown;
@@ -16,8 +16,8 @@ export type device_select_recipe_hook =
 (
     map:           game_map,
     dev:           device,
-    old_recipe_id: string | undefined,
-    new_recipe_id: string | undefined
+    old_recipe_id: namespaced_id | undefined,
+    new_recipe_id: namespaced_id | undefined
 ) => void;
 export type history_change_hook = (tree: history_tree) => void;
 
@@ -112,8 +112,8 @@ export function trigger_select_recipe
 (
     map:           game_map,
     dev:           device,
-    old_recipe_id: string | undefined,
-    new_recipe_id: string | undefined
+    old_recipe_id: namespaced_id | undefined,
+    new_recipe_id: namespaced_id | undefined
 ): void
 {
     for (const hook of hooks.on_device_select_recipe)

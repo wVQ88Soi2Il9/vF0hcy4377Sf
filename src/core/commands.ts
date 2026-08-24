@@ -1,4 +1,4 @@
-import type { game_map, device, vector, map_command } from '@/core/types';
+import type { game_map, device, vector, map_command, namespaced_id } from '@/core/types';
 import type { device_constructor } from '@/core/pack_manager';
 import
 {
@@ -17,7 +17,7 @@ import
 export function create_device_command
 (
     device_class:  device_constructor,
-    definition_id: string,
+    definition_id: namespaced_id,
     position:      vector,
     other_info:    Record<string, unknown> = {}
 ): map_command
@@ -25,7 +25,7 @@ export function create_device_command
     let created_dev: device | null = null;
 
     return {
-        id: 'core:create_device',
+        id: { pack: 'core', id: 'create_device' },
         other_info: { definition_id, position: [...position], ...other_info },
         execute(map: game_map): void
         {
@@ -57,7 +57,7 @@ export function delete_device_command(device_uid: number): map_command
     let deleted_dev: device | null = null;
 
     return {
-        id: 'core:delete_device',
+        id: { pack: 'core', id: 'delete_device' },
         other_info: { device_uid },
         execute(map: game_map): void
         {
@@ -87,7 +87,7 @@ export function move_device_command(device_uid: number, new_position: vector): m
     let previous_position: vector | null = null;
 
     return {
-        id: 'core:move_device',
+        id: { pack: 'core', id: 'move_device' },
         other_info: { device_uid, position: [...new_position] },
         execute(map: game_map): void
         {
@@ -115,13 +115,13 @@ export function move_device_command(device_uid: number, new_position: vector): m
  * Command for selecting or clearing a device's recipe.
  * Remembers previous recipe ID so inverse (undo) can revert it.
  */
-export function select_recipe_command(device_uid: number, new_recipe_id?: string): map_command
+export function select_recipe_command(device_uid: number, new_recipe_id?: namespaced_id): map_command
 {
-    let previous_recipe_id: string | undefined = undefined;
+    let previous_recipe_id: namespaced_id | undefined = undefined;
     let initialized = false;
 
     return {
-        id: 'core:select_recipe',
+        id: { pack: 'core', id: 'select_recipe' },
         other_info: { device_uid, new_recipe_id },
         execute(map: game_map): void
         {

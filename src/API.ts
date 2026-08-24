@@ -225,29 +225,33 @@ export function create_device_command
     {
         throw new Error('Global pack registry not found.');
     }
-    const dev_class = get_device_class(registry, definition_id);
-    if (!dev_class)
-    {
-        throw new Error(`Device definition ID "${definition_id}" not found in registry.`);
-    }
-    return core_create_device_command(dev_class, definition_id, position, other_info);
+    const ns_id = parse_namespaced_id(definition_id);
+    const dev_class = get_device_class(registry, ns_id);
+    return core_create_device_command(dev_class, ns_id, position, other_info);
 }
 
 export
 {
     create_pack_registry,
-    load_pack,
+    register_pack,
     get_item,
+    has_item,
     get_recipe,
+    has_recipe,
     register_recipe,
     register_device_class,
     get_device_class,
+    has_device_class,
     evaluate_recipe,
-    resolve_namespaced_id,
-    format_namespaced_id,
     type pack_registry,
     type device_constructor
 } from '@/core/pack_manager';
+
+export
+{
+    parse_namespaced_id,
+    format_namespaced_id
+} from '@/utils/identifier';
 
 export
 {
@@ -258,7 +262,7 @@ export type
 {
     vector,
     namespaced_id,
-    pack,
+    pack_module,
     item_definition,
     item_stack,
     recipe_evaluation,
