@@ -5,6 +5,17 @@
  */
 export type vector = number[];
 
+// ── Namespace & Identifier ───────────────────────────────────────────────────
+
+/**
+ * Structured namespaced resource identifier.
+ */
+export interface namespaced_id
+{
+    pack: string;
+    id:   string;
+}
+
 // ── Pack ─────────────────────────────────────────────────────────────────────
 
 /** 
@@ -21,6 +32,7 @@ export interface pack
 
 export interface item_definition
 {
+    pack?:       string;
     id:          string;
     other_info:  Record<string, unknown>;
 }
@@ -59,6 +71,7 @@ export type recipe_fn = (uid?: number) => recipe_evaluation;
 
 export interface recipe
 {
+    pack?:       string;
     id:          string;
     evaluate:    recipe_fn;
     other_info?: Record<string, unknown>;

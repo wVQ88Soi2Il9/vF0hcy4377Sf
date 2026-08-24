@@ -20,5 +20,19 @@
 3. **跨模組擴充目錄**：`$` 符號專屬於檔案系統（例如 `src/packs/pipe/$basic_ui/`），代碼內資料結構完全不使用 `$`。
 4. **Pack 模組介面**：Pack 的公開 API 統一於其 `index.ts` 封裝為命名物件導出（例如 `export const vanilla = { ... }`）。
 
+### Q2 · 2026-08-25 03:12（human: wVQ88Soi2Il9）
+為什麼資源與指令 ID 採字串，而不使用物件結構（如第 4 種方式）？
+
+### A2 · 2026-08-25 03:15（agent: gemini-3.7-flash）
+考量 JS 原生無值語意物件雜湊（Value-based Hash），若僅用物件作為查表 Key 需自訂轉換，但兩層 Map 階層註冊表（`Map<pack_id, Map<resource_id, T>>`）具備強大優勢：
+1. **語意純粹**：提供 `namespaced_id`（`{ pack: string, id: string }`）結構化物件介面，擺脫字串拆分。
+2. **Mod 整體管理極致高效**：卸載 Mod（`unload_pack`）可直接以 $O(1)$ 刪除對應子 Map，完全無需掃描全域字串。
+3. **無縫相容**：Registry 同時支援物件結構 `{ pack, id }` 與冒號字串 `<pack>:<id>` 雙向解析，CLI 與 JSON 序列化維持簡潔字串傳遞。
+
 ## 結論
-字串 ID 統一為 `<pack_id>:<name>`；Pack 程式碼介面統一為 `export const <pack_name>`；`other_info` 擴充強制以 `<pack_id>` 物件包裹且不帶 `$` 符號；`$` 專屬於目錄結構。
+1. **Registry 採用兩層 Map 結構**（`Map<pack_id, Map<resource_id, T>>`），Mod 卸載可達 $O(1)$ 乾淨清除。
+2. **資源與定義支援 `namespaced_id` 結構化物件**（`{ pack, id }`），同時相容 `<pack_id>:<name>` 字串格式。
+3. **Pack 程式碼介面**統一為 `export const <pack_name> = { ... }` 模組導出。
+4. **`other_info` 擴充袋**強制以 `<pack_id>` 物件包裹且不帶 `$` 符號。
+5. **`$` 符號**專屬於檔案系統擴充目錄（`$<rely_pack>/`）。
+

@@ -1,5 +1,5 @@
 import './style.css';
-import { get_registry } from '@/runtime';
+import { get_registry, get_device_class } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
 import { pipe, type pipe_segment } from '../pipe';
 
@@ -143,7 +143,7 @@ export function is_pipe_definition(def_id: string): boolean
     {
         return false;
     }
-    const cls = registry.device_classes.get(def_id);
+    const cls = get_device_class(registry, def_id);
     if (!cls)
     {
         return false;
