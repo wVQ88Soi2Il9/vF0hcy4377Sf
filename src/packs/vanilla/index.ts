@@ -16,12 +16,15 @@ import
     set_node_merged_from,
     extract_branch_path,
     check_merge_conflicts,
-    aggregate_branch_mutations
+    aggregate_branch_mutations,
+    composite_map_command,
+    replay_branch_commands,
+    merge_branch
 } from './history';
 
 export type { available_recipe_entry } from './recipe_query';
 export type { map_validation_result, device_node } from './types';
-export type { vanilla_history_node_info, merge_conflict, merge_conflict_check_result } from './history';
+export type { vanilla_history_node_info, merge_conflict, merge_conflict_check_result, merge_branch_result } from './history';
 export { get_available_recipes } from './recipe_query';
 export { check_map_overlap, is_out_of_bounds } from './overlap';
 export { build_device_graph } from './graph';
@@ -39,7 +42,10 @@ export
     set_node_merged_from,
     extract_branch_path,
     check_merge_conflicts,
-    aggregate_branch_mutations
+    aggregate_branch_mutations,
+    composite_map_command,
+    replay_branch_commands,
+    merge_branch
 };
 
 export const vanilla =
@@ -60,7 +66,10 @@ export const vanilla =
     set_node_merged_from,
     extract_branch_path,
     check_merge_conflicts,
-    aggregate_branch_mutations
+    aggregate_branch_mutations,
+    composite_map_command,
+    replay_branch_commands,
+    merge_branch
 };
 
 /**

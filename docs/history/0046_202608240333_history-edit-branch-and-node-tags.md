@@ -231,7 +231,7 @@
 - H2 · 2026-08-25 03:17 落地 —— 在 src/packs/vanilla/history.ts 實作 aggregate_branch_mutations 與 check_merge_conflicts 嚴格原子性衝突檢測器並由 vanilla 匯出（agent: gemini-3.7-flash） → O1
 
 ### 19 UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
-- **state:** 待實作
+- **state:** 等待確認
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -240,9 +240,10 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 重映射與指令重放模組（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 03:18 落地 —— 在 src/packs/vanilla/history.ts 實作 replay_branch_commands，動態重映射來源分支新建立 UID 與後續 move/recipe/delete 指令（agent: gemini-3.7-flash） → O1
 
 ### 20 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
-- **state:** 待實作
+- **state:** 等待確認
 - **承接:** 0046#13
 - **basis:** → O1
 
@@ -251,6 +252,7 @@
 **沿革**
 
 - H1 · 2026-08-25 02:46 決斷 —— 承接 0046#13 複合指令與主流程調度模組（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 03:18 落地 —— 實作 composite_map_command 與 merge_branch 完整調度演算法，支援 Fast-forward、衝突拒絕與雙親節點紀錄（agent: gemini-3.7-flash） → O1
 
 ### 14 CLI 實作 merge 指令與參數解析
 - **state:** 待實作

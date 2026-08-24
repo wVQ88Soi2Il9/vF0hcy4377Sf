@@ -1,4 +1,25 @@
-import { get_history_tree, delete_node, compute_path_to_root, type history_node, type history_tree, type vector } from '@/API';
+import
+{
+    get_history_tree,
+    delete_node,
+    compute_path_to_root,
+    find_lca,
+    jump_to_node,
+    record_command,
+    create_device_command,
+    move_device_command,
+    select_recipe_command,
+    delete_device_command,
+    get_device_class,
+    get_map,
+    get_registry,
+    type history_node,
+    type history_tree,
+    type vector,
+    type game_map,
+    type map_command,
+    type pack_registry
+} from '@/API';
 
 export interface vanilla_history_node_info
 {
@@ -428,5 +449,326 @@ export function check_merge_conflicts
     return {
         has_conflict: conflicts.length > 0,
         conflicts
+    };
+}
+
+/**
+ * Creates an atomic composite map command that sequentially executes child commands
+ * and inverts them in exact reverse order upon undo.
+ */
+export function composite_map_command
+(
+    pack:       string,
+    id:         string,
+    commands:   map_command[],
+    other_info: Record<string, unknown> = {}
+): map_command
+{
+    return {
+        pack,
+        id,
+        other_info: { ...other_info, command_count: commands.length },
+        execute(map: game_map): void
+        {
+            for (const cmd of commands)
+            {
+                cmd.execute(map);
+            }
+        },
+        inverse(map: game_map): void
+        {
+            for (let i = commands.length - 1; i >= 0; i--)
+            {
+                commands[i].inverse(map);
+            }
+        }
+    };
+}
+
+/**
+ * Replays commands from source branch with dynamic UID remapping for newly created devices.
+ */
+export function replay_branch_commands
+(
+    source_nodes: history_node[],
+    registry:     pack_registry
+): map_command[]
+{
+    const uid_map = new Map<number, number>();
+    const remapped_commands: map_command[] = [];
+
+    for (const node of source_nodes)
+    {
+        const cmd = node.command;
+        if (!cmd)
+        {
+            continue;
+        }
+
+        if (cmd.pack === 'core' && cmd.id === 'create_device')
+        {
+            const def_id = (cmd.other_info?.definition_id as string) ?? '';
+            const pos = (cmd.other_info?.position as vector) ?? [0, 0, 0];
+            const orig_other_info = (cmd.other_info ?? {}) as Record<string, unknown>;
+            const old_uid = orig_other_info.device_uid as number | undefined;
+
+            const dev_class = get_device_class(registry, def_id);
+            if (!dev_class)
+            {
+                throw new Error(`Device class "${def_id}" not found during merge replay.`);
+            }
+
+            const new_cmd = create_device_command(dev_class, def_id, pos, orig_other_info);
+            const wrapped_create: map_command = {
+                pack:       'core',
+                id:         'create_device',
+                other_info: { ...new_cmd.other_info },
+                execute(m: game_map): void
+                {
+                    new_cmd.execute(m);
+                    const new_uid = new_cmd.other_info?.device_uid as number | undefined;
+                    if (old_uid !== undefined && new_uid !== undefined)
+                    {
+                        uid_map.set(old_uid, new_uid);
+                    }
+                },
+                inverse(m: game_map): void
+                {
+                    new_cmd.inverse(m);
+                }
+            };
+            remapped_commands.push(wrapped_create);
+        }
+        else if (cmd.pack === 'core' && cmd.id === 'move_device')
+        {
+            const orig_uid = cmd.other_info?.device_uid as number;
+            const new_pos = cmd.other_info?.position as vector;
+
+            const wrapped_move: map_command = {
+                pack:       'core',
+                id:         'move_device',
+                other_info: { device_uid: orig_uid, position: new_pos },
+                execute(m: game_map): void
+                {
+                    const target_dev_uid = uid_map.get(orig_uid) ?? orig_uid;
+                    const inner_cmd = move_device_command(target_dev_uid, new_pos);
+                    (this as any)._inner = inner_cmd;
+                    inner_cmd.execute(m);
+                },
+                inverse(m: game_map): void
+                {
+                    const inner_cmd = (this as any)._inner as map_command | undefined;
+                    if (inner_cmd)
+                    {
+                        inner_cmd.inverse(m);
+                    }
+                }
+            };
+            remapped_commands.push(wrapped_move);
+        }
+        else if (cmd.pack === 'core' && cmd.id === 'select_recipe')
+        {
+            const orig_uid = cmd.other_info?.device_uid as number;
+            const recipe_id = cmd.other_info?.new_recipe_id as string | undefined;
+
+            const wrapped_recipe: map_command = {
+                pack:       'core',
+                id:         'select_recipe',
+                other_info: { device_uid: orig_uid, new_recipe_id: recipe_id },
+                execute(m: game_map): void
+                {
+                    const target_dev_uid = uid_map.get(orig_uid) ?? orig_uid;
+                    const inner_cmd = select_recipe_command(target_dev_uid, recipe_id);
+                    (this as any)._inner = inner_cmd;
+                    inner_cmd.execute(m);
+                },
+                inverse(m: game_map): void
+                {
+                    const inner_cmd = (this as any)._inner as map_command | undefined;
+                    if (inner_cmd)
+                    {
+                        inner_cmd.inverse(m);
+                    }
+                }
+            };
+            remapped_commands.push(wrapped_recipe);
+        }
+        else if (cmd.pack === 'core' && cmd.id === 'delete_device')
+        {
+            const orig_uid = cmd.other_info?.device_uid as number;
+
+            const wrapped_delete: map_command = {
+                pack:       'core',
+                id:         'delete_device',
+                other_info: { device_uid: orig_uid },
+                execute(m: game_map): void
+                {
+                    const target_dev_uid = uid_map.get(orig_uid) ?? orig_uid;
+                    if (m.devices.some(d => d.uid === target_dev_uid))
+                    {
+                        const inner_cmd = delete_device_command(target_dev_uid);
+                        (this as any)._inner = inner_cmd;
+                        inner_cmd.execute(m);
+                    }
+                },
+                inverse(m: game_map): void
+                {
+                    const inner_cmd = (this as any)._inner as map_command | undefined;
+                    if (inner_cmd)
+                    {
+                        inner_cmd.inverse(m);
+                    }
+                }
+            };
+            remapped_commands.push(wrapped_delete);
+        }
+        else
+        {
+            remapped_commands.push(cmd);
+        }
+    }
+
+    return remapped_commands;
+}
+
+export interface merge_branch_result
+{
+    success:          boolean;
+    is_fast_forward?: boolean;
+    has_conflict?:    boolean;
+    conflicts?:       merge_conflict[];
+    merged_node_uid?: number;
+    message:          string;
+}
+
+/**
+ * Merges source_uid history branch into target_uid branch (defaults to current active node).
+ * Performs Fast-forward detection, 3-way conflict detection, command remapping,
+ * and records an atomic composite merge node.
+ */
+export function merge_branch
+(
+    source_uid:  number,
+    target_uid?: number
+): merge_branch_result
+{
+    const tree = get_history_tree();
+    const map = get_map();
+    const registry = get_registry();
+
+    if (!tree || !map || !registry)
+    {
+        return {
+            success: false,
+            message: 'Engine runtime (tree, map, or registry) not initialized.'
+        };
+    }
+
+    const actual_target_uid = target_uid ?? tree.current_uid;
+
+    if (!tree.nodes.has(source_uid))
+    {
+        return {
+            success: false,
+            message: `Source node #${source_uid} does not exist.`
+        };
+    }
+
+    if (!tree.nodes.has(actual_target_uid))
+    {
+        return {
+            success: false,
+            message: `Target node #${actual_target_uid} does not exist.`
+        };
+    }
+
+    if (source_uid === actual_target_uid)
+    {
+        return {
+            success:         true,
+            is_fast_forward: true,
+            merged_node_uid: actual_target_uid,
+            message:         `Already at node #${source_uid}.`
+        };
+    }
+
+    // Step 1: Ensure current map state is at actual_target_uid
+    if (tree.current_uid !== actual_target_uid)
+    {
+        jump_to_node(actual_target_uid);
+    }
+
+    // Step 2: Find Lowest Common Ancestor (LCA)
+    const lca_uid = find_lca(tree, source_uid, actual_target_uid);
+    if (lca_uid === null)
+    {
+        return {
+            success: false,
+            message: `Cannot find common ancestor between #${source_uid} and #${actual_target_uid}.`
+        };
+    }
+
+    // Step 3: Fast-forward checks
+    if (lca_uid === actual_target_uid)
+    {
+        // Target is an ancestor of Source -> Fast-forward directly to Source
+        jump_to_node(source_uid);
+        return {
+            success:         true,
+            is_fast_forward: true,
+            merged_node_uid: source_uid,
+            message:         `Fast-forward merged to branch head #${source_uid}.`
+        };
+    }
+
+    if (lca_uid === source_uid)
+    {
+        // Source is an ancestor of Target -> Already merged / up to date
+        return {
+            success:         true,
+            is_fast_forward: true,
+            merged_node_uid: actual_target_uid,
+            message:         `Source #${source_uid} is an ancestor of Target #${actual_target_uid}. Already up to date.`
+        };
+    }
+
+    // Step 4: 3-Way Conflict Detection
+    const conflict_check = check_merge_conflicts(tree, lca_uid, source_uid, actual_target_uid);
+    if (conflict_check.has_conflict)
+    {
+        return {
+            success:      false,
+            has_conflict: true,
+            conflicts:    conflict_check.conflicts,
+            message:      `Merge conflict detected: ${conflict_check.conflicts.map(c => c.message).join('; ')}`
+        };
+    }
+
+    // Step 5: Extract Source Path & Replay with UID Remapping
+    const source_path = extract_branch_path(tree, lca_uid, source_uid);
+    const remapped_commands = replay_branch_commands(source_path, registry);
+
+    // Step 6: Create & Execute Composite Merge Command
+    const merge_cmd = composite_map_command(
+        'core',
+        'merge_branch',
+        remapped_commands,
+        {
+            source_uid,
+            target_uid: actual_target_uid,
+            lca_uid
+        }
+    );
+
+    const new_node = record_command(tree, map, merge_cmd);
+
+    // Step 7: Record vanilla merged_from metadata on the merge node
+    set_node_merged_from(new_node.uid, source_uid);
+
+    return {
+        success:         true,
+        is_fast_forward: false,
+        merged_node_uid: new_node.uid,
+        message:         `Successfully merged branch #${source_uid} into #${actual_target_uid} at new node #${new_node.uid}.`
     };
 }
