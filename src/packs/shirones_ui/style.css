@@ -1186,6 +1186,76 @@
     opacity: 0.85;
 }
 
+.history_git_actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+}
+
+.history_git_row_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: 2px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--basic-ui-subtext0);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.history_git_row:hover .history_git_row_btn:not(:disabled) {
+    opacity: 0.75;
+}
+
+.history_git_row:hover .history_git_row_btn:disabled {
+    opacity: 0.25;
+}
+
+.history_git_row_btn:disabled {
+    cursor: not-allowed;
+}
+
+/* 1. Delete Node Hover: Soft pastel red */
+.history_git_row_btn.delete_node_btn:hover:not(:disabled),
+.history_git_row_btn:not(.delete_branch_btn):hover:not(:disabled) {
+    opacity: 1 !important;
+    background: rgba(243, 139, 168, 0.18);
+    color: var(--basic-ui-red);
+    border-color: rgba(243, 139, 168, 0.4);
+}
+
+.history_git_row_btn.delete_node_btn:active:not(:disabled),
+.history_git_row_btn:not(.delete_branch_btn):active:not(:disabled) {
+    background: rgba(243, 139, 168, 0.35);
+    color: #ffffff;
+    border-color: var(--basic-ui-red);
+    transform: scale(0.92);
+}
+
+/* 2. Delete Branch Hover: Vivid strong bright red with glow */
+.history_git_row_btn.delete_branch_btn:hover:not(:disabled) {
+    opacity: 1 !important;
+    background: rgba(243, 70, 100, 0.28);
+    color: #ff4766;
+    border-color: rgba(243, 70, 100, 0.65);
+    box-shadow: 0 0 6px rgba(243, 70, 100, 0.35);
+}
+
+.history_git_row_btn.delete_branch_btn:active:not(:disabled) {
+    background: #e64553;
+    color: #ffffff;
+    border-color: #e64553;
+    transform: scale(0.92);
+}
+
 /* ─── Viewport Panel & Zoom Controls ────────────────────────────────────────── */
 
 .viewport_panel_content {

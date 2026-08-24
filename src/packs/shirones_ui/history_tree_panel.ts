@@ -10,9 +10,11 @@ import
     jump_to_prev_fork,
     jump_to_next_fork,
     jump_to_leaf,
+    delete_node,
     find_next_fork_node
 } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
+import { delete_branch } from '@/packs/vanilla';
 
 export interface history_tree_component
 {
@@ -488,6 +490,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     panel.content_element.appendChild(expanded_wrapper);
 
     let is_currently_collapsed = true;
+    let last_scrolled_uid: number | null = null;
 
     function set_collapsed(collapsed: boolean): void
     {
@@ -505,6 +508,9 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
 
     function refresh(): void
     {
+        const prev_scroll_top = viewport.scrollTop;
+        const prev_scroll_left = viewport.scrollLeft;
+
         const tree = get_history_tree();
         if (!tree)
         {
@@ -524,6 +530,9 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             canvas_container.innerHTML = '<div class="basic_ui_label_sub" style="padding:16px;">History not initialized.</div>';
             return;
         }
+
+        const current_changed = last_scrolled_uid !== tree.current_uid;
+        last_scrolled_uid = tree.current_uid;
 
         strip_step_badge.textContent = `#${tree.current_uid}`;
 
@@ -697,6 +706,56 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             uid_badge.textContent = `#${n.node.uid}`;
             main_line.appendChild(uid_badge);
 
+            if (n.node.uid !== 0)
+            {
+                const actions_group = document.createElement('span');
+                actions_group.className = 'history_git_actions';
+
+                // 1. Delete single node (✂️)
+                const delete_node_btn = document.createElement('button');
+                delete_node_btn.type = 'button';
+                delete_node_btn.className = 'history_git_row_btn delete_node_btn';
+                delete_node_btn.title = n.is_current ? 'Cannot delete current active node' : `Delete node #${n.node.uid} (re-parent children)`;
+                delete_node_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+
+                if (n.is_current)
+                {
+                    delete_node_btn.disabled = true;
+                }
+                else
+                {
+                    delete_node_btn.addEventListener('click', (e) =>
+                    {
+                        e.stopPropagation();
+                        delete_node(n.node.uid);
+                    });
+                }
+
+                // 2. Delete branch (🗑️)
+                const delete_branch_btn = document.createElement('button');
+                delete_branch_btn.type = 'button';
+                delete_branch_btn.className = 'history_git_row_btn delete_branch_btn';
+                delete_branch_btn.title = n.is_on_active_path ? 'Cannot delete active branch (switch active branch first)' : `Delete branch rooted at #${n.node.uid} (prune subtree)`;
+                delete_branch_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15 4V2H9v2H4v2h1v13c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6h1V4h-5zm2 15H7V6h10v13zM9 8h2v9H9zm4 0h2v9h-2z"/></svg>';
+
+                if (n.is_on_active_path)
+                {
+                    delete_branch_btn.disabled = true;
+                }
+                else
+                {
+                    delete_branch_btn.addEventListener('click', (e) =>
+                    {
+                        e.stopPropagation();
+                        delete_branch(n.node.uid);
+                    });
+                }
+
+                actions_group.appendChild(delete_node_btn);
+                actions_group.appendChild(delete_branch_btn);
+                main_line.appendChild(actions_group);
+            }
+
             const sub_line = document.createElement('div');
             sub_line.className = 'history_git_sub_line';
 
@@ -717,24 +776,57 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             row.appendChild(main_line);
             row.appendChild(sub_line);
 
-            row.title = `${label_str} — Click to jump`;
+            if (n.node.uid === 0)
+            {
+                row.title = `${label_str} — Click to jump (Root node cannot be deleted)`;
+            }
+            else if (n.is_current)
+            {
+                row.title = `${label_str} — Current active HEAD node (Jump away to delete)`;
+            }
+            else
+            {
+                row.title = `${label_str} — Left-click: Jump | Right-click: Delete node`;
+            }
 
             row.addEventListener('click', () =>
             {
                 jump_to_history(n.node.uid);
             });
 
-            canvas_container.appendChild(row);
-
-            // Auto-scroll into view if current HEAD
-            if (n.is_current)
+            row.addEventListener('contextmenu', (e) =>
             {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (n.node.uid === 0 || n.is_current)
+                {
+                    return;
+                }
+
+                delete_node(n.node.uid);
+            });
+
+            canvas_container.appendChild(row);
+        }
+
+        if (current_changed)
+        {
+            const current_layout = layout.nodes.find((n) => n.is_current);
+            if (current_layout)
+            {
+                const current_row_y = PAD_Y + current_layout.row * ROW_HEIGHT;
                 setTimeout(() =>
                 {
-                    const target_scroll = Math.max(0, row_y - viewport.clientHeight / 2 + ROW_HEIGHT / 2);
+                    const target_scroll = Math.max(0, current_row_y - viewport.clientHeight / 2 + ROW_HEIGHT / 2);
                     viewport.scrollTo({ top: target_scroll, behavior: 'smooth' });
                 }, 50);
             }
+        }
+        else
+        {
+            viewport.scrollTop  = prev_scroll_top;
+            viewport.scrollLeft = prev_scroll_left;
         }
     }
 

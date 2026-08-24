@@ -269,13 +269,14 @@ nothing can check. Bare `#14` is not a reference; it will not be resolved.
 | `待決斷` | a question is open and **the user owes the answer** |
 | `待實作` | decided, not started |
 | `實作中` | started, partially landed |
+| `等待確認` | landed, awaiting human verification — Agent 實作交付後設定，等待 Human 驗收 |
 | `完成` | done — **Human（使用者）專屬判定**，Agent 無權主動標記 |
 | `否決` | decided not to do it — **Human（使用者）專屬判定**，the reason is in 正文 and in a `否決` 沿革 entry |
 | `移交` | another item owns it now; `- **移交:**` names which |
 
 - **There is no `owner` field.** It is derivable: `待決斷` is the user's move,
-  `待實作` / `實作中` is the agent's.
-- **`完成` 與 `否決` 是 Human 專屬權限**：Agent 嚴禁將待辦狀態改為 `完成` 或 `否決`。Agent 完成實作後，僅在該待辦追加 `落地` 沿革（附依據 `→ O<n>`），狀態保持 `實作中`，由 Human 檢視驗收後主動設定 `完成` 或 `否決`。
+  `待實作` / `實作中` is the agent's, `等待確認` is waiting for the user.
+- **`完成` 與 `否決` 是 Human 專屬權限**：Agent 嚴禁將待辦狀態改為 `完成` 或 `否決`。Agent 完成實作後，在該待辦追加 `落地` 沿革（附依據 `→ O<n>`），並將狀態更新為 `等待確認`，由 Human 檢視驗收後主動設定 `完成` 或 `否決`。
 - **There is no `阻塞` state.** It is computed from `needs`: an item whose prerequisite
   is not in a terminal state is blocked. Storing it would drift the moment a
   prerequisite lands.

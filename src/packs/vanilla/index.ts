@@ -2,19 +2,22 @@ import { register_overlap_check, register_graph_build } from '@/API';
 import { get_available_recipes } from './recipe_query';
 import { check_map_overlap, is_out_of_bounds } from './overlap';
 import { build_device_graph } from './graph';
+import { delete_branch } from './history';
 
 export type { available_recipe_entry } from './recipe_query';
 export type { map_validation_result, device_node } from './types';
 export { get_available_recipes } from './recipe_query';
 export { check_map_overlap, is_out_of_bounds } from './overlap';
 export { build_device_graph } from './graph';
+export { delete_branch } from './history';
 
 export const vanilla =
 {
     get_available_recipes,
     check_map_overlap,
     build_device_graph,
-    is_out_of_bounds
+    is_out_of_bounds,
+    delete_branch
 };
 
 /**

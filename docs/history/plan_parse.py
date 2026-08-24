@@ -90,7 +90,7 @@ SUPERSEDE_RE = re.compile(r"取代\s*H(\d+)")
 # `0007#14` — the one address form, valid anywhere including prose.
 ADDR_RE = re.compile(r"\b(\d{4})#(\d+)\b")
 
-ITEM_STATES = ("待決斷", "待實作", "實作中", "完成", "否決", "移交")
+ITEM_STATES = ("待決斷", "待實作", "實作中", "等待確認", "完成", "否決", "移交")
 TERMINAL_STATES = ("完成", "否決", "移交")
 HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交", "提問", "回答")
 ACTOR_TAG_RE = re.compile(r"[（\(]([^（\(\)）]+)[）\)](?:\s*→\s*O\d+)?\s*$")

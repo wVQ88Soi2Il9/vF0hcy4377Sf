@@ -10,12 +10,15 @@ import
     jump_to_history,
     jump_to_prev_fork,
     jump_to_next_fork,
+    delete_node as api_delete_node,
+    compute_path_to_root,
     get_history_tree
 } from '@/API';
 import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
+import { delete_branch } from '@/packs/vanilla';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -86,7 +89,61 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", delete-node --"<node_uid>", delete-branch --"<node_uid>", help';
+        }
+
+        case 'delete-node':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: delete-node --"<node_uid>" (e.g. delete-node --"2")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const target_uid = parseInt(uid_str, 10);
+            if (isNaN(target_uid))
+            {
+                return 'Error: Invalid node UID. Must be a number (e.g. delete-node --"2").';
+            }
+            if (target_uid === 0)
+            {
+                return 'Error: Cannot delete root node (#0).';
+            }
+            const tree = get_history_tree();
+            if (tree && target_uid === tree.current_uid)
+            {
+                return `Error: Cannot delete current active node (#${target_uid}). Please jump to another node first.`;
+            }
+            const success = api_delete_node(target_uid);
+            return success ? `Successfully deleted history node #${target_uid}.` : `Error: Failed to delete history node #${target_uid} (node not found).`;
+        }
+
+        case 'delete-branch':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: delete-branch --"<node_uid>" (e.g. delete-branch --"2")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const target_uid = parseInt(uid_str, 10);
+            if (isNaN(target_uid))
+            {
+                return 'Error: Invalid node UID. Must be a number (e.g. delete-branch --"2").';
+            }
+            if (target_uid === 0)
+            {
+                return 'Error: Cannot delete root branch (#0).';
+            }
+            const tree = get_history_tree();
+            if (tree)
+            {
+                const active_path = compute_path_to_root(tree, tree.current_uid);
+                if (active_path.includes(target_uid))
+                {
+                    return `Error: Cannot delete branch containing active node (#${tree.current_uid}). Please switch active branch first.`;
+                }
+            }
+            const success = delete_branch(target_uid);
+            return success ? `Successfully deleted history branch rooted at #${target_uid}.` : `Error: Failed to delete history branch #${target_uid} (node not found).`;
         }
 
         case 'undo':

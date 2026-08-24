@@ -11,13 +11,8 @@
 - `0047#1` · **待實作** — 抽離導航按鈕定義與共用按鈕工廠
 - `0047#2` · **待實作** — 重構與大幅精簡 history_tree_panel.ts
 - `0047#3` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
-- `0046#6` · **待實作** — Core 與 API 實作 delete_branch 演算法
-- `0046#7` · **待實作** — CLI 實作 delete-branch 指令
-- `0046#8` · **待實作** — Shirones UI 實作分支刪除按鈕與互動
-- `0046#9` · **實作中** — Core 與 API 實作 delete_node 演算法
-- `0046#10` · **待實作** — CLI 實作 delete-node 指令
-- `0046#11` · **待實作** — Shirones UI 實作單節點刪除按鈕與互動
-- `0046#12` · **待實作** — 歷史刪除功能之單元測試與端到端驗證
+- `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
+- `0046#10` · **等待確認** — CLI 實作 delete-node 指令
 - `0046#2` · **待實作** — 實作歷史節點標記、釘選與高亮（Mark / Tag / Highlight / Pin Nodes）
 - `0046#3` · **待實作** — 實作歷史分支合併（Merge Branch）
 - `0042#1` · **待實作** — 實作視口座標逆變換 (screen_to_grid) 與裝置拾取檢測
@@ -32,5 +27,5 @@
 
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
 - **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
-- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 9/12，已移交 3
+- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 4/12，已移交 3
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4

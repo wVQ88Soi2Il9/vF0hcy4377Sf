@@ -79,20 +79,21 @@
 - H1 · 2026-08-25 01:07 決斷 —— 承接 0046#1 單節點刪除任務，明定拒絕刪除當前節點（使用者）
 - H2 · 2026-08-25 01:08 拆格 —— 細拆為 0046#9（Core/API）、0046#10（CLI）、0046#11（UI）、0046#12（測試）
 
-### 6 Core 與 API 實作 delete_branch 演算法
-- **state:** 待實作
+### 6 Vanilla / Pack 層實作 delete_branch 演算法
+- **state:** 完成
 - **承接:** 0046#4
 - **basis:** → O1
 
-基於 `delete_node` 實作 `delete_branch(tree, target_uid)` 與 `src/API.ts` 匯出；若目標子樹包含當前活躍路徑（`current_uid`）或為 Root 節點則拒絕刪除；由下而上多次呼叫 `delete_node` 依序修剪子樹節點。
+基於 `delete_node` 於 `src/packs/vanilla/history.ts` 實作 `delete_branch(target_uid)` 並由 `vanilla` 匯出；若目標子樹包含當前活躍路徑（`current_uid`）或為 Root 節點則拒絕刪除；由下而上多次呼叫 `delete_node` 依序修剪子樹節點。
 
 **沿革**
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 核心演算法實作（使用者）
 - H2 · 2026-08-25 01:14 決斷 —— 確立 delete branch = 多次 delete node 架構（使用者）
+- H3 · 2026-08-25 01:46 落地 —— 在 src/packs/vanilla/history.ts 實作 delete_branch 演算法並於 vanilla pack 匯出 → O1
 
 ### 7 CLI 實作 delete-branch 指令
-- **state:** 待實作
+- **state:** 等待確認
 - **承接:** 0046#4
 - **basis:** → O1
 
@@ -101,9 +102,10 @@
 **沿革**
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 CLI 指令實作（使用者）
+- H2 · 2026-08-25 01:49 落地 —— 在 src/packs/shirones_ui/cli_executor.ts 實作 delete-branch 指令與活躍分支保護提示 → O1
 
 ### 8 Shirones UI 實作分支刪除按鈕與互動
-- **state:** 待實作
+- **state:** 完成
 - **承接:** 0046#4
 - **basis:** → O1
 
@@ -112,9 +114,10 @@
 **沿革**
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#4 UI 介面實作（使用者）
+- H2 · 2026-08-25 01:54 落地 —— 在 src/packs/shirones_ui/history_tree_panel.ts 節點列實作刪除分支按鈕與活躍分支防護 → O1
 
 ### 9 Core 與 API 實作 delete_node 演算法
-- **state:** 實作中
+- **state:** 完成
 - **承接:** 0046#5
 - **basis:** → O1
 
@@ -127,7 +130,7 @@
 - H3 · 2026-08-25 01:18 落地 —— 在 src/core/history_manager.ts 與 src/API.ts 實作 delete_node 演算法 → O1
 
 ### 10 CLI 實作 delete-node 指令
-- **state:** 待實作
+- **state:** 等待確認
 - **承接:** 0046#5
 - **basis:** → O1
 
@@ -136,9 +139,10 @@
 **沿革**
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 CLI 指令實作（使用者）
+- H2 · 2026-08-25 01:41 落地 —— 在 src/packs/shirones_ui/cli_executor.ts 實作 delete-node 指令與防呆錯誤提示 → O1
 
 ### 11 Shirones UI 實作單節點刪除按鈕與互動
-- **state:** 待實作
+- **state:** 完成
 - **承接:** 0046#5
 - **basis:** → O1
 
@@ -147,9 +151,11 @@
 **沿革**
 
 - H1 · 2026-08-25 01:08 決斷 —— 承接 0046#5 UI 介面實作（使用者）
+- H2 · 2026-08-25 01:41 落地 —— 在 src/packs/shirones_ui/history_tree_panel.ts 節點行實作刪除按鈕與點擊連動 → O1
+- H3 · 2026-08-25 01:44 落地 —— 支援在歷史節點行直接滑鼠右鍵刪除節點（左鍵跳轉、右鍵刪除）→ O1
 
 ### 12 歷史刪除功能之單元測試與端到端驗證
-- **state:** 待實作
+- **state:** 完成
 - **承接:** 0046#5
 - **basis:** → O1
 
