@@ -1,15 +1,15 @@
 import * as parser from './parser';
-import * as registry from './registry';
+import * as help from './help';
 import * as executor from './executor';
 
 export * from './parser';
-export * from './registry';
+export * from './help';
 export * from './executor';
 
 export const cli_tool = {
     pack_id: 'cli_tool',
     ...parser,
-    ...registry,
+    ...help,
     ...executor
 };
 

@@ -1,4 +1,3 @@
-import { register_vanilla_cli_commands } from './cli_commands';
 import * as axes from './axes';
 export * from './axes';
 import * as math from './math';
@@ -42,5 +41,4 @@ export const vanilla = {
  */
 export function init_pack(): void
 {
-    register_vanilla_cli_commands();
 }
