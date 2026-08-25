@@ -1,5 +1,6 @@
 import type { game_map, map_command } from '@/core';
 import { delete_branch, toggle_node_pin, set_node_pin } from './history';
+import { inspect_device_text } from './device_inspector';
 
 export function delete_branch_command(target_uid: number): map_command
 {
@@ -19,7 +20,6 @@ export function delete_branch_command(target_uid: number): map_command
         },
         inverse(_map: game_map): void
         {
-            // History branch subtree deletion
         }
     };
 }
@@ -65,7 +65,40 @@ export function pin_node_command(target_uid: number): map_command
     }
 };
 
+export function info_device_command(device_uid: number): map_command
+{
+    let result_text = '';
+    const cmd: map_command = {
+        pack: 'vanilla',
+        id:   'info_device',
+        other_info:
+        {
+            vanilla:
+            {
+                device_uid
+            }
+        },
+        execute(map: game_map): void
+        {
+            result_text = inspect_device_text(map, Number(device_uid));
+            (cmd as any).result_text = result_text;
+        },
+        inverse(_map: game_map): void
+        {
+        }
+    };
+    return cmd;
+}
+
+(info_device_command as any).other_info = {
+    cli: {
+        alias:    'info',
+        describe: 'Display detailed device specifications and status'
+    }
+};
+
 export const vanilla_commands = {
     delete_branch: delete_branch_command,
-    pin_node:      pin_node_command
+    pin_node:      pin_node_command,
+    info_device:   info_device_command
 };

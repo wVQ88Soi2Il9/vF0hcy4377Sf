@@ -1,3 +1,5 @@
+import * as device_inspector from './device_inspector';
+export * from './device_inspector';
 import { vanilla_commands, delete_branch_command, pin_node_command } from './commands';
 import * as axes from './axes';
 export * from './axes';
@@ -31,7 +33,8 @@ export const vanilla = {
     ...axes,
     ...recipe_query,
     ...overlap,
-    ...history
+    ...history,
+    ...device_inspector
 };
 
 /**

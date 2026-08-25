@@ -118,6 +118,10 @@ export function execute_command(input: string): string
         const cleaned_args = args.map(clean_flag_arg);
         const cmd_obj = matched.factory(...cleaned_args);
         api_execute_command(cmd_obj);
+        if ((cmd_obj as any).result_text)
+        {
+            return (cmd_obj as any).result_text;
+        }
         return `Executed command "${matched.pack}:${matched.id}" successfully.`;
     }
     catch (err: unknown)
