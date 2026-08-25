@@ -6,7 +6,7 @@ import
     redo,
     jump_to_prev_fork,
     jump_to_leaf
-} from '@/runtime';
+} from '@/world';
 
 export interface navigation_button_spec
 {

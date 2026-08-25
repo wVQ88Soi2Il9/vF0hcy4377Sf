@@ -9,7 +9,7 @@ import
     get_history_tree,
     jump_to_history,
     delete_history_node
-} from '@/runtime';
+} from '@/world';
 import { format_namespaced_id } from '@/packs/vanilla';
 import { basic_ui } from '@/packs/basic_ui';
 import

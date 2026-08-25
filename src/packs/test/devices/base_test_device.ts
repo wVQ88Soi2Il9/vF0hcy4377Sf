@@ -1,6 +1,6 @@
 import type { camera_type } from '@/packs/basic_renderer';
 import { base_layered_device, add_vector_3d, type vector_3d } from '@/packs/layered_2d';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import { vanilla } from '@/packs/vanilla';
 
 export interface device_color_theme

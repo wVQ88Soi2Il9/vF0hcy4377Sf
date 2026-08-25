@@ -14,7 +14,7 @@ import
     jump_to_root,
     jump_to_leaf,
     delete_history_node
-} from '@/runtime';
+} from '@/world';
 import { tokenize_input, parse_vector, parse_integer } from './parser';
 import { format_cli_help } from './help';
 

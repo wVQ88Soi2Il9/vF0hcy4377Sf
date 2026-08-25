@@ -1,5 +1,5 @@
 import type { recipe, recipe_evaluation, pack_registry } from '@/core';
-import { get_registry } from '@/runtime';
+import { get_registry } from '@/world';
 
 export interface available_recipe_entry
 {

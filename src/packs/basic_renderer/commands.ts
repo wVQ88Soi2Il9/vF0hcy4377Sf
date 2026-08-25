@@ -1,5 +1,5 @@
 import type { game_map, map_command } from '@/core';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import { parse_axis_name, format_axis_name, get_right_oriented_axes } from '@/packs/vanilla';
 import { get_camera_plane } from './camera';
 import { set_camera_plane } from './camera_control';

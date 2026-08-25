@@ -1,4 +1,4 @@
-import { get_map, get_registry, execute_command } from '@/runtime';
+import { get_map, get_registry, execute_command } from '@/world';
 import { parse_namespaced_id, get_device_class, get_command } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';

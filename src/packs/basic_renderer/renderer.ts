@@ -2,7 +2,7 @@ import type { camera_type } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
 import { on_device_change, on_history_change } from '@/core';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import { camera, adapt_camera_plane, on_camera_change } from './camera';
 import { setup_camera_control } from './camera_control';
 
