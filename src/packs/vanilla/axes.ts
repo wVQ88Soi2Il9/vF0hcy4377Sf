@@ -1,6 +1,6 @@
 /**
- * Translation Layer: Human (1-indexed d[n]) → Internal Code (0-indexed).
- * Strict input format: "d1", "d2", "d3", ...
+ * Human 1-indexed string → Internal Code (0-indexed).
+ * Strict input format: "d1", "d2", "d3", ... (e.g. "d1" -> 0, "d2" -> 1)
  */
 export function parse_axis_name(name: string): number | null
 {
@@ -17,18 +17,22 @@ export function parse_axis_name(name: string): number | null
 }
 
 /**
- * Translation Layer: Internal Code (0-indexed) → Human Label (1-indexed d[n] format).
- *
- * Output examples:
- *   0 → "d1"
- *   1 → "d2"
- *   2 → "d3"
- *   3 → "d4"
+ * Internal Code (0-indexed) → Human 1-indexed string (e.g. 0 -> "d1", 1 -> "d2").
+ * Mathematical inverse of parse_axis_name.
  */
-export function get_axis_label(internal_idx: number): string
+export function format_axis_name(internal_idx: number): string
 {
+    if (!Number.isInteger(internal_idx) || internal_idx < 0)
+    {
+        throw new Error(`Invalid internal axis index: ${internal_idx}. Must be non-negative integer.`);
+    }
     return `d${internal_idx + 1}`;
 }
+
+/**
+ * Alias for format_axis_name.
+ */
+export const get_axis_label = format_axis_name;
 
 /**
  * Calculates (dim_h, dim_v) for 2D view projection in N dimensions
