@@ -129,3 +129,44 @@ export function trigger_history_change(tree: history_tree): void
         hook(tree);
     }
 }
+
+export type unsubscribe_function = () => void;
+
+function create_hook_subscriber<T>(list: T[]): (fn: T) => unsubscribe_function
+{
+    return (fn: T): unsubscribe_function =>
+    {
+        list.push(fn);
+        return () =>
+        {
+            const index = list.indexOf(fn);
+            if (index !== -1)
+            {
+                list.splice(index, 1);
+            }
+        };
+    };
+}
+
+export const on_device_create = create_hook_subscriber(hooks.on_device_create);
+export const on_device_delete = create_hook_subscriber(hooks.on_device_delete);
+export const on_device_move = create_hook_subscriber(hooks.on_device_move);
+export const on_device_select_recipe = create_hook_subscriber(hooks.on_device_select_recipe);
+export const on_history_change = create_hook_subscriber(hooks.on_history_change);
+export const register_overlap_check = create_hook_subscriber(hooks.on_check_overlap);
+export const register_graph_build = create_hook_subscriber(hooks.on_build_graph);
+
+export function on_device_change(callback: () => void): unsubscribe_function
+{
+    const unsub_create        = on_device_create(() => callback());
+    const unsub_delete        = on_device_delete(() => callback());
+    const unsub_move          = on_device_move(() => callback());
+    const unsub_select_recipe = on_device_select_recipe(() => callback());
+    return () =>
+    {
+        unsub_create();
+        unsub_delete();
+        unsub_move();
+        unsub_select_recipe();
+    };
+}
