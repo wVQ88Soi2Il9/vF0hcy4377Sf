@@ -14,6 +14,7 @@ import
     jump_to_node as core_jump_to_node,
     jump_to_prev_fork as core_jump_to_prev_fork,
     jump_to_next_fork as core_jump_to_next_fork,
+    jump_to_root as core_jump_to_root,
     jump_to_leaf as core_jump_to_leaf,
     delete_node as core_delete_node
 } from '@/core';
@@ -132,6 +133,18 @@ export function jump_to_next_fork(): boolean
         return false;
     }
     return core_jump_to_next_fork(_history_tree, _map);
+}
+
+/**
+ * 跳轉至歷史樹根節點（UID 0）。
+ */
+export function jump_to_root(): boolean
+{
+    if (!_map || !_history_tree)
+    {
+        return false;
+    }
+    return core_jump_to_root(_history_tree, _map);
 }
 
 /**

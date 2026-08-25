@@ -1,9 +1,6 @@
 import type { game_map, history_node, history_tree, map_command } from '@/core/types';
 import { trigger_history_change } from '@/core/hooks';
 
-/**
- * Creates an empty history tree with root node (UID 0).
- */
 export function create_history_tree(): history_tree
 {
     const root_node: history_node =
@@ -21,10 +18,6 @@ export function create_history_tree(): history_tree
     };
 }
 
-/**
- * Executes a command and records it as a new child node in the history tree.
- * Updates current_uid to the newly created node.
- */
 export function record_command(tree: history_tree, map: game_map, cmd: map_command): history_node
 {
     cmd.execute(map);
@@ -51,10 +44,45 @@ export function record_command(tree: history_tree, map: game_map, cmd: map_comma
     return new_node;
 }
 
-/**
- * Reverts the most recent command by stepping back to the parent node.
- * Returns true if undo succeeded, false if already at root.
- */
+export function delete_node(tree: history_tree, target_uid: number): boolean
+{
+    if (target_uid === 0 || target_uid === tree.current_uid)
+    {
+        return false;
+    }
+
+    const target_node = tree.nodes.get(target_uid);
+    if (!target_node || target_node.parent_uid === null)
+    {
+        return false;
+    }
+
+    const parent_node = tree.nodes.get(target_node.parent_uid);
+    if (!parent_node)
+    {
+        return false;
+    }
+
+    for (const child_uid of target_node.children_uids)
+    {
+        const child = tree.nodes.get(child_uid);
+        if (child)
+        {
+            child.parent_uid = parent_node.uid;
+        }
+    }
+
+    const idx = parent_node.children_uids.indexOf(target_uid);
+    if (idx !== -1)
+    {
+        parent_node.children_uids.splice(idx, 1, ...target_node.children_uids);
+    }
+
+    tree.nodes.delete(target_uid);
+    trigger_history_change(tree);
+    return true;
+}
+
 export function undo(tree: history_tree, map: game_map): boolean
 {
     if (tree.current_uid === 0)
@@ -78,19 +106,32 @@ export function undo(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-/**
- * Re-applies the most recent undone command along the latest child branch.
- * Returns true if redo succeeded, false if at leaf node.
- */
-export function redo(tree: history_tree, map: game_map): boolean
+export function redo(tree: history_tree, map: game_map, target_child_uid?: number): boolean
 {
     const current_node = tree.nodes.get(tree.current_uid);
-    if (!current_node || current_node.children_uids.length === 0)
+    if (!current_node)
     {
         return false;
     }
 
-    const next_uid = current_node.children_uids[current_node.children_uids.length - 1];
+    let next_uid: number;
+    if (target_child_uid !== undefined)
+    {
+        if (!current_node.children_uids.includes(target_child_uid))
+        {
+            return false;
+        }
+        next_uid = target_child_uid;
+    }
+    else
+    {
+        if (current_node.children_uids.length !== 1)
+        {
+            return false;
+        }
+        next_uid = current_node.children_uids[0];
+    }
+
     const next_node = tree.nodes.get(next_uid);
     if (!next_node || !next_node.command)
     {
@@ -104,96 +145,6 @@ export function redo(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-/**
- * Computes the ancestral path from a node up to root (0).
- */
-export function compute_path_to_root(tree: history_tree, start_uid: number): number[]
-{
-    const path: number[] = [];
-    let curr: number | null = start_uid;
-
-    while (curr !== null)
-    {
-        path.push(curr);
-        const node = tree.nodes.get(curr);
-        curr = node ? node.parent_uid : null;
-    }
-
-    return path;
-}
-
-/**
- * Finds the Lowest Common Ancestor (LCA) UID between two history nodes.
- */
-export function find_lca(tree: history_tree, uid_a: number, uid_b: number): number | null
-{
-    const path_a = compute_path_to_root(tree, uid_a);
-    const path_b = compute_path_to_root(tree, uid_b);
-    const set_b  = new Set(path_b);
-
-    for (const uid of path_a)
-    {
-        if (set_b.has(uid))
-        {
-            return uid;
-        }
-    }
-
-    return null;
-}
-
-/**
- * Transitions the map state from current_uid to target_uid in the history tree.
- * Reverts commands up to LCA, then executes commands forward to target_uid.
- */
-export function jump_to_node(tree: history_tree, map: game_map, target_uid: number): boolean
-{
-    if (tree.current_uid === target_uid)
-    {
-        return true;
-    }
-
-    const lca_uid = find_lca(tree, tree.current_uid, target_uid);
-    if (lca_uid === null)
-    {
-        return false;
-    }
-
-    // 1. 倒帶回 LCA
-    let curr: number | null = tree.current_uid;
-    while (curr !== null && curr !== lca_uid)
-    {
-        const node = tree.nodes.get(curr);
-        node?.command?.inverse(map);
-        curr = node ? node.parent_uid : null;
-    }
-
-    // 2. 從 LCA 快轉到目標
-    const forward_nodes: history_node[] = [];
-    curr = target_uid;
-    while (curr !== null && curr !== lca_uid)
-    {
-        const node = tree.nodes.get(curr);
-        if (node)
-        {
-            forward_nodes.push(node);
-        }
-        curr = node ? node.parent_uid : null;
-    }
-
-    for (let i = forward_nodes.length - 1; i >= 0; i--)
-    {
-        forward_nodes[i].command?.execute(map);
-    }
-
-    tree.current_uid = target_uid;
-    trigger_history_change(tree);
-    return true;
-}
-
-/**
- * Finds the closest ancestor node from start_uid that has multiple branches (> 1 children).
- */
 export function find_prev_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
 {
     const start_node = tree.nodes.get(start_uid);
@@ -222,151 +173,168 @@ export function find_prev_fork_node(tree: history_tree, start_uid: number = tree
     return null;
 }
 
-/**
- * Finds the closest downstream descendant node along the active child branch that has multiple branches (> 1 children).
- */
 export function find_next_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
 {
-    let curr: number = start_uid;
+    const start_node = tree.nodes.get(start_uid);
+    if (!start_node || start_node.children_uids.length !== 1)
+    {
+        return null;
+    }
 
+    let curr: number = start_node.children_uids[0];
     while (true)
     {
         const node = tree.nodes.get(curr);
-        if (!node || node.children_uids.length === 0)
+        if (!node)
         {
             break;
         }
 
-        const next_uid = node.children_uids[node.children_uids.length - 1];
-        const next_node = tree.nodes.get(next_uid);
-        if (!next_node)
+        if (node.children_uids.length > 1)
+        {
+            return node.uid;
+        }
+
+        if (node.children_uids.length === 0)
         {
             break;
         }
 
-        if (next_node.children_uids.length > 1)
-        {
-            return next_node.uid;
-        }
-
-        curr = next_uid;
+        curr = node.children_uids[0];
     }
 
     return null;
 }
 
-/**
- * Transitions the map state to the previous fork/branch point.
- * If no previous fork exists but not at root, jumps to root.
- */
+export function compute_path_to_root(tree: history_tree, start_uid: number): number[]
+{
+    const path: number[] = [];
+    let curr: number | null = start_uid;
+
+    while (curr !== null)
+    {
+        path.push(curr);
+        const node = tree.nodes.get(curr);
+        curr = node ? node.parent_uid : null;
+    }
+
+    return path;
+}
+
+export function find_lca(tree: history_tree, uid_a: number, uid_b: number): number | null
+{
+    const path_a = compute_path_to_root(tree, uid_a);
+    const path_b = compute_path_to_root(tree, uid_b);
+    const set_b  = new Set(path_b);
+
+    for (const uid of path_a)
+    {
+        if (set_b.has(uid))
+        {
+            return uid;
+        }
+    }
+
+    return null;
+}
+
 export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
 {
-    const prev_fork_uid = find_prev_fork_node(tree, tree.current_uid);
-    if (prev_fork_uid !== null)
+    const target_uid = find_prev_fork_node(tree, tree.current_uid) ?? (tree.current_uid !== 0 ? 0 : null);
+    if (target_uid === null)
     {
-        return jump_to_node(tree, map, prev_fork_uid);
+        return false;
     }
 
-    if (tree.current_uid !== 0)
+    while (tree.current_uid !== target_uid)
     {
-        return jump_to_node(tree, map, 0);
-    }
-
-    return false;
-}
-
-/**
- * Transitions the map state to the next downstream fork/branch point along the active branch.
- */
-export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
-{
-    const next_fork_uid = find_next_fork_node(tree, tree.current_uid);
-    if (next_fork_uid !== null)
-    {
-        return jump_to_node(tree, map, next_fork_uid);
-    }
-
-    return false;
-}
-
-/**
- * Finds the latest leaf node along the active child branch from start_uid.
- */
-export function find_leaf_node(tree: history_tree, start_uid: number = tree.current_uid): number
-{
-    let curr: number = start_uid;
-    while (true)
-    {
-        const node = tree.nodes.get(curr);
-        if (!node || node.children_uids.length === 0)
+        if (!undo(tree, map))
         {
-            break;
-        }
-        const next_uid = node.children_uids[node.children_uids.length - 1];
-        curr = next_uid;
-    }
-    return curr;
-}
-
-/**
- * Transitions the map state to the latest leaf node on the current branch.
- */
-export function jump_to_leaf(tree: history_tree, map: game_map): boolean
-{
-    const leaf_uid = find_leaf_node(tree, tree.current_uid);
-    if (leaf_uid !== tree.current_uid)
-    {
-        return jump_to_node(tree, map, leaf_uid);
-    }
-    return false;
-}
-
-/**
- * Deletes a single history node and re-parents its children (if any) to its parent node.
- * Refuses deletion if target is root (uid 0) or current active node (current_uid).
- * Returns true if deletion succeeded, false otherwise.
- */
-export function delete_node(tree: history_tree, target_uid: number): boolean
-{
-    if (target_uid === 0 || target_uid === tree.current_uid)
-    {
-        return false;
-    }
-
-    const target_node = tree.nodes.get(target_uid);
-    if (!target_node || target_node.parent_uid === null)
-    {
-        return false;
-    }
-
-    const parent_node = tree.nodes.get(target_node.parent_uid);
-    if (!parent_node)
-    {
-        return false;
-    }
-
-    // 1. Re-parent children to target_node's parent
-    for (const child_uid of target_node.children_uids)
-    {
-        const child = tree.nodes.get(child_uid);
-        if (child)
-        {
-            child.parent_uid = parent_node.uid;
+            return false;
         }
     }
 
-    // 2. In parent_node.children_uids, replace target_uid with target_node.children_uids
-    const idx = parent_node.children_uids.indexOf(target_uid);
-    if (idx !== -1)
-    {
-        parent_node.children_uids.splice(idx, 1, ...target_node.children_uids);
-    }
-
-    // 3. Remove target_node from tree
-    tree.nodes.delete(target_uid);
-    trigger_history_change(tree);
     return true;
 }
 
+export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
+{
+    const target_uid = find_next_fork_node(tree, tree.current_uid);
+    if (target_uid === null)
+    {
+        return false;
+    }
 
+    while (tree.current_uid !== target_uid)
+    {
+        if (!redo(tree, map))
+        {
+            return false;
+        }
+    }
 
+    return true;
+}
+
+export function jump_to_node(tree: history_tree, map: game_map, target_uid: number): boolean
+{
+    if (tree.current_uid === target_uid)
+    {
+        return true;
+    }
+
+    const lca_uid = find_lca(tree, tree.current_uid, target_uid);
+    if (lca_uid === null)
+    {
+        return false;
+    }
+
+    while (tree.current_uid !== lca_uid)
+    {
+        if (!undo(tree, map))
+        {
+            return false;
+        }
+    }
+
+    const path_from_target = compute_path_to_root(tree, target_uid);
+    const forward_uids: number[] = [];
+    for (const uid of path_from_target)
+    {
+        if (uid === lca_uid)
+        {
+            break;
+        }
+        forward_uids.unshift(uid);
+    }
+
+    for (const next_uid of forward_uids)
+    {
+        if (!redo(tree, map, next_uid))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export function jump_to_root(tree: history_tree, map: game_map): boolean
+{
+    let jumped = false;
+    while (undo(tree, map))
+    {
+        jumped = true;
+    }
+    return jumped;
+}
+
+export function jump_to_leaf(tree: history_tree, map: game_map): boolean
+{
+    let jumped = false;
+    while (redo(tree, map))
+    {
+        jumped = true;
+    }
+    return jumped;
+}

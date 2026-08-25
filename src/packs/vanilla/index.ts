@@ -1,4 +1,3 @@
-import { register_overlap_check, register_graph_build } from '@/core';
 import * as math from './math';
 import * as spatial_map from './spatial_map';
 import * as identifier from './identifier';
@@ -34,11 +33,9 @@ export const vanilla = {
 };
 
 /**
- * Initialize the vanilla pack by registering its core logics to the engine hooks.
+ * Initialize the vanilla pack.
  * Called automatically by loader.ts.
  */
 export function init_pack(): void
 {
-    register_overlap_check(overlap.check_map_overlap);
-    register_graph_build(graph.build_device_graph);
 }
