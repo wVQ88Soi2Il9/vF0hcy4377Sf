@@ -13,9 +13,12 @@ trigger: always_on
 
 依賴關係嚴格單向：`packs` → `core`（基礎數學與空間工具收斂於 `@/packs/vanilla`，全域狀態容器收斂於 `@/runtime`）。
 
-- **Core Layer**（`src/core/`）：純型別、純狀態容器、Hooks 系統、Undo Tree 歷程。零業務邏輯、**零全域狀態、零外部依賴**。唯一公開進入點為 `src/core/index.ts`（外部透過 `@/core` 引用）。
+- **Core Layer**（`src/core/`）：純型別、純狀態容器、Hooks 系統、Undo Tree 歷程。零業務邏輯、**零全域狀態、零外部依賴**。唯一公開進入點為 `src/core/index.ts`（外部透過 `@/core` 引用）。包含全系統命令唯一真實來源（`pack_module.commands` 註冊至 `pack_registry`）。
 - **Runtime Layer**（`src/runtime.ts`）：應用啟動期的全域實例容器（Map、Registry、History Tree）與捷徑操作（`execute_command`、`undo`、`jump_to_history` 等）。
-- **Packs Layer**（`src/packs/`）：所有具體遊戲規則、基礎工具（`vanilla` 包含空間雜湊、向量數學、命名空間解析）、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`（外部透過 `@/packs/<pack_name>` 引用）。
+- **Packs Layer**（`src/packs/`）：所有具體遊戲規則、基礎工具（`vanilla` 包含空間雜湊、空間與軸向數學、向量運算、命名空間解析）、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`（外部透過 `@/packs/<pack_name>` 引用）。
+- **CLI 與 UI 邊界規範**：
+  - **`cli_tool` 純粹化**：僅作為純文字解析（Tokenizer、Flag Cleaner）與 Help 格式化工具，從 Core Registry 讀取指令工廠並執行。**嚴禁在 `cli_tool` 內嵌入遊戲領域業務邏輯，亦嚴禁要求其他 Pack 建立專屬 CLI 橋接檔**。
+  - **`shirones_ui` 職責**：僅負責終端機 UI 面板渲染、DOM 事件處理與預設別名（Alias）映射。
 - **邊界隔離與 Import 規範（Public Entrypoint Rule）**：
   - **模組邊界**：跨 module boundary 引用時，**必須一律從目標模組的 `index.ts` 公開進入點 import**（例：`import ... from '@/core'`、`import ... from '@/packs/<target_pack>'`）。
   - **禁止深層依賴**：**嚴禁直接依賴另一模組的內部實作檔案**（例：禁止 `import ... from '@/core/commands'`、禁止 `import ... from '@/packs/vanilla/overlap'`）。
@@ -82,6 +85,9 @@ trigger: always_on
 - **編譯檢查**：除非明確指示，Agent 不主動執行 `npx tsc -b`。
 - **Git 執行**：收到 Git 指令指示時，自動完成 `git add`、生成 commit message 並執行 `git commit`。
 - **Unknown 政策**：標記 `⚠️ unknown` 之項目禁止逕行假設實作，標註 `// TODO: unknown — [reason]` 並向使用者確認。
+- **嚴格聚焦當前範圍（No Unsolicited Over-Automation）**：
+  - Agent 必須嚴格聚焦於使用者當前明確指示的單一模組或檔案範圍，**嚴禁擅自向未提及的模組追加新檔案或發起跨模組連鎖修改**（No unsolicited cross-pack proliferation）。
+  - **禁止私自預設立場與過度設計**：未經使用者明確指示前，嚴禁擅自發明額外的中介橋接層、跨模組註冊檔或多餘的自動化機制。
 
 ---
 
