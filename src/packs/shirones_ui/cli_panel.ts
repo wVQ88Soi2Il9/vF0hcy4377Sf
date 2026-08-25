@@ -1,4 +1,4 @@
-import { execute_command } from './cli_executor';
+import { execute_command } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
 
 export interface cli_bar_component

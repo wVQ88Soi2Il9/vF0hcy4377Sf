@@ -1,6 +1,6 @@
 import { get_map, get_registry } from '@/runtime';
-import { tokenize_input } from '@/packs/cli_tool';
-import { CLI_COMMAND_REGISTRY, execute_generic_pack_command, format_cli_help } from './cli_registry';
+import { tokenize_input } from './parser';
+import { CLI_COMMAND_REGISTRY, execute_generic_pack_command, format_cli_help } from './registry';
 
 /**
  * Parses and executes a command string dynamically via Command Registry & Generic Reflection.

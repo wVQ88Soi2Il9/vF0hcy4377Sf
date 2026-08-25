@@ -22,7 +22,7 @@ import
     get_pinned_nodes
 } from '@/packs/vanilla';
 import { basic_renderer, type view_plane } from '@/packs/basic_renderer';
-import { clean_flag_arg, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
+import { clean_flag_arg, parse_axis_name, get_axis_label, get_right_oriented_axes } from './parser';
 import { basic_ui } from '@/packs/basic_ui';
 
 export interface cli_context
