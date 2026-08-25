@@ -71,9 +71,10 @@ trigger: always_on
 
 - **嚴格語法**：
   - 參數一律採用**空格分隔**之位置參數（`cmd <arg1> <arg2> ...`）。
-  - 座標向量一律使用**連續數字**（如 `create conveyor 4 4 0`、`move 1 6 6 0`），由解析器依據地圖維度嚴格驗證長度與偶數錨點。
+  - 座標向量一律使用**連續數字**（如 `create_device conveyor 4 4 0`、`move_device 1 6 6 0`），由解析器依據地圖維度嚴格驗證長度與偶數錨點。
   - 包含空格之字串才需以雙引號包覆（`"..."`）；相機軸向切片表示為 `d<n>=<val>`（如 `camera d2=0`）。
-- **標準指令集**：`create`, `move`, `delete`, `info`, `recipe`, `camera`, `rotate`, `flip`, `undo`, `redo`, `jump`, `prev-fork`, `next-fork`, `jump-root`, `jump-leaf`, `delete-branch`, `delete-node`, `pin`, `history`, `help`。
+  - **別名原則**：別名一律由各 Pack 自行提供（如 `vanilla` 提供 `info`, `pin`, `delete-branch`；`layered_2d` 提供 `rotate`, `flip`；`basic_renderer` 提供 `camera`）；Core 與 History 導航不提供別名。
+- **標準指令集**：`create_device`, `move_device`, `delete_device`, `select_recipe`, `info`, `camera`, `rotate`, `flip`, `undo`, `redo`, `jump_to_history`, `jump_to_prev_fork`, `jump_to_next_fork`, `jump_to_root`, `jump_to_leaf`, `delete-branch`, `delete_history_node`, `pin`, `history`, `help`。
 
 ---
 

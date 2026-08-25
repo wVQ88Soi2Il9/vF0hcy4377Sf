@@ -38,7 +38,7 @@ export function create_cli_bar(on_collapse_change?: (collapsed: boolean) => void
     input_el.id = 'cli_input';
     input_el.type = 'text';
     input_el.className = 'basic_ui_cli_input';
-    input_el.placeholder = 'Type command (e.g. create test:assembler 4 4 0) or help...';
+    input_el.placeholder = 'Type command (e.g. create_device test:assembler 4 4 0) or help...';
 
     const enter_badge = document.createElement('div');
     enter_badge.className = 'basic_ui_cli_kbd';

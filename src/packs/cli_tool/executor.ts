@@ -1,4 +1,4 @@
-import type { pack_registry, namespaced_id, map_command_factory } from '@/core';
+import type { pack_registry, map_command_factory, namespaced_id, device_constructor } from '@/core';
 import
 {
     get_registry,
@@ -18,46 +18,20 @@ import
 import { tokenize_input, parse_vector, parse_integer } from './parser';
 import { format_cli_help } from './help';
 
-function resolve_namespaced_id
-(
-    registry: pack_registry,
-    category: 'devices' | 'recipes' | 'commands',
-    query:    string
-): namespaced_id
+function matches_alias(meta_alias: unknown, query: string): boolean
 {
-    if (query.includes(':'))
+    if (typeof meta_alias === 'string')
     {
-        const [pack, id] = query.split(':');
-        const exists = Boolean(registry.packs.get(pack)?.[category]?.[id]);
-        if (!exists)
-        {
-            throw new Error(`Item "${query}" not found in pack "${pack}".`);
-        }
-        return { pack, id };
+        return meta_alias.toLowerCase() === query;
     }
-
-    const matches: namespaced_id[] = [];
-    for (const [pack_name, mod] of registry.packs)
+    if (Array.isArray(meta_alias))
     {
-        if (mod[category] && mod[category]![query])
-        {
-            matches.push({ pack: pack_name, id: query });
-        }
+        return meta_alias.some(a => typeof a === 'string' && a.toLowerCase() === query);
     }
-
-    if (matches.length === 1)
-    {
-        return matches[0];
-    }
-    if (matches.length > 1)
-    {
-        throw new Error(`Ambiguous ${category} "${query}". Matches: ${matches.map(m => `${m.pack}:${m.id}`).join(', ')}`);
-    }
-
-    throw new Error(`${category.slice(0, -1)} "${query}" not found in any loaded pack.`);
+    return false;
 }
 
-function find_command_factory
+function find_command
 (
     registry: pack_registry,
     query:    string
@@ -78,8 +52,7 @@ function find_command_factory
         {
             for (const [cmd_id, cmd_factory] of Object.entries(mod.commands))
             {
-                const meta_alias = (cmd_factory as any)?.other_info?.cli?.alias;
-                if (matches_alias(meta_alias, id))
+                if (matches_alias((cmd_factory as any)?.other_info?.cli?.alias, id))
                 {
                     return { pack, id: cmd_id, factory: cmd_factory };
                 }
@@ -117,21 +90,85 @@ function find_command_factory
     return null;
 }
 
-function matches_alias(meta_alias: unknown, query: string): boolean
+function resolve_device_class
+(
+    registry: pack_registry,
+    query:    string
+): { dev_class: device_constructor; ns_id: namespaced_id }
 {
-    if (typeof meta_alias === 'string')
+    if (query.includes(':'))
     {
-        return meta_alias.toLowerCase() === query;
+        const [pack, id] = query.split(':');
+        const dev_class = registry.packs.get(pack)?.devices?.[id];
+        if (!dev_class)
+        {
+            throw new Error(`Device "${query}" not found in registry.`);
+        }
+        return { dev_class, ns_id: { pack, id } };
     }
-    if (Array.isArray(meta_alias))
+
+    const matches: Array<{ dev_class: device_constructor; ns_id: namespaced_id }> = [];
+    for (const [pack_name, mod] of registry.packs)
     {
-        return meta_alias.some(a => typeof a === 'string' && a.toLowerCase() === query);
+        if (mod.devices && mod.devices[query])
+        {
+            matches.push({ dev_class: mod.devices[query], ns_id: { pack: pack_name, id: query } });
+        }
     }
-    return false;
+
+    if (matches.length === 1)
+    {
+        return matches[0];
+    }
+    if (matches.length > 1)
+    {
+        throw new Error(`Ambiguous device "${query}". Matches: ${matches.map(m => `${m.ns_id.pack}:${m.ns_id.id}`).join(', ')}`);
+    }
+
+    throw new Error(`Device "${query}" not found in any loaded pack.`);
+}
+
+function execute_runtime_navigation(cmd: string, args: string[]): string | null
+{
+    switch (cmd)
+    {
+        case 'undo':
+            return undo() ? 'Undo: reverted 1 step.' : 'Undo: already at the root of history.';
+        case 'redo':
+            return redo() ? 'Redo: stepped forward 1 step.' : 'Redo: already at the latest state.';
+        case 'jump_to_history':
+        {
+            if (args.length === 0) throw new Error('Usage: jump_to_history <node_uid>');
+            const uid = parse_integer(args[0], 'Node UID');
+            return jump_to_history(uid) ? `Jumped to history node #${uid}.` : `Failed to jump: node #${uid} not found.`;
+        }
+        case 'jump_to_prev_fork':
+            return jump_to_prev_fork() ? 'Jumped to previous fork.' : 'No previous fork found in history ancestry.';
+        case 'jump_to_next_fork':
+            return jump_to_next_fork() ? 'Jumped to next fork.' : 'No forward fork found along this branch.';
+        case 'jump_to_root':
+            return jump_to_root() ? 'Jumped to history root (node 0).' : 'Already at root.';
+        case 'jump_to_leaf':
+            return jump_to_leaf() ? 'Jumped to branch leaf node.' : 'Already at leaf.';
+        case 'delete_history_node':
+        {
+            if (args.length === 0) throw new Error('Usage: delete_history_node <node_uid>');
+            const uid = parse_integer(args[0], 'Node UID');
+            return delete_history_node(uid) ? `Deleted history node #${uid}.` : `Failed to delete node #${uid}.`;
+        }
+        case 'history':
+        {
+            const tree = get_history_tree();
+            return tree ? `History: ${tree.nodes.size} nodes. Active: #${tree.current_uid}.` : 'History tree not initialized.';
+        }
+        default:
+            return null;
+    }
 }
 
 /**
- * Parses and executes a command string with pure positional & whitespace-separated vector syntax.
+ * Pure generic command executor: parses input, resolves commands from Core Registry,
+ * and dynamically dispatches without hardcoded pack business logic.
  */
 export function execute_command(input: string): string
 {
@@ -142,7 +179,7 @@ export function execute_command(input: string): string
     }
 
     const tokens = tokenize_input(trimmed);
-    const cmd    = tokens[0].toLowerCase();
+    const cmd    = tokens[0].toLowerCase().replace(/-/g, '_');
     const args   = tokens.slice(1);
 
     const registry = get_registry();
@@ -151,320 +188,67 @@ export function execute_command(input: string): string
         return 'Error: Global pack registry not found.';
     }
 
+    if (cmd === 'help')
+    {
+        return format_cli_help(registry);
+    }
+
     try
     {
-        // ── 1. General & Navigation Builtins ─────────────────────────────────
-        if (cmd === 'help')
+        // 1. History & runtime navigation commands (no aliases for core/history)
+        const runtime_res = execute_runtime_navigation(cmd, args);
+        if (runtime_res !== null)
         {
-            return format_cli_help(registry);
+            return runtime_res;
         }
 
-        if (cmd === 'history')
-        {
-            const tree = get_history_tree();
-            if (!tree)
-            {
-                return 'History tree not initialized.';
-            }
-            return `History: ${tree.nodes.size} nodes. Current active node: #${tree.current_uid}.`;
-        }
-
-        if (cmd === 'undo')
-        {
-            const ok = undo();
-            return ok ? 'Undo: reverted 1 step.' : 'Undo: already at the root of history.';
-        }
-
-        if (cmd === 'redo')
-        {
-            const ok = redo();
-            return ok ? 'Redo: stepped forward 1 step.' : 'Redo: already at the latest state.';
-        }
-
-        if (cmd === 'jump')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: jump <node_uid>');
-            }
-            const node_uid = parse_integer(args[0], 'History node UID');
-            const ok = jump_to_history(node_uid);
-            return ok ? `Jumped to history node #${node_uid}.` : `Failed to jump: node #${node_uid} not found in history tree.`;
-        }
-
-        if (cmd === 'prev-fork' || cmd === 'prev_fork')
-        {
-            const ok = jump_to_prev_fork();
-            return ok ? 'Jumped to previous fork.' : 'No previous fork found in history ancestry.';
-        }
-
-        if (cmd === 'next-fork' || cmd === 'next_fork')
-        {
-            const ok = jump_to_next_fork();
-            return ok ? 'Jumped to next fork.' : 'No forward fork found along this branch.';
-        }
-
-        if (cmd === 'jump-root' || cmd === 'jump_root')
-        {
-            const ok = jump_to_root();
-            return ok ? 'Jumped to history root (UID 0).' : 'Already at root.';
-        }
-
-        if (cmd === 'jump-leaf' || cmd === 'jump_leaf')
-        {
-            const ok = jump_to_leaf();
-            return ok ? 'Jumped to branch leaf node.' : 'Already at leaf.';
-        }
-
-        if (cmd === 'delete-node' || cmd === 'delete_node')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: delete-node <node_uid>');
-            }
-            const node_uid = parse_integer(args[0], 'History node UID');
-            const ok = delete_history_node(node_uid);
-            return ok ? `Deleted history node #${node_uid}.` : `Failed to delete node #${node_uid}.`;
-        }
-
-        // ── 2. Standard Map Mutation Adapters ────────────────────────────────
-        if (cmd === 'create' || cmd === 'create_device' || cmd === 'core:create_device')
-        {
-            if (args.length < 2)
-            {
-                throw new Error('Usage: create <device_id> <x> <y> [z...]');
-            }
-            const device_id_raw = args[0];
-            const ns_id = resolve_namespaced_id(registry, 'devices', device_id_raw);
-            const dev_class = registry.packs.get(ns_id.pack)?.devices?.[ns_id.id];
-            if (!dev_class)
-            {
-                throw new Error(`Device constructor "${ns_id.pack}:${ns_id.id}" not found.`);
-            }
-
-            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
-            const pos = parse_vector(args.slice(1), dim);
-
-            if (pos.some(c => c % 2 !== 0))
-            {
-                throw new Error(`Invalid device position (${pos.join(', ')}): all coordinates must be even integers (2k).`);
-            }
-
-            const factory = registry.packs.get('core')?.commands?.create_device;
-            if (!factory)
-            {
-                throw new Error('Core command "create_device" not found.');
-            }
-
-            const cmd_obj = factory(dev_class, ns_id, pos);
-            api_execute_command(cmd_obj);
-            return `Created device "${ns_id.pack}:${ns_id.id}" at (${pos.join(', ')}).`;
-        }
-
-        if (cmd === 'move' || cmd === 'move_device' || cmd === 'core:move_device')
-        {
-            if (args.length < 2)
-            {
-                throw new Error('Usage: move <device_uid> <x> <y> [z...]');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const map = get_map();
-            if (map && !map.devices.some(d => d.uid === uid))
-            {
-                throw new Error(`Device #${uid} not found on map.`);
-            }
-
-            const dim = get_dimension() ?? map?.dimension ?? 3;
-            const pos = parse_vector(args.slice(1), dim);
-
-            if (pos.some(c => c % 2 !== 0))
-            {
-                throw new Error(`Invalid device position (${pos.join(', ')}): all coordinates must be even integers (2k).`);
-            }
-
-            const factory = registry.packs.get('core')?.commands?.move_device;
-            if (!factory)
-            {
-                throw new Error('Core command "move_device" not found.');
-            }
-
-            const cmd_obj = factory(uid, pos);
-            api_execute_command(cmd_obj);
-            return `Moved device #${uid} to (${pos.join(', ')}).`;
-        }
-
-        if (cmd === 'delete' || cmd === 'delete_device' || cmd === 'core:delete_device')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: delete <device_uid>');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const map = get_map();
-            if (map && !map.devices.some(d => d.uid === uid))
-            {
-                throw new Error(`Device #${uid} not found on map.`);
-            }
-
-            const factory = registry.packs.get('core')?.commands?.delete_device;
-            if (!factory)
-            {
-                throw new Error('Core command "delete_device" not found.');
-            }
-
-            const cmd_obj = factory(uid);
-            api_execute_command(cmd_obj);
-            return `Deleted device #${uid}.`;
-        }
-
-        if (cmd === 'recipe' || cmd === 'select_recipe' || cmd === 'core:select_recipe')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: recipe <device_uid> [recipe_id]');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const map = get_map();
-            if (map && !map.devices.some(d => d.uid === uid))
-            {
-                throw new Error(`Device #${uid} not found on map.`);
-            }
-
-            const factory = registry.packs.get('core')?.commands?.select_recipe;
-            if (!factory)
-            {
-                throw new Error('Core command "select_recipe" not found.');
-            }
-
-            if (args.length > 1 && args[1].trim() !== '')
-            {
-                const recipe_ns = resolve_namespaced_id(registry, 'recipes', args[1].trim());
-                const cmd_obj = factory(uid, recipe_ns);
-                api_execute_command(cmd_obj);
-                return `Selected recipe "${recipe_ns.pack}:${recipe_ns.id}" for device #${uid}.`;
-            }
-            else
-            {
-                const cmd_obj = factory(uid, undefined);
-                api_execute_command(cmd_obj);
-                return `Cleared recipe for device #${uid}.`;
-            }
-        }
-
-        // ── 3. Downstream Pack Adapters ──────────────────────────────────────
-        if (cmd === 'rotate' || cmd === 'rotate_device' || cmd === 'layered_2d:rotate_device')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: rotate <device_uid> [steps]');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const steps = args.length > 1 ? parse_integer(args[1], 'Steps') : 1;
-            const factory = registry.packs.get('layered_2d')?.commands?.rotate_device;
-            if (!factory)
-            {
-                throw new Error('Command "layered_2d:rotate_device" not found.');
-            }
-            const cmd_obj = factory(uid, steps);
-            api_execute_command(cmd_obj);
-            return `Rotated device #${uid} by ${steps} step(s).`;
-        }
-
-        if (cmd === 'flip' || cmd === 'flip_device' || cmd === 'layered_2d:flip_device')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: flip <device_uid>');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const factory = registry.packs.get('layered_2d')?.commands?.flip_device;
-            if (!factory)
-            {
-                throw new Error('Command "layered_2d:flip_device" not found.');
-            }
-            const cmd_obj = factory(uid);
-            api_execute_command(cmd_obj);
-            return `Flipped device #${uid}.`;
-        }
-
-        if (cmd === 'camera' || cmd === 'basic_renderer:camera')
-        {
-            const eq_arg = args.join(' ');
-            const factory = registry.packs.get('basic_renderer')?.commands?.camera;
-            if (!factory)
-            {
-                throw new Error('Command "basic_renderer:camera" not found.');
-            }
-            const cmd_obj = factory(eq_arg);
-            api_execute_command(cmd_obj);
-            return `Camera updated (${eq_arg || 'default'}).`;
-        }
-
-        if (cmd === 'info' || cmd === 'info_device' || cmd === 'vanilla:info_device')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: info <device_uid>');
-            }
-            const uid = parse_integer(args[0], 'Device UID');
-            const factory = registry.packs.get('vanilla')?.commands?.info_device;
-            if (!factory)
-            {
-                throw new Error('Command "vanilla:info_device" not found.');
-            }
-            const cmd_obj = factory(uid);
-            api_execute_command(cmd_obj);
-            return (cmd_obj as any).result_text || `Device #${uid} information displayed.`;
-        }
-
-        if (cmd === 'delete-branch' || cmd === 'delete_branch' || cmd === 'vanilla:delete_branch')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: delete-branch <node_uid>');
-            }
-            const uid = parse_integer(args[0], 'Node UID');
-            const factory = registry.packs.get('vanilla')?.commands?.delete_branch;
-            if (!factory)
-            {
-                throw new Error('Command "vanilla:delete_branch" not found.');
-            }
-            const cmd_obj = factory(uid);
-            api_execute_command(cmd_obj);
-            return `Deleted history branch rooted at #${uid}.`;
-        }
-
-        if (cmd === 'pin' || cmd === 'pin_node' || cmd === 'vanilla:pin_node')
-        {
-            if (args.length === 0)
-            {
-                throw new Error('Usage: pin <node_uid>');
-            }
-            const uid = parse_integer(args[0], 'Node UID');
-            const factory = registry.packs.get('vanilla')?.commands?.pin_node;
-            if (!factory)
-            {
-                throw new Error('Command "vanilla:pin_node" not found.');
-            }
-            const cmd_obj = factory(uid);
-            api_execute_command(cmd_obj);
-            return `Toggled pin state for history node #${uid}.`;
-        }
-
-        // ── 4. Dynamic Generic Command Dispatch ──────────────────────────────
-        const matched = find_command_factory(registry, cmd);
+        // 2. Lookup command factory from Core Command Registry
+        const matched = find_command(registry, cmd);
         if (!matched)
         {
-            return `Unknown command: "${cmd}". Type "help" to list available commands.`;
+            return `Unknown command: "${tokens[0]}". Type "help" to list available commands.`;
         }
 
-        const cmd_obj = matched.factory(...args);
-        api_execute_command(cmd_obj);
-        if ((cmd_obj as any).result_text)
+        // 3. Invoke factory with proper argument adaptation
+        let cmd_obj;
+        if (matched.pack === 'core' && matched.id === 'create_device')
         {
-            return (cmd_obj as any).result_text;
+            if (args.length < 2) throw new Error('Usage: create_device <device_id> <x> <y> [z...]');
+            const { dev_class, ns_id } = resolve_device_class(registry, args[0]);
+            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const pos = parse_vector(args.slice(1), dim);
+            cmd_obj = matched.factory(dev_class, ns_id, pos);
         }
-        return `Executed command "${matched.pack}:${matched.id}" successfully.`;
+        else if (matched.pack === 'core' && matched.id === 'move_device')
+        {
+            if (args.length < 2) throw new Error('Usage: move_device <device_uid> <x> <y> [z...]');
+            const uid = parse_integer(args[0], 'Device UID');
+            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const pos = parse_vector(args.slice(1), dim);
+            cmd_obj = matched.factory(uid, pos);
+        }
+        else if (matched.pack === 'core' && matched.id === 'delete_device')
+        {
+            if (args.length === 0) throw new Error('Usage: delete_device <device_uid>');
+            cmd_obj = matched.factory(parse_integer(args[0], 'Device UID'));
+        }
+        else if (matched.pack === 'core' && matched.id === 'select_recipe')
+        {
+            if (args.length === 0) throw new Error('Usage: select_recipe <device_uid> [recipe_id]');
+            const uid = parse_integer(args[0], 'Device UID');
+            const recipe_id = args.length > 1 && args[1].trim() !== ''
+                ? { pack: args[1].includes(':') ? args[1].split(':')[0] : 'vanilla', id: args[1].includes(':') ? args[1].split(':')[1] : args[1] }
+                : undefined;
+            cmd_obj = matched.factory(uid, recipe_id);
+        }
+        else
+        {
+            // Generic dispatch for all downstream pack commands
+            cmd_obj = matched.factory(...args);
+        }
+
+        api_execute_command(cmd_obj);
+        return (cmd_obj as any).result_text || `Executed command "${matched.pack}:${matched.id}" successfully.`;
     }
     catch (err: unknown)
     {

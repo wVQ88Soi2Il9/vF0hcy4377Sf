@@ -93,7 +93,7 @@
 - H3 · 2026-08-25 01:46 落地 —— 在 src/packs/vanilla/history.ts 實作 delete_branch 演算法並於 vanilla pack 匯出 → O1
 
 ### 7 CLI 實作 delete-branch 指令
-- **state:** 等待確認
+- **state:** 完成
 - **承接:** 0046#4
 - **basis:** → O1
 
@@ -130,7 +130,7 @@
 - H3 · 2026-08-25 01:18 落地 —— 在 src/core/history_manager.ts 與 src/API.ts 實作 delete_node 演算法 → O1
 
 ### 10 CLI 實作 delete-node 指令
-- **state:** 等待確認
+- **state:** 完成
 - **承接:** 0046#5
 - **basis:** → O1
 
@@ -205,7 +205,7 @@
 - H2 · 2026-08-25 02:46 拆格 —— 細拆為 0046#17（路徑與差異分析）、0046#18（3-Way 衝突檢測）、0046#19（UID 重映射與重放）、0046#20（複合指令與主流程整合）
 
 ### 17 歷史節點型別擴充與三方路徑提取器（Path Extractor）
-- **state:** 等待確認
+- **state:** 完成
 - **承接:** 0046#13
 - **basis:** → O1
 
