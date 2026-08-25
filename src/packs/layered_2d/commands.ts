@@ -140,3 +140,7 @@ export function set_device_transform_command(device_uid: number, transform: d4_t
         }
     };
 }
+
+(rotate_device_command as any).other_info = { cli: { describe: 'Rotate a 2.5D device counter-clockwise by step(s)' } };
+(flip_device_command as any).other_info = { cli: { describe: 'Toggle vertical flip of a 2.5D device' } };
+(set_device_transform_command as any).other_info = { cli: { describe: 'Set 2.5D transform of a device' } };
