@@ -1,12 +1,10 @@
 import type { history_tree } from '@/core';
-import { find_next_fork_node } from '@/core';
 import
 {
     jump_to_history,
     undo,
     redo,
     jump_to_prev_fork,
-    jump_to_next_fork,
     jump_to_leaf
 } from '@/runtime';
 
@@ -61,27 +59,19 @@ export const NAVIGATION_BUTTON_SPECS: readonly navigation_button_spec[] = [
         can_execute:   (tree: history_tree) =>
         {
             const node = tree.nodes.get(tree.current_uid);
-            return node ? node.children_uids.length > 0 : false;
+            return node ? node.children_uids.length === 1 : false;
         }
     },
     {
         id:            'next_fork',
-        strip_title:   'Jump to Next Fork',
-        toolbar_title: 'Jump to next fork',
+        strip_title:   'Jump to Next Fork / End',
+        toolbar_title: 'Jump to next fork or branch end (Fast Forward)',
         svg_paths:     '<path d="M13 12L3.5 5v14z"/><path d="M22 12l-9.5-7v14z"/>',
-        action:        () => { jump_to_next_fork(); },
-        can_execute:   (tree: history_tree) => find_next_fork_node(tree, tree.current_uid) !== null
-    },
-    {
-        id:            'leaf',
-        strip_title:   'Jump to Leaf (Branch End)',
-        toolbar_title: 'Jump to latest step (End of branch)',
-        svg_paths:     '<rect x="18.5" y="4" width="2.5" height="16" rx="1"/><path d="M11.5 12L3 5.5v13z"/><path d="M18.5 12L10 5.5v13z"/>',
         action:        () => { jump_to_leaf(); },
         can_execute:   (tree: history_tree) =>
         {
             const node = tree.nodes.get(tree.current_uid);
-            return node ? node.children_uids.length > 0 : false;
+            return node ? node.children_uids.length === 1 : false;
         }
     }
 ];
