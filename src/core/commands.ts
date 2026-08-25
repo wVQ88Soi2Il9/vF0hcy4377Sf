@@ -27,7 +27,15 @@ export function create_device_command
     return {
         pack: 'core',
         id:   'create_device',
-        other_info: { definition_id, position: [...position], ...other_info },
+        other_info:
+        {
+            ...other_info,
+            core:
+            {
+                definition_id,
+                position: [...position]
+            }
+        },
         execute(map: game_map): void
         {
             if (!created_dev)
@@ -60,7 +68,13 @@ export function delete_device_command(device_uid: number): map_command
     return {
         pack: 'core',
         id:   'delete_device',
-        other_info: { device_uid },
+        other_info:
+        {
+            core:
+            {
+                device_uid
+            }
+        },
         execute(map: game_map): void
         {
             const target_uid = deleted_dev ? deleted_dev.uid : device_uid;
@@ -91,7 +105,14 @@ export function move_device_command(device_uid: number, new_position: vector): m
     return {
         pack: 'core',
         id:   'move_device',
-        other_info: { device_uid, position: [...new_position] },
+        other_info:
+        {
+            core:
+            {
+                device_uid,
+                position: [...new_position]
+            }
+        },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
@@ -126,7 +147,14 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
     return {
         pack: 'core',
         id:   'select_recipe',
-        other_info: { device_uid, new_recipe_id },
+        other_info:
+        {
+            core:
+            {
+                device_uid,
+                new_recipe_id
+            }
+        },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);

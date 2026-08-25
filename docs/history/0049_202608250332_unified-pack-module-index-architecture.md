@@ -65,3 +65,4 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 
 - H1 · 2026-08-25 03:32 決斷 —— 承接 UI/CLI 對齊與驗證任務（human: wVQ88Soi2Il9）
 - H2 · 2026-08-25 14:06 落地 —— 完成 Shirones UI（Device Creator, Device Card, History Tree Panel）、CLI Executor 與所有 Pack 對齊，tsc -b 與 vite build 編譯打包全部 0 error 0 warning 通過（agent: gemini-3.7-flash） → O1, O2
+- H3 · 2026-08-25 14:10 落地 —— 修正 core/commands.ts 與 layered_2d/commands.ts 的 other_info 擴充袋，一律依 namespace 包裹（core、layered_2d），徹底杜絕命名空間污染（agent: gemini-3.7-flash） → O1, O2

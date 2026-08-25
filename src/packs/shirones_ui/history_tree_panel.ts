@@ -96,9 +96,10 @@ function parse_command_details(cmd: map_command | null): {
 
     if (cmd.pack === 'core' && cmd.id === 'create_device')
     {
-        const def_val = cmd.other_info?.definition_id;
+        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const def_val = core_info?.definition_id;
         const def = typeof def_val === 'object' && def_val !== null ? format_namespaced_id(def_val as any) : String(def_val ?? 'device');
-        const pos = cmd.other_info?.position ? ` at [${(cmd.other_info.position as number[]).join(', ')}]` : '';
+        const pos = core_info?.position ? ` at [${(core_info.position as number[]).join(', ')}]` : '';
         return {
             icon:        '➕',
             action_type: 'create',
@@ -109,8 +110,9 @@ function parse_command_details(cmd: map_command | null): {
 
     if (cmd.pack === 'core' && cmd.id === 'move_device')
     {
-        const uid = cmd.other_info?.device_uid ?? '';
-        const pos = cmd.other_info?.position ? ` to [${(cmd.other_info.position as number[]).join(', ')}]` : '';
+        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const uid = core_info?.device_uid ?? '';
+        const pos = core_info?.position ? ` to [${(core_info.position as number[]).join(', ')}]` : '';
         return {
             icon:        '🔄',
             action_type: 'move',
@@ -121,8 +123,9 @@ function parse_command_details(cmd: map_command | null): {
 
     if (cmd.pack === 'core' && cmd.id === 'select_recipe')
     {
-        const uid = cmd.other_info?.device_uid ?? '';
-        const rec_val = cmd.other_info?.new_recipe_id;
+        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const uid = core_info?.device_uid ?? '';
+        const rec_val = core_info?.new_recipe_id;
         const recipe = typeof rec_val === 'object' && rec_val !== null ? format_namespaced_id(rec_val as any) : String(rec_val ?? 'none');
         return {
             icon:        '⚙️',
@@ -134,7 +137,8 @@ function parse_command_details(cmd: map_command | null): {
 
     if (cmd.pack === 'core' && cmd.id === 'delete_device')
     {
-        const uid = cmd.other_info?.device_uid ?? '';
+        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const uid = core_info?.device_uid ?? '';
         return {
             icon:        '🗑️',
             action_type: 'delete',

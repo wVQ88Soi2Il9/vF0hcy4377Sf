@@ -26,7 +26,14 @@ export function rotate_device_command(device_uid: number, steps: number = 1): ma
     return {
         pack: 'layered_2d',
         id:   'rotate_device',
-        other_info: { device_uid, steps },
+        other_info:
+        {
+            layered_2d:
+            {
+                device_uid,
+                steps
+            }
+        },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
@@ -62,7 +69,13 @@ export function flip_device_command(device_uid: number): map_command
     return {
         pack: 'layered_2d',
         id:   'flip_device',
-        other_info: { device_uid },
+        other_info:
+        {
+            layered_2d:
+            {
+                device_uid
+            }
+        },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
@@ -97,7 +110,14 @@ export function set_device_transform_command(device_uid: number, transform: d4_t
     return {
         pack: 'layered_2d',
         id:   'set_device_transform',
-        other_info: { device_uid, transform: { ...transform } },
+        other_info:
+        {
+            layered_2d:
+            {
+                device_uid,
+                transform: { ...transform }
+            }
+        },
         execute(map: game_map): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
