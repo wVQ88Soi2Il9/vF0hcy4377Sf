@@ -1,5 +1,4 @@
-import type { game_map, device, vector, map_command, namespaced_id } from '@/core/types';
-import type { device_constructor } from '@/core/pack_manager';
+import type { game_map, device, vector, map_command, namespaced_id, device_constructor } from './types';
 import
 {
     create_device,

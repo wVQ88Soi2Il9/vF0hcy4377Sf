@@ -4,7 +4,6 @@ import
     delete_device_command,
     move_device_command,
     compute_path_to_root,
-    get_device_class,
     type history_node
 } from '@/core';
 import
@@ -20,7 +19,7 @@ import
     jump_to_next_fork,
     delete_history_node
 } from '@/runtime';
-import { format_namespaced_id, parse_namespaced_id } from '@/packs/vanilla';
+import { format_namespaced_id, parse_namespaced_id, get_device_class } from '@/packs/vanilla';
 import { basic_renderer, type view_plane } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';

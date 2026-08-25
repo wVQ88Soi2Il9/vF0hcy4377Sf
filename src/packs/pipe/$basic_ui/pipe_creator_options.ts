@@ -132,9 +132,8 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     };
 }
 
-import { get_device_class, has_device_class } from '@/core';
 import { get_registry } from '@/runtime';
-import { parse_namespaced_id } from '@/packs/vanilla';
+import { parse_namespaced_id, has_device_class, get_device_class } from '@/packs/vanilla';
 
 /**
  * Checks if a device definition inherits from abstract class pipe.

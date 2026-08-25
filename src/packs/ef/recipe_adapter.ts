@@ -4,8 +4,7 @@
  * 將 EF 產品配方轉換為相容核心引擎 evaluate 契約之動態配方物件。
  */
 
-import type { recipe, recipe_evaluation, pack_registry } from '@/core';
-import { register_recipe } from '@/core';
+import type { recipe, recipe_evaluation } from '@/core';
 import type { recipe_def } from './types';
 import { product_list } from './data/products';
 
@@ -29,49 +28,26 @@ export function recipe_def_to_recipe(def: recipe_def): recipe
                     ef:
                     {
                         machine:      def.machine,
-                        machine_mode: def.machine_mode,
-                        environment:  def.environment
+                        time_seconds: def.time_seconds
                     }
                 }
             };
-        },
-        other_info:
-        {
-            ef:
-            {
-                machine:      def.machine,
-                machine_mode: def.machine_mode,
-                environment:  def.environment,
-                time_seconds: def.time_seconds
-            }
         }
     };
 }
 
 /**
- * 取得所有 EF 產品之核心 recipe 陣列。
+ * 取得所有 EF 產品之核心配方物件清單。
  */
 export function get_all_ef_recipes(): recipe[]
 {
     const recipes: recipe[] = [];
-    for (const prod of product_list)
+    for (const p of product_list)
     {
-        for (const r_def of prod.recipes)
+        for (const r_def of p.recipes)
         {
             recipes.push(recipe_def_to_recipe(r_def));
         }
     }
     return recipes;
-}
-
-/**
- * 將所有 EF 配方註冊至 Pack Registry
- */
-export function register_all_ef_recipes(registry: pack_registry): void
-{
-    const recipes = get_all_ef_recipes();
-    for (const r of recipes)
-    {
-        register_recipe(registry, r);
-    }
 }

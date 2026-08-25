@@ -2,46 +2,17 @@
  * EF (Endfield) Pack 進入點
  */
 
-import { get_registry } from '@/runtime';
 import * as environments from './data/environments';
 import * as materials from './data/materials';
 import * as machines from './data/machines';
 import * as products from './data/products';
-import { base_ef_device, register_all_ef_devices, port_def_to_vector_3d, machine_to_shape_3d, get_tag_color_theme, resolve_machine } from './base_device';
-import { register_all_ef_recipes, recipe_def_to_recipe, get_all_ef_recipes } from './recipe_adapter';
-import { solidpipe, liquidpipe, gaspipe, base_ef_pipe, register_all_ef_pipes } from './pipes';
-
-// ─── 導出型別 ─────────────────────────────────────────────────────────────────
-export type * from './types';
-export type { ef_device_color_theme } from './base_device';
-export type { ef_pipe_color_theme } from './pipes';
-
-// ─── 導出資料模組與適配邏輯 ───────────────────────────────────────────────────
-export
-{
-    environments,
-    materials,
-    machines,
-    products,
-    base_ef_device,
-    base_ef_pipe,
-    solidpipe,
-    liquidpipe,
-    gaspipe,
-    port_def_to_vector_3d,
-    machine_to_shape_3d,
-    get_tag_color_theme,
-    resolve_machine,
-    recipe_def_to_recipe,
-    get_all_ef_recipes,
-    register_all_ef_pipes
-};
-
-import type { pack_module, item_definition, recipe, device_constructor } from '@/core';
+import { base_ef_device, port_def_to_vector_3d, machine_to_shape_3d, get_tag_color_theme, resolve_machine, create_ef_device_class } from './base_device';
+import { recipe_def_to_recipe, get_all_ef_recipes } from './recipe_adapter';
+import { solidpipe, liquidpipe, gaspipe, base_ef_pipe } from './pipes';
 import { machine_list } from './data/machines';
 import { material_list } from './data/materials';
 import { product_list } from './data/products';
-import { create_ef_device_class } from './base_device';
+import type { pack_module, item_definition, recipe, device_constructor } from '@/core';
 
 // Build unified items dictionary for ef pack
 const ef_items: Record<string, item_definition> = {};
@@ -119,8 +90,7 @@ export const ef: pack_module =
     get_tag_color_theme,
     resolve_machine,
     recipe_def_to_recipe,
-    get_all_ef_recipes,
-    register_all_ef_pipes
+    get_all_ef_recipes
 };
 
 /**
@@ -128,11 +98,5 @@ export const ef: pack_module =
  */
 export function init_pack(): void
 {
-    const registry = get_registry();
-    if (registry)
-    {
-        register_all_ef_devices(registry);
-        register_all_ef_pipes(registry);
-        register_all_ef_recipes(registry);
-    }
+    // EF pack 模組已由 index 導出自動載入
 }

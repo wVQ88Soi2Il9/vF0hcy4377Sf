@@ -1,6 +1,6 @@
-import { create_device_command, get_device_class } from '@/core';
+import { create_device_command } from '@/core';
 import { get_map, get_registry, execute_command } from '@/runtime';
-import { parse_namespaced_id } from '@/packs/vanilla';
+import { parse_namespaced_id, get_device_class } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';

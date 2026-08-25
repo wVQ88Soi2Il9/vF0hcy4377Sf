@@ -2,7 +2,7 @@
  * EF Pack Base Device Class
  */
 
-import { type vector, type pack_registry, type device_constructor, register_device_class, type namespaced_id } from '@/core';
+import type { vector, namespaced_id, device_constructor } from '@/core';
 import type { camera_type } from '@/packs/basic_renderer';
 import type { base_cuboid_device } from '@/packs/cuboid_device';
 import { cuboid_to_shape } from '@/packs/cuboid_device';
@@ -13,7 +13,7 @@ import
     add_vector_3d
 } from '@/packs/layered_2d';
 import type { machine, port_def } from './types';
-import { machine_list, get_machine, get_machine_by_id } from './data/machines';
+import { get_machine, get_machine_by_id } from './data/machines';
 
 // ─── 輔助函式與主題配置 ────────────────────────────────────────────────────────
 
@@ -236,12 +236,4 @@ export function create_ef_device_class(m: machine, mode_id?: string): device_con
             super(uid, def_id, pos, { mode_id: mode_id || m.modes[0]?.id, ...info });
         }
     };
-}
-
-export function register_all_ef_devices(registry: pack_registry): void
-{
-    for (const m of machine_list)
-    {
-        register_device_class(registry, { pack: 'ef', id: m.id }, create_ef_device_class(m));
-    }
 }

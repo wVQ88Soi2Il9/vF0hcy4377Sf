@@ -42,6 +42,7 @@ export * from './math';
 export * from './spatial_map';
 export * from './identifier';
 export * from './device_utils';
+export * from './registry_query';
 
 export const vanilla =
 {
