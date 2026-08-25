@@ -82,6 +82,7 @@
 - H1 · 2026-08-24 03:41 決斷 —— 新增優化 shirones_ui 計畫（使用者）
 - H2 · 2026-08-25 20:38 決斷 —— 拆分為小步漸進待辦（使用者）
 - H3 · 2026-08-25 20:44 落地 —— 審查全體面板組件，確認皆已模組化解耦且無冗餘匯入與死代碼（agent: gemini-3.7-flash-medium） → O1
+- H4 · 2026-08-25 20:57 落地 —— 將龐大 style.css 拆解為 cli_panel.css、device_card.css、info_panel.css 等 10 個組件級獨立 CSS 模組（agent: gemini-3.7-flash-medium） → O1
 
 ### 5 整合測試與建構驗證
 - **state:** 等待確認

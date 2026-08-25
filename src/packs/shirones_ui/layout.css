@@ -1,0 +1,46 @@
+/* ─── Splitter Layout (Resizable Panes) ──────────────────────────────────────── */
+
+.basic_ui_splitter_layout {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 8px;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    background: var(--basic-ui-bg-crust);
+    gap: 0;
+}
+
+.basic_ui_history_sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.basic_ui_center_col {
+    display: flex;
+    flex-direction: column;
+    min-width: 280px;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+.basic_ui_right_col {
+    display: flex;
+    flex-direction: column;
+    min-width: 38px;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

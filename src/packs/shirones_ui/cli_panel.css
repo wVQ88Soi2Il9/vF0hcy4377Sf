@@ -1,0 +1,94 @@
+/* ─── CLI Bar Specific Styles ────────────────────────────────────────────── */
+
+.basic_ui_cli_prompt {
+    font-weight: 700;
+    color: var(--basic-ui-blue);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.basic_ui_cli_prompt_icon {
+    color: var(--basic-ui-sky);
+}
+
+.basic_ui_cli_input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--basic-ui-text);
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.basic_ui_cli_kbd {
+    font-size: 11px;
+    color: var(--basic-ui-overlay0);
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.basic_ui_cli_kbd kbd {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--basic-ui-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--basic-ui-subtext0);
+    font-family: inherit;
+}
+
+.basic_ui_cli_panel_root {
+    transition: height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.basic_ui_cli_panel_root.is_cli_collapsed .basic_ui_content {
+    display: none !important;
+}
+
+.basic_ui_cli_toggle_btn {
+    background: transparent;
+    border: 1px solid var(--basic-ui-surface1);
+    border-radius: 4px;
+    color: var(--basic-ui-subtext0);
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    margin-left: 4px;
+}
+
+.basic_ui_cli_toggle_btn:hover {
+    background: var(--basic-ui-surface0);
+    color: var(--basic-ui-blue);
+    border-color: var(--basic-ui-blue);
+}
+
+.basic_ui_cli_output {
+    font-size: 12px;
+    color: var(--basic-ui-subtext0);
+    overflow-y: auto;
+    white-space: pre-wrap;
+    padding-left: 46px;
+    flex: 1;
+    min-height: 16px;
+    box-sizing: border-box;
+}
+
+.basic_ui_cli_output.success {
+    color: var(--basic-ui-green);
+}
+
+.basic_ui_cli_output.error {
+    color: var(--basic-ui-red);
+}
