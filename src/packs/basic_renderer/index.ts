@@ -1,3 +1,4 @@
+import { basic_renderer_commands, set_camera_command } from './commands';
 import * as camera_mod from './camera';
 import * as camera_control_mod from './camera_control';
 import * as renderer_mod from './renderer';
@@ -9,6 +10,7 @@ export * from './renderer';
 
 export const basic_renderer = {
     pack_id:              'basic_renderer',
+    commands:             basic_renderer_commands,
     // Canvas & Redraw
     get_canvas:           renderer_mod.get_renderer_canvas,
     resize_canvas:        renderer_mod.resize_renderer_canvas,
@@ -33,3 +35,5 @@ export function init_pack(): void
 {
     renderer_mod.init_renderer();
 }
+
+export { set_camera_command };

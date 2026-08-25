@@ -1,3 +1,4 @@
+import { vanilla_commands, delete_branch_command, pin_node_command } from './commands';
 import * as axes from './axes';
 export * from './axes';
 import * as math from './math';
@@ -21,6 +22,7 @@ export * from './history';
 
 export const vanilla = {
     pack_id: 'vanilla',
+    commands: vanilla_commands,
     ...math,
     ...spatial_map,
     ...identifier,
@@ -39,3 +41,5 @@ export const vanilla = {
 export function init_pack(): void
 {
 }
+
+export { delete_branch_command, pin_node_command };
