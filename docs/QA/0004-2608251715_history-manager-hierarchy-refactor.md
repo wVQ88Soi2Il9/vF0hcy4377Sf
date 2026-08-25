@@ -6,9 +6,7 @@
 ## 提問與回答
 
 ### Q1 · 2026-08-25 17:14（human: wVQ88Soi2Il9）
-`src/core/history_manager.ts` 我想進行重構。操作關係如下圖：
-
-![History Manager Dependency Graph](./assets/history_manager_hierarchy.png)
+`src/core/history_manager.ts` 我想進行重構，將所有操作依「調用依賴關係（Call-Dependency DAG）」進行組合與解耦。
 
 ### A1 · 2026-08-25 17:15（agent: gemini-3.7-flash）
 這個依賴關係圖（Call-Dependency DAG）清晰展現了函式間的組合關係：
@@ -42,40 +40,48 @@
 
 ```mermaid
 flowchart TD
-    subgraph Elementary["Elementary Operators (彼此獨立，非組合)"]
-        create_history_tree["create_history_tree"]
-        record_command["record_command"]
+    %% 基礎原子層
+    subgraph Elementary["Elementary Operators (原子操作，彼此獨立)"]
+        create_tree["create_history_tree"]
+        record_cmd["record_command"]
         delete_node["delete_node"]
     end
 
-    undo["undo<br/>(inverse current.cmd, 移到 parent)"]
-    redo["redo<br/>(execute child.cmd, 移到 child)"]
+    %% 核心中樞
+    subgraph Core["Core LCA & Target Jump (核心中樞)"]
+        lca["find_lca / compute_path_to_root<br/>(列出祖先鏈，取最後共同點)"]
+        jump_node["jump_to_node<br/>(LCA + 連續 undo + 連續 redo)"]
+    end
 
-    find_prev["find_prev_fork_node<br/>(重複找 parent，直到 children > 1)"]
-    find_next["find_next_fork_node<br/>(重複找 child，直到 children > 1)"]
+    %% 左側：逆向（Undo / Prev）系列
+    subgraph Upward["Backward / Upward (逆向 / 向上)"]
+        find_prev["find_prev_fork_node<br/>(重複找 parent，直到 children > 1)"]
+        undo["undo<br/>(inverse current.cmd，移到 parent)"]
+        jump_prev["jump_to_prev_fork<br/>(find_prev + 連續 undo)"]
+        jump_root["jump_to_root<br/>(連續 undo 直到頂端)"]
+    end
 
-    lca["find_lca / compute_path_to_root<br/>(列出祖先鏈，取最後共同點)"]
+    %% 右側：正向（Redo / Next）系列
+    subgraph Downward["Forward / Downward (正向 / 向下)"]
+        find_next["find_next_fork_node<br/>(重複找 child，直到 children > 1)"]
+        redo["redo<br/>(execute child.cmd，移到 child)"]
+        jump_next["jump_to_next_fork<br/>(find_next + 連續 redo)"]
+        jump_leaf["jump_to_leaf<br/>(連續 redo 直到末端)"]
+    end
 
-    jump_prev["jump_to_prev_fork<br/>(find_prev + 連續 undo)"]
-    jump_next["jump_to_next_fork<br/>(find_next + 連續 redo)"]
-
-    jump_node["jump_to_node<br/>(LCA + 連續 undo + 連續 redo)"]
-
-    jump_root["jump_to_root<br/>(連續 undo 直到頂端)"]
-    jump_leaf["jump_to_leaf<br/>(連續 redo 直到末端)"]
-
-    %% Dependencies
-    undo --> jump_prev
-    undo --> jump_node
-    undo --> jump_root
+    %% 左側連線
     find_prev --> jump_prev
-    find_prev -.-> lca
+    undo --> jump_prev
+    undo --> jump_root
+    undo --> jump_node
 
-    redo --> jump_next
-    redo --> jump_node
-    redo --> jump_leaf
+    %% 右側連線
     find_next --> jump_next
+    redo --> jump_next
+    redo --> jump_leaf
+    redo --> jump_node
 
+    %% 中樞連線
     lca --> jump_node
 ```
 
