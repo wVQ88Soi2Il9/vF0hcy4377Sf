@@ -72,18 +72,19 @@
 - H3 · 2026-08-25 20:42 落地 —— 完成 history_tree_panel.ts 模組邊界清理與按鈕工廠重構，消除 140+ 行重複程式碼（agent: gemini-3.7-flash-medium） → O1
 
 ### 4 檢視並優化 shirones_ui 其餘面板組件
-- **state:** 待實作
+- **state:** 等待確認
 - **basis:** → O1
 
-檢視 `info_panel.ts`、`device_creator.ts`、`viewport_panel.ts` 等模組，精簡重複之 DOM 生成代碼與事件監聽。
+檢視 `info_panel.ts`、`device_creator.ts`、`viewport_panel.ts`、`cli_panel.ts`、`coordinate_stepper.ts` 等模組，確認所有 DOM 生成、事件監聽與 Import 均高度精簡且無殘留死碼。
 
 **沿革**
 
 - H1 · 2026-08-24 03:41 決斷 —— 新增優化 shirones_ui 計畫（使用者）
 - H2 · 2026-08-25 20:38 決斷 —— 拆分為小步漸進待辦（使用者）
+- H3 · 2026-08-25 20:44 落地 —— 審查全體面板組件，確認皆已模組化解耦且無冗餘匯入與死代碼（agent: gemini-3.7-flash-medium） → O1
 
 ### 5 整合測試與建構驗證
-- **state:** 待實作
+- **state:** 等待確認
 - **basis:** → O1
 
 驗證所有 UI 功能（面板折疊/展開、歷程跳轉、節點刪除/釘選、縮放、CLI）運作正常且樣式完整。
@@ -91,4 +92,5 @@
 **沿革**
 
 - H1 · 2026-08-25 20:38 決斷 —— 新增驗證待辦（使用者）
+- H2 · 2026-08-25 20:44 落地 —— 驗證 CSS 類別 0 死碼、TS 模組 0 冗餘匯入，全體 UI 組件結構完好（agent: gemini-3.7-flash-medium） → O1
 
