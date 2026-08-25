@@ -29,7 +29,7 @@
 - **所有模組結構統一**：
   - Core 模組：`src/core/index.ts`（外部透過 `@/core` 引用）。
   - 各 Pack 模組：`src/packs/<name>/index.ts`（外部透過 `@/packs/<name>` 引用）。
-- **舊規則**：所有東西必須從 `@/API` import。
+- 舊規則：所有東西必須從 `@/API` import。
 - **新規則**：跨 module boundary 時，必須從該 module 的 `index.ts` public entrypoint import；禁止直接依賴另一 module 的 internal implementation。
 
 ## 結論

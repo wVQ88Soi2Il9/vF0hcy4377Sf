@@ -1,75 +1,44 @@
 import { register_overlap_check, register_graph_build } from '@/core';
-import { get_available_recipes } from './recipe_query';
-import { check_map_overlap, is_out_of_bounds } from './overlap';
-import { build_device_graph } from './graph';
-import
-{
-    delete_branch,
-    is_node_pinned,
-    set_node_pin,
-    toggle_node_pin,
-    get_pinned_nodes,
-    clear_all_pinned_nodes,
-    get_vanilla_node_info,
-    set_vanilla_node_info,
-    get_node_merged_from,
-    set_node_merged_from,
-    extract_branch_path
-} from './history';
+import * as math from './math';
+import * as spatial_map from './spatial_map';
+import * as identifier from './identifier';
+import * as device_utils from './device_utils';
+import * as registry_query from './registry_query';
+import * as recipe_query from './recipe_query';
+import * as overlap from './overlap';
+import * as graph from './graph';
+import * as history from './history';
 
-export type { available_recipe_entry } from './recipe_query';
-export type { map_validation_result, device_node } from './types';
-export type { vanilla_history_node_info } from './history';
-export { get_available_recipes } from './recipe_query';
-export { check_map_overlap, is_out_of_bounds } from './overlap';
-export { build_device_graph } from './graph';
-export
-{
-    delete_branch,
-    is_node_pinned,
-    set_node_pin,
-    toggle_node_pin,
-    get_pinned_nodes,
-    clear_all_pinned_nodes,
-    get_vanilla_node_info,
-    set_vanilla_node_info,
-    get_node_merged_from,
-    set_node_merged_from,
-    extract_branch_path
-};
-
+export * from './types';
 export * from './math';
 export * from './spatial_map';
 export * from './identifier';
 export * from './device_utils';
 export * from './registry_query';
+export * from './recipe_query';
+export * from './overlap';
+export * from './graph';
+export * from './history';
 
-export const vanilla =
-{
+export const vanilla = {
     pack_id: 'vanilla',
-    get_available_recipes,
-    check_map_overlap,
-    build_device_graph,
-    is_out_of_bounds,
-    delete_branch,
-    is_node_pinned,
-    set_node_pin,
-    toggle_node_pin,
-    get_pinned_nodes,
-    clear_all_pinned_nodes,
-    get_vanilla_node_info,
-    set_vanilla_node_info,
-    get_node_merged_from,
-    set_node_merged_from,
-    extract_branch_path
+    ...math,
+    ...spatial_map,
+    ...identifier,
+    ...device_utils,
+    ...registry_query,
+    ...recipe_query,
+    ...overlap,
+    ...graph,
+    ...history
 };
 
 /**
  * Initialize the vanilla pack by registering its core logics to the engine hooks.
- * Called automatically by loader.ts — do not call manually.
+ * Called automatically by loader.ts.
  */
 export function init_pack(): void
 {
-    register_overlap_check(check_map_overlap);
-    register_graph_build(build_device_graph);
+    register_overlap_check(overlap.check_map_overlap);
+    register_graph_build(graph.build_device_graph);
 }
