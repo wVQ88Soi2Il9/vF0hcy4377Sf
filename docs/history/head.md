@@ -8,7 +8,7 @@
 
 ## 現在開著的（逐格）
 
-- `0053#1` · **等待確認** — 重命名 Core 空間型別為 space 並維持純函式演算法 (Space Interface & Pure Core Algorithms)
+- `0053#1` · **等待確認** — 重命名 Core 空間型別為 class space 並維持純函式演算法 (class space & Core Algorithms)
 - `0053#2` · **等待確認** — 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
 - `0053#3` · **待實作** — 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)
 - `0053#4` · **待實作** — 跨模組依賴更新、過渡設施清理與 CLI / UI 整合驗證 (Cross-Pack Migration, Transitional Cleanup & Validation)

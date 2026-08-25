@@ -6,13 +6,13 @@
 
 ## 主題簡述
 
-依據 QA 0006 與 QA 0007 確立之架構共識，推進 Core、World 與 Vanilla 的職責邊界收斂、多世界實例（Multi-World）架構演進，以及「空間（Space）」數學名詞與 `class world = space + history + registry` 實體範式：
+依據 QA 0006 與 QA 0007 確立之架構共識，推進 Core、World 與 Vanilla 的職責邊界收斂、多世界實例（Multi-World）架構演進，以及「空間（Space）」數學名詞與 `class world` / `class space` 實體範式：
 1. **名詞重構（`world` 與 `space`）**：
    - 將冷硬的 `runtime` 正式更名為遊戲領域核心概念 **`world`**（實體類別 `class world`，全域容器/模組為 `src/world.ts`）。
-   - 將易與 JS `Map` 混淆的 `game_map` / `map` 正式更名為數學空間語意之 **`space`**（型別 `interface space`，管理器為 `src/core/space_manager.ts`），形成 $\text{World} = \text{Space} + \text{History} + \text{Registry}$ 的三位一體心智模型。
+   - 將易與 JS `Map` 混淆的 `game_map` / `map` 正式更名為數學空間語意之 **`space`**（實體類別 `class space`，管理器為 `src/core/space_manager.ts`），形成 $\text{World} = \text{Space} + \text{History} + \text{Registry}$ 的三位一體心智模型。
 2. **實體類別與 Core 純演算法分層架構**：
-   - **實體層**：以 `class world` 聚合 `space`, `history`, `registry`，對外提供高內聚且具人體工學的 `world.execute(cmd)`、`world.undo()`、`world.jump_to()` 物件導向介面。
-   - **核心層**：Core 保持純資料契約（`interface space`、`interface history_tree`）與純函式演算法（`undo`、`jump_to_node` 等），可逆指令 `space_command` 僅依賴 `space`。
+   - **實體層**：以 `class world` 聚合 `space`, `history`, `registry`，以 `class space` 封裝空間幾何與裝置集合，提供高內聚且具人體工學之 OOP 介面與 Hooks 觸發保證。
+   - **核心層**：Core 保持可逆指令契約（`space_command`）與歷史樹純函式演算法（`undo`、`jump_to_node` 等）。
 3. **World 多實例化與 Active World 管理**：
    - 將 `src/world.ts` 升級為支援建立、銷毀與切換世界實例的管理器，並提供對當前 Active World 轉發的便利捷徑。
 4. **Vanilla 業務語意與擴充容器收斂**：
@@ -36,15 +36,21 @@
 ### O4 · 2026-08-26 03:41:00+08:00 — 完成 Core 層 space 型別與純函式管理器重構
 完成 `src/core/` 全面重構：在 `types.ts` 定義 `space` 與 `space_command`（保留過渡相容別名），新增 `space_manager.ts` 管理空間幾何與裝置異動，全面更新 `commands.ts`、`history_manager.ts`、`hooks.ts` 與 `index.ts` 公開進入點，Core 保持 100% 零全域狀態與純函式演算法無副作用。
 
+### O5 · 2026-08-26 03:49:00+08:00 — 完成 class world 與多世界管理中心實裝
+在 `src/world.ts` 完整實作 `class world`（聚合 `space`、`history`、`registry`，提供 `execute`、`undo`、`redo`、`jump_to` 等代理方法）、多世界實例註冊與 Active World 切換機制，以及偏函式捷徑轉發。建立 `src/runtime.ts` 過渡轉發檔。
+
+### O6 · 2026-08-26 03:56:00+08:00 — 實作 class space 類別與空間操作內聚
+在 `src/core/space_manager.ts` 實作 `class space`（封裝 `dimension`、`size`、`uid`、`devices` 與 `create_device`、`delete_device`、`move_device`、`select_recipe` 等實例方法），內聚 Hooks 觸發點，並在 `space_manager.ts` 提供向後相容函式風格包裝。
+
 ---
 
 ## 待辦
 
-### 1 重命名 Core 空間型別為 space 並維持純函式演算法 (Space Interface & Pure Core Algorithms)
+### 1 重命名 Core 空間型別為 class space 並維持純函式演算法 (class space & Core Algorithms)
 - **state:** 等待確認
-- **basis:** → O1, O2, O3, O4
+- **basis:** → O1, O2, O3, O4, O6
 
-在 `src/core/types.ts` 將 `game_map` 重命名為 `space`（並重構 `map_manager.ts` 為 `space_manager.ts`、`map_command` 為 `space_command`），確認 Core 所有歷史演算法與空間操作皆為接受 `space` / `history_tree` 顯式參數之純函式，指令不依賴外部整個 world 物件。
+在 `src/core/space_manager.ts` 實作 `class space` 實體類別（封裝維度、尺寸、UID 與裝置異動方法及 Hooks 觸發），並確認歷史演算法與空間指令皆可兼顧物件導向呼叫與純函式重放。
 
 **沿革**
 
@@ -52,10 +58,11 @@
 - H2 · 2026-08-26 03:23 決斷 —— 依據 QA 0007 將 map 改名為 space，runtime 改名為 world（human: wVQ88Soi2Il9） → O2
 - H3 · 2026-08-26 03:35 決斷 —— 確立 Core 維持無狀態純函式與 space_command 最小依賴原則（human: wVQ88Soi2Il9） → O3
 - H4 · 2026-08-26 03:41 落地 —— 完成 Core 內 space/space_command 重命名與 space_manager.ts 重構（agent: gemini-3.7-flash-high） → O4
+- H5 · 2026-08-26 03:56 決斷 —— 依據 QA 0007 Q3/A3 實裝 class space 實體類別（human: wVQ88Soi2Il9） → O6
 
 ### 2 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
-- **state:** 待實作
-- **basis:** → O1, O2, O3
+- **state:** 等待確認
+- **basis:** → O1, O2, O3, O5, O6
 
 在 `src/world.ts`（原 `src/runtime.ts`）實作 `class world`（聚合 `space`、`history`、`registry`，提供 `execute()`, `undo()`, `redo()`, `jump_to()` 等方法代理 Core 純函式），並實作 Active World 管理與便利函式匯出。
 
@@ -64,6 +71,7 @@
 - H1 · 2026-08-26 03:15 決斷 —— 建立多實例管理與捷徑轉發待辦（human: wVQ88Soi2Il9）
 - H2 · 2026-08-26 03:23 決斷 —— 依據 QA 0007 將檔案重命名為 world.ts 並將概念收斂為 Multi-World（human: wVQ88Soi2Il9） → O2
 - H3 · 2026-08-26 03:35 決斷 —— 確定採用 class world = space + history + registry 實體類別模式（human: wVQ88Soi2Il9） → O3
+- H4 · 2026-08-26 03:49 落地 —— 實作 class world 類別、Multi-World 管理與 Active World 偏函式代理（agent: gemini-3.7-flash-medium） → O5
 
 ### 3 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)
 - **state:** 待實作

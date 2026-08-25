@@ -1,26 +1,131 @@
-import type { space, device, vector, namespaced_id, device_constructor } from './types';
+import type { device, vector, namespaced_id, device_constructor } from './types';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from './hooks';
 
 /**
- * Creates a new space instance with next uid starting from 1.
+ * 空間實體類別：封裝 N 維幾何維度、網格大小、UID 計數器與裝置實體集合。
+ */
+export class space
+{
+    public readonly dimension: number;
+    public          size:      vector;
+    public          uid:       number;
+    public          devices:   device[];
+
+    constructor(size: vector)
+    {
+        this.dimension = size.length;
+        this.size = size;
+        this.uid = 1;
+        this.devices = [];
+    }
+
+    /**
+     * 在空間中建立新裝置實例並自動分配 UID。
+     */
+    public create_device
+    (
+        device_class:  device_constructor,
+        definition_id: namespaced_id,
+        position:      vector,
+        other_info:    Record<string, unknown> = {}
+    ): device
+    {
+        const assigned_id = this.uid;
+        const dev = new device_class(assigned_id, definition_id, position, other_info);
+
+        this.uid += 1;
+        this.devices.push(dev);
+        trigger_create_device(this, dev);
+        return dev;
+    }
+
+    /**
+     * 還原既有裝置實例（Redo / Undo 還原時使用），維持原 UID。
+     */
+    public restore_device(dev: device): void
+    {
+        const exists = this.devices.some(d => d.uid === dev.uid);
+        if (!exists)
+        {
+            this.devices.push(dev);
+            if (dev.uid >= this.uid)
+            {
+                this.uid = dev.uid + 1;
+            }
+            trigger_create_device(this, dev);
+        }
+    }
+
+    /**
+     * 依 UID 從空間中移除裝置。
+     */
+    public delete_device(device_uid: number): device | undefined
+    {
+        const index = this.devices.findIndex(d => d.uid === device_uid);
+        if (index !== -1)
+        {
+            const dev = this.devices[index];
+            this.devices.splice(index, 1);
+            trigger_delete_device(this, dev);
+            return dev;
+        }
+        return undefined;
+    }
+
+    /**
+     * 移動指定 UID 之裝置至新位置。
+     */
+    public move_device(device_uid: number, new_position: vector): void
+    {
+        const dev = this.devices.find(d => d.uid === device_uid);
+        if (dev)
+        {
+            const old_position = dev.position;
+            dev.position = new_position;
+            trigger_move_device
+            (
+                this,
+                dev,
+                old_position,
+                new_position
+            );
+        }
+    }
+
+    /**
+     * 設定或清除裝置的選定配方。
+     */
+    public select_recipe(device_uid: number, recipe_id?: namespaced_id): void
+    {
+        const dev = this.devices.find(d => d.uid === device_uid);
+        if (dev)
+        {
+            const old_recipe_id = dev.selected_recipe_id;
+            dev.selected_recipe_id = recipe_id;
+            trigger_select_recipe
+            (
+                this,
+                dev,
+                old_recipe_id,
+                recipe_id
+            );
+        }
+    }
+}
+
+/**
+ * 工廠函式：建立一個新的 space 實例。
  */
 export function create_space(size: vector): space
 {
-    return {
-        dimension: size.length,
-        size,
-        uid: 1,
-        devices: []
-    };
+    return new space(size);
 }
 
 // TODO: transitional - remove create_map alias after full migration to create_space
 export const create_map = create_space;
 
 /**
- * Adds a device to the space by instantiating from a device constructor.
- * Auto-assigns uid from space.uid and increments it by 1.
- * Modifies the space in place and returns the created device instance.
+ * 函式風格包裝：轉發至 space.create_device
  */
 export function create_device
 (
@@ -31,89 +136,37 @@ export function create_device
     other_info:    Record<string, unknown> = {}
 ): device
 {
-    const assigned_id = sp.uid;
-    const dev = new device_class(assigned_id, definition_id, position, other_info);
-
-    sp.uid += 1;
-    sp.devices.push(dev);
-    trigger_create_device(sp, dev);
-    return dev;
+    return sp.create_device(device_class, definition_id, position, other_info);
 }
 
 /**
- * Restores an existing device instance to the space without reassigning its uid.
- * If dev.uid is >= space.uid, space.uid is updated to dev.uid + 1.
- * Modifies the space in place and triggers create hook.
+ * 函式風格包裝：轉發至 space.restore_device
  */
 export function restore_device(sp: space, dev: device): void
 {
-    const exists = sp.devices.some(d => d.uid === dev.uid);
-    if (!exists)
-    {
-        sp.devices.push(dev);
-        if (dev.uid >= sp.uid)
-        {
-            sp.uid = dev.uid + 1;
-        }
-        trigger_create_device(sp, dev);
-    }
+    sp.restore_device(dev);
 }
 
 /**
- * Removes a device by its uid.
- * Modifies the space in place and returns the removed device instance if found.
+ * 函式風格包裝：轉發至 space.delete_device
  */
 export function delete_device(sp: space, device_uid: number): device | undefined
 {
-    const index = sp.devices.findIndex(d => d.uid === device_uid);
-    if (index !== -1)
-    {
-        const dev = sp.devices[index];
-        sp.devices.splice(index, 1);
-        trigger_delete_device(sp, dev);
-        return dev;
-    }
-    return undefined;
+    return sp.delete_device(device_uid);
 }
 
 /**
- * Moves a device.
- * Modifies the device in place.
+ * 函式風格包裝：轉發至 space.move_device
  */
 export function move_device(sp: space, device_uid: number, new_position: vector): void
 {
-    const dev = sp.devices.find(d => d.uid === device_uid);
-    if (dev)
-    {
-        const old_position = dev.position;
-        dev.position = new_position;
-        trigger_move_device
-        (
-            sp,
-            dev,
-            old_position,
-            new_position
-        );
-    }
+    sp.move_device(device_uid, new_position);
 }
 
 /**
- * Sets or clears the selected recipe for a device.
- * Modifies the device in place.
+ * 函式風格包裝：轉發至 space.select_recipe
  */
 export function select_recipe(sp: space, device_uid: number, recipe_id?: namespaced_id): void
 {
-    const dev = sp.devices.find(d => d.uid === device_uid);
-    if (dev)
-    {
-        const old_recipe_id = dev.selected_recipe_id;
-        dev.selected_recipe_id = recipe_id;
-        trigger_select_recipe
-        (
-            sp,
-            dev,
-            old_recipe_id,
-            recipe_id
-        );
-    }
+    sp.select_recipe(device_uid, recipe_id);
 }

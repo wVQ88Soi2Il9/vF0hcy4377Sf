@@ -114,26 +114,8 @@ export abstract class device
 
 // ── Space ────────────────────────────────────────────────────────────────────
 
-export interface space
-{
-    /**
-     * Spatial dimension count N (e.g. 2 for 2D, 3 for 3D, 4 for 4D).
-     * Strictly equals size.length.
-     */
-    readonly dimension: number;
-
-    /**
-     * Grid dimensions per axis.
-     * Length of this array defines N (the number of spatial dimensions).
-     * Valid cells satisfy: 0 <= pos[i] < size[i] for all i.
-     */
-    size:               vector;
-
-    /** Auto-increment counter for device uid generation */
-    uid:                number;
-
-    devices:            device[];
-}
+import type { space } from './space_manager';
+export type { space };
 
 // TODO: transitional - remove game_map alias after full migration to space
 export type game_map = space;

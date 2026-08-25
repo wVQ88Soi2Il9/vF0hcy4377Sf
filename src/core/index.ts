@@ -8,7 +8,6 @@
 export * from './types';
 export * from './pack_manager';
 export * from './space_manager';
-export * from './map_manager';
 export * from './history_manager';
 export * from './commands';
 export * from './hooks';

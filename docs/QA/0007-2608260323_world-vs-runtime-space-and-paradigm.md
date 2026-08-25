@@ -1,7 +1,7 @@
 # 0007-2608260323_world-vs-runtime-space-and-paradigm
 
 - **status:** resolved
-- **topic:** runtime 改名 world、map 改名 space 之語意與 class world = space + history + registry 選型雙向論證
+- **topic:** runtime 改名 world、map 改名 space 之語意與 class world / class space 選型雙向論證
 
 ## 提問與回答
 
@@ -65,16 +65,26 @@
 
 ---
 
-#### 最佳融合架構方案（Pragmatic Class World + Core Pure Algorithms）
-為兼得兩者優勢，架構推薦採「**外層 Class 實體門面 + 底層 Core 純演算法**」分層模式：
-1. **底層 Core（純資料型別 + 純演算法）**：
-   - `interface space`、`interface history_tree`、`interface pack_registry` 定義純資料結構。
-   - Core 匯出無狀態純函式：`core_record_command(tree, space, cmd)`、`core_undo(tree, space)`、`core_jump_to_node(tree, space, uid)`。
-   - 可逆指令 `space_command` 只吃 `space`，維持極小依賴與可逆性。
-2. **World 實體層（`class world`）**：
-   - `class world` 持有 `public readonly space: space; public readonly history: history_tree; public readonly registry: pack_registry;`。
-   - `world` 的實例方法（`execute()`, `undo()`, `jump_to()`）作為委派（Delegate）代理底層 Core 純函式。
-   - `src/world.ts` 同時可維護 `get_active_world()` / `set_active_world()` 作為預設世界的快捷進入點。
+### Q3 · 2026-08-26 03:55（human: wVQ88Soi2Il9）
+先把 `space` 改成 `class`。
+
+### A3 · 2026-08-26 03:56（agent: gemini-3.7-flash-high）
+
+針對將 `space` 由純資料介面重構為實體類別 `class space` 之雙向論證評估：
+
+#### 贊同採納的理由（Why we should）
+1. **空間狀態與實體異動高度內聚（Encapsulation & High Cohesion）**：
+   - 空間維度、尺寸、UID 遞增器、裝置陣列與增刪改操作（`create_device`, `delete_device`, `move_device`, `select_recipe`）完全收斂於實例方法中，呼叫端享有 `sp.create_device(...)`、`sp.delete_device(uid)` 之直接直觀語意。
+2. **Hooks 觸發點內聚保障**：
+   - 裝置建立、移動、刪除時的 Core Hooks 觸發邏輯直接內聚於 `class space` 方法內部，杜絕外部繞過 Hooks 造成狀態與 UI 渲染不同步之漏洞。
+3. **三層 OOP 領域階層完整統一**：
+   - 形成清晰一貫的領域物件階層：`world (class)` $\rightarrow$ `space (class)` $\rightarrow$ `device (class)`。
+
+#### 反對／保留／潛在代價的理由（Why we shouldn't）
+1. **純資料快照與序列化代價**：
+   - 將 `space` 轉為類別後，進行深拷貝或 JSON 存檔序列化時需透過資料提取或反序列化工廠重建類別實例。
+2. **純函式封裝相容需求**：
+   - 為了相容外部或既有函式風格呼叫（`create_device(sp, ...)`），`space_manager.ts` 需提供薄轉發包裝層。
 
 ---
 
@@ -82,4 +92,4 @@
 
 1. **命名全面定案**：`runtime` $\rightarrow$ **`world`**，`map` $\rightarrow$ **`space`**。
 2. **三位一體實體模型**：正式確立 $\text{World} = \text{Space} + \text{History} + \text{Registry}$。
-3. **架構模式定案**：採「**`class world` 實體門面 + Core 純資料與純函式演算法**」分層架構，呼叫端享有極致優雅的 `world.undo()` / `world.execute()` 物件導向介面，底層維持 100% 零全域狀態與演算法純粹性。
+3. **OOP 領域層級定案**：全面採用 `class world` 與 `class space` 作為核心實體類別，內聚狀態異動與 Hooks 觸發，同時保留純函式轉發與可逆指令契約，兼具物件導向高內聚性與底層純粹性。

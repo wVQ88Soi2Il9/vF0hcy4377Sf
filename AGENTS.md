@@ -98,6 +98,8 @@ trigger: always_on
   - 執行過程中一旦發現涉及未預期、大幅度超出當前待辦範疇之破壞性修改或連鎖重構，**必須立即停止作業，主動向使用者說明情況並確認意圖**，嚴禁逕行推演實作。
 - **過渡相容設施 TODO 列管與強制清理 (Transitional Code Tagging & Mandatory Cleanup)**：
   - 為了平滑重構所暫時保留之過渡相容別名、橋接轉發檔或相容包裝，**一律強制於程式碼標註 `// TODO: transitional - [cleanup target]` 並在 Plan 中列管清理待辦**，重構遷移完成後必須徹底移除，嚴禁永久殘留為技術債。
+- **重命名作業 Human 優先 (Human-First Rename & Refactoring)**：
+  - 涉及跨檔案之符號、型別、變數、函式或檔案重命名（Rename Refactor），**優先交由 Human（使用者透過 IDE 語意重構工具）統一處理**，以確保修改之迅速、精準與安全性，Agent 不主動發起大範圍文字取代。
 
 ---
 

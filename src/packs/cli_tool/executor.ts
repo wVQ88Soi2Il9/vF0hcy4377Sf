@@ -128,7 +128,7 @@ function resolve_device_class
     throw new Error(`Device "${query}" not found in any loaded pack.`);
 }
 
-function execute_runtime_navigation(cmd: string, args: string[]): string | null
+function execute_history_navigation(cmd: string, args: string[]): string | null
 {
     switch (cmd)
     {
@@ -195,11 +195,11 @@ export function execute_command(input: string): string
 
     try
     {
-        // 1. History & runtime navigation commands (no aliases for core/history)
-        const runtime_res = execute_runtime_navigation(cmd, args);
-        if (runtime_res !== null)
+        // 1. History navigation commands (no aliases for core/history)
+        const history_res = execute_history_navigation(cmd, args);
+        if (history_res !== null)
         {
-            return runtime_res;
+            return history_res;
         }
 
         // 2. Lookup command factory from Core Command Registry

@@ -2,13 +2,13 @@ import type { pack_registry } from '@/core';
 
 /**
  * Dynamically generates help text from commands registered in Core Command Registry,
- * along with runtime navigation commands.
+ * along with history navigation commands.
  */
 export function format_cli_help(registry: pack_registry): string
 {
     const lines: string[] = ['=== Available CLI Commands ===\n'];
 
-    lines.push('[runtime history navigation]');
+    lines.push('[history navigation]');
     lines.push('  undo                       - Revert previous history step');
     lines.push('  redo                       - Reapply next history step');
     lines.push('  jump_to_history <uid>      - Jump to specified history node');
