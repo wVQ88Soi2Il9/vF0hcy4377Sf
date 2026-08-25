@@ -1,4 +1,4 @@
-import { basic_renderer_commands, set_camera_command } from './commands';
+import { basic_renderer_commands, camera_command } from './commands';
 import * as camera_mod from './camera';
 import * as camera_control_mod from './camera_control';
 import * as renderer_mod from './renderer';
@@ -7,6 +7,7 @@ export * from './types';
 export * from './camera';
 export * from './camera_control';
 export * from './renderer';
+export * from './commands';
 
 export const basic_renderer = {
     pack_id:              'basic_renderer',
@@ -36,4 +37,4 @@ export function init_pack(): void
     renderer_mod.init_renderer();
 }
 
-export { set_camera_command };
+export { camera_command };

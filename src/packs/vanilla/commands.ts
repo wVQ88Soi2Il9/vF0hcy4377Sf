@@ -1,5 +1,5 @@
-import type { map_command } from '@/core';
-import { delete_branch, toggle_node_pin } from './history';
+import type { game_map, map_command } from '@/core';
+import { delete_branch, toggle_node_pin, set_node_pin } from './history';
 
 export function delete_branch_command(target_uid: number): map_command
 {
@@ -8,14 +8,18 @@ export function delete_branch_command(target_uid: number): map_command
         id:   'delete_branch',
         other_info:
         {
-            vanilla: { target_uid }
+            vanilla:
+            {
+                target_uid
+            }
         },
-        execute(): void
+        execute(_map: game_map): void
         {
             delete_branch(Number(target_uid));
         },
-        inverse(): void
+        inverse(_map: game_map): void
         {
+            // History branch subtree deletion
         }
     };
 }
@@ -27,36 +31,28 @@ export function delete_branch_command(target_uid: number): map_command
     }
 };
 
-export function pin_node_command(target: string | number): map_command
+export function pin_node_command(target_uid: number): map_command
 {
+    let previous_state: boolean | null = null;
     return {
         pack: 'vanilla',
         id:   'pin_node',
         other_info:
         {
-            vanilla: { target }
-        },
-        execute(): void
-        {
-            if (typeof target === 'string' && target.toLowerCase() === 'list')
+            vanilla:
             {
-                return;
-            }
-            const uid = typeof target === 'number' ? target : parseInt(target, 10);
-            if (!isNaN(uid))
-            {
-                toggle_node_pin(uid);
+                target_uid
             }
         },
-        inverse(): void
+        execute(_map: game_map): void
         {
-            if (typeof target !== 'string' || target.toLowerCase() !== 'list')
+            previous_state = toggle_node_pin(Number(target_uid));
+        },
+        inverse(_map: game_map): void
+        {
+            if (previous_state !== null)
             {
-                const uid = typeof target === 'number' ? target : parseInt(target, 10);
-                if (!isNaN(uid))
-                {
-                    toggle_node_pin(uid);
-                }
+                set_node_pin(Number(target_uid), !previous_state);
             }
         }
     };
@@ -65,7 +61,7 @@ export function pin_node_command(target: string | number): map_command
 (pin_node_command as any).other_info = {
     cli: {
         alias:    'pin',
-        describe: 'Toggle pin on history node or list pinned nodes'
+        describe: 'Toggle pin on a history node'
     }
 };
 

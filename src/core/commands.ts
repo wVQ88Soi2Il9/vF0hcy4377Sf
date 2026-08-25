@@ -181,10 +181,10 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
  * Core pack standard commands map.
  */
 
-(create_device_command as any).other_info = { cli: { alias: 'create', describe: 'Create a device at target position' } };
-(delete_device_command as any).other_info = { cli: { alias: ['delete', 'del', 'rm'], describe: 'Delete a device by UID' } };
-(move_device_command as any).other_info = { cli: { alias: 'move', describe: 'Move a device to a new position' } };
-(select_recipe_command as any).other_info = { cli: { alias: ['recipe', 'set-recipe'], describe: 'Select recipe for a device' } };
+(create_device_command as any).other_info = { cli: { describe: 'Create a device at target position' } };
+(delete_device_command as any).other_info = { cli: { describe: 'Delete a device by UID' } };
+(move_device_command as any).other_info = { cli: { describe: 'Move a device to a new position' } };
+(select_recipe_command as any).other_info = { cli: { describe: 'Select recipe for a device' } };
 
 export const core_commands: Record<string, map_command_factory> = {
     create_device: create_device_command,
