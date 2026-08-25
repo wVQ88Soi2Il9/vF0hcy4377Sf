@@ -3,7 +3,7 @@ import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
 import { on_device_change, on_history_change } from '@/core';
 import { get_map } from '@/runtime';
-import { camera, adapt_camera_plane } from './camera';
+import { camera, adapt_camera_plane, on_camera_change } from './camera';
 import { setup_camera_control } from './camera_control';
 
 let renderer_canvas: HTMLCanvasElement | null = null;
@@ -130,6 +130,7 @@ export function init_renderer(): void
     setup_camera_control(renderer_canvas, redraw_renderer);
     on_device_change(redraw_renderer);
     on_history_change(redraw_renderer);
+    on_camera_change(redraw_renderer);
 
     queueMicrotask(redraw_renderer);
 }

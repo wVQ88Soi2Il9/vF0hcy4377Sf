@@ -1,5 +1,4 @@
 import { camera, notify_camera_change, adapt_camera_plane } from './camera';
-import { redraw_renderer } from './renderer';
 import { get_map } from '@/runtime';
 
 /**
@@ -10,7 +9,6 @@ export function set_camera_pan(pan_x: number, pan_y: number): void
     camera.pan_x = pan_x;
     camera.pan_y = pan_y;
     notify_camera_change();
-    redraw_renderer();
 }
 
 /**
@@ -20,7 +18,6 @@ export function set_camera_zoom(zoom: number): void
 {
     camera.zoom = Math.max(10, Math.min(200, zoom));
     notify_camera_change();
-    redraw_renderer();
 }
 
 /**
@@ -32,7 +29,6 @@ export function set_camera_transform(pan_x: number, pan_y: number, zoom: number)
     camera.pan_y = pan_y;
     camera.zoom  = Math.max(10, Math.min(200, zoom));
     notify_camera_change();
-    redraw_renderer();
 }
 
 /**
@@ -71,7 +67,6 @@ export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]
     }
 
     notify_camera_change();
-    redraw_renderer();
 }
 
 /**
