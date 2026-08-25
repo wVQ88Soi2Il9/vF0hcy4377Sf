@@ -77,8 +77,7 @@ function format_history_summary(): string
         lines.push(`${prefix}[#${node.uid}] ${label}${parent_info}${branches}`);
     }
 
-    return lines.join('
-');
+    return lines.join('\n');
 }
 
 export const CLI_COMMAND_REGISTRY = new Map<string, cli_command_spec>();
@@ -562,8 +561,7 @@ register_cli_command({
                 const label = node ? (node.command ? format_namespaced_id(node.command) : 'root (initial state)') : 'unknown';
                 lines.push(`- [#${uid}] ${label}`);
             }
-            return lines.join('
-');
+            return lines.join('\n');
         }
 
         const target_uid = parseInt(arg_str, 10);
