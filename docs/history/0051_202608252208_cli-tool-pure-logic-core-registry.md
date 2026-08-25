@@ -20,7 +20,7 @@
 ## 待辦
 
 ### 1 重構 cli_tool 為純邏輯核心 (Pure CLI Tool Logic)
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1
 
 徹底清除 `src/packs/cli_tool` 對下游 Pack 的依賴，僅保留純字串分詞（`tokenize_input`）、旗標清洗（`clean_flag_arg`）、命令註冊表（`CLI_COMMAND_REGISTRY`）與執行器（`execute_command`），空間維度數學工具全數遷出，並於瀏覽器掛載 `window.cli`。

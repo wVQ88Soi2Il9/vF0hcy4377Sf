@@ -38,7 +38,7 @@ export function draw_grid
     const min_y_units = Math.floor((camera.pan_y) / step_px) * GRID_STEP;
     const max_y_units = Math.ceil((h + camera.pan_y) / step_px) * GRID_STEP;
 
-    // 3. 繪製精確的網格線 (無失真、無模糊、無變形)
+    // 3. 繪製精確的網格線
     ctx.save();
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(176, 176, 176, 0.45)';
