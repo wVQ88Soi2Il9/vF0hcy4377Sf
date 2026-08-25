@@ -1,4 +1,4 @@
-import type { pack_registry, map_command_factory, namespaced_id, device_constructor } from '@/core';
+import type { pack_registry, space_command_factory, namespaced_id, device_constructor } from '@/core';
 import
 {
     get_registry,
@@ -35,7 +35,7 @@ function find_command
 (
     registry: pack_registry,
     query:    string
-): { pack: string; id: string; factory: map_command_factory } | null
+): { pack: string; id: string; factory: space_command_factory } | null
 {
     const normalized = query.toLowerCase().replace(/-/g, '_');
 
@@ -61,7 +61,7 @@ function find_command
         return null;
     }
 
-    const matches: Array<{ pack: string; id: string; factory: map_command_factory }> = [];
+    const matches: Array<{ pack: string; id: string; factory: space_command_factory }> = [];
     for (const [pack_name, mod] of registry.packs)
     {
         if (mod.commands)

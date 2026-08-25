@@ -4,7 +4,7 @@ import type {
     recipe_evaluation,
     namespaced_id,
     device_constructor,
-    map_command_factory,
+    space_command_factory,
     pack_registry
 } from '@/core';
 
@@ -82,7 +82,7 @@ export function has_command(registry: pack_registry, identifier: namespaced_id):
 /**
  * 取得指令工廠，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_command(registry: pack_registry, identifier: namespaced_id): map_command_factory
+export function get_command(registry: pack_registry, identifier: namespaced_id): space_command_factory
 {
     const cmd = registry.packs.get(identifier.pack)?.commands?.[identifier.id];
     if (!cmd)

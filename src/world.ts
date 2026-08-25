@@ -5,10 +5,10 @@
  * 提供 Active World 管理中心與偏函式捷徑轉發。
  */
 
-import type { space, history_tree, space_command, pack_registry, vector } from '@/core';
+import type { history_tree, space_command, pack_registry, vector } from '@/core';
 import
 {
-    create_space,
+    space,
     create_history_tree,
     create_pack_registry,
     record_command as core_record_command,
@@ -45,7 +45,7 @@ export class world
     constructor(options: world_options = {})
     {
         this.id = options.id ?? `world_${Date.now()}`;
-        this.space = options.space ?? create_space(options.size ?? [10, 10]);
+        this.space = options.space ?? new space(options.size ?? [10, 10]);
         this.history = options.history ?? create_history_tree();
         this.registry = options.registry ?? create_pack_registry();
     }

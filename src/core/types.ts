@@ -27,7 +27,6 @@ export type device_constructor = new
 ) => device;
 
 export type space_command_factory = (...args: any[]) => space_command;
-export type map_command_factory = space_command_factory;
 
 /**
  * 模組命名空間物件 (Pack-as-a-Module-Object)
@@ -115,6 +114,7 @@ export abstract class device
 // ── Space ────────────────────────────────────────────────────────────────────
 
 import type { space } from './space_manager';
+
 export type { space };
 
 // ── History (Undo / Redo) ─────────────────────────────────────────────────────

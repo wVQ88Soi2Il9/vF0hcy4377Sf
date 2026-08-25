@@ -1,12 +1,4 @@
 import type { space, device, vector, space_command, space_command_factory, namespaced_id, device_constructor } from './types';
-import
-{
-    create_device,
-    restore_device,
-    delete_device,
-    move_device,
-    select_recipe
-} from './space_manager';
 
 /**
  * Command for creating a device on the space.
@@ -39,18 +31,18 @@ export function create_device_command
         {
             if (!created_dev)
             {
-                created_dev = create_device(sp, device_class, definition_id, position, other_info);
+                created_dev = sp.create_device(device_class, definition_id, position, other_info);
             }
             else
             {
-                restore_device(sp, created_dev);
+                sp.restore_device(created_dev);
             }
         },
         inverse(sp: space): void
         {
             if (created_dev)
             {
-                delete_device(sp, created_dev.uid);
+                sp.delete_device(created_dev.uid);
             }
         }
     };
@@ -77,7 +69,7 @@ export function delete_device_command(device_uid: number): space_command
         execute(sp: space): void
         {
             const target_uid = deleted_dev ? deleted_dev.uid : device_uid;
-            const dev = delete_device(sp, target_uid);
+            const dev = sp.delete_device(target_uid);
             if (dev)
             {
                 deleted_dev = dev;
@@ -87,7 +79,7 @@ export function delete_device_command(device_uid: number): space_command
         {
             if (deleted_dev)
             {
-                restore_device(sp, deleted_dev);
+                sp.restore_device(deleted_dev);
             }
         }
     };
@@ -121,14 +113,14 @@ export function move_device_command(device_uid: number, new_position: vector): s
                 {
                     previous_position = [...dev.position];
                 }
-                move_device(sp, device_uid, new_position);
+                sp.move_device(device_uid, new_position);
             }
         },
         inverse(sp: space): void
         {
             if (previous_position !== null)
             {
-                move_device(sp, device_uid, previous_position);
+                sp.move_device(device_uid, previous_position);
             }
         }
     };
@@ -164,14 +156,14 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
                     previous_recipe_id = dev.selected_recipe_id;
                     initialized = true;
                 }
-                select_recipe(sp, device_uid, new_recipe_id);
+                sp.select_recipe(device_uid, new_recipe_id);
             }
         },
         inverse(sp: space): void
         {
             if (initialized)
             {
-                select_recipe(sp, device_uid, previous_recipe_id);
+                sp.select_recipe(device_uid, previous_recipe_id);
             }
         }
     };

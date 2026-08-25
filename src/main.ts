@@ -1,4 +1,4 @@
-import { create_map, create_history_tree, create_pack_registry } from '@/core';
+import { space, create_history_tree, create_pack_registry } from '@/core';
 import { set_map, set_registry, set_history_tree, jump_to_history } from '@/world';
 import { load_all_packs, call_all_pack_inits } from './packs/loader';
 import { execute_command } from '@/packs/cli_tool';
@@ -7,12 +7,12 @@ import { execute_command } from '@/packs/cli_tool';
 const registry = create_pack_registry();
 load_all_packs(registry);
 
-// 2. 建立地圖（3 維空間: 64×64×4，全偶數網格錨點）與歷史樹
-const map = create_map([64, 64, 4]);
+// 2. 建立空間（3 維空間: 64×64×4，全偶數網格錨點）與歷史樹
+const sp = new space([64, 64, 4]);
 const history_tree = create_history_tree();
 
-// 3. 在 loader 呼叫 init_pack() 之前，註冊 map, registry 和 history_tree
-set_map(map);
+// 3. 在 loader 呼叫 init_pack() 之前，註冊 space, registry 和 history_tree
+set_map(sp);
 set_registry(registry);
 set_history_tree(history_tree);
 
