@@ -11,7 +11,8 @@ import
     jump_to_next_fork,
     jump_to_leaf,
     delete_node,
-    find_next_fork_node
+    find_next_fork_node,
+    format_namespaced_id
 } from '@/API';
 import { basic_ui } from '@/packs/basic_ui';
 import
@@ -93,9 +94,10 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.id === 'core:create_device')
+    if (cmd.pack === 'core' && cmd.id === 'create_device')
     {
-        const def = (cmd.other_info?.definition_id as string) ?? 'device';
+        const def_val = cmd.other_info?.definition_id;
+        const def = typeof def_val === 'object' && def_val !== null ? format_namespaced_id(def_val as any) : String(def_val ?? 'device');
         const pos = cmd.other_info?.position ? ` at [${(cmd.other_info.position as number[]).join(', ')}]` : '';
         return {
             icon:        '➕',
@@ -105,7 +107,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.id === 'core:move_device')
+    if (cmd.pack === 'core' && cmd.id === 'move_device')
     {
         const uid = cmd.other_info?.device_uid ?? '';
         const pos = cmd.other_info?.position ? ` to [${(cmd.other_info.position as number[]).join(', ')}]` : '';
@@ -117,10 +119,11 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.id === 'core:select_recipe')
+    if (cmd.pack === 'core' && cmd.id === 'select_recipe')
     {
         const uid = cmd.other_info?.device_uid ?? '';
-        const recipe = cmd.other_info?.new_recipe_id ?? 'none';
+        const rec_val = cmd.other_info?.new_recipe_id;
+        const recipe = typeof rec_val === 'object' && rec_val !== null ? format_namespaced_id(rec_val as any) : String(rec_val ?? 'none');
         return {
             icon:        '⚙️',
             action_type: 'recipe',
@@ -129,7 +132,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.id === 'core:delete_device')
+    if (cmd.pack === 'core' && cmd.id === 'delete_device')
     {
         const uid = cmd.other_info?.device_uid ?? '';
         return {
@@ -143,7 +146,7 @@ function parse_command_details(cmd: map_command | null): {
     return {
         icon:        '🔹',
         action_type: 'command',
-        target:      cmd.id,
+        target:      format_namespaced_id(cmd),
         params:      ''
     };
 }
@@ -690,6 +693,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         {
             const row_y = PAD_Y + n.row * ROW_HEIGHT;
             const details = parse_command_details(n.node.command);
+            const label_str = details.target;
             const color = get_lane_color(n.lane);
             const is_pinned = is_node_pinned(n.node.uid);
 

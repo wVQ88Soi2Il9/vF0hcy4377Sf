@@ -38,9 +38,7 @@ export
     extract_branch_path
 };
 
-import type { pack_module } from '@/API';
-
-export const vanilla: pack_module =
+export const vanilla =
 {
     pack_id: 'vanilla',
     get_available_recipes,

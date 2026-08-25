@@ -1,5 +1,4 @@
-import type { device } from '@/core/types';
-import { move_device_command, delete_device_command, select_recipe_command, execute_command } from '@/API';
+import { type device, move_device_command, delete_device_command, select_recipe_command, execute_command, format_namespaced_id, parse_namespaced_id } from '@/API';
 import { get_registry } from '@/runtime';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
@@ -40,14 +39,17 @@ function get_available_recipes(_def_id: string): Array<{ id: string; label: stri
     }
 
     const matched: Array<{ id: string; label: string }> = [];
-    for (const [pack_name, pack_recipes] of registry.recipes)
+    for (const [pack_name, mod] of registry.packs)
     {
-        for (const [rec_id] of pack_recipes)
+        if (mod.recipes)
         {
-            matched.push({
-                id:    `${pack_name}:${rec_id}`,
-                label: rec_id
-            });
+            for (const [rec_id] of Object.entries(mod.recipes))
+            {
+                matched.push({
+                    id:    `${pack_name}:${rec_id}`,
+                    label: rec_id
+                });
+            }
         }
     }
 
@@ -80,7 +82,7 @@ export function render_device_card
 
     const def_span = document.createElement('span');
     def_span.className = 'basic_ui_card_def_id';
-    def_span.textContent = dev.definition_id;
+    def_span.textContent = format_namespaced_id(dev.definition_id);
 
     header.appendChild(uid_span);
     header.appendChild(def_span);
@@ -143,8 +145,8 @@ export function render_device_card
     const recipe_select = document.createElement('select');
     recipe_select.className = 'basic_ui_select';
 
-    const current_recipe_id = dev.selected_recipe_id || '';
-    const available_recipes = get_available_recipes(dev.definition_id);
+    const current_recipe_id = dev.selected_recipe_id ? format_namespaced_id(dev.selected_recipe_id) : '';
+    const available_recipes = get_available_recipes(format_namespaced_id(dev.definition_id));
 
     recipe_select.innerHTML = '<option value="">(None / Pass-through)</option>';
     for (const r of available_recipes)
@@ -161,7 +163,8 @@ export function render_device_card
 
     recipe_select.addEventListener('change', () =>
     {
-        const new_rec_id = recipe_select.value.trim();
+        const new_rec_str = recipe_select.value.trim();
+        const new_rec_id = new_rec_str ? parse_namespaced_id(new_rec_str) : undefined;
         try
         {
             const cmd = select_recipe_command(dev.uid, new_rec_id);

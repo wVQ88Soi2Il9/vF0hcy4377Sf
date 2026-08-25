@@ -45,21 +45,23 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 - H2 · 2026-08-25 04:41 落地 —— 完成所有 Pack（vanilla, basic_ui, layered_2d, pipe, ef, shirones_ui, cuboid_device, test, cli_tool）之 index.ts 與指令/配方/裝置對齊 pack_module 契約，清除 $ 前綴污染（agent: gemini-3.7-flash） → O1, O2
 
 ### 3 Loader 自動載入器簡化（Loader Streamlining）
-- **state:** 待實作
-- **basis:** → O1
+- **state:** 等待確認
+- **basis:** → O1, O2
 
 簡化 `src/packs/loader.ts`，由 Loader 統一掃描並載入各 Pack 的 `index.ts` 註冊至全域 Registry，並執行 `init_pack()`；支援純 JSON 資料的合成包裝。
 
 **沿革**
 
 - H1 · 2026-08-25 03:32 決斷 —— 承接 Loader 簡化任務（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 14:02 落地 —— 完成 loader.ts 簡化，統一由 index.ts 自動發現並呼叫 register_pack 註冊至 registry，主入口 main.ts 啟動流精簡完竣（agent: gemini-3.7-flash） → O1, O2
 
 ### 4 下游 UI / CLI 對齊與功能整合驗證（UI / CLI Alignment & Verification）
-- **state:** 待實作
-- **basis:** → O1
+- **state:** 等待確認
+- **basis:** → O1, O2
 
 更新 Shirones UI（Device Creator, Device Card, Recipe Selector）、CLI 指令與測試腳本，驗證在新架構下所有裝置建立、配方選擇、分支合併與畫布渲染運作正常。
 
 **沿革**
 
 - H1 · 2026-08-25 03:32 決斷 —— 承接 UI/CLI 對齊與驗證任務（human: wVQ88Soi2Il9）
+- H2 · 2026-08-25 14:06 落地 —— 完成 Shirones UI（Device Creator, Device Card, History Tree Panel）、CLI Executor 與所有 Pack 對齊，tsc -b 與 vite build 編譯打包全部 0 error 0 warning 通過（agent: gemini-3.7-flash） → O1, O2

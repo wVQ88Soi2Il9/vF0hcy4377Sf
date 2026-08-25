@@ -12,13 +12,14 @@ import
     jump_to_next_fork,
     delete_node as api_delete_node,
     compute_path_to_root,
-    get_history_tree
+    get_history_tree,
+    format_namespaced_id
 } from '@/API';
 import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
-import { delete_branch, toggle_node_pin, set_node_pin, get_pinned_nodes } from '@/packs/vanilla';
+import { delete_branch, toggle_node_pin, get_pinned_nodes } from '@/packs/vanilla';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -55,7 +56,7 @@ function format_history_summary(): string
     {
         const is_current = node.uid === tree.current_uid;
         const prefix = is_current ? '-> ' : '   ';
-        const label = node.command ? node.command.id : 'root (initial)';
+        const label = node.command ? format_namespaced_id(node.command) : 'root (initial)';
         const parent_info = node.parent_uid !== null ? ` (parent: ${node.parent_uid})` : '';
         const branches = node.children_uids.length > 1 ? ` [branches: ${node.children_uids.join(', ')}]` : '';
         lines.push(`${prefix}[#${node.uid}] ${label}${parent_info}${branches}`);
@@ -111,7 +112,7 @@ export function execute_command(input: string): string
                 for (const uid of pinned)
                 {
                     const node = tree?.nodes.get(uid);
-                    const label = node ? (node.command ? node.command.id : 'root (initial state)') : 'unknown';
+                    const label = node ? (node.command ? format_namespaced_id(node.command) : 'root (initial state)') : 'unknown';
                     lines.push(`- [#${uid}] ${label}`);
                 }
                 return lines.join('\n');

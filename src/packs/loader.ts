@@ -1,142 +1,45 @@
-import type { pack, item_definition, recipe } from '@/core/types';
-import type { pack_registry } from '@/core/pack_manager';
-import { register_device_class } from '@/core/pack_manager';
-
-// Helper function to resolve ID with namespace
-function resolve_id(id: string, ns: string): string
-{
-    return id.includes(':') ? id : `${ns}:${id}`;
-}
+import type { pack_module, pack_registry } from '@/API';
+import { register_pack } from '@/API';
 
 /**
- * Loads all packs automatically by scanning the folder structure.
- * 1. JSON files inside packs/{namespace}/data/*.json (items)
- * 2. TypeScript recipe modules inside packs/{namespace}/recipes/*.ts
+ * 載入並註冊所有 Pack 模組。
+ * 自動掃描 packs 旗下所有 index.ts，辨識導出的 pack_module 物件並註冊至全域 Registry。
  */
-export function load_all_packs(): pack[]
+export function load_all_packs(registry: pack_registry): void
 {
-    // Map to group pack data by namespace
-    const namespace_map = new Map<string, pack>();
+    const index_modules = import.meta.glob('./*/index.ts', { eager: true }) as Record<string, any>;
 
-    function get_or_create_pack(namespace: string): pack
-    {
-        let p = namespace_map.get(namespace);
-        if (!p)
-        {
-            p = {
-                id: namespace,
-                items: [],
-                recipes: []
-            };
-            namespace_map.set(namespace, p);
-        }
-        return p;
-    }
-
-    // 1. Vite's glob import to get all JSON files under packs/*/data/*.json
-    const pack_modules = import.meta.glob('./*/data/*.json', { eager: true }) as Record<string, any>;
-
-    for (const path in pack_modules)
+    for (const path in index_modules)
     {
         const parts = path.split('/');
-        if (parts.length < 4)
+        if (parts.length < 3)
         {
             continue;
         }
 
-        const namespace = parts[1];
-        const filename = parts[3].replace('.json', '');
-        const file_data = pack_modules[path].default;
-        const current_pack = get_or_create_pack(namespace);
+        const pack_dir = parts[1];
+        const mod = index_modules[path];
 
-        if (Array.isArray(file_data))
+        // 尋找導出的 pack_module 物件（可能為命名導出 pack_dir 或預設導出，或帶有 pack_id 屬性的物件）
+        const pack_candidate: pack_module | undefined =
+            (mod[pack_dir] && typeof mod[pack_dir] === 'object' && 'pack_id' in mod[pack_dir] ? mod[pack_dir] : undefined) ??
+            (mod.default && typeof mod.default === 'object' && 'pack_id' in mod.default ? mod.default : undefined) ??
+            Object.values(mod).find((v): v is pack_module => typeof v === 'object' && v !== null && 'pack_id' in v);
+
+        if (pack_candidate)
         {
-            if (filename === 'items')
-            {
-                for (const raw_item of file_data)
-                {
-                    const full_id = resolve_id(raw_item.id, namespace);
-                    current_pack.items.push
-                    ({
-                        ...raw_item,
-                        id: full_id
-                    } as item_definition);
-                }
-            }
+            register_pack(registry, pack_candidate);
         }
-    }
-
-    // 2. Vite's glob import to get all dynamic TS recipe files under packs/*/recipes/*.ts
-    const recipe_modules = import.meta.glob('./*/recipes/*.ts', { eager: true }) as Record<string, any>;
-
-    for (const path in recipe_modules)
-    {
-        const parts = path.split('/');
-        if (parts.length < 4)
+        else
         {
-            continue;
-        }
-
-        const namespace = parts[1];
-        const filename = parts[3].replace('.ts', '');
-        const mod = recipe_modules[path];
-        const rec_candidate = mod.recipe || mod.default || mod;
-
-        if (rec_candidate && typeof rec_candidate.evaluate === 'function')
-        {
-            const full_id = resolve_id(rec_candidate.id || filename, namespace);
-            const current_pack = get_or_create_pack(namespace);
-
-            const processed_recipe: recipe =
-            {
-                ...rec_candidate,
-                id: full_id,
-                evaluate: rec_candidate.evaluate
-            };
-
-            current_pack.recipes.push(processed_recipe);
-        }
-    }
-
-    return Array.from(namespace_map.values());
-}
-
-/**
- * Loads and registers all dynamic TypeScript device classes under packs/{namespace}/devices/*.ts
- */
-export function load_all_device_classes(registry: pack_registry): void
-{
-    const device_modules = import.meta.glob('./*/devices/*.ts', { eager: true }) as Record<string, any>;
-
-    for (const path in device_modules)
-    {
-        const parts = path.split('/');
-        if (parts.length < 4)
-        {
-            continue;
-        }
-
-        const namespace = parts[1];
-        const filename = parts[3].replace('.ts', '');
-        if (filename.startsWith('base_') || filename.startsWith('_'))
-        {
-            continue;
-        }
-
-        const mod = device_modules[path];
-        const cls = mod.device_class || mod.default || mod[filename];
-
-        if (cls && typeof cls === 'function')
-        {
-            const full_id = resolve_id(mod.device_id || filename, namespace);
-            register_device_class(registry, full_id, cls);
+            // 若為純邏輯 pack 且無物件導出，以目錄名稱建立基礎 pack_module 結構
+            register_pack(registry, { pack_id: pack_dir });
         }
     }
 }
 
 /**
- * Auto-discovers and calls init_pack() from every pack's index.ts.
- * Any pack that exports init_pack() will be initialized automatically.
+ * 自動發現並執行各 Pack index.ts 導出的 init_pack() 初始化函式。
  */
 export function call_all_pack_inits(): void
 {

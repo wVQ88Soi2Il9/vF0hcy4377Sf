@@ -4,7 +4,7 @@
  * 繼承核心 device 並封裝 device_size 屬性、由 game_map 取得 dimension 與自動 Shape 計算。
  */
 
-import { device, type vector } from '@/API';
+import { device, type vector, type namespaced_id } from '@/API';
 import { cuboid_to_shape } from './adapter';
 
 /**
@@ -20,7 +20,7 @@ export abstract class base_cuboid_device extends device
     constructor
     (
         uid:           number,
-        definition_id: string,
+        definition_id: namespaced_id,
         position:      vector,
         other_info?:   Record<string, unknown>
     )

@@ -35,6 +35,7 @@ import
     delete_node as core_delete_node
 } from '@/core/history_manager';
 import { get_map, get_registry, get_history_tree } from '@/runtime';
+import { parse_namespaced_id } from '@/utils/identifier';
 
 export
 {
