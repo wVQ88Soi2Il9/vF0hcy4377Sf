@@ -3,8 +3,21 @@ import { get_registry, execute_command as api_execute_command } from '@/runtime'
 import { tokenize_input, clean_flag_arg } from './parser';
 import { format_cli_help } from './help';
 
+function matches_alias(meta_alias: unknown, query: string): boolean
+{
+    if (typeof meta_alias === 'string')
+    {
+        return meta_alias.toLowerCase() === query;
+    }
+    if (Array.isArray(meta_alias))
+    {
+        return meta_alias.some(a => typeof a === 'string' && a.toLowerCase() === query);
+    }
+    return false;
+}
+
 /**
- * Finds a command factory from Core Command Registry by exact or pack:command format.
+ * Finds a command factory from Core Command Registry by exact, namespaced or alias format.
  */
 function find_command
 (
@@ -22,10 +35,22 @@ function find_command
         {
             return { pack, id, factory };
         }
+        // Also check if id is an alias within that pack
+        const mod = registry.packs.get(pack);
+        if (mod?.commands)
+        {
+            for (const [cmd_id, cmd_factory] of Object.entries(mod.commands))
+            {
+                if (matches_alias((cmd_factory as any)?.other_info?.cli?.alias, id))
+                {
+                    return { pack, id: cmd_id, factory: cmd_factory };
+                }
+            }
+        }
         return null;
     }
 
-    // Search across all packs
+    // Search across all packs (by cmd_id or alias)
     const matches: Array<{ pack: string; id: string; factory: map_command_factory }> = [];
     for (const [pack_name, mod] of registry.packs)
     {
@@ -33,7 +58,9 @@ function find_command
         {
             for (const [cmd_id, factory] of Object.entries(mod.commands))
             {
-                if (cmd_id.toLowerCase() === normalized)
+                const is_direct_match = cmd_id.toLowerCase() === normalized;
+                const is_alias_match = matches_alias((factory as any)?.other_info?.cli?.alias, normalized);
+                if (is_direct_match || is_alias_match)
                 {
                     matches.push({ pack: pack_name, id: cmd_id, factory });
                 }
