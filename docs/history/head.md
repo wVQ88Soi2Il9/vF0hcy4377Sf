@@ -11,7 +11,7 @@
 - `0050#1` · **等待確認** — 擴充 Core 型別與 pack_module 指令契約 (Core Command Types)
 - `0050#2` · **等待確認** — 在 Vanilla 提供指令查詢與驗證 API (Vanilla Command Query API)
 - `0050#3` · **等待確認** — 註冊 Core 核心地圖可逆指令至 Registry (Core Commands Registration)
-- `0050#4` · **待實作** — 擴充 Pack 指令註冊與 CLI / UI 整合 (Downstream Integration)
+- `0050#4` · **等待確認** — 擴充 Pack 指令註冊與 CLI / UI 整合 (Downstream Integration)
 - `0047#1` · **等待確認** — 清理 style.css 死樣式與冗餘選擇器
 - `0047#2` · **等待確認** — 抽離導航按鈕定義與共用按鈕工廠
 - `0047#3` · **等待確認** — 重構與大幅精簡 history_tree_panel.ts

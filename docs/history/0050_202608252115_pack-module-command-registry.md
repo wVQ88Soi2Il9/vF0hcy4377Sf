@@ -53,7 +53,7 @@
 - H2 · 2026-08-25 21:17 落地 —— 於 commands.ts 匯出 core_commands，並於 loader.ts 加載時註冊 core 核心模組（agent: gemini-3.7-flash-high） → O1
 
 ### 4 擴充 Pack 指令註冊與 CLI / UI 整合 (Downstream Integration)
-- **state:** 待實作
+- **state:** 等待確認
 - **basis:** → O1
 
 將 `layered_2d` 的 `rotate_device`、`flip_device` 等指令註冊至其 `pack_module.commands`，並更新 CLI 執行器支援動態查找。
@@ -61,3 +61,4 @@
 **沿革**
 
 - H1 · 2026-08-25 21:15 決斷 —— 新增下游 Pack 指令註冊與 CLI 整合待辦（使用者）
+- H2 · 2026-08-25 21:21 落地 —— 完成 layered_2d 指令註冊至 pack_module，並重構 CLI 執行器與 Device Creator 全面透過 Registry 查找執行指令，新增 CLI rotate 與 flip 支援（agent: gemini-3.7-flash-medium） → O1

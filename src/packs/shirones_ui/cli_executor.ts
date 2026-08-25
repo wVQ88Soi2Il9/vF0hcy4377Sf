@@ -1,8 +1,5 @@
 import
 {
-    create_device_command,
-    delete_device_command,
-    move_device_command,
     compute_path_to_root,
     type history_node
 } from '@/core';
@@ -19,11 +16,20 @@ import
     jump_to_next_fork,
     delete_history_node
 } from '@/runtime';
-import { format_namespaced_id, parse_namespaced_id, get_device_class } from '@/packs/vanilla';
+import
+{
+    format_namespaced_id,
+    parse_namespaced_id,
+    get_device_class,
+    has_command,
+    get_command,
+    delete_branch,
+    toggle_node_pin,
+    get_pinned_nodes
+} from '@/packs/vanilla';
 import { basic_renderer, type view_plane } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
-import { delete_branch, toggle_node_pin, get_pinned_nodes } from '@/packs/vanilla';
 
 function format_camera_equation(plane: view_plane): string
 {
@@ -94,7 +100,7 @@ export function execute_command(input: string): string
     {
         case 'help':
         {
-            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", delete-node --"<node_uid>", delete-branch --"<node_uid>", pin --"<node_uid>|list", help';
+            return 'Available commands: create --"<def_id>" --"<position>", move --"<uid>" --"<pos>", delete --"<uid>", rotate --"<uid>" [--"<steps>"], flip --"<uid>", info --"<uid>", camera --"<axis>=<depth>", undo, redo, prev-fork, next-fork, history, jump --"<node_uid>", delete-node --"<node_uid>", delete-branch --"<node_uid>", pin --"<node_uid>|list", help';
         }
 
         case 'pin':
@@ -341,7 +347,8 @@ export function execute_command(input: string): string
                 }
                 const ns_id = parse_namespaced_id(def_id);
                 const dev_class = get_device_class(registry, ns_id);
-                const cmd_obj = create_device_command(dev_class, ns_id, coords);
+                const create_factory = get_command(registry, { pack: 'core', id: 'create_device' });
+                const cmd_obj = create_factory(dev_class, ns_id, coords);
                 api_execute_command(cmd_obj);
                 const created = map.devices[map.devices.length - 1];
                 return `Created device ${def_id} (ID: ${created.uid}) at [${coords.join(', ')}]`;
@@ -369,9 +376,22 @@ export function execute_command(input: string): string
             {
                 return `Error: Device ID ${id} not found.`;
             }
-            const cmd_obj = delete_device_command(id);
-            api_execute_command(cmd_obj);
-            return `Deleted device ID ${id}`;
+            try
+            {
+                const registry = get_registry();
+                if (!registry)
+                {
+                    return 'Error: Global pack registry not found.';
+                }
+                const delete_factory = get_command(registry, { pack: 'core', id: 'delete_device' });
+                const cmd_obj = delete_factory(id);
+                api_execute_command(cmd_obj);
+                return `Deleted device ID ${id}`;
+            }
+            catch (err: unknown)
+            {
+                return `Error: ${(err as Error).message}`;
+            }
         }
 
         case 'move':
@@ -401,9 +421,100 @@ export function execute_command(input: string): string
             {
                 return `Error: Device ID ${id} not found.`;
             }
-            const cmd_obj = move_device_command(id, coords);
-            api_execute_command(cmd_obj);
-            return `Moved device ID ${id} to [${coords.join(', ')}]`;
+
+            try
+            {
+                const registry = get_registry();
+                if (!registry)
+                {
+                    return 'Error: Global pack registry not found.';
+                }
+                const move_factory = get_command(registry, { pack: 'core', id: 'move_device' });
+                const cmd_obj = move_factory(id, coords);
+                api_execute_command(cmd_obj);
+                return `Moved device ID ${id} to [${coords.join(', ')}]`;
+            }
+            catch (err: unknown)
+            {
+                return `Error: ${(err as Error).message}`;
+            }
+        }
+
+        case 'rotate':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: rotate --"<uid>" [optional: --"<steps>"] (e.g. rotate --"1", rotate --"1" --"2")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const id = parseInt(uid_str, 10);
+            const steps = args.length >= 2 ? parseInt(clean_flag_arg(args[1]), 10) : 1;
+
+            if (isNaN(id) || isNaN(steps))
+            {
+                return 'Error: Invalid arguments. Usage: rotate --"<uid>" [optional: --"<steps>"]';
+            }
+
+            const existing = map.devices.find(d => d.uid === id);
+            if (!existing)
+            {
+                return `Error: Device ID ${id} not found.`;
+            }
+
+            try
+            {
+                const registry = get_registry();
+                if (!registry || !has_command(registry, { pack: 'layered_2d', id: 'rotate_device' }))
+                {
+                    return 'Error: Rotate command is not supported by the current registry.';
+                }
+                const rotate_factory = get_command(registry, { pack: 'layered_2d', id: 'rotate_device' });
+                const cmd_obj = rotate_factory(id, steps);
+                api_execute_command(cmd_obj);
+                return `Rotated device ID ${id} by ${steps} step(s)`;
+            }
+            catch (err: unknown)
+            {
+                return `Error: ${(err as Error).message}`;
+            }
+        }
+
+        case 'flip':
+        {
+            if (args.length < 1)
+            {
+                return 'Usage: flip --"<uid>" (e.g. flip --"1")';
+            }
+            const uid_str = clean_flag_arg(args[0]);
+            const id = parseInt(uid_str, 10);
+
+            if (isNaN(id))
+            {
+                return 'Error: Invalid device UID. Must be a number (e.g. flip --"1").';
+            }
+
+            const existing = map.devices.find(d => d.uid === id);
+            if (!existing)
+            {
+                return `Error: Device ID ${id} not found.`;
+            }
+
+            try
+            {
+                const registry = get_registry();
+                if (!registry || !has_command(registry, { pack: 'layered_2d', id: 'flip_device' }))
+                {
+                    return 'Error: Flip command is not supported by the current registry.';
+                }
+                const flip_factory = get_command(registry, { pack: 'layered_2d', id: 'flip_device' });
+                const cmd_obj = flip_factory(id);
+                api_execute_command(cmd_obj);
+                return `Flipped device ID ${id}`;
+            }
+            catch (err: unknown)
+            {
+                return `Error: ${(err as Error).message}`;
+            }
         }
 
         default:

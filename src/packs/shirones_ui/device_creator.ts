@@ -1,6 +1,5 @@
-import { create_device_command } from '@/core';
 import { get_map, get_registry, execute_command } from '@/runtime';
-import { parse_namespaced_id, get_device_class } from '@/packs/vanilla';
+import { parse_namespaced_id, get_device_class, get_command } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
@@ -254,7 +253,8 @@ export function create_device_creator
             }
             const ns_id = parse_namespaced_id(def_id);
             const dev_class = get_device_class(registry, ns_id);
-            const cmd = create_device_command(dev_class, ns_id, parsed.position, merged_other_info);
+            const create_factory = get_command(registry, { pack: 'core', id: 'create_device' });
+            const cmd = create_factory(dev_class, ns_id, parsed.position, merged_other_info);
             execute_command(cmd);
             coords_group.hide_error();
 
