@@ -4,7 +4,8 @@
  * 依據目標世界空間維度 dim，將長方體跨度向量轉換為核心引擎的 2× 網格單元格座標集合。
  */
 
-import { type vector, get_dimension } from '@/core';
+import type { vector } from '@/core';
+import { get_dimension } from '@/runtime';
 
 export function cuboid_to_shape(device_size: vector): vector[]
 {

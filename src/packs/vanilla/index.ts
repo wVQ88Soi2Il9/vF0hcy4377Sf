@@ -38,6 +38,11 @@ export
     extract_branch_path
 };
 
+export * from './math';
+export * from './spatial_map';
+export * from './identifier';
+export * from './device_utils';
+
 export const vanilla =
 {
     pack_id: 'vanilla',

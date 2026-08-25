@@ -1,5 +1,5 @@
 import type { device } from '@/core';
-import { execute_command } from '@/core';
+import { execute_command } from '@/runtime';
 import { basic_ui } from '@/packs/basic_ui';
 import { basic_renderer } from '@/packs/basic_renderer';
 import {

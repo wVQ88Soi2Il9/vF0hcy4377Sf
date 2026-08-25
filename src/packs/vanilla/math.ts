@@ -1,4 +1,4 @@
-import type { vector } from '@/core/types';
+import type { vector } from '@/core';
 
 /**
  * Adds two vectors together component-wise.

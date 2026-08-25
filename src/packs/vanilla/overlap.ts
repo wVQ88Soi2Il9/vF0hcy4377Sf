@@ -1,7 +1,7 @@
 import type { game_map, vector, pack_registry } from '@/core';
 import type { map_validation_result } from './types';
-import { add_vector } from '@/utils/math';
-import { spatial_map } from '@/utils/spatial_map';
+import { add_vector } from './math';
+import { spatial_map } from './spatial_map';
 
 /**
  * 檢查座標是否超出地圖邊界 (N 維通用)

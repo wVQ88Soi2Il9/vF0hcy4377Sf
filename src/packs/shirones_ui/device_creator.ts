@@ -1,5 +1,6 @@
-import { create_device_command, execute_command } from '@/core';
-import { get_map, get_registry } from '@/runtime';
+import { create_device_command, get_device_class } from '@/core';
+import { get_map, get_registry, execute_command } from '@/runtime';
+import { parse_namespaced_id } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
@@ -245,7 +246,15 @@ export function create_device_creator
 
         try
         {
-            const cmd = create_device_command(def_id, parsed.position, merged_other_info);
+            const registry = get_registry();
+            if (!registry)
+            {
+                coords_group.show_error('Error: Global pack registry not found.');
+                return;
+            }
+            const ns_id = parse_namespaced_id(def_id);
+            const dev_class = get_device_class(registry, ns_id);
+            const cmd = create_device_command(dev_class, ns_id, parsed.position, merged_other_info);
             execute_command(cmd);
             coords_group.hide_error();
 

@@ -1,5 +1,6 @@
-import { type device, move_device_command, delete_device_command, select_recipe_command, execute_command, format_namespaced_id, parse_namespaced_id } from '@/core';
-import { get_registry } from '@/runtime';
+import { type device, move_device_command, delete_device_command, select_recipe_command } from '@/core';
+import { get_registry, execute_command } from '@/runtime';
+import { format_namespaced_id, parse_namespaced_id } from '@/packs/vanilla';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 

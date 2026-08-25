@@ -2,7 +2,7 @@
  * EF (Endfield) Pack 進入點
  */
 
-import { get_registry } from '@/core';
+import { get_registry } from '@/runtime';
 import * as environments from './data/environments';
 import * as materials from './data/materials';
 import * as machines from './data/machines';

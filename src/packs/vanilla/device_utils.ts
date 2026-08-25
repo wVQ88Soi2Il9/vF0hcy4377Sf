@@ -1,4 +1,4 @@
-import type { vector } from '@/core/types';
+import type { vector } from '@/core';
 
 /**
  * Resolves which axis index (0 for X, 1 for Y, 2 for Z, etc.) a port is oriented along.

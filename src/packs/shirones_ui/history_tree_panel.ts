@@ -1,19 +1,22 @@
 import type { history_tree, history_node } from '@/core';
 import
 {
-    get_history_tree,
-    jump_to_history,
     on_history_change,
     compute_path_to_root,
+    find_next_fork_node
+} from '@/core';
+import
+{
+    get_history_tree,
+    jump_to_history,
     undo,
     redo,
     jump_to_prev_fork,
     jump_to_next_fork,
     jump_to_leaf,
-    delete_node,
-    find_next_fork_node,
-    format_namespaced_id
-} from '@/core';
+    delete_history_node
+} from '@/runtime';
+import { format_namespaced_id } from '@/packs/vanilla';
 import { basic_ui } from '@/packs/basic_ui';
 import
 {
@@ -784,7 +787,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                     delete_node_btn.addEventListener('click', (e) =>
                     {
                         e.stopPropagation();
-                        delete_node(n.node.uid);
+                        delete_history_node(n.node.uid);
                     });
                 }
 
@@ -861,7 +864,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                     return;
                 }
 
-                delete_node(n.node.uid);
+                delete_history_node(n.node.uid);
             });
 
             canvas_container.appendChild(row);

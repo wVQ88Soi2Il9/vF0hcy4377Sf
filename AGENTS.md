@@ -9,17 +9,16 @@ trigger: always_on
 
 ---
 
-## 1. 系統架構與邊界隔離 (Three-Layer Architecture)
+## 1. 系統架構與邊界隔離 (Architecture & Boundary Isolation)
 
-依賴關係嚴格單向：`packs` → `utils` → `core`。
+依賴關係嚴格單向：`packs` → `core`（基礎數學與空間工具收斂於 `@/packs/vanilla`，全域狀態容器收斂於 `@/runtime`）。
 
-- **Core Layer**（`src/core/`）：純型別、狀態容器、Hooks 系統、Undo Tree 歷程。零業務邏輯、零外部依賴。唯一公開進入點為 `src/core/index.ts`（外部透過 `@/core` 引用）。
-- **Utils Layer**（`src/utils/`）：無副作用純數學運算、幾何座標驗證、空間雜湊查表、識別字串解析。
-- **Packs Layer**（`src/packs/`）：所有具體遊戲規則、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`（外部透過 `@/packs/<pack_name>` 引用）。
+- **Core Layer**（`src/core/`）：純型別、純狀態容器、Hooks 系統、Undo Tree 歷程。零業務邏輯、**零全域狀態、零外部依賴**。唯一公開進入點為 `src/core/index.ts`（外部透過 `@/core` 引用）。
+- **Runtime Layer**（`src/runtime.ts`）：應用啟動期的全域實例容器（Map、Registry、History Tree）與捷徑操作（`execute_command`、`undo`、`jump_to_history` 等）。
+- **Packs Layer**（`src/packs/`）：所有具體遊戲規則、基礎工具（`vanilla` 包含空間雜湊、向量數學、命名空間解析）、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`（外部透過 `@/packs/<pack_name>` 引用）。
 - **邊界隔離與 Import 規範（Public Entrypoint Rule）**：
   - **模組邊界**：跨 module boundary 引用時，**必須一律從目標模組的 `index.ts` 公開進入點 import**（例：`import ... from '@/core'`、`import ... from '@/packs/<target_pack>'`）。
   - **禁止深層依賴**：**嚴禁直接依賴另一模組的內部實作檔案**（例：禁止 `import ... from '@/core/commands'`、禁止 `import ... from '@/packs/vanilla/overlap'`）。
-  - **Utils 存取**：純數學運算與工具一律引用 `@/utils/*`。
   - **Hooks 保護**：外部禁止直接操作 `hooks` 物件，必須透過 `@/core` 導出的訂閱函式。
 
 ---

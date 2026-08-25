@@ -1,5 +1,5 @@
-import type { vector } from '@/core/types';
-import { vector_to_string } from '@/utils/math';
+import type { vector } from '@/core';
+import { vector_to_string } from './math';
 
 /**
  * A generic spatial mapping utility that maps N-dimensional grid vectors to a value of type T.

@@ -2,8 +2,7 @@ import { type vector } from '@/core';
 import { pipe } from '@/packs/pipe';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
 import { get_map } from '@/runtime';
-import { vanilla } from '@/packs/vanilla';
-import { add_vector } from '@/utils/math';
+import { vanilla, add_vector } from '@/packs/vanilla';
 
 export const device_id = 'test:pipe';
 

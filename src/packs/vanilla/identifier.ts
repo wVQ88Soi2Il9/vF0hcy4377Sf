@@ -1,4 +1,4 @@
-import type { namespaced_id } from '@/core/types';
+import type { namespaced_id } from '@/core';
 
 /**
  * Parses a string in "pack:id" format into a structured namespaced_id.

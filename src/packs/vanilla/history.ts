@@ -1,4 +1,5 @@
-import { get_history_tree, delete_node, compute_path_to_root, type history_node, type history_tree } from '@/core';
+import { delete_node, compute_path_to_root, type history_node, type history_tree } from '@/core';
+import { get_history_tree } from '@/runtime';
 
 export interface vanilla_history_node_info
 {
@@ -181,7 +182,7 @@ export function delete_branch(target_uid: number): boolean
     // Repeatedly delete nodes from bottom up
     for (const uid of subtree_uids)
     {
-        delete_node(uid);
+        delete_node(tree, uid);
     }
 
     return true;

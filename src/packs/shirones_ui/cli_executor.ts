@@ -1,22 +1,27 @@
-import type { view_plane } from '@/packs/basic_renderer';
 import
 {
     create_device_command,
     delete_device_command,
     move_device_command,
+    compute_path_to_root,
+    get_device_class,
+    type history_node
+} from '@/core';
+import
+{
+    get_map,
+    get_history_tree,
+    get_registry,
     execute_command as api_execute_command,
     undo as api_undo,
     redo as api_redo,
     jump_to_history,
     jump_to_prev_fork,
     jump_to_next_fork,
-    delete_node as api_delete_node,
-    compute_path_to_root,
-    get_history_tree,
-    format_namespaced_id
-} from '@/core';
-import { get_map } from '@/runtime';
-import { basic_renderer } from '@/packs/basic_renderer';
+    delete_history_node
+} from '@/runtime';
+import { format_namespaced_id, parse_namespaced_id } from '@/packs/vanilla';
+import { basic_renderer, type view_plane } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
 import { delete_branch, toggle_node_pin, get_pinned_nodes } from '@/packs/vanilla';
@@ -51,7 +56,7 @@ function format_history_summary(): string
     }
 
     const lines: string[] = [`History Tree (Current UID: ${tree.current_uid}, Total Nodes: ${tree.nodes.size}):`];
-    const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);
+    const sorted_nodes: history_node[] = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);
     for (const node of sorted_nodes)
     {
         const is_current = node.uid === tree.current_uid;
@@ -154,7 +159,7 @@ export function execute_command(input: string): string
             {
                 return `Error: Cannot delete current active node (#${target_uid}). Please jump to another node first.`;
             }
-            const success = api_delete_node(target_uid);
+            const success = delete_history_node(target_uid);
             return success ? `Successfully deleted history node #${target_uid}.` : `Error: Failed to delete history node #${target_uid} (node not found).`;
         }
 
@@ -330,7 +335,14 @@ export function execute_command(input: string): string
 
             try
             {
-                const cmd_obj = create_device_command(def_id, coords);
+                const registry = get_registry();
+                if (!registry)
+                {
+                    return 'Error: Global pack registry not found.';
+                }
+                const ns_id = parse_namespaced_id(def_id);
+                const dev_class = get_device_class(registry, ns_id);
+                const cmd_obj = create_device_command(dev_class, ns_id, coords);
                 api_execute_command(cmd_obj);
                 const created = map.devices[map.devices.length - 1];
                 return `Created device ${def_id} (ID: ${created.uid}) at [${coords.join(', ')}]`;

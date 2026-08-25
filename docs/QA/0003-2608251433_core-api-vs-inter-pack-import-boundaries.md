@@ -35,7 +35,8 @@
 ## 結論
 
 全系統模組引用邊界收斂為 **Public Entrypoint Rule**：
-1. **跨模組公開進入點**：任何跨模組（Core 與各 Packs 之間）引用，一律且只能從目標模組的根目錄（`index.ts`）import（例：`import ... from '@/core'`、`import ... from '@/packs/<name>'`）。
-2. **禁止深層內部依賴**：嚴禁跨模組依賴任何模組的內部實作檔案（例如禁止 `from '@/core/commands'` 或 `from '@/packs/vanilla/overlap'`）。
-3. **工具層引用**：純數學運算與座標工具一律引用 `@/utils/*`。
-4. **`src/API.ts` 廢除**：原 `src/API.ts` 全面移入 `src/core/index.ts`，消除多餘的中介檔案。
+1. **Core 極致純粹（零全域、零外部依賴）**：`src/core/index.ts` 僅保留乾淨的 Barrel Re-export；全域狀態與捷徑操作收斂於 `@/runtime`。
+2. **Utils 模組化收斂至 Vanilla**：基礎向量數學、空間雜湊查表、座標驗證與命名空間解析全面移入 `@/packs/vanilla`，並透過其公開 `index.ts` 導出。
+3. **跨模組公開進入點**：任何跨模組（Core 與各 Packs 之間）引用，一律且只能從目標模組的公開進入點（`index.ts`）import（例：`import ... from '@/core'`、`import ... from '@/packs/<name>'`）。
+4. **禁止深層內部依賴**：嚴禁跨模組依賴任何模組的內部實作檔案（例如禁止 `from '@/core/commands'` 或 `from '@/packs/vanilla/overlap'`）。
+5. **`src/API.ts` 廢除**：原 `src/API.ts` 全面廢除，消除多餘中介。
