@@ -1,4 +1,4 @@
-import type { game_map, history_node, history_tree, map_command } from './types';
+import type { space, history_node, history_tree, space_command } from './types';
 import { trigger_history_change } from './hooks';
 
 export function create_history_tree(): history_tree
@@ -18,9 +18,9 @@ export function create_history_tree(): history_tree
     };
 }
 
-export function record_command(tree: history_tree, map: game_map, cmd: map_command): history_node
+export function record_command(tree: history_tree, sp: space, cmd: space_command): history_node
 {
-    cmd.execute(map);
+    cmd.execute(sp);
 
     const new_node: history_node =
     {
@@ -83,7 +83,7 @@ export function delete_node(tree: history_tree, target_uid: number): boolean
     return true;
 }
 
-export function undo(tree: history_tree, map: game_map): boolean
+export function undo(tree: history_tree, sp: space): boolean
 {
     if (tree.current_uid === 0)
     {
@@ -98,7 +98,7 @@ export function undo(tree: history_tree, map: game_map): boolean
 
     if (current_node.command)
     {
-        current_node.command.inverse(map);
+        current_node.command.inverse(sp);
     }
 
     tree.current_uid = current_node.parent_uid;
@@ -106,7 +106,7 @@ export function undo(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-export function redo(tree: history_tree, map: game_map, target_child_uid?: number): boolean
+export function redo(tree: history_tree, sp: space, target_child_uid?: number): boolean
 {
     const current_node = tree.nodes.get(tree.current_uid);
     if (!current_node)
@@ -138,7 +138,7 @@ export function redo(tree: history_tree, map: game_map, target_child_uid?: numbe
         return false;
     }
 
-    next_node.command.execute(map);
+    next_node.command.execute(sp);
     tree.current_uid = next_node.uid;
 
     trigger_history_change(tree);
@@ -238,7 +238,7 @@ export function find_lca(tree: history_tree, uid_a: number, uid_b: number): numb
     return null;
 }
 
-export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
+export function jump_to_prev_fork(tree: history_tree, sp: space): boolean
 {
     const target_uid = find_prev_fork_node(tree, tree.current_uid) ?? (tree.current_uid !== 0 ? 0 : null);
     if (target_uid === null)
@@ -248,7 +248,7 @@ export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
 
     while (tree.current_uid !== target_uid)
     {
-        if (!undo(tree, map))
+        if (!undo(tree, sp))
         {
             return false;
         }
@@ -257,7 +257,7 @@ export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
+export function jump_to_next_fork(tree: history_tree, sp: space): boolean
 {
     const target_uid = find_next_fork_node(tree, tree.current_uid);
     if (target_uid === null)
@@ -267,7 +267,7 @@ export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
 
     while (tree.current_uid !== target_uid)
     {
-        if (!redo(tree, map))
+        if (!redo(tree, sp))
         {
             return false;
         }
@@ -276,7 +276,7 @@ export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-export function jump_to_node(tree: history_tree, map: game_map, target_uid: number): boolean
+export function jump_to_node(tree: history_tree, sp: space, target_uid: number): boolean
 {
     if (tree.current_uid === target_uid)
     {
@@ -291,7 +291,7 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
 
     while (tree.current_uid !== lca_uid)
     {
-        if (!undo(tree, map))
+        if (!undo(tree, sp))
         {
             return false;
         }
@@ -310,7 +310,7 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
 
     for (const next_uid of forward_uids)
     {
-        if (!redo(tree, map, next_uid))
+        if (!redo(tree, sp, next_uid))
         {
             return false;
         }
@@ -319,20 +319,20 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
     return true;
 }
 
-export function jump_to_root(tree: history_tree, map: game_map): boolean
+export function jump_to_root(tree: history_tree, sp: space): boolean
 {
     let jumped = false;
-    while (undo(tree, map))
+    while (undo(tree, sp))
     {
         jumped = true;
     }
     return jumped;
 }
 
-export function jump_to_leaf(tree: history_tree, map: game_map): boolean
+export function jump_to_leaf(tree: history_tree, sp: space): boolean
 {
     let jumped = false;
-    while (redo(tree, map))
+    while (redo(tree, sp))
     {
         jumped = true;
     }

@@ -4,10 +4,14 @@
 
 ## 目前使用中
 
-[0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 1/3
+[0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4
 
 ## 現在開著的（逐格）
 
+- `0053#1` · **等待確認** — 重命名 Core 空間型別為 space 並維持純函式演算法 (Space Interface & Pure Core Algorithms)
+- `0053#2` · **等待確認** — 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
+- `0053#3` · **待實作** — 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)
+- `0053#4` · **待實作** — 跨模組依賴更新、過渡設施清理與 CLI / UI 整合驗證 (Cross-Pack Migration, Transitional Cleanup & Validation)
 - `0052#3` · **等待確認** — 補齊 Runtime 歷程控制指令註冊至 Core Registry (Register History Commands in Core Registry)
 - `0046#18` · **待實作** — 3-Way 衝突檢測器（3-Way Conflict Detector）
 - `0046#19` · **待實作** — UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
@@ -20,11 +24,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0052#3`
+> 要做某一格：`python3 docs/history/plan-item.py 0053#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0053** [0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4
 - **0052** [0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 1/3
 - **0051** [0051_202608252208_cli-tool-pure-logic-core-registry](./0051_202608252208_cli-tool-pure-logic-core-registry.md) — `in-progress`，待辦待決剩 0/2
 - **0050** [0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 0/4

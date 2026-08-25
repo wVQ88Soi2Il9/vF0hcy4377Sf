@@ -92,6 +92,12 @@ trigger: always_on
 - **嚴格聚焦當前範圍（No Unsolicited Over-Automation）**：
   - Agent 必須嚴格聚焦於使用者當前明確指示的單一模組或檔案範圍，**嚴禁擅自向未提及的模組追加新檔案或發起跨模組連鎖修改**（No unsolicited cross-pack proliferation）。
   - **禁止私自預設立場與過度設計**：未經使用者明確指示前，嚴禁擅自發明額外的中介橋接層、跨模組註冊檔或多餘的自動化機制。
+- **意見徵詢與決策雙向論證 (Balanced Advocacy: Why We Should + Why We Shouldn't)**：
+  - 當使用者詢問意見、架構決策、技術選型或重構方向時，Agent **必須同時且對等地提供「贊同／採納的理由（Why we should）」與「反對／保留／潛在代價的理由（Why we shouldn't）」**，嚴禁單向盲從附和或片面論述，以確保決策評估之全面性與客觀性。
+- **預料外大改熔斷確認 (Halt on Unexpected Major Refactor)**：
+  - 執行過程中一旦發現涉及未預期、大幅度超出當前待辦範疇之破壞性修改或連鎖重構，**必須立即停止作業，主動向使用者說明情況並確認意圖**，嚴禁逕行推演實作。
+- **過渡相容設施 TODO 列管與強制清理 (Transitional Code Tagging & Mandatory Cleanup)**：
+  - 為了平滑重構所暫時保留之過渡相容別名、橋接轉發檔或相容包裝，**一律強制於程式碼標註 `// TODO: transitional - [cleanup target]` 並在 Plan 中列管清理待辦**，重構遷移完成後必須徹底移除，嚴禁永久殘留為技術債。
 
 ---
 

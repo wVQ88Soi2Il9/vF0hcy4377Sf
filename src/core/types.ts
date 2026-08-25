@@ -26,7 +26,8 @@ export type device_constructor = new
     other_info?:   Record<string, unknown>
 ) => device;
 
-export type map_command_factory = (...args: any[]) => map_command;
+export type space_command_factory = (...args: any[]) => space_command;
+export type map_command_factory = space_command_factory;
 
 /**
  * 模組命名空間物件 (Pack-as-a-Module-Object)
@@ -37,7 +38,7 @@ export interface pack_module
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
-    commands?:     Record<string, map_command_factory>;
+    commands?:     Record<string, space_command_factory>;
     init_pack?:    () => void;
     [key: string]: unknown;
 }
@@ -111,9 +112,9 @@ export abstract class device
     public abstract get_port(type: 'input' | 'output'): vector[];
 }
 
-// ── Map ──────────────────────────────────────────────────────────────────────
+// ── Space ────────────────────────────────────────────────────────────────────
 
-export interface game_map
+export interface space
 {
     /**
      * Spatial dimension count N (e.g. 2 for 2D, 3 for 3D, 4 for 4D).
@@ -134,27 +135,29 @@ export interface game_map
     devices:            device[];
 }
 
+// TODO: transitional - remove game_map alias after full migration to space
+export type game_map = space;
+
 // ── History (Undo / Redo) ─────────────────────────────────────────────────────
 
 /**
- * An encapsulated, reversible map mutation.
+ * An encapsulated, reversible space mutation.
  * `execute` applies the change; `inverse` reverts it exactly.
- *
- * Factories in API.ts close over any additional context (e.g. registry)
- * via runtime, keeping this interface free of circular dependencies with
- * `pack_manager`.
  */
-export interface map_command extends namespaced_id
+export interface space_command extends namespaced_id
 {
-    /** Apply the change to the map. */
-    execute(map: game_map): void;
+    /** Apply the change to the space. */
+    execute(sp: space): void;
 
-    /** Revert the change to the map. Must be the exact logical inverse of execute(). */
-    inverse(map: game_map): void;
+    /** Revert the change to the space. Must be the exact logical inverse of execute(). */
+    inverse(sp: space): void;
 
     /** Optional mod-extensible metadata associated with this command instance. */
     other_info?: Record<string, unknown>;
 }
+
+// TODO: transitional - remove map_command alias after full migration to space_command
+export type map_command = space_command;
 
 /**
  * A single node in the Undo Tree.
@@ -163,13 +166,13 @@ export interface map_command extends namespaced_id
 export interface history_node
 {
     /** Unique numeric ID of this node within the tree. */
-    uid:          number;
+    uid:           number;
 
     /**
      * Parent node UID.
      * `null` only for the root node (which represents the initial empty state).
      */
-    parent_uid:   number | null;
+    parent_uid:    number | null;
 
     /**
      * UIDs of all child nodes in creation order.
@@ -182,16 +185,16 @@ export interface history_node
      * The command that produced this node's state from its parent's state.
      * `null` only for the root node.
      */
-    command:      map_command | null;
+    command:       space_command | null;
 
     /**
      * Mod-extensible metadata for this history node (e.g. vanilla tags, pin, merge info).
      */
-    other_info?:  Record<string, unknown>;
+    other_info?:   Record<string, unknown>;
 }
 
 /**
- * The Undo Tree: a persistent, branching record of all map mutations.
+ * The Undo Tree: a persistent, branching record of all space mutations.
  *
  * Invariants:
  *   - `nodes` always contains at least one entry (the root, uid = 0).
@@ -203,7 +206,7 @@ export interface history_tree
     /** All nodes keyed by their numeric UID. */
     nodes:         Map<number, history_node>;
 
-    /** UID of the node that represents the current map state. */
+    /** UID of the node that represents the current space state. */
     current_uid:   number;
 
     /** Counter used to assign the next unique node UID. Starts at 1 (root = 0). */
