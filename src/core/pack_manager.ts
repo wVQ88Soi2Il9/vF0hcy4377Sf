@@ -1,4 +1,4 @@
-import type { pack_module } from '@/core/types';
+import type { pack_module } from './types';
 
 export interface pack_registry
 {

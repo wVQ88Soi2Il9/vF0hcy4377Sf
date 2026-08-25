@@ -1,4 +1,4 @@
-import type { game_map, device, vector, history_tree, namespaced_id } from '@/core/types';
+import type { game_map, device, vector, history_tree, namespaced_id } from './types';
 
 export type device_create_hook = (map: game_map, dev: device) => void;
 export type device_delete_hook = (map: game_map, dev: device) => void;

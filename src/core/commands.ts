@@ -1,4 +1,4 @@
-import type { game_map, device, vector, map_command, namespaced_id, device_constructor } from './types';
+import type { game_map, device, vector, map_command, map_command_factory, namespaced_id, device_constructor } from './types';
 import
 {
     create_device,
@@ -6,7 +6,7 @@ import
     delete_device,
     move_device,
     select_recipe
-} from '@/core/map_manager';
+} from './map_manager';
 
 /**
  * Command for creating a device on the map.
@@ -176,3 +176,14 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
         }
     };
 }
+
+/**
+ * Core pack standard commands map.
+ */
+export const core_commands: Record<string, map_command_factory> = {
+    create_device: create_device_command,
+    delete_device: delete_device_command,
+    move_device:   move_device_command,
+    select_recipe: select_recipe_command
+};
+

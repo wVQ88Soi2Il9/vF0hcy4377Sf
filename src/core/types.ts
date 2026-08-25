@@ -26,15 +26,18 @@ export type device_constructor = new
     other_info?:   Record<string, unknown>
 ) => device;
 
+export type map_command_factory = (...args: any[]) => map_command;
+
 /**
  * 模組命名空間物件 (Pack-as-a-Module-Object)
  */
 export interface pack_module
 {
-    pack_id:            string;
+    pack_id:       string;
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
+    commands?:     Record<string, map_command_factory>;
     init_pack?:    () => void;
     [key: string]: unknown;
 }

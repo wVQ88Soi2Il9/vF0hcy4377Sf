@@ -1,5 +1,5 @@
-import type { game_map, history_node, history_tree, map_command } from '@/core/types';
-import { trigger_history_change } from '@/core/hooks';
+import type { game_map, history_node, history_tree, map_command } from './types';
+import { trigger_history_change } from './hooks';
 
 export function create_history_tree(): history_tree
 {

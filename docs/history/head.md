@@ -4,10 +4,14 @@
 
 ## 目前使用中
 
-[0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
+[0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 4/4
 
 ## 現在開著的（逐格）
 
+- `0050#1` · **等待確認** — 擴充 Core 型別與 pack_module 指令契約 (Core Command Types)
+- `0050#2` · **等待確認** — 在 Vanilla 提供指令查詢與驗證 API (Vanilla Command Query API)
+- `0050#3` · **等待確認** — 註冊 Core 核心地圖可逆指令至 Registry (Core Commands Registration)
+- `0050#4` · **待實作** — 擴充 Pack 指令註冊與 CLI / UI 整合 (Downstream Integration)
 - `0047#1` · **等待確認** — 清理 style.css 死樣式與冗餘選擇器
 - `0047#2` · **等待確認** — 抽離導航按鈕定義與共用按鈕工廠
 - `0047#3` · **等待確認** — 重構與大幅精簡 history_tree_panel.ts
@@ -27,11 +31,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0047#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0050#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0050** [0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 4/4
 - **0049** [0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
 - **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 5/5

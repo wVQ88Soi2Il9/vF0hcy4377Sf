@@ -1,5 +1,5 @@
 import type { game_map, device, vector, namespaced_id, device_constructor } from './types';
-import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from '@/core/hooks';
+import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from './hooks';
 
 /**
  * Creates a new map instance with next uid starting from 1.

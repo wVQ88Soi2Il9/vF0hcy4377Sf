@@ -1,5 +1,5 @@
 import type { pack_module, pack_registry } from '@/core';
-import { register_pack } from '@/core';
+import { register_pack, core_commands } from '@/core';
 
 /**
  * 載入並註冊所有 Pack 模組。
@@ -7,6 +7,12 @@ import { register_pack } from '@/core';
  */
 export function load_all_packs(registry: pack_registry): void
 {
+    // 註冊 core 核心模組與可逆地圖指令
+    register_pack(registry, {
+        pack_id:  'core',
+        commands: core_commands
+    });
+
     const index_modules = import.meta.glob('./*/index.ts', { eager: true }) as Record<string, any>;
 
     for (const path in index_modules)

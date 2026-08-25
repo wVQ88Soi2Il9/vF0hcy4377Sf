@@ -58,6 +58,12 @@ export function init_pack(): void
 export const layered_2d =
 {
     pack_id: 'layered_2d',
+    commands:
+    {
+        rotate_device:        rotate_device_command,
+        flip_device:          flip_device_command,
+        set_device_transform: set_device_transform_command
+    },
     draw_layered_devices,
     get_render_options,
     set_render_options,
