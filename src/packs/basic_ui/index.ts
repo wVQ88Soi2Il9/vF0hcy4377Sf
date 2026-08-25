@@ -1,3 +1,4 @@
+import { register_ui_cli_commands } from './cli_commands';
 import './style.css';
 import * as layout from './layout';
 import * as panel from './panel';
@@ -29,4 +30,5 @@ export const basic_ui = {
 export function init_pack(): void
 {
     layout.get_ui_root();
+    register_ui_cli_commands();
 }

@@ -9,7 +9,7 @@
 ## 現在開著的（逐格）
 
 - `0051#1` · **等待確認** — 重構 cli_tool 為純邏輯核心 (Pure CLI Tool Logic)
-- `0051#2` · **待實作** — 擴充指令回歸 Core Registry 與 UI 面板適配 (Core Registry & UI Adaptation)
+- `0051#2` · **等待確認** — 擴充指令回歸 Core Registry 與 UI 面板適配 (Core Registry & UI Adaptation)
 - `0050#1` · **等待確認** — 擴充 Core 型別與 pack_module 指令契約 (Core Command Types)
 - `0050#2` · **等待確認** — 在 Vanilla 提供指令查詢與驗證 API (Vanilla Command Query API)
 - `0050#3` · **等待確認** — 註冊 Core 核心地圖可逆指令至 Registry (Core Commands Registration)

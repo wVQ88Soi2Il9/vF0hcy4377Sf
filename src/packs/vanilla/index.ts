@@ -1,3 +1,6 @@
+import { register_vanilla_cli_commands } from './cli_commands';
+import * as axes from './axes';
+export * from './axes';
 import * as math from './math';
 import * as spatial_map from './spatial_map';
 import * as identifier from './identifier';
@@ -26,6 +29,7 @@ export const vanilla = {
     ...identifier,
     ...device_utils,
     ...registry_query,
+    ...axes,
     ...recipe_query,
     ...overlap,
     ...graph,
@@ -38,4 +42,5 @@ export const vanilla = {
  */
 export function init_pack(): void
 {
+    register_vanilla_cli_commands();
 }

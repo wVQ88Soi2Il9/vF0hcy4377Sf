@@ -1,3 +1,4 @@
+import { register_renderer_cli_commands } from './cli_commands';
 import * as camera_mod from './camera';
 import * as camera_control_mod from './camera_control';
 import * as renderer_mod from './renderer';
@@ -32,4 +33,5 @@ export const basic_renderer = {
 export function init_pack(): void
 {
     renderer_mod.init_renderer();
+    register_renderer_cli_commands();
 }
