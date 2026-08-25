@@ -1,4 +1,4 @@
-import type { game_map, pack_registry, history_node } from '@/core';
+import type { game_map, pack_registry, history_node, namespaced_id, map_command_factory } from '@/core';
 import { compute_path_to_root } from '@/core';
 import
 {
@@ -16,7 +16,6 @@ import
     format_namespaced_id,
     parse_namespaced_id,
     get_device_class,
-    has_command,
     get_command,
     delete_branch,
     toggle_node_pin,
@@ -213,94 +212,7 @@ register_cli_command({
     }
 });
 
-// ── 4. Rotate Device ───────────────────────────────────────────────────────────
-register_cli_command({
-    name:        'rotate',
-    usage:       'rotate --"<uid>" [--"<steps>"]',
-    description: 'Rotate a 2.5D device counter-clockwise by steps (default: 1).',
-    execute(args, { map, registry })
-    {
-        if (args.length < 1)
-        {
-            return 'Usage: rotate --"<uid>" [optional: --"<steps>"] (e.g. rotate --"1", rotate --"1" --"2")';
-        }
-        const uid_str = clean_flag_arg(args[0]);
-        const id = parseInt(uid_str, 10);
-        const steps = args.length >= 2 ? parseInt(clean_flag_arg(args[1]), 10) : 1;
-
-        if (isNaN(id) || isNaN(steps))
-        {
-            return 'Error: Invalid arguments. Usage: rotate --"<uid>" [optional: --"<steps>"]';
-        }
-
-        const existing = map.devices.find(d => d.uid === id);
-        if (!existing)
-        {
-            return `Error: Device ID ${id} not found.`;
-        }
-
-        try
-        {
-            if (!has_command(registry, { pack: 'layered_2d', id: 'rotate_device' }))
-            {
-                return 'Error: Rotate command is not supported by the current registry.';
-            }
-            const rotate_factory = get_command(registry, { pack: 'layered_2d', id: 'rotate_device' });
-            const cmd_obj = rotate_factory(id, steps);
-            api_execute_command(cmd_obj);
-            return `Rotated device ID ${id} by ${steps} step(s)`;
-        }
-        catch (err: unknown)
-        {
-            return `Error: ${(err as Error).message}`;
-        }
-    }
-});
-
-// ── 5. Flip Device ─────────────────────────────────────────────────────────────
-register_cli_command({
-    name:        'flip',
-    usage:       'flip --"<uid>"',
-    description: 'Toggle vertical flip on a 2.5D device.',
-    execute(args, { map, registry })
-    {
-        if (args.length < 1)
-        {
-            return 'Usage: flip --"<uid>" (e.g. flip --"1")';
-        }
-        const uid_str = clean_flag_arg(args[0]);
-        const id = parseInt(uid_str, 10);
-
-        if (isNaN(id))
-        {
-            return 'Error: Invalid device UID. Must be a number (e.g. flip --"1").';
-        }
-
-        const existing = map.devices.find(d => d.uid === id);
-        if (!existing)
-        {
-            return `Error: Device ID ${id} not found.`;
-        }
-
-        try
-        {
-            if (!has_command(registry, { pack: 'layered_2d', id: 'flip_device' }))
-            {
-                return 'Error: Flip command is not supported by the current registry.';
-            }
-            const flip_factory = get_command(registry, { pack: 'layered_2d', id: 'flip_device' });
-            const cmd_obj = flip_factory(id);
-            api_execute_command(cmd_obj);
-            return `Flipped device ID ${id}`;
-        }
-        catch (err: unknown)
-        {
-            return `Error: ${(err as Error).message}`;
-        }
-    }
-});
-
-// ── 6. Info ───────────────────────────────────────────────────────────────────
+// ── 4. Info ───────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'info',
     usage:       'info --"<uid>"',
@@ -322,7 +234,7 @@ register_cli_command({
     }
 });
 
-// ── 7. Camera ─────────────────────────────────────────────────────────────────
+// ── 5. Camera ─────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'camera',
     usage:       'camera --"<axis>=<depth>"',
@@ -387,7 +299,7 @@ register_cli_command({
     }
 });
 
-// ── 8. Undo ───────────────────────────────────────────────────────────────────
+// ── 6. Undo ───────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'undo',
     usage:       'undo',
@@ -399,7 +311,7 @@ register_cli_command({
     }
 });
 
-// ── 9. Redo ───────────────────────────────────────────────────────────────────
+// ── 7. Redo ───────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'redo',
     usage:       'redo',
@@ -411,7 +323,7 @@ register_cli_command({
     }
 });
 
-// ── 10. Prev Fork ─────────────────────────────────────────────────────────────
+// ── 8. Prev Fork ─────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'prev-fork',
     usage:       'prev-fork',
@@ -423,7 +335,7 @@ register_cli_command({
     }
 });
 
-// ── 11. Next Fork ─────────────────────────────────────────────────────────────
+// ── 9. Next Fork ─────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'next-fork',
     usage:       'next-fork',
@@ -435,7 +347,7 @@ register_cli_command({
     }
 });
 
-// ── 12. History ───────────────────────────────────────────────────────────────
+// ── 10. History ───────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'history',
     usage:       'history',
@@ -446,7 +358,7 @@ register_cli_command({
     }
 });
 
-// ── 13. Jump ──────────────────────────────────────────────────────────────────
+// ── 11. Jump ──────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'jump',
     usage:       'jump --"<node_uid>"',
@@ -468,7 +380,7 @@ register_cli_command({
     }
 });
 
-// ── 14. Delete Node ───────────────────────────────────────────────────────────
+// ── 12. Delete Node ───────────────────────────────────────────────────────────
 register_cli_command({
     name:        'delete-node',
     usage:       'delete-node --"<node_uid>"',
@@ -499,7 +411,7 @@ register_cli_command({
     }
 });
 
-// ── 15. Delete Branch ─────────────────────────────────────────────────────────
+// ── 13. Delete Branch ─────────────────────────────────────────────────────────
 register_cli_command({
     name:        'delete-branch',
     usage:       'delete-branch --"<node_uid>"',
@@ -534,7 +446,7 @@ register_cli_command({
     }
 });
 
-// ── 16. Pin ───────────────────────────────────────────────────────────────────
+// ── 14. Pin ───────────────────────────────────────────────────────────────────
 register_cli_command({
     name:        'pin',
     usage:       'pin --"<node_uid>|list"',
@@ -580,9 +492,130 @@ register_cli_command({
     }
 });
 
-export function format_cli_help(): string
+/**
+ * Automatically searches and invokes any Pack-defined command from pack_module.commands
+ * via generic reflection, with zero CLI wrapper maintenance required.
+ */
+export function execute_generic_pack_command
+(
+    cmd_query: string,
+    raw_args:  string[],
+    ctx:       cli_context
+): string | null
+{
+    const normalized_query = cmd_query.toLowerCase().replace(/-/g, '_');
+    const { registry } = ctx;
+
+    // 1. Search in registry.packs
+    let matched: { ns_id: namespaced_id; factory: map_command_factory } | null = null;
+
+    if (normalized_query.includes(':'))
+    {
+        const [pack, id] = normalized_query.split(':');
+        const factory = registry.packs.get(pack)?.commands?.[id];
+        if (factory)
+        {
+            matched = { ns_id: { pack, id }, factory };
+        }
+    }
+    else
+    {
+        const matches: Array<{ ns_id: namespaced_id; factory: map_command_factory }> = [];
+        for (const [pack_name, mod] of registry.packs)
+        {
+            if (mod.commands)
+            {
+                for (const [cmd_id, factory] of Object.entries(mod.commands))
+                {
+                    const nid = cmd_id.toLowerCase();
+                    if (
+                        nid === normalized_query ||
+                        nid === `${normalized_query}_device` ||
+                        normalized_query === `${nid}_device`
+                    )
+                    {
+                        matches.push({ ns_id: { pack: pack_name, id: cmd_id }, factory });
+                    }
+                }
+            }
+        }
+
+        if (matches.length === 1)
+        {
+            matched = matches[0];
+        }
+        else if (matches.length > 1)
+        {
+            return `Error: Ambiguous command "${cmd_query}". Matches: ${matches.map(m => `"${m.ns_id.pack}:${m.ns_id.id}"`).join(', ')}.`;
+        }
+    }
+
+    if (!matched)
+    {
+        return null;
+    }
+
+    // 2. Parse generic arguments
+    const cleaned_args = raw_args.map(clean_flag_arg);
+    const parsed_args: any[] = [];
+
+    for (const arg of cleaned_args)
+    {
+        if (arg.includes(','))
+        {
+            const vec = arg.split(',').map(s => Number(s.trim()));
+            parsed_args.push(vec.some(isNaN) ? arg : vec);
+        }
+        else if (/^-?\d+$/.test(arg))
+        {
+            parsed_args.push(parseInt(arg, 10));
+        }
+        else if (arg === 'true')
+        {
+            parsed_args.push(true);
+        }
+        else if (arg === 'false')
+        {
+            parsed_args.push(false);
+        }
+        else
+        {
+            parsed_args.push(arg);
+        }
+    }
+
+    try
+    {
+        const cmd_obj = matched.factory(...parsed_args);
+        api_execute_command(cmd_obj);
+        return `Executed "${matched.ns_id.pack}:${matched.ns_id.id}" successfully.`;
+    }
+    catch (err: unknown)
+    {
+        return `Error: ${(err as Error).message}`;
+    }
+}
+
+export function format_cli_help(registry?: pack_registry): string
 {
     const specs = Array.from(CLI_COMMAND_REGISTRY.values());
-    const usages = specs.map(s => s.usage);
-    return `Available commands: ${usages.join(', ')}, help`;
+    const builtins = specs.map(s => s.usage);
+
+    const pack_commands: string[] = [];
+    if (registry)
+    {
+        for (const [pack_name, mod] of registry.packs)
+        {
+            if (mod.commands)
+            {
+                for (const cmd_id of Object.keys(mod.commands))
+                {
+                    pack_commands.push(`${pack_name}:${cmd_id}`);
+                }
+            }
+        }
+    }
+
+    const pack_info = pack_commands.length > 0 ? `\nPack Commands: ${pack_commands.join(', ')}` : '';
+    return `Available commands: ${builtins.join(', ')}, help${pack_info}`;
 }
