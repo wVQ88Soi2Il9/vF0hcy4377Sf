@@ -7,7 +7,6 @@ import * as device_utils from './device_utils';
 import * as registry_query from './registry_query';
 import * as recipe_query from './recipe_query';
 import * as overlap from './overlap';
-import * as graph from './graph';
 import * as history from './history';
 
 export * from './types';
@@ -18,7 +17,6 @@ export * from './device_utils';
 export * from './registry_query';
 export * from './recipe_query';
 export * from './overlap';
-export * from './graph';
 export * from './history';
 
 export const vanilla = {
@@ -31,7 +29,6 @@ export const vanilla = {
     ...axes,
     ...recipe_query,
     ...overlap,
-    ...graph,
     ...history
 };
 
