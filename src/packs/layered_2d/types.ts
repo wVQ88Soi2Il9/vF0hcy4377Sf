@@ -1,4 +1,4 @@
-import type { device } from '@/API';
+import type { device } from '@/core';
 import type { drawable_device } from '@/packs/basic_renderer';
 
 /**

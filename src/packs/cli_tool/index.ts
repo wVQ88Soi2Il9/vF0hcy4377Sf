@@ -124,7 +124,7 @@ export function get_right_oriented_axes(num_dims: number, fixed_axes: Set<number
     }
 }
 
-import type { pack_module } from '@/API';
+import type { pack_module } from '@/core';
 
 export const cli_tool: pack_module = {
     pack_id: 'cli_tool',

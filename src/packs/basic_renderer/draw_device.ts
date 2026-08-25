@@ -1,4 +1,4 @@
-import type { game_map, device } from '@/API';
+import type { game_map, device } from '@/core';
 import type { camera_type, drawable_device } from './types';
 import { add_vector } from '@/utils/math';
 

@@ -1,4 +1,4 @@
-import { create_map, create_history_tree, jump_to_history, create_pack_registry } from '@/API';
+import { create_map, create_history_tree, jump_to_history, create_pack_registry } from '@/core';
 import { set_map, set_registry, set_history_tree } from '@/runtime';
 import { load_all_packs, call_all_pack_inits } from './packs/loader';
 import { execute_command } from './packs/shirones_ui/cli_executor';

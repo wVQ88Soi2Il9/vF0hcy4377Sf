@@ -1,4 +1,4 @@
-import { type vector } from '@/API';
+import { type vector } from '@/core';
 import { pipe } from '@/packs/pipe';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
 import { get_map } from '@/runtime';

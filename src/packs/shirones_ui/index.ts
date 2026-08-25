@@ -2,8 +2,8 @@ import './style.css';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
 import { get_map } from '@/runtime';
-import type { unsubscribe_function } from '@/API';
-import { on_device_change } from '@/API';
+import type { unsubscribe_function } from '@/core';
+import { on_device_change } from '@/core';
 import { create_ui_layout, type shirones_ui_layout_nodes } from './layout';
 import { create_info_bar, type info_bar_component } from './info_panel';
 import { create_cli_bar, type cli_bar_component } from './cli_panel';
@@ -88,7 +88,7 @@ export function init_pack(): void
     cleanup_device_change = on_device_change(update_map_info);
 }
 
-import type { pack_module } from '@/API';
+import type { pack_module } from '@/core';
 
 /**
  * Object export for shirones_ui pack interface.

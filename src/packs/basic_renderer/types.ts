@@ -1,4 +1,4 @@
-import type { device } from '@/core/types';
+import type { device } from '@/core';
 
 /**
  * Defines which 2 dimensions of the N-dimensional world are displayed,

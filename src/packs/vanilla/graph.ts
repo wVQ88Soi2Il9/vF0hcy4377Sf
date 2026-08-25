@@ -1,4 +1,4 @@
-import type { game_map, pack_registry } from '@/API';
+import type { game_map, pack_registry } from '@/core';
 import type { device_node } from './types';
 import { add_vector } from '@/utils/math';
 import { spatial_map } from '@/utils/spatial_map';

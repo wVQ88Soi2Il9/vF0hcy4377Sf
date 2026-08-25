@@ -2,7 +2,7 @@
  * EF Pack Base Device Class
  */
 
-import { type vector, type pack_registry, type device_constructor, register_device_class, type namespaced_id } from '@/API';
+import { type vector, type pack_registry, type device_constructor, register_device_class, type namespaced_id } from '@/core';
 import type { camera_type } from '@/packs/basic_renderer';
 import type { base_cuboid_device } from '@/packs/cuboid_device';
 import { cuboid_to_shape } from '@/packs/cuboid_device';

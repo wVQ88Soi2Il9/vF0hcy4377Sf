@@ -1,4 +1,4 @@
-import { device, type vector, type namespaced_id } from '@/API';
+import { device, type vector, type namespaced_id } from '@/core';
 import type { camera_type } from '@/packs/basic_renderer';
 import type
 {

@@ -1,4 +1,4 @@
-import { get_history_tree, delete_node, compute_path_to_root, type history_node, type history_tree } from '@/API';
+import { get_history_tree, delete_node, compute_path_to_root, type history_node, type history_tree } from '@/core';
 
 export interface vanilla_history_node_info
 {

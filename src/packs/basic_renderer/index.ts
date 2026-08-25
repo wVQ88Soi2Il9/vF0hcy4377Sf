@@ -1,7 +1,7 @@
 import type { camera_type, view_plane, drawable_device } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { on_device_change, on_history_change, type unsubscribe_function } from '@/API';
+import { on_device_change, on_history_change, type unsubscribe_function } from '@/core';
 import { get_map } from '@/runtime';
 
 export type { camera_type, view_plane, drawable_device };

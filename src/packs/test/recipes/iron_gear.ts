@@ -1,4 +1,4 @@
-import type { recipe as recipe_type, recipe_evaluation } from '@/API';
+import type { recipe as recipe_type, recipe_evaluation } from '@/core';
 import { get_map } from '@/runtime';
 
 /**

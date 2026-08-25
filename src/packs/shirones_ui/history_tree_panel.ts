@@ -1,4 +1,4 @@
-import type { history_tree, history_node } from '@/API';
+import type { history_tree, history_node } from '@/core';
 import
 {
     get_history_tree,
@@ -13,7 +13,7 @@ import
     delete_node,
     find_next_fork_node,
     format_namespaced_id
-} from '@/API';
+} from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import
 {
@@ -75,7 +75,7 @@ function get_lane_color(lane: number): string
     return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
-import type { map_command } from '@/API';
+import type { map_command } from '@/core';
 
 function parse_command_details(cmd: map_command | null): {
     icon:        string;

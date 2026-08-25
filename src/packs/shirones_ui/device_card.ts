@@ -1,4 +1,4 @@
-import { type device, move_device_command, delete_device_command, select_recipe_command, execute_command, format_namespaced_id, parse_namespaced_id } from '@/API';
+import { type device, move_device_command, delete_device_command, select_recipe_command, execute_command, format_namespaced_id, parse_namespaced_id } from '@/core';
 import { get_registry } from '@/runtime';
 import { basic_ui } from '@/packs/basic_ui';
 import { create_coordinate_stepper_group } from './coordinate_stepper';

@@ -4,8 +4,8 @@
  * 將 EF 產品配方轉換為相容核心引擎 evaluate 契約之動態配方物件。
  */
 
-import type { recipe, recipe_evaluation, pack_registry } from '@/API';
-import { register_recipe } from '@/API';
+import type { recipe, recipe_evaluation, pack_registry } from '@/core';
+import { register_recipe } from '@/core';
 import type { recipe_def } from './types';
 import { product_list } from './data/products';
 

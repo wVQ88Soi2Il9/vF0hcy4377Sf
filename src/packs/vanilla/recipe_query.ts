@@ -1,4 +1,4 @@
-import type { recipe, recipe_evaluation, pack_registry } from '@/API';
+import type { recipe, recipe_evaluation, pack_registry } from '@/core';
 import { get_registry } from '@/runtime';
 
 export interface available_recipe_entry

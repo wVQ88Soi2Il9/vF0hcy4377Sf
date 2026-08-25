@@ -1,4 +1,4 @@
-import { create_device_command, execute_command } from '@/API';
+import { create_device_command, execute_command } from '@/core';
 import { get_map, get_registry } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';

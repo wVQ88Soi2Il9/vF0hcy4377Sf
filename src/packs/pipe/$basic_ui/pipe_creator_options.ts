@@ -132,7 +132,7 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     };
 }
 
-import { get_registry, get_device_class, parse_namespaced_id, has_device_class } from '@/API';
+import { get_registry, get_device_class, parse_namespaced_id, has_device_class } from '@/core';
 
 /**
  * Checks if a device definition inherits from abstract class pipe.

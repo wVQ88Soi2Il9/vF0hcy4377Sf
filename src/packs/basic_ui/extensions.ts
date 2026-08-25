@@ -1,4 +1,4 @@
-import type { device, game_map, unsubscribe_function } from '@/API';
+import type { device, game_map, unsubscribe_function } from '@/core';
 
 export interface device_action
 {

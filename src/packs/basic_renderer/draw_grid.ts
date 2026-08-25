@@ -1,4 +1,4 @@
-import type { game_map } from '@/API';
+import type { game_map } from '@/core';
 import type { camera_type } from './types';
 
 const GRID_STEP = 2;   // 每個網格區塊跨度為 2 單位

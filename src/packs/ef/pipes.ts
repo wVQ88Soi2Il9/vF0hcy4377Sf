@@ -5,7 +5,7 @@
  * 繼承 packs/pipe 的 pipe 抽象基底類別並實作 2.5D 連接埠與 Canvas 繪製。
  */
 
-import { type pack_registry, register_device_class } from '@/API';
+import { type pack_registry, register_device_class } from '@/core';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
 import { pipe } from '@/packs/pipe';
 import { type vector_3d, add_vector_3d } from '@/packs/layered_2d';

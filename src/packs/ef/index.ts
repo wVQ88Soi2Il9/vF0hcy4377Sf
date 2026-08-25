@@ -2,7 +2,7 @@
  * EF (Endfield) Pack 進入點
  */
 
-import { get_registry } from '@/API';
+import { get_registry } from '@/core';
 import * as environments from './data/environments';
 import * as materials from './data/materials';
 import * as machines from './data/machines';
@@ -37,7 +37,7 @@ export
     register_all_ef_pipes
 };
 
-import type { pack_module, item_definition, recipe, device_constructor } from '@/API';
+import type { pack_module, item_definition, recipe, device_constructor } from '@/core';
 import { machine_list } from './data/machines';
 import { material_list } from './data/materials';
 import { product_list } from './data/products';

@@ -12,7 +12,7 @@ export
     cuboid_to_shape,
 };
 
-import type { pack_module } from '@/API';
+import type { pack_module } from '@/core';
 
 /**
  * cuboid_device Pack 統一導出物件

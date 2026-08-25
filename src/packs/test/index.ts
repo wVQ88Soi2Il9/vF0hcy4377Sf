@@ -3,7 +3,7 @@
  * Unified pack_module export encapsulating test devices and recipes.
  */
 
-import type { pack_module } from '@/API';
+import type { pack_module } from '@/core';
 import { assembler_device } from './devices/assembler';
 import { belt_device } from './devices/belt';
 import { merger_device } from './devices/merger';

@@ -1,4 +1,4 @@
-import type { device, game_map, map_command } from '@/API';
+import type { device, game_map, map_command } from '@/core';
 import type { d4_transform, rotatable_device } from './types';
 
 /**

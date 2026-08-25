@@ -1,4 +1,4 @@
-import type { view_plane } from '@/packs/basic_renderer/types';
+import type { view_plane } from '@/packs/basic_renderer';
 import
 {
     create_device_command,
@@ -14,7 +14,7 @@ import
     compute_path_to_root,
     get_history_tree,
     format_namespaced_id
-} from '@/API';
+} from '@/core';
 import { get_map } from '@/runtime';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { clean_flag_arg, tokenize_input, parse_axis_name, get_axis_label, get_right_oriented_axes } from '@/packs/cli_tool';

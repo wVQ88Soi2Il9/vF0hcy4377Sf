@@ -1,5 +1,5 @@
-import type { pack_module, pack_registry } from '@/API';
-import { register_pack } from '@/API';
+import type { pack_module, pack_registry } from '@/core';
+import { register_pack } from '@/core';
 
 /**
  * 載入並註冊所有 Pack 模組。

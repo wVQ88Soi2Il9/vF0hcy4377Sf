@@ -1,0 +1,41 @@
+# 0003-2608251433_core-api-vs-inter-pack-import-boundaries
+
+- **status:** resolved
+- **topic:** `@/API` 核心邊界與 Pack 間直接引用的職責分界
+
+## 提問與回答
+
+### Q1 · 2026-08-25 14:32（human: wVQ88Soi2Il9）
+為什麼我當初要規定統一到 `@/API` import？現在 packs 之間不用吧，已經在彼此的 index 有統一的 export 了。
+
+### A1 · 2026-08-25 14:33（agent: gemini-3.7-flash）
+是的！這正是架構演進後清晰的職責分工：
+
+1. **`@/API` 的本質是「Core Engine API」**：
+   - 當初設立 `@/API` 的核心目的，是在 **Core 層（`src/core/`）** 與 **外部業務模組（`src/packs/`）** 之間建立單向邊界防護牆。
+   - 阻止 Pack 直接存取 Core 的內部實作細節（私有 Map、Hooks 陣列、底層內部函式）。
+   - 因此，**只要存取 Core 核心引擎能力（地圖、歷程樹、通用註冊、命令），一律透過 `@/API`**。
+
+2. **Pack 之間的依賴是「模組對模組（Inter-Pack Module）」**：
+   - 在完成 Pack-as-a-Module-Object 架構後，每個 Pack 都有其唯一的 `src/packs/<pack_name>/index.ts` 作為公開 SSOT 進入點。
+   - 各 Pack 於自身的 `index.ts` 導出其公開型別、工具函式與 `pack_module` 物件。
+   - **Pack 之間互相依賴，直接引用目標 Pack 的根模組 `import ... from '@/packs/<target_pack>'`**，不經過也不應經過 `@/API`。
+
+### Q2 · 2026-08-25 14:35（human: wVQ88Soi2Il9）
+我是不是該把 API.ts 改名 index.ts 放到 core 內部，就像其他 pack 那樣？
+
+### A2 · 2026-08-25 14:37（agent: gemini-3.7-flash）
+是的，這讓整個專案的模組架構達到極致的對稱性與一致性（Symmetry & Consistency）：
+- **所有模組結構統一**：
+  - Core 模組：`src/core/index.ts`（外部透過 `@/core` 引用）。
+  - 各 Pack 模組：`src/packs/<name>/index.ts`（外部透過 `@/packs/<name>` 引用）。
+- **舊規則**：所有東西必須從 `@/API` import。
+- **新規則**：跨 module boundary 時，必須從該 module 的 `index.ts` public entrypoint import；禁止直接依賴另一 module 的 internal implementation。
+
+## 結論
+
+全系統模組引用邊界收斂為 **Public Entrypoint Rule**：
+1. **跨模組公開進入點**：任何跨模組（Core 與各 Packs 之間）引用，一律且只能從目標模組的根目錄（`index.ts`）import（例：`import ... from '@/core'`、`import ... from '@/packs/<name>'`）。
+2. **禁止深層內部依賴**：嚴禁跨模組依賴任何模組的內部實作檔案（例如禁止 `from '@/core/commands'` 或 `from '@/packs/vanilla/overlap'`）。
+3. **工具層引用**：純數學運算與座標工具一律引用 `@/utils/*`。
+4. **`src/API.ts` 廢除**：原 `src/API.ts` 全面移入 `src/core/index.ts`，消除多餘的中介檔案。
