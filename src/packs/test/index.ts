@@ -25,7 +25,7 @@ export {
 };
 
 export const test_pack: pack_module = {
-    id: 'test',
+    pack_id: 'test',
     devices: {
         assembler:    assembler_device,
         belt:         belt_device,

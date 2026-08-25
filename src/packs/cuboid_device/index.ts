@@ -19,7 +19,7 @@ import type { pack_module } from '@/API';
  */
 export const cuboid_device: pack_module =
 {
-    id: 'cuboid_device',
+    pack_id: 'cuboid_device',
     base_cuboid_device,
     cuboid_to_shape,
 };

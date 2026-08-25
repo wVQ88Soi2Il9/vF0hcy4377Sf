@@ -22,7 +22,7 @@ export function create_pack_registry(): pack_registry
  */
 export function register_pack(registry: pack_registry, mod: pack_module): void
 {
-    registry.packs.set(mod.id, mod);
+    registry.packs.set(mod.pack_id, mod);
 }
 
 /**
@@ -100,7 +100,7 @@ export function register_recipe
     let mod = registry.packs.get(recipe.pack);
     if (!mod)
     {
-        mod = { id: recipe.pack, recipes: {} };
+        mod = { pack_id: recipe.pack, recipes: {} };
         registry.packs.set(recipe.pack, mod);
     }
     if (!mod.recipes)
@@ -123,7 +123,7 @@ export function register_device_class
     let mod = registry.packs.get(identifier.pack);
     if (!mod)
     {
-        mod = { id: identifier.pack, devices: {} };
+        mod = { pack_id: identifier.pack, devices: {} };
         registry.packs.set(identifier.pack, mod);
     }
     if (!mod.devices)

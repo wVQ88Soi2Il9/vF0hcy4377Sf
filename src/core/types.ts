@@ -31,7 +31,7 @@ export type device_constructor = new
  */
 export interface pack_module
 {
-    id:            string;
+    pack_id:            string;
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;

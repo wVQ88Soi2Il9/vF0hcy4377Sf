@@ -94,7 +94,7 @@ import type { pack_module } from '@/API';
  * Object export for shirones_ui pack interface.
  */
 export const shirones_ui: pack_module = {
-    id: 'shirones_ui',
+    pack_id: 'shirones_ui',
     get_layout: () => active_layout,
     create_ui_layout,
     create_info_bar,

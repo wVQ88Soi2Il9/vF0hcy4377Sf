@@ -101,7 +101,7 @@ for (const m of machine_list)
  */
 export const ef: pack_module =
 {
-    id: 'ef',
+    pack_id: 'ef',
     items: ef_items,
     recipes: ef_recipes,
     devices: ef_devices,
