@@ -15,4 +15,8 @@ export const cli_tool = {
 
 export function init_pack(): void
 {
+    if (typeof window !== 'undefined')
+    {
+        (window as any).cli = executor.execute_command;
+    }
 }
