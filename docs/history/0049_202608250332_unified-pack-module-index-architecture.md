@@ -22,7 +22,7 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 ## 待辦
 
 ### 1 Core 型別與 Registry 重構（Core Types & Unified Registry）
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1, O2
 
 在 `src/core/types.ts` 與 `src/core/pack_manager.ts` 定義 `pack_module` 契約（包含 `id: string`、可選的 `items`、`recipes`、`devices`、`init_pack?`），並將 `pack_registry` 簡化為單一 `packs: Map<string, pack_module>` 容器，提供核心統一查表函式。
@@ -34,7 +34,7 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 - H3 · 2026-08-25 04:35 落地 —— 將 item_definition、recipe、map_command 改為直接 extends namespaced_id，消除多餘巢狀包裝（agent: gemini-3.7-flash） → O2
 
 ### 2 Pack Index 統一模組化封裝（Packs Index Harmonization）
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1, O2
 
 重構現有各 Pack（`vanilla`, `basic_ui`, `layered_2d`, `pipe`, `ef`, `shirones_ui`, `cuboid_device`, `test`, `cli_tool`）的 `index.ts`，統一以符合 `pack_module` 規範的命名物件匯出其 items、recipes、devices 與工具函式。
@@ -45,7 +45,7 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 - H2 · 2026-08-25 04:41 落地 —— 完成所有 Pack（vanilla, basic_ui, layered_2d, pipe, ef, shirones_ui, cuboid_device, test, cli_tool）之 index.ts 與指令/配方/裝置對齊 pack_module 契約，清除 $ 前綴污染（agent: gemini-3.7-flash） → O1, O2
 
 ### 3 Loader 自動載入器簡化（Loader Streamlining）
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1, O2
 
 簡化 `src/packs/loader.ts`，由 Loader 統一掃描並載入各 Pack 的 `index.ts` 註冊至全域 Registry，並執行 `init_pack()`；支援純 JSON 資料的合成包裝。
@@ -56,7 +56,7 @@ Core 註冊表、map_command、item_definition、recipe 全面直接 `extends na
 - H2 · 2026-08-25 14:02 落地 —— 完成 loader.ts 簡化，統一由 index.ts 自動發現並呼叫 register_pack 註冊至 registry，主入口 main.ts 啟動流精簡完竣（agent: gemini-3.7-flash） → O1, O2
 
 ### 4 下游 UI / CLI 對齊與功能整合驗證（UI / CLI Alignment & Verification）
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1, O2
 
 更新 Shirones UI（Device Creator, Device Card, Recipe Selector）、CLI 指令與測試腳本，驗證在新架構下所有裝置建立、配方選擇、分支合併與畫布渲染運作正常。

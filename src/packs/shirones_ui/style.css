@@ -330,26 +330,6 @@
     min-width: 115px;
 }
 
-.basic_ui_input {
-    width: 100%;
-    min-width: 36px;
-    background: var(--basic-ui-bg-crust);
-    border: 1px solid var(--basic-ui-surface1);
-    border-radius: 4px;
-    color: var(--basic-ui-text);
-    padding: 3px 4px;
-    font-family: monospace;
-    font-size: 11px;
-    text-align: center;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.15s ease;
-}
-
-.basic_ui_input:focus {
-    border-color: var(--basic-ui-blue);
-}
-
 /* Checkbox and Toggle */
 .basic_ui_checkbox_label {
     display: inline-flex;
@@ -488,22 +468,6 @@
     opacity: 0.35;
     cursor: not-allowed;
     pointer-events: none;
-}
-
-.basic_ui_history_row {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-.basic_ui_history_row > button {
-    width: 26px;
-    height: 24px;
-    padding: 0;
-    flex: 0 0 auto;
 }
 
 /* Card and Form Structure */
@@ -677,16 +641,6 @@
 
 .basic_ui_label_eval {
     color: var(--basic-ui-mauve);
-    font-weight: bold;
-}
-
-.basic_ui_label_io {
-    color: var(--basic-ui-sky);
-    font-weight: bold;
-}
-
-.basic_ui_label_dur {
-    color: var(--basic-ui-peach);
     font-weight: bold;
 }
 
@@ -1167,6 +1121,9 @@
     color: var(--basic-ui-subtext0);
     font-family: monospace;
     flex-shrink: 0;
+    min-width: 28px;
+    text-align: right;
+    margin-left: auto;
 }
 
 .history_git_sub_line {
@@ -1177,14 +1134,6 @@
     font-size: 10.5px;
     color: var(--basic-ui-subtext0);
     margin-top: 1px;
-}
-
-.history_git_param {
-    font-family: monospace;
-    color: var(--basic-ui-subtext1);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .history_git_branch_badge {

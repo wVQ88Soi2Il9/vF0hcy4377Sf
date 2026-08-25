@@ -4,17 +4,15 @@
 
 ## 目前使用中
 
-[0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 4/4
+[0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
 
 ## 現在開著的（逐格）
 
-- `0049#1` · **等待確認** — Core 型別與 Registry 重構（Core Types & Unified Registry）
-- `0049#2` · **等待確認** — Pack Index 統一模組化封裝（Packs Index Harmonization）
-- `0049#3` · **等待確認** — Loader 自動載入器簡化（Loader Streamlining）
-- `0049#4` · **等待確認** — 下游 UI / CLI 對齊與功能整合驗證（UI / CLI Alignment & Verification）
-- `0047#1` · **待實作** — 抽離導航按鈕定義與共用按鈕工廠
-- `0047#2` · **待實作** — 重構與大幅精簡 history_tree_panel.ts
-- `0047#3` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
+- `0047#1` · **等待確認** — 清理 style.css 死樣式與冗餘選擇器
+- `0047#2` · **等待確認** — 抽離導航按鈕定義與共用按鈕工廠
+- `0047#3` · **等待確認** — 重構與大幅精簡 history_tree_panel.ts
+- `0047#4` · **待實作** — 檢視並優化 shirones_ui 其餘面板組件
+- `0047#5` · **待實作** — 整合測試與建構驗證
 - `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
 - `0046#10` · **等待確認** — CLI 實作 delete-node 指令
 - `0046#17` · **等待確認** — 歷史節點型別擴充與三方路徑提取器（Path Extractor）
@@ -29,13 +27,13 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0049#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0047#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0049** [0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 4/4
+- **0049** [0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
-- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 3/3
+- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 5/5
 - **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 9/20，已移交 5
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4

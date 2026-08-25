@@ -1,19 +1,13 @@
-import type { history_tree, history_node } from '@/core';
+import type { history_tree, history_node, map_command } from '@/core';
 import
 {
     on_history_change,
-    compute_path_to_root,
-    find_next_fork_node
+    compute_path_to_root
 } from '@/core';
 import
 {
     get_history_tree,
     jump_to_history,
-    undo,
-    redo,
-    jump_to_prev_fork,
-    jump_to_next_fork,
-    jump_to_leaf,
     delete_history_node
 } from '@/runtime';
 import { format_namespaced_id } from '@/packs/vanilla';
@@ -24,6 +18,7 @@ import
     is_node_pinned,
     toggle_node_pin
 } from '@/packs/vanilla';
+import { create_navigation_button_group } from './history_navigation';
 
 const HIGHLIGHT_COLOR = '#f9e2af';
 
@@ -35,7 +30,7 @@ export interface history_tree_component
     set_collapsed: (collapsed: boolean) => void;
 }
 
-export interface git_node_layout
+interface git_node_layout
 {
     node:              history_node;
     row:               number;
@@ -44,7 +39,7 @@ export interface git_node_layout
     is_on_active_path: boolean;
 }
 
-export interface git_edge_layout
+interface git_edge_layout
 {
     parent_uid: number;
     child_uid:  number;
@@ -78,22 +73,16 @@ function get_lane_color(lane: number): string
     return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
-import type { map_command } from '@/core';
-
 function parse_command_details(cmd: map_command | null): {
-    icon:        string;
-    action_type: string;
-    target:      string;
-    params:      string;
+    icon:   string;
+    target: string;
 }
 {
     if (!cmd)
     {
         return {
-            icon:        '🔷',
-            action_type: 'root',
-            target:      'root (initial state)',
-            params:      ''
+            icon:   '🔷',
+            target: 'root (initial)'
         };
     }
 
@@ -104,10 +93,8 @@ function parse_command_details(cmd: map_command | null): {
         const def = typeof def_val === 'object' && def_val !== null ? format_namespaced_id(def_val as any) : String(def_val ?? 'device');
         const pos = core_info?.position ? ` at [${(core_info.position as number[]).join(', ')}]` : '';
         return {
-            icon:        '➕',
-            action_type: 'create',
-            target:      `create "${def}"${pos}`,
-            params:      ''
+            icon:   '➕',
+            target: `create "${def}"${pos}`
         };
     }
 
@@ -117,10 +104,8 @@ function parse_command_details(cmd: map_command | null): {
         const uid = core_info?.device_uid ?? '';
         const pos = core_info?.position ? ` to [${(core_info.position as number[]).join(', ')}]` : '';
         return {
-            icon:        '🔄',
-            action_type: 'move',
-            target:      `move #${uid}${pos}`,
-            params:      ''
+            icon:   '🔄',
+            target: `move #${uid}${pos}`
         };
     }
 
@@ -131,10 +116,8 @@ function parse_command_details(cmd: map_command | null): {
         const rec_val = core_info?.new_recipe_id;
         const recipe = typeof rec_val === 'object' && rec_val !== null ? format_namespaced_id(rec_val as any) : String(rec_val ?? 'none');
         return {
-            icon:        '⚙️',
-            action_type: 'recipe',
-            target:      `select recipe "${recipe}" for #${uid}`,
-            params:      ''
+            icon:   '⚙️',
+            target: `select recipe "${recipe}" for #${uid}`
         };
     }
 
@@ -143,18 +126,14 @@ function parse_command_details(cmd: map_command | null): {
         const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
         const uid = core_info?.device_uid ?? '';
         return {
-            icon:        '🗑️',
-            action_type: 'delete',
-            target:      `delete #${uid}`,
-            params:      ''
+            icon:   '🗑️',
+            target: `delete #${uid}`
         };
     }
 
     return {
-        icon:        '🔹',
-        action_type: 'command',
-        target:      format_namespaced_id(cmd),
-        params:      ''
+        icon:   '🔹',
+        target: format_namespaced_id(cmd)
     };
 }
 
@@ -162,7 +141,7 @@ function parse_command_details(cmd: map_command | null): {
  * Computes standard Git Graph topology layout (ordered by UID creation sequence).
  * Each node sits at its creation row, while branches curve out smoothly with Bézier elbows.
  */
-export function compute_git_graph_layout(tree: history_tree): {
+function compute_git_graph_layout(tree: history_tree): {
     nodes:        git_node_layout[];
     edges:        git_edge_layout[];
     max_lane:     number;
@@ -338,65 +317,8 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     expand_btn.title = 'Expand History Tree';
     expand_btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13.5V9.75a3.75 3.75 0 0 0-3.75-3.75H12V3.75a.75.75 0 0 0-1.5 0V6H7.75A3.75 3.75 0 0 0 4 9.75v3.75a2.25 2.25 0 1 0 1.5 0V9.75c0-1.243 1.007-2.25 2.25-2.25H10.5V18a2.25 2.25 0 1 0 1.5 0V7.5h2.75c1.243 0 2.25 1.007 2.25 2.25v3.75a2.25 2.25 0 1 0 2 0z"/></svg>';
 
-    // 6 Vertical Jump / Transport Buttons
-    const strip_btn_group = document.createElement('div');
-    strip_btn_group.className = 'history_strip_btn_group';
-
-    // 1. Root (|◀◀)
-    const strip_btn_first = document.createElement('button');
-    strip_btn_first.type = 'button';
-    strip_btn_first.className = 'history_strip_btn';
-    strip_btn_first.title = 'Jump to Root';
-    strip_btn_first.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="3" y="4" width="2.5" height="16" rx="1"/><path d="M12.5 12l8.5 6.5V5.5z"/><path d="M5.5 12l8.5 6.5V5.5z"/></svg>';
-
-    // 2. Prev Fork (⏪)
-    const strip_btn_prev_fork = document.createElement('button');
-    strip_btn_prev_fork.type = 'button';
-    strip_btn_prev_fork.className = 'history_strip_btn';
-    strip_btn_prev_fork.title = 'Jump to Prev Fork';
-    strip_btn_prev_fork.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M11 12l9.5 7V5z"/><path d="M2 12l9.5 7V5z"/></svg>';
-
-    // 3. Undo (◀)
-    const strip_btn_undo = document.createElement('button');
-    strip_btn_undo.type = 'button';
-    strip_btn_undo.className = 'history_strip_btn';
-    strip_btn_undo.title = 'Undo (Ctrl+Z)';
-    strip_btn_undo.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M18 4.5v15l-13-7.5z"/></svg>';
-
-    // 4. Redo (▶)
-    const strip_btn_redo = document.createElement('button');
-    strip_btn_redo.type = 'button';
-    strip_btn_redo.className = 'history_strip_btn';
-    strip_btn_redo.title = 'Redo (Ctrl+Y)';
-    strip_btn_redo.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>';
-
-    // 5. Next Fork (⏩)
-    const strip_btn_next_fork = document.createElement('button');
-    strip_btn_next_fork.type = 'button';
-    strip_btn_next_fork.className = 'history_strip_btn';
-    strip_btn_next_fork.title = 'Jump to Next Fork';
-    strip_btn_next_fork.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M13 12L3.5 5v14z"/><path d="M22 12l-9.5-7v14z"/></svg>';
-
-    // 6. Leaf (▶▶|)
-    const strip_btn_leaf = document.createElement('button');
-    strip_btn_leaf.type = 'button';
-    strip_btn_leaf.className = 'history_strip_btn';
-    strip_btn_leaf.title = 'Jump to Leaf (Branch End)';
-    strip_btn_leaf.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="18.5" y="4" width="2.5" height="16" rx="1"/><path d="M11.5 12L3 5.5v13z"/><path d="M18.5 12L10 5.5v13z"/></svg>';
-
-    strip_btn_first.addEventListener('click', (e) => { e.stopPropagation(); jump_to_history(0); });
-    strip_btn_prev_fork.addEventListener('click', (e) => { e.stopPropagation(); jump_to_prev_fork(); });
-    strip_btn_undo.addEventListener('click', (e) => { e.stopPropagation(); undo(); });
-    strip_btn_redo.addEventListener('click', (e) => { e.stopPropagation(); redo(); });
-    strip_btn_next_fork.addEventListener('click', (e) => { e.stopPropagation(); jump_to_next_fork(); });
-    strip_btn_leaf.addEventListener('click', (e) => { e.stopPropagation(); jump_to_leaf(); });
-
-    strip_btn_group.appendChild(strip_btn_first);
-    strip_btn_group.appendChild(strip_btn_prev_fork);
-    strip_btn_group.appendChild(strip_btn_undo);
-    strip_btn_group.appendChild(strip_btn_redo);
-    strip_btn_group.appendChild(strip_btn_next_fork);
-    strip_btn_group.appendChild(strip_btn_leaf);
+    // 6 Vertical Jump / Transport Buttons (Collapsed Strip)
+    const strip_nav = create_navigation_button_group('history_strip_btn_group', 'history_strip_btn', 'strip');
 
     const strip_step_badge = document.createElement('span');
     strip_step_badge.className = 'history_strip_badge';
@@ -409,7 +331,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     });
 
     collapsed_strip.appendChild(expand_btn);
-    collapsed_strip.appendChild(strip_btn_group);
+    collapsed_strip.appendChild(strip_nav.container);
     collapsed_strip.appendChild(strip_step_badge);
 
     root_element.appendChild(collapsed_strip);
@@ -440,67 +362,11 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     info_label.className = 'basic_ui_cad_info';
     info_label.textContent = 'Git Graph';
 
-    const btn_group = document.createElement('div');
-    btn_group.className = 'basic_ui_cad_btn_group';
-
-    // 1. Jump to Root (|◀◀)
-    const btn_first = document.createElement('button');
-    btn_first.type = 'button';
-    btn_first.className = 'basic_ui_btn';
-    btn_first.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="3" y="4" width="2.5" height="16" rx="1"/><path d="M12.5 12l8.5 6.5V5.5z"/><path d="M5.5 12l8.5 6.5V5.5z"/></svg>';
-    btn_first.title = 'Jump to initial state (Root)';
-
-    // 2. Jump to Previous Fork (⏪)
-    const btn_prev_fork = document.createElement('button');
-    btn_prev_fork.type = 'button';
-    btn_prev_fork.className = 'basic_ui_btn';
-    btn_prev_fork.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M11 12l9.5 7V5z"/><path d="M2 12l9.5 7V5z"/></svg>';
-    btn_prev_fork.title = 'Jump to previous fork';
-
-    // 3. Step Back / Undo (◀)
-    const btn_undo = document.createElement('button');
-    btn_undo.type = 'button';
-    btn_undo.className = 'basic_ui_btn';
-    btn_undo.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18 4.5v15l-13-7.5z"/></svg>';
-    btn_undo.title = 'Step back (Undo)';
-
-    // 4. Step Forward / Redo (▶)
-    const btn_redo = document.createElement('button');
-    btn_redo.type = 'button';
-    btn_redo.className = 'basic_ui_btn';
-    btn_redo.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M6 4.5v15l13-7.5z"/></svg>';
-    btn_redo.title = 'Step forward (Redo)';
-
-    // 5. Jump to Next Fork (⏩)
-    const btn_next_fork = document.createElement('button');
-    btn_next_fork.type = 'button';
-    btn_next_fork.className = 'basic_ui_btn';
-    btn_next_fork.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M13 12L3.5 5v14z"/><path d="M22 12l-9.5-7v14z"/></svg>';
-    btn_next_fork.title = 'Jump to next fork';
-
-    // 6. Jump to Latest / Leaf (▶▶|)
-    const btn_leaf = document.createElement('button');
-    btn_leaf.type = 'button';
-    btn_leaf.className = 'basic_ui_btn';
-    btn_leaf.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="18.5" y="4" width="2.5" height="16" rx="1"/><path d="M11.5 12L3 5.5v13z"/><path d="M18.5 12L10 5.5v13z"/></svg>';
-    btn_leaf.title = 'Jump to latest step (End of branch)';
-
-    btn_first.addEventListener('click', () => { jump_to_history(0); });
-    btn_prev_fork.addEventListener('click', () => { jump_to_prev_fork(); });
-    btn_undo.addEventListener('click', () => { undo(); });
-    btn_redo.addEventListener('click', () => { redo(); });
-    btn_next_fork.addEventListener('click', () => { jump_to_next_fork(); });
-    btn_leaf.addEventListener('click', () => { jump_to_leaf(); });
-
-    btn_group.appendChild(btn_first);
-    btn_group.appendChild(btn_prev_fork);
-    btn_group.appendChild(btn_undo);
-    btn_group.appendChild(btn_redo);
-    btn_group.appendChild(btn_next_fork);
-    btn_group.appendChild(btn_leaf);
+    // 6 Jump / Transport Buttons (Expanded Toolbar)
+    const toolbar_nav = create_navigation_button_group('basic_ui_cad_btn_group', 'basic_ui_btn', 'toolbar');
 
     toolbar.appendChild(info_label);
-    toolbar.appendChild(btn_group);
+    toolbar.appendChild(toolbar_nav.container);
 
     // Scrollable Vertical Git Graph Viewport
     const viewport = document.createElement('div');
@@ -541,18 +407,8 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         if (!tree)
         {
             strip_step_badge.textContent = '#0';
-            btn_first.disabled = true;
-            btn_prev_fork.disabled = true;
-            btn_undo.disabled = true;
-            btn_redo.disabled = true;
-            btn_next_fork.disabled = true;
-            btn_leaf.disabled = true;
-            strip_btn_first.disabled = true;
-            strip_btn_prev_fork.disabled = true;
-            strip_btn_undo.disabled = true;
-            strip_btn_redo.disabled = true;
-            strip_btn_next_fork.disabled = true;
-            strip_btn_leaf.disabled = true;
+            strip_nav.update_state(null);
+            toolbar_nav.update_state(null);
             canvas_container.innerHTML = '<div class="basic_ui_label_sub" style="padding:16px;">History not initialized.</div>';
             return;
         }
@@ -561,26 +417,8 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         last_scrolled_uid = tree.current_uid;
 
         strip_step_badge.textContent = `#${tree.current_uid}`;
-
-        const can_undo = tree.current_uid !== 0;
-        const current_node = tree.nodes.get(tree.current_uid);
-        const can_redo = current_node ? current_node.children_uids.length > 0 : false;
-        const has_prev_fork = tree.current_uid !== 0;
-        const has_next_fork = find_next_fork_node(tree, tree.current_uid) !== null;
-
-        btn_first.disabled = !can_undo;
-        btn_prev_fork.disabled = !has_prev_fork;
-        btn_undo.disabled = !can_undo;
-        btn_redo.disabled = !can_redo;
-        btn_next_fork.disabled = !has_next_fork;
-        btn_leaf.disabled = !can_redo;
-
-        strip_btn_first.disabled = !can_undo;
-        strip_btn_prev_fork.disabled = !has_prev_fork;
-        strip_btn_undo.disabled = !can_undo;
-        strip_btn_redo.disabled = !can_redo;
-        strip_btn_next_fork.disabled = !has_next_fork;
-        strip_btn_leaf.disabled = !can_redo;
+        strip_nav.update_state(tree);
+        toolbar_nav.update_state(tree);
 
         if (is_currently_collapsed)
         {
@@ -737,7 +575,6 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             target_span.title = details.target;
 
             main_line.appendChild(icon_span);
-            main_line.appendChild(target_span);
 
             if (n.is_current)
             {
@@ -746,6 +583,8 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                 head_badge.textContent = 'HEAD';
                 main_line.appendChild(head_badge);
             }
+
+            main_line.appendChild(target_span);
 
             const uid_badge = document.createElement('span');
             uid_badge.className = 'history_git_uid_badge';
@@ -769,63 +608,56 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             });
             actions_group.appendChild(pin_btn);
 
-            if (n.node.uid !== 0)
+            // 2. Delete single node (✂️)
+            const delete_node_btn = document.createElement('button');
+            delete_node_btn.type = 'button';
+            delete_node_btn.className = 'history_git_row_btn delete_node_btn';
+            delete_node_btn.title = n.node.uid === 0
+                ? 'Root node cannot be deleted'
+                : (n.is_current ? 'Cannot delete current active node' : `Delete node #${n.node.uid} (re-parent children)`);
+            delete_node_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
+
+            if (n.node.uid === 0 || n.is_current)
             {
-                // 2. Delete single node (✂️)
-                const delete_node_btn = document.createElement('button');
-                delete_node_btn.type = 'button';
-                delete_node_btn.className = 'history_git_row_btn delete_node_btn';
-                delete_node_btn.title = n.is_current ? 'Cannot delete current active node' : `Delete node #${n.node.uid} (re-parent children)`;
-                delete_node_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
-
-                if (n.is_current)
-                {
-                    delete_node_btn.disabled = true;
-                }
-                else
-                {
-                    delete_node_btn.addEventListener('click', (e) =>
-                    {
-                        e.stopPropagation();
-                        delete_history_node(n.node.uid);
-                    });
-                }
-
-                // 3. Delete branch (🗑️)
-                const delete_branch_btn = document.createElement('button');
-                delete_branch_btn.type = 'button';
-                delete_branch_btn.className = 'history_git_row_btn delete_branch_btn';
-                delete_branch_btn.title = n.is_on_active_path ? 'Cannot delete active branch (switch active branch first)' : `Delete branch rooted at #${n.node.uid} (prune subtree)`;
-                delete_branch_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15 4V2H9v2H4v2h1v13c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6h1V4h-5zm2 15H7V6h10v13zM9 8h2v9H9zm4 0h2v9h-2z"/></svg>';
-
-                if (n.is_on_active_path)
-                {
-                    delete_branch_btn.disabled = true;
-                }
-                else
-                {
-                    delete_branch_btn.addEventListener('click', (e) =>
-                    {
-                        e.stopPropagation();
-                        delete_branch(n.node.uid);
-                    });
-                }
-
-                actions_group.appendChild(delete_node_btn);
-                actions_group.appendChild(delete_branch_btn);
+                delete_node_btn.disabled = true;
             }
+            else
+            {
+                delete_node_btn.addEventListener('click', (e) =>
+                {
+                    e.stopPropagation();
+                    delete_history_node(n.node.uid);
+                });
+            }
+
+            // 3. Delete branch (🗑️)
+            const delete_branch_btn = document.createElement('button');
+            delete_branch_btn.type = 'button';
+            delete_branch_btn.className = 'history_git_row_btn delete_branch_btn';
+            delete_branch_btn.title = n.node.uid === 0
+                ? 'Root node cannot be deleted'
+                : (n.is_on_active_path ? 'Cannot delete active branch (switch active branch first)' : `Delete branch rooted at #${n.node.uid} (prune subtree)`);
+            delete_branch_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15 4V2H9v2H4v2h1v13c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6h1V4h-5zm2 15H7V6h10v13zM9 8h2v9H9zm4 0h2v9h-2z"/></svg>';
+
+            if (n.node.uid === 0 || n.is_on_active_path)
+            {
+                delete_branch_btn.disabled = true;
+            }
+            else
+            {
+                delete_branch_btn.addEventListener('click', (e) =>
+                {
+                    e.stopPropagation();
+                    delete_branch(n.node.uid);
+                });
+            }
+
+            actions_group.appendChild(delete_node_btn);
+            actions_group.appendChild(delete_branch_btn);
             main_line.appendChild(actions_group);
 
             const sub_line = document.createElement('div');
             sub_line.className = 'history_git_sub_line';
-
-            if (details.params)
-            {
-                const param_span = document.createElement('span');
-                param_span.className = 'history_git_param';
-                param_span.textContent = details.params;
-                sub_line.appendChild(param_span);
-            }
 
             const branch_badge = document.createElement('span');
             branch_badge.className = 'history_git_branch_badge';
