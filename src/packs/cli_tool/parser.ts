@@ -1,19 +1,5 @@
 /**
- * Strips leading '--' and outer double quotes from strict flag arguments.
- * Strict format: --"<value>"
- */
-export function clean_flag_arg(arg: string): string
-{
-    const trimmed = arg.trim();
-    if (trimmed.startsWith('--"') && trimmed.endsWith('"') && trimmed.length >= 4)
-    {
-        return trimmed.substring(3, trimmed.length - 1);
-    }
-    return trimmed;
-}
-
-/**
- * Tokenizes command input while respecting quoted strings.
+ * Tokenizes command input while respecting double-quoted strings.
  */
 export function tokenize_input(input: string): string[]
 {
@@ -27,7 +13,6 @@ export function tokenize_input(input: string): string[]
         if (char === '"')
         {
             in_quotes = !in_quotes;
-            current += char;
         }
         else if (/\s/.test(char) && !in_quotes)
         {
@@ -47,4 +32,46 @@ export function tokenize_input(input: string): string[]
         tokens.push(current);
     }
     return tokens;
+}
+
+/**
+ * Parses consecutive string tokens into a numeric coordinate vector.
+ * Strictly verifies all components are valid numbers and matches expected dimension.
+ */
+export function parse_vector(tokens: string[], expected_dim?: number): number[]
+{
+    if (tokens.length === 0)
+    {
+        throw new Error('Missing coordinates.');
+    }
+
+    const vec = tokens.map(t =>
+    {
+        const n = Number(t);
+        if (isNaN(n))
+        {
+            throw new Error(`Invalid coordinate "${t}": must be a valid number.`);
+        }
+        return n;
+    });
+
+    if (expected_dim !== undefined && vec.length !== expected_dim)
+    {
+        throw new Error(`Dimension mismatch: expected ${expected_dim}D coordinate (${expected_dim} numbers), but got ${vec.length} (${tokens.join(' ')}).`);
+    }
+
+    return vec;
+}
+
+/**
+ * Parses an integer token (e.g. UID, steps), failing fast if non-integer.
+ */
+export function parse_integer(token: string, field_name: string = 'Value'): number
+{
+    const val = Number(token);
+    if (isNaN(val) || !Number.isInteger(val))
+    {
+        throw new Error(`${field_name} must be an integer, got "${token}".`);
+    }
+    return val;
 }

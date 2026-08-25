@@ -18,7 +18,7 @@ export function format_camera_equation(plane: view_plane, num_dims?: number): st
             eq_parts.push(`${axis_name}=${depth}`);
         }
     }
-    return `camera --"${eq_parts.join(', ')}"`;
+    return `camera ${eq_parts.join(' ')}`;
 }
 
 export function camera_command(equation_arg?: string): map_command

@@ -32,7 +32,7 @@
 - H3 · 2026-08-25 22:17 落地 —— 將 parse_axis_name, get_axis_label, get_right_oriented_axes 移至 vanilla/axes.ts，消滅 cli_tool 內嵌遊戲業務邏輯，cli_tool 達成 100% 自包含零外部依賴（agent: gemini-3.7-flash-high） → O1
 
 ### 2 擴充指令回歸 Core Registry 與 UI 面板適配 (Core Registry & UI Adaptation)
-- **state:** 等待確認
+- **state:** 完成
 - **basis:** → O1
 
 將各 Pack 之擴充操作納入各自模組初始化時註冊至 CLI（`vanilla` 註冊地圖/歷程指令、`layered_2d` 註冊旋轉/翻轉、`basic_renderer` 註冊相機、`basic_ui` 註冊裝置資訊），並由 `shirones_ui/cli_panel.ts` 統一調用。

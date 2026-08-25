@@ -1,4 +1,4 @@
-import { execute_command, tokenize_input } from '@/packs/cli_tool';
+import { execute_command } from '@/packs/cli_tool';
 import { basic_ui } from '@/packs/basic_ui';
 
 export interface cli_bar_component
@@ -8,33 +8,8 @@ export interface cli_bar_component
     set_collapsed: (collapsed: boolean) => void;
 }
 
-/**
- * Translates Core command aliases and delegates execution to cli_tool.
- */
 function handle_ui_cli_input(input: string): string
 {
-    const tokens = tokenize_input(input.trim());
-    if (tokens.length === 0)
-    {
-        return '';
-    }
-    const cmd = tokens[0].toLowerCase();
-    const args = tokens.slice(1);
-
-    // Core Aliases
-    if (cmd === 'create')
-    {
-        return execute_command(`core:create_device ${args.join(' ')}`);
-    }
-    if (cmd === 'move')
-    {
-        return execute_command(`core:move_device ${args.join(' ')}`);
-    }
-    if (cmd === 'delete')
-    {
-        return execute_command(`core:delete_device ${args.join(' ')}`);
-    }
-
     return execute_command(input);
 }
 
@@ -63,7 +38,7 @@ export function create_cli_bar(on_collapse_change?: (collapsed: boolean) => void
     input_el.id = 'cli_input';
     input_el.type = 'text';
     input_el.className = 'basic_ui_cli_input';
-    input_el.placeholder = 'Type command (e.g. create --"test:assembler" --"4, 4, 0") or help...';
+    input_el.placeholder = 'Type command (e.g. create test:assembler 4 4 0) or help...';
 
     const enter_badge = document.createElement('div');
     enter_badge.className = 'basic_ui_cli_kbd';

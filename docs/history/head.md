@@ -4,21 +4,14 @@
 
 ## 目前使用中
 
-[0051_202608252208_cli-tool-pure-logic-core-registry](./0051_202608252208_cli-tool-pure-logic-core-registry.md) — `in-progress`，待辦待決剩 2/2
+[0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 3/3
 
 ## 現在開著的（逐格）
 
-- `0051#1` · **等待確認** — 重構 cli_tool 為純邏輯核心 (Pure CLI Tool Logic)
+- `0052#1` · **等待確認** — 探討並評估全新 CLI 指令語法與向量解析方案 (CLI Syntax & Vector Parsing Evaluation)
+- `0052#2` · **等待確認** — 修正 execute_command 參數轉型與指令適配器 (Fix execute_command & Adapter Pipeline)
+- `0052#3` · **等待確認** — 補齊 Runtime 歷程控制指令註冊至 Core Registry (Register History Commands in Core Registry)
 - `0051#2` · **等待確認** — 擴充指令回歸 Core Registry 與 UI 面板適配 (Core Registry & UI Adaptation)
-- `0050#1` · **等待確認** — 擴充 Core 型別與 pack_module 指令契約 (Core Command Types)
-- `0050#2` · **等待確認** — 在 Vanilla 提供指令查詢與驗證 API (Vanilla Command Query API)
-- `0050#3` · **等待確認** — 註冊 Core 核心地圖可逆指令至 Registry (Core Commands Registration)
-- `0050#4` · **等待確認** — 擴充 Pack 指令註冊與 CLI / UI 整合 (Downstream Integration)
-- `0047#1` · **等待確認** — 清理 style.css 死樣式與冗餘選擇器
-- `0047#2` · **等待確認** — 抽離導航按鈕定義與共用按鈕工廠
-- `0047#3` · **等待確認** — 重構與大幅精簡 history_tree_panel.ts
-- `0047#4` · **等待確認** — 檢視並優化 shirones_ui 其餘面板組件
-- `0047#5` · **等待確認** — 整合測試與建構驗證
 - `0046#7` · **等待確認** — CLI 實作 delete-branch 指令
 - `0046#10` · **等待確認** — CLI 實作 delete-node 指令
 - `0046#17` · **等待確認** — 歷史節點型別擴充與三方路徑提取器（Path Extractor）
@@ -33,15 +26,16 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0051#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0052#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
-- **0051** [0051_202608252208_cli-tool-pure-logic-core-registry](./0051_202608252208_cli-tool-pure-logic-core-registry.md) — `in-progress`，待辦待決剩 2/2
-- **0050** [0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 4/4
+- **0052** [0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 3/3
+- **0051** [0051_202608252208_cli-tool-pure-logic-core-registry](./0051_202608252208_cli-tool-pure-logic-core-registry.md) — `in-progress`，待辦待決剩 1/2
+- **0050** [0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 0/4
 - **0049** [0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
 - **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
-- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 5/5
+- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 0/5
 - **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 9/20，已移交 5
 - **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4

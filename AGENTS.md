@@ -69,8 +69,11 @@ trigger: always_on
 
 ## 6. CLI 命令列規範
 
-- **嚴格語法**：參數強制為 `--"<arg>"` 格式；軸向為 `d<n>`；無指令別名；不符格式直接拋錯。
-- **標準指令集**：`create`, `move`, `delete`, `info`, `camera`, `undo`, `redo`, `jump`, `prev-fork`, `next-fork`, `history`, `help`。
+- **嚴格語法**：
+  - 參數一律採用**空格分隔**之位置參數（`cmd <arg1> <arg2> ...`）。
+  - 座標向量一律使用**連續數字**（如 `create conveyor 4 4 0`、`move 1 6 6 0`），由解析器依據地圖維度嚴格驗證長度與偶數錨點。
+  - 包含空格之字串才需以雙引號包覆（`"..."`）；相機軸向切片表示為 `d<n>=<val>`（如 `camera d2=0`）。
+- **標準指令集**：`create`, `move`, `delete`, `info`, `recipe`, `camera`, `rotate`, `flip`, `undo`, `redo`, `jump`, `prev-fork`, `next-fork`, `jump-root`, `jump-leaf`, `delete-branch`, `delete-node`, `pin`, `history`, `help`。
 
 ---
 
