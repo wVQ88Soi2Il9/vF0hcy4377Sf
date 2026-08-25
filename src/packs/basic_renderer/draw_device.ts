@@ -1,4 +1,4 @@
-import type { game_map, device } from '@/core';
+import type { space, device } from '@/core';
 import type { camera_type, drawable_device } from './types';
 import { add_vector } from '@/packs/vanilla';
 
@@ -42,7 +42,7 @@ function render_device_item
 export function draw_devices
 (
     ctx:      CanvasRenderingContext2D,
-    map:      game_map,
+    map:      space,
     camera:   camera_type,
     canvas:   HTMLCanvasElement
 ): void

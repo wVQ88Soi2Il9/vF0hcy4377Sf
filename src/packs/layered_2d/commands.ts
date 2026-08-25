@@ -1,4 +1,4 @@
-import type { device, game_map, map_command } from '@/core';
+import type { device, space, map_command } from '@/core';
 import type { d4_transform, rotatable_device } from './types';
 
 /**
@@ -34,7 +34,7 @@ export function rotate_device_command(device_uid: number, steps: number = 1): ma
                 steps
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
             if (dev && is_rotatable_device(dev))
@@ -47,7 +47,7 @@ export function rotate_device_command(device_uid: number, steps: number = 1): ma
                 dev.rotate(steps);
             }
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
             if (target_dev && previous_transform !== null)
             {
@@ -76,7 +76,7 @@ export function flip_device_command(device_uid: number): map_command
                 device_uid
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
             if (dev && is_rotatable_device(dev))
@@ -89,7 +89,7 @@ export function flip_device_command(device_uid: number): map_command
                 dev.flip();
             }
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
             if (target_dev && previous_transform !== null)
             {
@@ -118,7 +118,7 @@ export function set_device_transform_command(device_uid: number, transform: d4_t
                 transform: { ...transform }
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
             if (dev && is_rotatable_device(dev))
@@ -131,7 +131,7 @@ export function set_device_transform_command(device_uid: number, transform: d4_t
                 dev.set_transform(transform);
             }
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
             if (target_dev && previous_transform !== null)
             {

@@ -117,9 +117,6 @@ export abstract class device
 import type { space } from './space_manager';
 export type { space };
 
-// TODO: transitional - remove game_map alias after full migration to space
-export type game_map = space;
-
 // ── History (Undo / Redo) ─────────────────────────────────────────────────────
 
 /**

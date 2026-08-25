@@ -1,4 +1,4 @@
-import type { game_map, map_command } from '@/core';
+import type { space, map_command } from '@/core';
 import { delete_branch, toggle_node_pin, set_node_pin } from './history';
 import { inspect_device_text } from './device_inspector';
 
@@ -14,11 +14,11 @@ export function delete_branch_command(target_uid: number): map_command
                 target_uid
             }
         },
-        execute(_map: game_map): void
+        execute(_map: space): void
         {
             delete_branch(Number(target_uid));
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
         }
     };
@@ -44,11 +44,11 @@ export function pin_node_command(target_uid: number): map_command
                 target_uid
             }
         },
-        execute(_map: game_map): void
+        execute(_map: space): void
         {
             previous_state = toggle_node_pin(Number(target_uid));
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
             if (previous_state !== null)
             {
@@ -78,12 +78,12 @@ export function info_device_command(device_uid: number): map_command
                 device_uid
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             result_text = inspect_device_text(map, Number(device_uid));
             (cmd as any).result_text = result_text;
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
         }
     };
