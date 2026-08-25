@@ -29,10 +29,6 @@ export function format_axis_name(internal_idx: number): string
     return `d${internal_idx + 1}`;
 }
 
-/**
- * Alias for format_axis_name.
- */
-export const get_axis_label = format_axis_name;
 
 /**
  * Calculates (dim_h, dim_v) for 2D view projection in N dimensions
