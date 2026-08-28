@@ -1,6 +1,6 @@
 import type { camera_type } from '@/packs/basic_renderer';
 import { base_layered_device, add_vector_3d, type vector_3d } from '@/packs/layered_2d';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import { vanilla } from '@/packs/vanilla';
 
 export interface device_color_theme
@@ -131,7 +131,7 @@ export abstract class base_test_device extends base_layered_device
         this.draw_ports(ctx, camera);
 
         // 5. 若發生重疊，以淡紅色包覆（外框同樣內縮於 grid 內部）
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             const validation = vanilla.check_map_overlap(map);

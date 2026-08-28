@@ -1,7 +1,7 @@
 /**
  * cuboid_device 抽象基底類別
  *
- * 繼承核心 device 並封裝 device_size 屬性、由 game_map 取得 dimension 與自動 Shape 計算。
+ * 繼承核心 device 並封裝 device_size 屬性、由 space 取得 dimension 與自動 Shape 計算。
  */
 
 import { device, type vector, type namespaced_id } from '@/core';

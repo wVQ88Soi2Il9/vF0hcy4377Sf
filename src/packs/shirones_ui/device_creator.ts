@@ -1,4 +1,4 @@
-import { get_map, get_registry, execute_command } from '@/world';
+import { get_space, get_registry, execute_command } from '@/world';
 import { parse_namespaced_id, get_device_class, get_command } from '@/packs/vanilla';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
@@ -193,7 +193,7 @@ export function create_device_creator
     refresh_definitions();
 
     // 2. Position Inputs & Steppers
-    const map = get_map();
+    const map = get_space();
     const num_dims = map ? map.dimension : 3;
     const cam_slices = basic_renderer.get_camera().slices;
     const initial_coords: number[] = [];
@@ -258,7 +258,7 @@ export function create_device_creator
             execute_command(cmd);
             coords_group.hide_error();
 
-            const current_map = get_map();
+            const current_map = get_space();
             if (current_map && on_device_created)
             {
                 const latest_dev = current_map.devices[current_map.devices.length - 1];

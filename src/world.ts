@@ -200,9 +200,6 @@ export function get_space(): space | undefined
     return _active_world?.space;
 }
 
-// TODO: transitional - remove get_map alias after downstream migration
-export const get_map = get_space;
-
 export function set_space(sp: space): void
 {
     if (_active_world)
@@ -215,9 +212,6 @@ export function set_space(sp: space): void
         set_active_world(w);
     }
 }
-
-// TODO: transitional - remove set_map alias after downstream migration
-export const set_map = set_space;
 
 export function get_dimension(): number | undefined
 {

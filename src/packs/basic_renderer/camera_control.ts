@@ -1,5 +1,5 @@
 import { camera, notify_camera_change, adapt_camera_plane } from './camera';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 
 /**
  * Updates camera pan position.
@@ -36,7 +36,7 @@ export function set_camera_transform(pan_x: number, pan_y: number, zoom: number)
  */
 export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
 {
-    const map = get_map();
+    const map = get_space();
     const slice_count = slices ? slices.length : 0;
     const target_dim = map ? map.dimension : Math.max(3, dim_h + 1, dim_v + 1, slice_count);
 

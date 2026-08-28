@@ -1,4 +1,5 @@
-import type { space, device, vector, history_tree, namespaced_id } from './types';
+import type { device, vector, history_tree, namespaced_id } from './types';
+import type { space } from './space_manager';
 
 export type device_create_hook = (sp: space, dev: device) => void;
 export type device_delete_hook = (sp: space, dev: device) => void;

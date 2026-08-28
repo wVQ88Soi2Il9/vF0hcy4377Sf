@@ -1,4 +1,4 @@
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import { on_history_change } from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';
@@ -107,7 +107,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
 
     on_history_change(() =>
     {
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             const device_count = map.devices.length;
@@ -140,7 +140,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
         const current_val = target_uid !== null ? String(target_uid) : '';
         uid_select.innerHTML = '<option value="">Select Device (#UID)</option>';
 
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             for (const dev of map.devices)
@@ -177,7 +177,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
 
         if (currently_inspected_uid !== null)
         {
-            const map = get_map();
+            const map = get_space();
             const dev = map ? map.devices.find(d => d.uid === currently_inspected_uid) : undefined;
             if (dev)
             {
@@ -202,7 +202,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
 
         // Render downstream custom sections
         custom_sections_el.innerHTML = '';
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             for (const section of basic_ui.get_panel_sections())
@@ -214,7 +214,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
 
     function display_device_info(uid: number): boolean
     {
-        const map = get_map();
+        const map = get_space();
         if (!map)
         {
             currently_inspected_uid = null;

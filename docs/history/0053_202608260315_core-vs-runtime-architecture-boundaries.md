@@ -86,7 +86,7 @@
 - H3 · 2026-08-26 03:35 決斷 —— 支援接收 world 實例或純 history_tree 進行標記與分支操作（human: wVQ88Soi2Il9） → O3
 
 ### 4 跨模組依賴更新、過渡設施清理與 CLI / UI 整合驗證 (Cross-Pack Migration, Transitional Cleanup & Validation)
-- **state:** 待實作
+- **state:** 等待確認
 - **basis:** → O1, O2, O3
 
 更新所有引用原 `@/runtime` 與 `game_map` 的下游 Pack（`basic_renderer`、`basic_ui`、`cli_tool`、`layered_2d`、`ef`、`shirones_ui` 等）至 `@/world` 與 `space`，驗證 CLI 與 UI 在多 World 切換下之操作一致性與架構純度。並於遷移完成後**徹底清除所有 `// TODO: transitional` 標記項目**（移除 `game_map` / `map_command` / `create_map` 別名與刪除 `src/core/map_manager.ts`）。
@@ -97,3 +97,4 @@
 - H2 · 2026-08-26 03:23 決斷 —— 擴充涵蓋全 Pack 下游引用遷移與多世界切換驗證（human: wVQ88Soi2Il9） → O2
 - H3 · 2026-08-26 03:35 決斷 —— 驗證 class world 實體在 UI/CLI 交互下的穩定性（human: wVQ88Soi2Il9） → O3
 - H4 · 2026-08-26 03:44 決斷 —— 列管所有 TODO: transitional 過渡設施之強制清理任務（human: wVQ88Soi2Il9）
+- H5 · 2026-08-28 落地 —— 移除 `map_command`、`get_map`、`set_map` 過渡別名，完成所有下游引用遷移；TypeScript 編譯通過，Vite 建構受缺少 Rolldown 原生 binding 阻塞 → O1、O2、O3、H4（agent: GitHub Copilot）

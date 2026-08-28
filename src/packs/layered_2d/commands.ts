@@ -1,4 +1,4 @@
-import type { device, space, map_command } from '@/core';
+import type { device, space, space_command } from '@/core';
 import type { d4_transform, rotatable_device } from './types';
 
 /**
@@ -18,7 +18,7 @@ export function is_rotatable_device(dev: device): dev is rotatable_device
  * Command for rotating a 2.5D device by specified steps (default: 1 step = 90° counter-clockwise).
  * Remembers previous transform so inverse (undo) can revert it.
  */
-export function rotate_device_command(device_uid: number, steps: number = 1): map_command
+export function rotate_device_command(device_uid: number, steps: number = 1): space_command
 {
     let previous_transform: d4_transform | null = null;
     let target_dev: rotatable_device | null = null;
@@ -61,7 +61,7 @@ export function rotate_device_command(device_uid: number, steps: number = 1): ma
  * Command for flipping a 2.5D device across horizontal axis.
  * Remembers previous transform so inverse (undo) can revert it.
  */
-export function flip_device_command(device_uid: number): map_command
+export function flip_device_command(device_uid: number): space_command
 {
     let previous_transform: d4_transform | null = null;
     let target_dev: rotatable_device | null = null;
@@ -102,7 +102,7 @@ export function flip_device_command(device_uid: number): map_command
 /**
  * Command for setting a 2.5D device transform directly.
  */
-export function set_device_transform_command(device_uid: number, transform: d4_transform): map_command
+export function set_device_transform_command(device_uid: number, transform: d4_transform): space_command
 {
     let previous_transform: d4_transform | null = null;
     let target_dev: rotatable_device | null = null;

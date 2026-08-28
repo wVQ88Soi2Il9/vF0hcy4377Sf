@@ -1,7 +1,7 @@
 import { type vector } from '@/core';
 import { pipe } from '@/packs/pipe';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import { vanilla, add_vector } from '@/packs/vanilla';
 
 export const device_id = 'test:pipe';
@@ -199,7 +199,7 @@ export class pipe_device extends pipe implements drawable_device
 
         this.draw_ports(ctx, camera);
 
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             const validation = vanilla.check_map_overlap(map);

@@ -1,8 +1,8 @@
-import type { space, map_command } from '@/core';
+import type { space, space_command } from '@/core';
 import { delete_branch, toggle_node_pin, set_node_pin } from './history';
 import { inspect_device_text } from './device_inspector';
 
-export function delete_branch_command(target_uid: number): map_command
+export function delete_branch_command(target_uid: number): space_command
 {
     return {
         pack: 'vanilla',
@@ -31,7 +31,7 @@ export function delete_branch_command(target_uid: number): map_command
     }
 };
 
-export function pin_node_command(target_uid: number): map_command
+export function pin_node_command(target_uid: number): space_command
 {
     let previous_state: boolean | null = null;
     return {
@@ -65,10 +65,10 @@ export function pin_node_command(target_uid: number): map_command
     }
 };
 
-export function info_device_command(device_uid: number): map_command
+export function info_device_command(device_uid: number): space_command
 {
     let result_text = '';
-    const cmd: map_command = {
+    const cmd: space_command = {
         pack: 'vanilla',
         id:   'info_device',
         other_info:

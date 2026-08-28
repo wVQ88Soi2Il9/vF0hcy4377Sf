@@ -2,7 +2,7 @@ import type { camera_type } from './types';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
 import { on_device_change, on_history_change } from '@/core';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import { camera, adapt_camera_plane, on_camera_change } from './camera';
 import { setup_camera_control } from './camera_control';
 
@@ -95,11 +95,11 @@ export function grid_to_screen
  */
 export function init_renderer(): void
 {
-    const map = get_map();
+    const map = get_space();
 
     if (!map)
     {
-        console.error('[basic_renderer] init_pack() called before set_map(). Renderer aborted.');
+        console.error('[basic_renderer] init_pack() called before set_space(). Renderer aborted.');
         return;
     }
 

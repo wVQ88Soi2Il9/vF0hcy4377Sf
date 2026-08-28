@@ -1,5 +1,5 @@
 import { space, create_history_tree, create_pack_registry } from '@/core';
-import { set_map, set_registry, set_history_tree, jump_to_history } from '@/world';
+import { set_space, set_registry, set_history_tree, jump_to_history } from '@/world';
 import { load_all_packs, call_all_pack_inits } from './packs/loader';
 import { execute_command } from '@/packs/cli_tool';
 
@@ -12,7 +12,7 @@ const sp = new space([64, 64, 4]);
 const history_tree = create_history_tree();
 
 // 3. 在 loader 呼叫 init_pack() 之前，註冊 space, registry 和 history_tree
-set_map(sp);
+set_space(sp);
 set_registry(registry);
 set_history_tree(history_tree);
 

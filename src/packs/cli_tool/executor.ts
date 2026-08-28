@@ -2,7 +2,7 @@ import type { pack_registry, space_command_factory, namespaced_id, device_constr
 import
 {
     get_registry,
-    get_map,
+    get_space,
     get_dimension,
     get_history_tree,
     execute_command as api_execute_command,
@@ -215,7 +215,7 @@ export function execute_command(input: string): string
         {
             if (args.length < 2) throw new Error('Usage: create_device <device_id> <x> <y> [z...]');
             const { dev_class, ns_id } = resolve_device_class(registry, args[0]);
-            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const dim = get_dimension() ?? get_space()?.dimension ?? 3;
             const pos = parse_vector(args.slice(1), dim);
             cmd_obj = matched.factory(dev_class, ns_id, pos);
         }
@@ -223,7 +223,7 @@ export function execute_command(input: string): string
         {
             if (args.length < 2) throw new Error('Usage: move_device <device_uid> <x> <y> [z...]');
             const uid = parse_integer(args[0], 'Device UID');
-            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const dim = get_dimension() ?? get_space()?.dimension ?? 3;
             const pos = parse_vector(args.slice(1), dim);
             cmd_obj = matched.factory(uid, pos);
         }

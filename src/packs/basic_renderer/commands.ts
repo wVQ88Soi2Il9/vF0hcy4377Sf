@@ -1,5 +1,5 @@
-import type { space, map_command } from '@/core';
-import { get_map } from '@/world';
+import type { space, space_command } from '@/core';
+import { get_space } from '@/world';
 import { parse_axis_name, format_axis_name, get_right_oriented_axes } from '@/packs/vanilla';
 import { get_camera_plane } from './camera';
 import { set_camera_plane } from './camera_control';
@@ -21,7 +21,7 @@ export function format_camera_equation(plane: view_plane, num_dims?: number): st
     return `camera ${eq_parts.join(' ')}`;
 }
 
-export function camera_command(equation_arg?: string): map_command
+export function camera_command(equation_arg?: string): space_command
 {
     let previous_plane: { dim_h: number; dim_v: number; slices: number[] } | null = null;
 
@@ -70,7 +70,7 @@ export function camera_command(equation_arg?: string): map_command
                 return;
             }
 
-            const map = get_map();
+            const map = get_space();
             const num_dims = map ? map.dimension : current.slices.length;
             const fixed_axes_set = new Set(fixed_map.keys());
             const axes = get_right_oriented_axes(num_dims, fixed_axes_set);

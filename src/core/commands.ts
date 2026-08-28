@@ -1,4 +1,5 @@
-import type { space, device, vector, space_command, space_command_factory, namespaced_id, device_constructor } from './types';
+import type { device, vector, space_command, space_command_factory, namespaced_id, device_constructor } from './types';
+import type { space } from './space_manager';
 
 /**
  * Command for creating a device on the space.

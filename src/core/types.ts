@@ -115,8 +115,6 @@ export abstract class device
 
 import type { space } from './space_manager';
 
-export type { space };
-
 // ── History (Undo / Redo) ─────────────────────────────────────────────────────
 
 /**
@@ -134,9 +132,6 @@ export interface space_command extends namespaced_id
     /** Optional mod-extensible metadata associated with this command instance. */
     other_info?: Record<string, unknown>;
 }
-
-// TODO: transitional - remove map_command alias after full migration to space_command
-export type map_command = space_command;
 
 /**
  * A single node in the Undo Tree.

@@ -1,5 +1,5 @@
 import type { camera_type, view_plane } from './types';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import type { unsubscribe_function } from '@/core';
 
 export const camera: camera_type =
@@ -57,7 +57,7 @@ export function adapt_camera_plane(cam: camera_type, target_dim: number): void
  */
 export function get_camera_plane(): view_plane
 {
-    const map = get_map();
+    const map = get_space();
     if (map)
     {
         adapt_camera_plane(camera, map.dimension);
@@ -74,7 +74,7 @@ export function get_camera_plane(): view_plane
  */
 export function get_camera_state(): camera_type
 {
-    const map = get_map();
+    const map = get_space();
     if (map)
     {
         adapt_camera_plane(camera, map.dimension);

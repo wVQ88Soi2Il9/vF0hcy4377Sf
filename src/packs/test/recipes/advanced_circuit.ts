@@ -1,5 +1,5 @@
 import type { recipe as recipe_type, recipe_evaluation } from '@/core';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 
 /**
  * Advanced Circuit recipe:
@@ -15,7 +15,7 @@ export const recipe: recipe_type =
 
         if (uid !== undefined)
         {
-            const map = get_map();
+            const map = get_space();
             const dev = map?.devices.find(d => d.uid === uid);
             if (dev)
             {

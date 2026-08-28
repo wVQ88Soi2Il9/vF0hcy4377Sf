@@ -1,7 +1,7 @@
 import './style.css';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
-import { get_map } from '@/world';
+import { get_space } from '@/world';
 import type { unsubscribe_function } from '@/core';
 import { on_device_change } from '@/core';
 import { create_ui_layout, type shirones_ui_layout_nodes } from './layout';
@@ -74,7 +74,7 @@ export function init_pack(): void
 
     function update_map_info(): void
     {
-        const map = get_map();
+        const map = get_space();
         if (map)
         {
             const device_count = map.devices.length;

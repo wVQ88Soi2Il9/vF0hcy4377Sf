@@ -1,4 +1,4 @@
-import type { history_tree, history_node, map_command } from '@/core';
+import type { history_tree, history_node, space_command } from '@/core';
 import
 {
     on_history_change,
@@ -73,7 +73,7 @@ function get_lane_color(lane: number): string
     return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
-function parse_command_details(cmd: map_command | null): {
+function parse_command_details(cmd: space_command | null): {
     icon:   string;
     target: string;
 }

@@ -1,4 +1,5 @@
-import type { space, history_node, history_tree, space_command } from './types';
+import type { history_node, history_tree, space_command } from './types';
+import type { space } from './space_manager';
 import { trigger_history_change } from './hooks';
 
 export function create_history_tree(): history_tree
