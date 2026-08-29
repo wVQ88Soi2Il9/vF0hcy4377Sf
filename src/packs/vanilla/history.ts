@@ -1,4 +1,4 @@
-import { delete_node, compute_path_to_root, type history_node, type history_tree } from '@/core';
+import { delete_node, find_lca, type history_node, type history_tree } from '@/core';
 import { get_history_tree } from '@/world';
 
 export interface vanilla_history_node_info
@@ -10,9 +10,9 @@ export interface vanilla_history_node_info
 /**
  * Gets the $vanilla metadata from a history node's other_info.
  */
-export function get_vanilla_node_info(uid: number): vanilla_history_node_info | undefined
+export function get_vanilla_node_info(uid: number, explicit_tree?: history_tree): vanilla_history_node_info | undefined
 {
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     const node = tree?.nodes.get(uid);
     return node?.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
 }
@@ -20,9 +20,9 @@ export function get_vanilla_node_info(uid: number): vanilla_history_node_info | 
 /**
  * Updates the $vanilla metadata in a history node's other_info.
  */
-export function set_vanilla_node_info(uid: number, info: Partial<vanilla_history_node_info>): boolean
+export function set_vanilla_node_info(uid: number, info: Partial<vanilla_history_node_info>, explicit_tree?: history_tree): boolean
 {
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     const node = tree?.nodes.get(uid);
     if (!node)
     {
@@ -42,43 +42,43 @@ export function set_vanilla_node_info(uid: number, info: Partial<vanilla_history
 /**
  * Checks if a specific history node is currently pinned.
  */
-export function is_node_pinned(uid: number): boolean
+export function is_node_pinned(uid: number, explicit_tree?: history_tree): boolean
 {
-    return get_vanilla_node_info(uid)?.pinned ?? false;
+    return get_vanilla_node_info(uid, explicit_tree)?.pinned ?? false;
 }
 
 /**
  * Sets the pinned state for a history node in its other_info['vanilla'].
  */
-export function set_node_pin(uid: number, pinned: boolean): boolean
+export function set_node_pin(uid: number, pinned: boolean, explicit_tree?: history_tree): boolean
 {
-    return set_vanilla_node_info(uid, { pinned });
+    return set_vanilla_node_info(uid, { pinned }, explicit_tree);
 }
 
 /**
  * Toggles the pinned state of a history node.
  * Returns the new pinned state (boolean) or null if node does not exist.
  */
-export function toggle_node_pin(uid: number): boolean | null
+export function toggle_node_pin(uid: number, explicit_tree?: history_tree): boolean | null
 {
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     if (!tree || !tree.nodes.has(uid))
     {
         return null;
     }
 
-    const current = is_node_pinned(uid);
+    const current = is_node_pinned(uid, tree);
     const next = !current;
-    set_node_pin(uid, next);
+    set_node_pin(uid, next, tree);
     return next;
 }
 
 /**
  * Gets a list of all currently pinned node UIDs.
  */
-export function get_pinned_nodes(): number[]
+export function get_pinned_nodes(explicit_tree?: history_tree): number[]
 {
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     if (!tree)
     {
         return [];
@@ -99,9 +99,9 @@ export function get_pinned_nodes(): number[]
 /**
  * Clears all pinned nodes.
  */
-export function clear_all_pinned_nodes(): void
+export function clear_all_pinned_nodes(explicit_tree?: history_tree): void
 {
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     if (!tree)
     {
         return;
@@ -120,30 +120,31 @@ export function clear_all_pinned_nodes(): void
 /**
  * Gets the merged_from node UID if this node is a merge node.
  */
-export function get_node_merged_from(uid: number): number | undefined
+export function get_node_merged_from(uid: number, explicit_tree?: history_tree): number | undefined
 {
-    return get_vanilla_node_info(uid)?.merged_from;
+    return get_vanilla_node_info(uid, explicit_tree)?.merged_from;
 }
 
 /**
  * Sets the merged_from node UID in this node's $vanilla metadata.
  */
-export function set_node_merged_from(uid: number, source_uid: number): boolean
+export function set_node_merged_from(uid: number, source_uid: number, explicit_tree?: history_tree): boolean
 {
-    return set_vanilla_node_info(uid, { merged_from: source_uid });
+    return set_vanilla_node_info(uid, { merged_from: source_uid }, explicit_tree);
 }
 
 /**
- * Deletes an entire history branch (subtree) rooted at target_uid by repeatedly calling delete_node.
+ * Deletes an entire history branch (subtree) rooted at target_uid by repeatedly calling leaf-only delete_node.
+ * Traverses descendant nodes in post-order so each node is guaranteed to be a leaf at deletion time.
  */
-export function delete_branch(target_uid: number): boolean
+export function delete_branch(target_uid: number, explicit_tree?: history_tree): boolean
 {
     if (target_uid === 0)
     {
         return false;
     }
 
-    const tree = get_history_tree();
+    const tree = explicit_tree ?? get_history_tree();
     if (!tree)
     {
         return false;
@@ -155,14 +156,13 @@ export function delete_branch(target_uid: number): boolean
         return false;
     }
 
-    // Refuse deletion if target_uid is on the active path leading to current_uid
-    const active_path = compute_path_to_root(tree, tree.current_uid);
-    if (active_path.includes(target_uid))
+    // Refuse deletion if target_uid is an ancestor on the active path leading to current_uid
+    if (find_lca(tree, target_uid, tree.current_uid) === target_uid)
     {
         return false;
     }
 
-    // Collect all descendant nodes in target subtree via post-order traversal
+    // Collect all descendant nodes in target subtree via post-order traversal (leaves first)
     const subtree_uids: number[] = [];
     function collect_post_order(uid: number): void
     {
@@ -179,7 +179,7 @@ export function delete_branch(target_uid: number): boolean
     }
     collect_post_order(target_uid);
 
-    // Repeatedly delete nodes from bottom up
+    // Repeatedly delete nodes from bottom up (guaranteed to be leaf at deletion time)
     for (const uid of subtree_uids)
     {
         delete_node(tree, uid);

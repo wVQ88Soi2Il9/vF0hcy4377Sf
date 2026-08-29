@@ -1,6 +1,35 @@
-import type { history_node, history_tree, space_command } from './types';
-import type { space } from './space_manager';
-import { trigger_history_change } from './hooks';
+/**
+ * src/core_v3/history.ts — 分支歷史樹純演算法與操作
+ *
+ * 遵循極致鏡像對稱與無歧義路徑原則：
+ * - 向上時間流：undo / jump_to_prev_fork / jump_to_root / jump_to_ancestor
+ * - 向下時間流：redo / jump_to_next_fork / jump_to_descendant
+ * - 跨分支穿越：jump_to_node（由 LCA + jump_to_ancestor + jump_to_descendant 組裝）
+ */
+
+import type { space_command } from './command/command';
+import type { space } from './domain';
+import { trigger_hook } from './hooks';
+
+// ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
+
+export interface history_node
+{
+    uid:           number;
+    parent_uid:    number | null;
+    children_uids: number[];
+    command:       space_command | null;
+    other_info?:   Record<string, unknown>;
+}
+
+export interface history_tree
+{
+    nodes:         Map<number, history_node>;
+    current_uid:   number;
+    next_node_uid: number;
+}
+
+// ── 1. Elementary Operators (基礎原子操作) ───────────────────────────────────
 
 export function create_history_tree(): history_tree
 {
@@ -41,7 +70,7 @@ export function record_command(tree: history_tree, sp: space, cmd: space_command
     tree.current_uid = new_node.uid;
     tree.next_node_uid += 1;
 
-    trigger_history_change(tree);
+    trigger_hook('history:change', tree);
     return new_node;
 }
 
@@ -64,9 +93,11 @@ export function delete_node(tree: history_tree, target_uid: number): boolean
     }
 
     tree.nodes.delete(target_uid);
-    trigger_history_change(tree);
+    trigger_hook('history:change', tree);
     return true;
 }
+
+// ── 2. Upward / Backward Operators (逆向向上時間流) ──────────────────────────
 
 export function undo(tree: history_tree, sp: space): boolean
 {
@@ -87,7 +118,7 @@ export function undo(tree: history_tree, sp: space): boolean
     }
 
     tree.current_uid = current_node.parent_uid;
-    trigger_history_change(tree);
+    trigger_hook('history:change', tree);
     return true;
 }
 
@@ -154,6 +185,8 @@ export function jump_to_root(tree: history_tree, sp: space): boolean
     return jump_to_ancestor(tree, sp, 0);
 }
 
+// ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
+
 export function redo(tree: history_tree, sp: space, target_child_uid?: number): boolean
 {
     const current_node = tree.nodes.get(tree.current_uid);
@@ -189,7 +222,7 @@ export function redo(tree: history_tree, sp: space, target_child_uid?: number): 
     next_node.command.execute(sp);
     tree.current_uid = next_node.uid;
 
-    trigger_history_change(tree);
+    trigger_hook('history:change', tree);
     return true;
 }
 
@@ -254,7 +287,10 @@ export function jump_to_descendant(tree: history_tree, sp: space, descendant_uid
     return true;
 }
 
-export function jump_to_leaf(tree: history_tree, sp: space): boolean
+/**
+ * 沿當前無歧義單一路徑前進至最深處（葉節點或下一個分岔點）。
+ */
+export function jump_to_next_fork(tree: history_tree, sp: space): boolean
 {
     let jumped = false;
     while (redo(tree, sp))
@@ -263,6 +299,8 @@ export function jump_to_leaf(tree: history_tree, sp: space): boolean
     }
     return jumped;
 }
+
+// ── 4. Core LCA & Target Jump (核心中樞：跨分支任意穿越) ─────────────────────
 
 /**
  * 歐幾里得輾轉相除法（Euclidean LCA Algorithm）：

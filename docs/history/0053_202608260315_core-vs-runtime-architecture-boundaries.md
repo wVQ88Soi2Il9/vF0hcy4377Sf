@@ -6,7 +6,7 @@
 
 ## 主題簡述
 
-依據 QA 0006 與 QA 0007 確立之架構共識，推進 Core、World 與 Vanilla 的職責邊界收斂、多世界實例（Multi-World）架構演進，以及「空間（Space）」數學名詞與 `class world` / `class space` 實體範式：
+依據 QA 0006、QA 0007 與 QA 0008 確立之架構共識，推進 Core、World 與 Vanilla 的職責邊界收斂、多世界實例（Multi-World）架構演進，以及「空間（Space）」數學名詞與 `class world` / `class space` 實體範式：
 1. **名詞重構（`world` 與 `space`）**：
    - 將冷硬的 `runtime` 正式更名為遊戲領域核心概念 **`world`**（實體類別 `class world`，全域容器/模組為 `src/world.ts`）。
    - 將易與 JS `Map` 混淆的 `game_map` / `map` 正式更名為數學空間語意之 **`space`**（實體類別 `class space`，管理器為 `src/core/space_manager.ts`），形成 $\text{World} = \text{Space} + \text{History} + \text{Registry}$ 的三位一體心智模型。
@@ -42,6 +42,9 @@
 ### O6 · 2026-08-26 03:56:00+08:00 — 實作 class space 類別與空間操作內聚
 在 `src/core/space_manager.ts` 實作 `class space`（封裝 `dimension`、`size`、`uid`、`devices` 與 `create_device`、`delete_device`、`move_device`、`select_recipe` 等實例方法），內聚 Hooks 觸發點，並在 `space_manager.ts` 提供向後相容函式風格包裝。
 
+### O7 · 2026-08-30 02:30:00+08:00 — delete_node 限縮為葉節點操作與 Vanilla 歷史模組多實例適配
+在 Core 中將 `delete_node` 嚴格限定為僅能刪除 `children_uids.length === 0` 之葉節點（避免非葉節點剪除破壞因果歷史連續性）；在 `src/packs/vanilla/history.ts` 中升級 `delete_branch` 透過後序遍歷逐一剪除葉節點，並為所有 Vanilla 歷史函式追加支援顯式 `history_tree` 參數。
+
 ---
 
 ## 待辦
@@ -74,8 +77,8 @@
 - H4 · 2026-08-26 03:49 落地 —— 實作 class world 類別、Multi-World 管理與 Active World 偏函式代理（agent: gemini-3.7-flash-medium） → O5
 
 ### 3 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)
-- **state:** 待實作
-- **basis:** → O1, O2, O3
+- **state:** 等待確認
+- **basis:** → O1, O2, O3, O7
 
 檢視 `src/packs/vanilla/history.ts`，將 `pinned`、`merged_from` 與 `delete_branch` 正式收斂為 `other_info['vanilla']` 擴充與組合操作，並解除對全域單例的隱式耦合，使其支援傳入顯式 `history_tree` 或 `world` 實例。
 
@@ -84,6 +87,7 @@
 - H1 · 2026-08-26 03:15 決斷 —— 建立 Vanilla 歷史擴充邊界收斂待辦（human: wVQ88Soi2Il9）
 - H2 · 2026-08-26 03:23 決斷 —— 依據 QA 0007 更新對齊 space 與 world 型別引用（human: wVQ88Soi2Il9） → O2
 - H3 · 2026-08-26 03:35 決斷 —— 支援接收 world 實例或純 history_tree 進行標記與分支操作（human: wVQ88Soi2Il9） → O3
+- H4 · 2026-08-30 02:30 落地 —— 完成 delete_node 葉節點限制，並在 vanilla/history.ts 為所有操作追加顯式 history_tree 傳參支援與後序刪除分支（agent: gemini-3.7-flash-high） → O7
 
 ### 4 跨模組依賴更新、過渡設施清理與 CLI / UI 整合驗證 (Cross-Pack Migration, Transitional Cleanup & Validation)
 - **state:** 等待確認

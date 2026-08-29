@@ -10,7 +10,6 @@ import
     redo,
     jump_to_history,
     jump_to_prev_fork,
-    jump_to_next_fork,
     jump_to_root,
     jump_to_leaf,
     delete_history_node
@@ -144,8 +143,6 @@ function execute_history_navigation(cmd: string, args: string[]): string | null
         }
         case 'jump_to_prev_fork':
             return jump_to_prev_fork() ? 'Jumped to previous fork.' : 'No previous fork found in history ancestry.';
-        case 'jump_to_next_fork':
-            return jump_to_next_fork() ? 'Jumped to next fork.' : 'No forward fork found along this branch.';
         case 'jump_to_root':
             return jump_to_root() ? 'Jumped to history root (node 0).' : 'Already at root.';
         case 'jump_to_leaf':

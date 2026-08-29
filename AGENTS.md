@@ -74,8 +74,8 @@ trigger: always_on
 
 ### 5.1 系統架構與邊界隔離
 - **依賴單向性**：`packs` → `core`（空間幾何與通用工具收斂於 `@/packs/vanilla`，世界容器收斂於 `@/world`）。
-- **Core Layer（`src/core/`）**：純型別、純空間/裝置類別、Hooks 系統、Undo Tree 純演算法。零業務邏輯、零全域狀態。唯一公開進入點為 `src/core/index.ts`。
-- **World Layer（`src/world.ts`）**：`class world = space + history + registry` 實體類別與多世界管理中心。
+- **Core Layer（`src/core/`）**：定義「何謂世界（What is a world）」——包含純契約型別、裝置基類（`abstract class device`）、空間實體（`class space`）、世界聚合實體（`class world = space + history + registry`）、Hooks 系統與 Undo Tree 純演算法。零業務邏輯、零全域活體狀態。唯一公開進入點為 `src/core/index.ts`。
+- **World Layer（`src/world.ts`）**：管理「當前世界實例（Current worlds, may > 1）」——多世界實例倉庫（`_worlds: Map`）、Active World 焦點指標切換與快捷分派代理。
 - **Packs Layer（`src/packs/`）**：所有具體遊戲規則、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`。
 - **CLI 與 UI 邊界**：
   - `cli_tool` 純粹化：純文字解析與 Core Registry 指令分派，嚴禁嵌入業務邏輯或要求專屬橋接檔。

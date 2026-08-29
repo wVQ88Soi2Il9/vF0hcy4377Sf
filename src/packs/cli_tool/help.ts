@@ -13,7 +13,6 @@ export function format_cli_help(registry: pack_registry): string
     lines.push('  redo                       - Reapply next history step');
     lines.push('  jump_to_history <uid>      - Jump to specified history node');
     lines.push('  jump_to_prev_fork          - Jump to previous fork node in history tree');
-    lines.push('  jump_to_next_fork          - Jump to next fork node in current branch');
     lines.push('  jump_to_root               - Jump to history root (node 0)');
     lines.push('  jump_to_leaf               - Jump to leaf node of current branch');
     lines.push('  delete_history_node <uid>  - Delete single history node');

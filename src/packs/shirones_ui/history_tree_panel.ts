@@ -1,8 +1,7 @@
 import type { history_tree, history_node, space_command } from '@/core';
 import
 {
-    on_history_change,
-    compute_path_to_root
+    on_history_change
 } from '@/core';
 import
 {
@@ -154,7 +153,13 @@ function compute_git_graph_layout(tree: history_tree): {
         return { nodes: [], edges: [], max_lane: 0, total_height: 0 };
     }
 
-    const active_path_set = new Set(compute_path_to_root(tree, tree.current_uid));
+    const active_path_set = new Set<number>();
+    let active_curr: number | null = tree.current_uid;
+    while (active_curr !== null)
+    {
+        active_path_set.add(active_curr);
+        active_curr = tree.nodes.get(active_curr)?.parent_uid ?? null;
+    }
 
     // Sort all nodes chronologically by UID (Topological order)
     const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);

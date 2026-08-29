@@ -16,7 +16,6 @@ import
     redo as core_redo,
     jump_to_node as core_jump_to_node,
     jump_to_prev_fork as core_jump_to_prev_fork,
-    jump_to_next_fork as core_jump_to_next_fork,
     jump_to_root as core_jump_to_root,
     jump_to_leaf as core_jump_to_leaf,
     delete_node as core_delete_node
@@ -93,14 +92,6 @@ export class world
     public jump_to_prev_fork(): boolean
     {
         return core_jump_to_prev_fork(this.history, this.space);
-    }
-
-    /**
-     * 跳轉至下一個分支點。
-     */
-    public jump_to_next_fork(): boolean
-    {
-        return core_jump_to_next_fork(this.history, this.space);
     }
 
     /**
@@ -303,13 +294,6 @@ export function jump_to_prev_fork(): boolean
     return _active_world?.jump_to_prev_fork() ?? false;
 }
 
-/**
- * 在當前活躍世界上跳轉至下一個分支點。
- */
-export function jump_to_next_fork(): boolean
-{
-    return _active_world?.jump_to_next_fork() ?? false;
-}
 
 /**
  * 在當前活躍世界上跳轉至歷史樹根節點（UID 0）。
