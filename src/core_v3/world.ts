@@ -1,6 +1,5 @@
-import type { vector } from './primitives';
-import type { space_command } from './command/command';
-import { space } from './domain';
+import type { vector, uid } from './primitives';
+import { space, reversible_operation } from './domain';
 import { pack_registry, create_pack_registry } from './registry';
 import
 {
@@ -52,7 +51,7 @@ export class world
     /**
      * 在該世界上執行可逆指令。
      */
-    public execute(cmd: space_command): void
+    public execute(cmd: reversible_operation): void
     {
         core_record_command(this.history, this.space, cmd);
     }
@@ -68,17 +67,17 @@ export class world
     /**
      * 在該世界上重做下一步。
      */
-    public redo(target_child_uid?: number): boolean
+    public redo(target_child_history_uid?: uid): boolean
     {
-        return core_redo(this.history, this.space, target_child_uid);
+        return core_redo(this.history, this.space, target_child_history_uid);
     }
 
     /**
      * 跳轉至指定歷史節點。
      */
-    public jump_to(target_node_uid: number): boolean
+    public jump_to(target_history_uid: uid): boolean
     {
-        return core_jump_to_node(this.history, this.space, target_node_uid);
+        return core_jump_to_node(this.history, this.space, target_history_uid);
     }
 
     /**
@@ -108,8 +107,8 @@ export class world
     /**
      * 刪除指定歷史節點。
      */
-    public delete_history_node(target_uid: number): boolean
+    public delete_history_node(target_history_uid: uid): boolean
     {
-        return core_delete_node(this.history, target_uid);
+        return core_delete_node(this.history, target_history_uid);
     }
 }

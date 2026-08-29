@@ -12,3 +12,5 @@ export interface namespaced_id
     pack: string;
     id:   string;
 }
+
+export type uid = number;

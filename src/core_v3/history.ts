@@ -6,27 +6,26 @@
  * - 向下時間流：redo / jump_to_next_fork / jump_to_descendant
  * - 跨分支穿越：jump_to_node（由 LCA + jump_to_ancestor + jump_to_descendant 組裝）
  */
-
-import type { space_command } from './command/command';
-import type { space } from './domain';
+import type { uid } from './primitives';
+import type { space, reversible_operation } from './domain';
 import { trigger_hook } from './hooks';
 
 // ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
 
 export interface history_node
 {
-    uid:           number;
-    parent_uid:    number | null;
-    children_uids: number[];
-    command:       space_command | null;
-    other_info?:   Record<string, unknown>;
+    history_uid:           uid;
+    parent_history_uid:    uid | null;
+    children_history_uids: uid[];
+    command:               reversible_operation | null;
+    other_info?:           Record<string, unknown>;
 }
 
 export interface history_tree
 {
-    nodes:         Map<number, history_node>;
-    current_uid:   number;
-    next_node_uid: number;
+    nodes:               Map<uid, history_node>;
+    current_history_uid: uid;
+    next_history_uid:    uid;
 }
 
 // ── 1. Elementary Operators (基礎原子操作) ───────────────────────────────────
@@ -35,40 +34,40 @@ export function create_history_tree(): history_tree
 {
     const root_node: history_node =
     {
-        uid:           0,
-        parent_uid:    null,
-        children_uids: [],
-        command:       null
+        history_uid:           0,
+        parent_history_uid:    null,
+        children_history_uids: [],
+        command:               null
     };
 
     return {
-        nodes:         new Map([[0, root_node]]),
-        current_uid:   0,
-        next_node_uid: 1
+        nodes:               new Map([[0, root_node]]),
+        current_history_uid: 0,
+        next_history_uid:    1
     };
 }
 
-export function record_command(tree: history_tree, sp: space, cmd: space_command): history_node
+export function record_command(tree: history_tree, sp: space, cmd: reversible_operation): history_node
 {
     cmd.execute(sp);
 
     const new_node: history_node =
     {
-        uid:           tree.next_node_uid,
-        parent_uid:    tree.current_uid,
-        children_uids: [],
-        command:       cmd
+        history_uid:           tree.next_history_uid,
+        parent_history_uid:    tree.current_history_uid,
+        children_history_uids: [],
+        command:               cmd
     };
 
-    const parent = tree.nodes.get(tree.current_uid);
+    const parent = tree.nodes.get(tree.current_history_uid);
     if (parent)
     {
-        parent.children_uids.push(new_node.uid);
+        parent.children_history_uids.push(new_node.history_uid);
     }
 
-    tree.nodes.set(new_node.uid, new_node);
-    tree.current_uid = new_node.uid;
-    tree.next_node_uid += 1;
+    tree.nodes.set(new_node.history_uid, new_node);
+    tree.current_history_uid = new_node.history_uid;
+    tree.next_history_uid += 1;
 
     trigger_hook('history:change', tree);
     return new_node;
@@ -76,23 +75,23 @@ export function record_command(tree: history_tree, sp: space, cmd: space_command
 
 /**
  * 從歷史樹中刪除一個末端葉節點（Leaf Node）。
- * 嚴格限制：僅能刪除無子節點（children_uids.length === 0）的葉節點，避免破壞因果歷史連續性。
+ * 嚴格限制：僅能刪除無子節點（children_history_uids.length === 0）的葉節點，避免破壞因果歷史連續性。
  */
-export function delete_node(tree: history_tree, target_uid: number): boolean
+export function delete_node(tree: history_tree, target_history_uid: uid): boolean
 {
-    const target = tree.nodes.get(target_uid);
-    if (!target || target_uid === tree.current_uid || target.children_uids.length > 0 || target.parent_uid === null)
+    const target = tree.nodes.get(target_history_uid);
+    if (!target || target_history_uid === tree.current_history_uid || target.children_history_uids.length > 0 || target.parent_history_uid === null)
     {
         return false;
     }
 
-    const parent = tree.nodes.get(target.parent_uid);
+    const parent = tree.nodes.get(target.parent_history_uid);
     if (parent)
     {
-        parent.children_uids = parent.children_uids.filter(id => id !== target_uid);
+        parent.children_history_uids = parent.children_history_uids.filter(id => id !== target_history_uid);
     }
 
-    tree.nodes.delete(target_uid);
+    tree.nodes.delete(target_history_uid);
     trigger_hook('history:change', tree);
     return true;
 }
@@ -101,13 +100,13 @@ export function delete_node(tree: history_tree, target_uid: number): boolean
 
 export function undo(tree: history_tree, sp: space): boolean
 {
-    if (tree.current_uid === 0)
+    if (tree.current_history_uid === 0)
     {
         return false;
     }
 
-    const current_node = tree.nodes.get(tree.current_uid);
-    if (!current_node || current_node.parent_uid === null)
+    const current_node = tree.nodes.get(tree.current_history_uid);
+    if (!current_node || current_node.parent_history_uid === null)
     {
         return false;
     }
@@ -117,20 +116,20 @@ export function undo(tree: history_tree, sp: space): boolean
         current_node.command.inverse(sp);
     }
 
-    tree.current_uid = current_node.parent_uid;
+    tree.current_history_uid = current_node.parent_history_uid;
     trigger_hook('history:change', tree);
     return true;
 }
 
-export function find_prev_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
+export function find_prev_fork_node(tree: history_tree, start_history_uid: uid = tree.current_history_uid): uid | null
 {
-    const start_node = tree.nodes.get(start_uid);
-    if (!start_node || start_node.parent_uid === null)
+    const start_node = tree.nodes.get(start_history_uid);
+    if (!start_node || start_node.parent_history_uid === null)
     {
         return null;
     }
 
-    let curr: number | null = start_node.parent_uid;
+    let curr: uid | null = start_node.parent_history_uid;
     while (curr !== null)
     {
         const node = tree.nodes.get(curr);
@@ -139,23 +138,23 @@ export function find_prev_fork_node(tree: history_tree, start_uid: number = tree
             break;
         }
 
-        if (node.children_uids.length > 1)
+        if (node.children_history_uids.length > 1)
         {
-            return node.uid;
+            return node.history_uid;
         }
 
-        curr = node.parent_uid;
+        curr = node.parent_history_uid;
     }
 
     return null;
 }
 
 /**
- * 沿直系祖先路徑向上跳轉（當 ancestor_uid 為 current 之祖先節點時）。
+ * 沿直系祖先路徑向上跳轉（當 ancestor_history_uid 為 current 之祖先節點時）。
  */
-export function jump_to_ancestor(tree: history_tree, sp: space, ancestor_uid: number): boolean
+export function jump_to_ancestor(tree: history_tree, sp: space, ancestor_history_uid: uid): boolean
 {
-    while (tree.current_uid !== ancestor_uid)
+    while (tree.current_history_uid !== ancestor_history_uid)
     {
         if (!undo(tree, sp))
         {
@@ -171,8 +170,8 @@ export function jump_to_prev_fork(tree: history_tree, sp: space): boolean
     while (undo(tree, sp))
     {
         jumped = true;
-        const current = tree.nodes.get(tree.current_uid);
-        if (current && (current.children_uids.length > 1 || current.parent_uid === null))
+        const current = tree.nodes.get(tree.current_history_uid);
+        if (current && (current.children_history_uids.length > 1 || current.parent_history_uid === null))
         {
             break;
         }
@@ -187,54 +186,54 @@ export function jump_to_root(tree: history_tree, sp: space): boolean
 
 // ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
 
-export function redo(tree: history_tree, sp: space, target_child_uid?: number): boolean
+export function redo(tree: history_tree, sp: space, target_child_history_uid?: uid): boolean
 {
-    const current_node = tree.nodes.get(tree.current_uid);
+    const current_node = tree.nodes.get(tree.current_history_uid);
     if (!current_node)
     {
         return false;
     }
 
-    let next_uid: number;
-    if (target_child_uid !== undefined)
+    let next_history_uid: uid;
+    if (target_child_history_uid !== undefined)
     {
-        if (!current_node.children_uids.includes(target_child_uid))
+        if (!current_node.children_history_uids.includes(target_child_history_uid))
         {
             return false;
         }
-        next_uid = target_child_uid;
+        next_history_uid = target_child_history_uid;
     }
     else
     {
-        if (current_node.children_uids.length !== 1)
+        if (current_node.children_history_uids.length !== 1)
         {
             return false;
         }
-        next_uid = current_node.children_uids[0];
+        next_history_uid = current_node.children_history_uids[0];
     }
 
-    const next_node = tree.nodes.get(next_uid);
+    const next_node = tree.nodes.get(next_history_uid);
     if (!next_node || !next_node.command)
     {
         return false;
     }
 
     next_node.command.execute(sp);
-    tree.current_uid = next_node.uid;
+    tree.current_history_uid = next_node.history_uid;
 
     trigger_hook('history:change', tree);
     return true;
 }
 
-export function find_next_fork_node(tree: history_tree, start_uid: number = tree.current_uid): number | null
+export function find_next_fork_node(tree: history_tree, start_history_uid: uid = tree.current_history_uid): uid | null
 {
-    const start_node = tree.nodes.get(start_uid);
-    if (!start_node || start_node.children_uids.length !== 1)
+    const start_node = tree.nodes.get(start_history_uid);
+    if (!start_node || start_node.children_history_uids.length !== 1)
     {
         return null;
     }
 
-    let curr: number = start_node.children_uids[0];
+    let curr: uid = start_node.children_history_uids[0];
     while (true)
     {
         const node = tree.nodes.get(curr);
@@ -243,41 +242,41 @@ export function find_next_fork_node(tree: history_tree, start_uid: number = tree
             break;
         }
 
-        if (node.children_uids.length > 1)
+        if (node.children_history_uids.length > 1)
         {
-            return node.uid;
+            return node.history_uid;
         }
 
-        if (node.children_uids.length === 0)
+        if (node.children_history_uids.length === 0)
         {
             break;
         }
 
-        curr = node.children_uids[0];
+        curr = node.children_history_uids[0];
     }
 
     return null;
 }
 
 /**
- * 沿直系子孫路徑向下跳轉（當 descendant_uid 為 current 之子孫節點時）。
+ * 沿直系子孫路徑向下跳轉（當 descendant_history_uid 為 current 之子孫節點時）。
  */
-export function jump_to_descendant(tree: history_tree, sp: space, descendant_uid: number): boolean
+export function jump_to_descendant(tree: history_tree, sp: space, descendant_history_uid: uid): boolean
 {
-    const forward_uids: number[] = [];
-    let curr: number | null = descendant_uid;
-    while (curr !== null && curr !== tree.current_uid)
+    const forward_history_uids: uid[] = [];
+    let curr: uid | null = descendant_history_uid;
+    while (curr !== null && curr !== tree.current_history_uid)
     {
-        forward_uids.unshift(curr);
-        curr = tree.nodes.get(curr)?.parent_uid ?? null;
+        forward_history_uids.unshift(curr);
+        curr = tree.nodes.get(curr)?.parent_history_uid ?? null;
     }
 
-    if (curr !== tree.current_uid)
+    if (curr !== tree.current_history_uid)
     {
         return false; // target 不是 current 的直系子孫
     }
 
-    for (const next_uid of forward_uids)
+    for (const next_uid of forward_history_uids)
     {
         if (!redo(tree, sp, next_uid))
         {
@@ -304,25 +303,25 @@ export function jump_to_next_fork(tree: history_tree, sp: space): boolean
 
 /**
  * 歐幾里得輾轉相除法（Euclidean LCA Algorithm）：
- * 藉由 UID 嚴格單調遞減性質（parent_uid < uid），以雙指針追逐法找出兩節點之最近公共祖先。
+ * 藉由 UID 嚴格單調遞減性質（parent_history_uid < history_uid），以雙指針追逐法找出兩節點之最近公共祖先。
  * 當較大指針的上游分岔點仍大於等於較小指針時，可透過 find_prev_fork_node 進行跨區間跳躍。
  */
-export function find_lca(tree: history_tree, uid_a: number, uid_b: number): number
+export function find_lca(tree: history_tree, history_uid_a: uid, history_uid_b: uid): uid
 {
-    let a = uid_a;
-    let b = uid_b;
+    let a = history_uid_a;
+    let b = history_uid_b;
 
     while (a !== b)
     {
         if (a > b)
         {
             const fork = find_prev_fork_node(tree, a);
-            a = (fork !== null && fork >= b) ? fork : (tree.nodes.get(a)?.parent_uid ?? 0);
+            a = (fork !== null && fork >= b) ? fork : (tree.nodes.get(a)?.parent_history_uid ?? 0);
         }
         else
         {
             const fork = find_prev_fork_node(tree, b);
-            b = (fork !== null && fork >= a) ? fork : (tree.nodes.get(b)?.parent_uid ?? 0);
+            b = (fork !== null && fork >= a) ? fork : (tree.nodes.get(b)?.parent_history_uid ?? 0);
         }
     }
 
@@ -332,14 +331,14 @@ export function find_lca(tree: history_tree, uid_a: number, uid_b: number): numb
 /**
  * 跨分支任意節點跳轉：由 LCA 拆解為「先向上跳至 LCA，再向下跳至目標子孫」。
  */
-export function jump_to_node(tree: history_tree, sp: space, target_uid: number): boolean
+export function jump_to_node(tree: history_tree, sp: space, target_history_uid: uid): boolean
 {
-    if (tree.current_uid === target_uid)
+    if (tree.current_history_uid === target_history_uid)
     {
         return true;
     }
 
-    const lca_uid = find_lca(tree, tree.current_uid, target_uid);
+    const lca_uid = find_lca(tree, tree.current_history_uid, target_history_uid);
 
-    return jump_to_ancestor(tree, sp, lca_uid) && jump_to_descendant(tree, sp, target_uid);
+    return jump_to_ancestor(tree, sp, lca_uid) && jump_to_descendant(tree, sp, target_history_uid);
 }

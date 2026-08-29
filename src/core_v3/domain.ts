@@ -2,7 +2,7 @@
  * src/core_v3/domain.ts — 世界實體與物質契約（世界本身「是什麼」）
  */
 
-import type { vector, namespaced_id } from './primitives';
+import type { vector, namespaced_id, uid } from './primitives';
 
 // ── Items ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ export interface recipe_evaluation
 /**
  * 動態配方評估函式。
  */
-export type recipe_fn = (uid?: number) => recipe_evaluation;
+export type recipe_fn = (device_uid?: uid) => recipe_evaluation;
 
 export interface recipe extends namespaced_id
 {
@@ -55,15 +55,15 @@ export interface recipe extends namespaced_id
  */
 export abstract class device
 {
-    public readonly uid:                 number;
+    public readonly device_uid:          uid;
     public          definition_id:       namespaced_id;
     public          position:            vector;
     public          selected_recipe_id?: namespaced_id;
     public          other_info?:         Record<string, unknown>;
 
-    constructor(uid: number, definition_id: namespaced_id, position: vector, other_info: Record<string, unknown> = {})
+    constructor(device_uid: uid, definition_id: namespaced_id, position: vector, other_info: Record<string, unknown> = {})
     {
-        this.uid = uid;
+        this.device_uid = device_uid;
         this.definition_id = definition_id;
         this.position = position;
         this.other_info = other_info;
@@ -78,7 +78,7 @@ export abstract class device
 
 export type device_constructor = new
 (
-    uid:           number,
+    device_uid:    uid,
     definition_id: namespaced_id,
     position:      vector,
     other_info?:   Record<string, unknown>
@@ -91,16 +91,30 @@ export type device_constructor = new
  */
 export class space
 {
-    public readonly dimension: number;
-    public          size:      vector;
-    public          uid:       number;
-    public          devices:   device[];
+    public readonly dimension:       number;
+    public          size:            vector;
+    public          next_device_uid: uid;
+    public          devices:         device[];
 
     constructor(size: vector)
     {
         this.dimension = size.length;
         this.size = size;
-        this.uid = 1;
+        this.next_device_uid = 1;
         this.devices = [];
     }
 }
+
+export interface reversible_operation extends namespaced_id
+{
+    /** 對目標空間施加異動 */
+    execute(sp: space): void;
+
+    /** 還原對空間的異動（必須為 execute 的精確邏輯反操作） */
+    inverse(sp: space): void;
+
+    /** 指令實例可擴充中繼資料 */
+    other_info?: Record<string, unknown>;
+}
+
+export type reversible_operation_factory = (...args: any[]) => reversible_operation;
