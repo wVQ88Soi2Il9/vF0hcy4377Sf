@@ -165,7 +165,7 @@ export function execute_command(command_or_name: reversible_operation | string, 
         const reg = _active_world.registry;
         for (const [_, pack] of reg.packs)
         {
-            const factory = pack.commands?.[command_or_name];
+            const factory = pack.operations?.[command_or_name];
             if (factory)
             {
                 const cmd = factory(...args);

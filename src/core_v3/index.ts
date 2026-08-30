@@ -17,5 +17,4 @@ export * from './definition_iii';
 export * from './history';
 
 // ── Systems & Entities ───────────────────────────────────────────────────────
-export * from './registry';
 export * from './world';
