@@ -7,7 +7,6 @@
  * - 跨分支穿越：jump_to_node（由 LCA + jump_to_ancestor + jump_to_descendant 組裝）
  */
 import type { uid } from './definition_i';
-import { trigger_hook } from './definition_i';
 import type { space } from './definition_ii';
 import { reversible_operation } from './definition_iii';
 
@@ -18,7 +17,7 @@ export interface history_node
     history_uid:           uid;
     parent_history_uid:    uid | null;
     children_history_uids: uid[];
-    command:               reversible_operation | null;
+    operation:               reversible_operation | null;
     other_info?:           Record<string, unknown>;
 }
 
@@ -38,7 +37,7 @@ export function create_history_tree(): history_tree
         history_uid:           0,
         parent_history_uid:    null,
         children_history_uids: [],
-        command:               null
+        operation:               null
     };
 
     return {
@@ -48,7 +47,7 @@ export function create_history_tree(): history_tree
     };
 }
 
-export function record_command(tree: history_tree, sp: space, cmd: reversible_operation): history_node
+export function record_operation(tree: history_tree, sp: space, cmd: reversible_operation): history_node
 {
     cmd.execute(sp);
 
@@ -57,7 +56,7 @@ export function record_command(tree: history_tree, sp: space, cmd: reversible_op
         history_uid:           tree.next_history_uid,
         parent_history_uid:    tree.current_history_uid,
         children_history_uids: [],
-        command:               cmd
+        operation:               cmd
     };
 
     const parent = tree.nodes.get(tree.current_history_uid);
@@ -70,7 +69,6 @@ export function record_command(tree: history_tree, sp: space, cmd: reversible_op
     tree.current_history_uid = new_node.history_uid;
     tree.next_history_uid += 1;
 
-    trigger_hook('history:change', tree);
     return new_node;
 }
 
@@ -93,7 +91,6 @@ export function delete_node(tree: history_tree, target_history_uid: uid): boolea
     }
 
     tree.nodes.delete(target_history_uid);
-    trigger_hook('history:change', tree);
     return true;
 }
 
@@ -112,13 +109,12 @@ export function jump_prev_node(tree: history_tree, sp: space): boolean
         return false;
     }
 
-    if (current_node.command)
+    if (current_node.operation)
     {
-        current_node.command.inverse(sp);
+        current_node.operation.inverse(sp);
     }
 
     tree.current_history_uid = current_node.parent_history_uid;
-    trigger_hook('history:change', tree);
     return true;
 }
 
@@ -214,15 +210,14 @@ export function jump_next_node(tree: history_tree, sp: space, target_child_histo
     }
 
     const next_node = tree.nodes.get(next_history_uid);
-    if (!next_node || !next_node.command)
+    if (!next_node || !next_node.operation)
     {
         return false;
     }
 
-    next_node.command.execute(sp);
+    next_node.operation.execute(sp);
     tree.current_history_uid = next_node.history_uid;
 
-    trigger_hook('history:change', tree);
     return true;
 }
 

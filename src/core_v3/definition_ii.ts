@@ -78,6 +78,7 @@ export interface recipe_output
 
 /**
  * ⚠️ string用來放error msg, 具體怎麼做還不確定 別用
+ * uid == context 還沒想好
  */
 export interface recipe extends namespaced_id
 {
