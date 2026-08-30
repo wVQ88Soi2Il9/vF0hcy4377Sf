@@ -5,7 +5,7 @@
  * 維護當前操作焦點指標（_active_world），並提供 Active World 捷徑轉發。
  */
 
-import { std_world, type world_options, type space, type history_tree, type pack_registry, type reversible_operation } from './core_v3';
+import { std_world, type world_options, type space, type tree, type pack_registry, type reversible_operation } from './core_v3';
 
 // ── Multi-World Registry ─────────────────────────────────────────────────────
 
@@ -119,12 +119,12 @@ export function get_dimension(): number
     return _active_world?.dimension ?? 0;
 }
 
-export function get_history_tree(): history_tree | undefined
+export function get_history_tree(): tree | undefined
 {
     return _active_world?.history;
 }
 
-export function set_history_tree(tree: history_tree): void
+export function set_history_tree(tree: tree): void
 {
     if (!_active_world)
     {

@@ -12,7 +12,7 @@ import { reversible_operation } from './definition_iii';
 
 // ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
 
-export interface history_node
+export interface node
 {
     history_uid:           uid;
     parent_history_uid:    uid | null;
@@ -21,18 +21,18 @@ export interface history_node
     other_info?:           Record<string, unknown>;
 }
 
-export interface history_tree
+export interface tree
 {
-    nodes:               Map<uid, history_node>;
+    nodes:               Map<uid, node>;
     current_history_uid: uid;
     next_history_uid:    uid;
 }
 
 // ── 1. Elementary Operators (基礎原子操作) ───────────────────────────────────
 
-export function create_history_tree(): history_tree
+export function create_tree(): tree
 {
-    const root_node: history_node =
+    const root_node: node =
     {
         history_uid:           0,
         parent_history_uid:    null,
@@ -47,11 +47,11 @@ export function create_history_tree(): history_tree
     };
 }
 
-export function record_operation(tree: history_tree, sp: space, operation: reversible_operation): history_node
+export function record_operation(tree: tree, sp: space, operation: reversible_operation): node
 {
     operation.execute(sp);
 
-    const new_node: history_node =
+    const new_node: node =
     {
         history_uid:           tree.next_history_uid,
         parent_history_uid:    tree.current_history_uid,
@@ -76,7 +76,7 @@ export function record_operation(tree: history_tree, sp: space, operation: rever
  * 從歷史樹中刪除一個末端葉節點（Leaf Node）。
  * 嚴格限制：僅能刪除無子節點（children_history_uids.length === 0）的葉節點，避免破壞因果歷史連續性。
  */
-export function delete_node(tree: history_tree, target_uid: uid): boolean
+export function delete_node(tree: tree, target_uid: uid): boolean
 {
     const target = tree.nodes.get(target_uid);
     if (!target || target_uid === tree.current_history_uid || target.children_history_uids.length > 0 || target.parent_history_uid === null)
@@ -96,7 +96,7 @@ export function delete_node(tree: history_tree, target_uid: uid): boolean
 
 // ── 2. Upward / Backward Operators (逆向向上時間流) ──────────────────────────
 
-export function jump_prev_node(tree: history_tree, sp: space): boolean
+export function jump_prev_node(tree: tree, sp: space): boolean
 {
     if (tree.current_history_uid === 0)
     {
@@ -118,7 +118,7 @@ export function jump_prev_node(tree: history_tree, sp: space): boolean
     return true;
 }
 
-export function find_prev_fork_node(tree: history_tree, start: uid = tree.current_history_uid): uid | null
+export function find_prev_fork_node(tree: tree, start: uid = tree.current_history_uid): uid | null
 {
     const start_node = tree.nodes.get(start);
     if (!start_node || start_node.parent_history_uid === null)
@@ -147,44 +147,35 @@ export function find_prev_fork_node(tree: history_tree, start: uid = tree.curren
 }
 
 /**
- * 沿直系祖先路徑向上跳轉（當 ancestor_history_uid 為 current 之祖先節點時）。
+ * 沿直系祖先路徑向上跳轉（當 target 為 current 之祖先節點時）。
  * you MUST ensure it REALLY is
  */
-export function jump_to_ancestor(tree: history_tree, sp: space, target: uid): boolean
+export function jump_to_ancestor(tree: tree, sp: space, target: uid): void
 {
     while (tree.current_history_uid !== target)
-    {
-        if (!jump_prev_node(tree, sp))
-        {
-            return false;
-        }
-    }
-    return true;
+    { jump_prev_node(tree, sp) }
 }
 
-export function jump_to_prev_fork(tree: history_tree, sp: space): boolean
+export function jump_to_prev_fork(tree: tree, sp: space): void
 {
-    let jumped = false;
     while (jump_prev_node(tree, sp))
     {
-        jumped = true;
-        const current = tree.nodes.get(tree.current_history_uid);
-        if (current && (current.children_history_uids.length > 1 || current.parent_history_uid === null))
+        const current = tree.nodes.get(tree.current_history_uid)!;
+        if (current.children_history_uids.length > 1 || current.parent_history_uid === null)
         {
             break;
         }
     }
-    return jumped;
 }
 
-export function jump_to_root(tree: history_tree, sp: space): boolean
+export function jump_to_root(tree: tree, sp: space): void
 {
-    return jump_to_ancestor(tree, sp, 0);
+    jump_to_ancestor(tree, sp, 0);
 }
 
 // ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
 
-export function jump_next_node(tree: history_tree, sp: space, target_child?: uid): boolean
+export function jump_next_node(tree: tree, sp: space, target_child?: uid): boolean
 {
     const current_node = tree.nodes.get(tree.current_history_uid);
     if (!current_node)
@@ -222,7 +213,7 @@ export function jump_next_node(tree: history_tree, sp: space, target_child?: uid
     return true;
 }
 
-export function find_next_fork_node(tree: history_tree, start: uid = tree.current_history_uid): uid | null
+export function find_next_fork_node(tree: tree, start: uid = tree.current_history_uid): uid | null
 {
     const start_node = tree.nodes.get(start);
     if (!start_node || start_node.children_history_uids.length !== 1)
@@ -256,12 +247,13 @@ export function find_next_fork_node(tree: history_tree, start: uid = tree.curren
 }
 
 /**
- * 沿直系子孫路徑向下跳轉（當 descendant_history_uid 為 current 之子孫節點時）。
+ * 沿直系子孫路徑向下跳轉（當 target 為 current 之子孫節點時）。
  */
-export function jump_to_descendant(tree: history_tree, sp: space, descendant: uid): boolean
+export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
 {
     const forward_history_uids: uid[] = [];
     let curr: uid | null = descendant;
+
     while (curr !== null && curr !== tree.current_history_uid)
     {
         forward_history_uids.unshift(curr);
@@ -270,35 +262,26 @@ export function jump_to_descendant(tree: history_tree, sp: space, descendant: ui
 
     if (curr !== tree.current_history_uid)
     {
-        return false; // target 不是 current 的直系子孫
+        throw new Error('target is not a descendant of current node');
     }
 
     for (const next_uid of forward_history_uids)
     {
-        if (!jump_next_node(tree, sp, next_uid))
-        {
-            return false;
-        }
+        jump_next_node(tree, sp, next_uid);
     }
-    return true;
 }
 
 /**
  * 沿當前無歧義單一路徑前進至最深處（葉節點或下一個分岔點）。
  */
-export function jump_to_next_fork(tree: history_tree, sp: space): boolean
+export function jump_to_next_fork(tree: tree, sp: space): void
 {
-    let jumped = false;
-    while (jump_next_node(tree, sp))
-    {
-        jumped = true;
-    }
-    return jumped;
+    while (jump_next_node(tree, sp)){}
 }
 
 // ── 4. Core LCA & Target Jump (核心中樞：跨分支任意穿越) ─────────────────────
 
-export function find_lca(tree: history_tree, history_uid_a: uid, history_uid_b: uid): uid
+export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): uid
 {
     const ancestors = new Set<uid>();
 
@@ -332,7 +315,7 @@ export function find_lca(tree: history_tree, history_uid_a: uid, history_uid_b: 
 /**
  * 跨分支任意節點跳轉：由 LCA 拆解為「先回到 LCA，再跳至目標子孫」。
  */
-export function jump_to_node(tree: history_tree, sp: space, target: uid): void
+export function jump_to_node(tree: tree, sp: space, target: uid): void
 {
     if (tree.current_history_uid === target)
     {
