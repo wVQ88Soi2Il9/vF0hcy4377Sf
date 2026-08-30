@@ -21,11 +21,11 @@ export type port_direction = 'input' | 'output' | 'bidirectional';
 
 export interface port 
 {
-    /** local */
-    port_uid: uid;
-    offset: vector;
-    direction: port_direction;
-    other_info?: Record<string, unknown>;
+    /** local uid*/
+    port_uid:       uid;
+    offset:         vector;
+    direction:      port_direction;
+    other_info?:    Record<string, unknown>;
 }
 
 // ── Devices ──────────────────────────────────────────────────────────────────
@@ -33,25 +33,25 @@ export interface port
 /**
  * 裝置抽象基類：提供座標錨點、局部形狀 (Shape) 與連接埠 (Port) 的多型介面。
  */
-export abstract class device {
+export abstract class device 
+{
     public readonly device_uid: uid;
     public definition_id: namespaced_id;
     public position: vector;
     public selected_recipe_id?: namespaced_id;
     public other_info?: Record<string, unknown>;
 
-    constructor(device_uid: uid, definition_id: namespaced_id, position: vector, other_info: Record<string, unknown> = {}) {
+    constructor(device_uid: uid, definition_id: namespaced_id, position: vector, other_info: Record<string, unknown> = {}) 
+    {
         this.device_uid = device_uid;
         this.definition_id = definition_id;
         this.position = position;
         this.other_info = other_info;
     }
 
-    /** 取得局部形狀格點 (Local Coordinates) */
-    public abstract get_shape(): vector[];
-
-    /** 取得局部連接埠 (Local Coordinates) */
-    public abstract get_port(type: 'input' | 'output'): vector[];
+    /** Local Position */
+    public abstract get_shape():    vector[];
+    public abstract get_port():     port[];
 }
 
 export type device_constructor = new
@@ -65,31 +65,25 @@ export type device_constructor = new
 
 // ── Recipes ──────────────────────────────────────────────────────────────────
 
-export interface recipe_evaluation 
+/**
+ * 單一 port 上的輸出物品堆疊。
+ * recipe 只描述輸出——input 是 context 的一部分（device 目前收到什麼），
+ * 不由 recipe 宣告或計算，即便 device 被迫持有 input 庫存也一樣。
+ */
+export interface recipe_output
 {
-    /** 此配方在當前上下文是否可用 */
-    valid: boolean;
-
-    /** 處理耗時 */
-    duration: number;
-
-    /** 動態所需輸入物品 */
-    inputs: item_stack[];
-
-    /** 動態產出物品 */
-    outputs: item_stack[];
-
-    /** Mod 擴充評估中繼資料 */
-    other_info?: Record<string, unknown>;
+    port_uid:   uid;
+    item_stack: item_stack;
 }
 
 /**
- * 動態配方評估函式。
+ * ⚠️ unknown —— valid / duration / other_info 是否保留、以何種形式保留尚未決定。
+ * 動態配方評估函式：device_uid 即 context（device_uid ≡ context，非 optional），
+ * 回傳每個 port 上要輸出的物品堆疊陣列。
  */
-export type recipe_fn = (device_uid?: uid) => recipe_evaluation;
-
-export interface recipe extends namespaced_id {
-    evaluate: recipe_fn;
+export interface recipe extends namespaced_id
+{
+    evaluate: (device_uid: uid) => recipe_output[];
     other_info?: Record<string, unknown>;
 }
 

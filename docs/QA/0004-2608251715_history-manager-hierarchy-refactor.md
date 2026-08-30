@@ -1,4 +1,4 @@
-# 0004-2608251715_history-manager-dependency-graph
+# 0004-2608251715_history-manager-hierarchy-refactor
 
 - **status:** resolved
 - **topic:** `history_manager` 操作依賴關係圖與無歧義路徑原則
