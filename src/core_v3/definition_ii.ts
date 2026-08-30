@@ -77,13 +77,11 @@ export interface recipe_output
 }
 
 /**
- * ⚠️ unknown —— valid / duration / other_info 是否保留、以何種形式保留尚未決定。
- * 動態配方評估函式：device_uid 即 context（device_uid ≡ context，非 optional），
- * 回傳每個 port 上要輸出的物品堆疊陣列。
+ * ⚠️ string用來放error msg, 具體怎麼做還不確定 別用
  */
 export interface recipe extends namespaced_id
 {
-    evaluate: (device_uid: uid) => recipe_output[];
+    evaluate: (device_uid: uid) => recipe_output[] | string;
     other_info?: Record<string, unknown>;
 }
 
@@ -94,10 +92,10 @@ export interface recipe extends namespaced_id
  * 空間實體類別：封裝 N 維幾何維度、網格大小、UID 計數器與裝置實體集合。
  */
 export class space {
-    public readonly dimension: number;
-    public size: vector;
-    public next_device_uid: uid;
-    public devices: device[];
+    public readonly dimension:  number;
+    public size:                vector;
+    public next_device_uid:     uid;
+    public devices:             device[];
 
     constructor(size: vector) {
         this.dimension = size.length;

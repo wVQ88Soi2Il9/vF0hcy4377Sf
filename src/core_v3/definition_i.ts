@@ -14,4 +14,4 @@ export type uid = number;
 /**
  * pack-> Map:{id->Array}
  */
-export type empty_hook_list = Map<string, Map<string, Array<(...args: any[]) => void>>>
+export type hook_list = Map<string, Map<string, Array<(...args: any[]) => void>>>
