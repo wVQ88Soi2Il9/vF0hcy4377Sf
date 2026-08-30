@@ -1,65 +1,30 @@
-/**
- * src/core_v3/domain.ts — 世界實體與物質契約（世界本身「是什麼」）
- */
+/** what is a world */
 
 import type { vector, namespaced_id, uid } from './definition_i';
 
 // ── Items ────────────────────────────────────────────────────────────────────
 
-export interface item_definition extends namespaced_id {
+export interface item_definition extends namespaced_id 
+{
     other_info?: Record<string, unknown>;
 }
 
-export interface item_stack {
+export interface item_stack 
+{
     item_id: namespaced_id;
     quantity: number;
 }
-
 
 // Port
 
 export type port_direction = 'input' | 'output' | 'bidirectional';
 
-export interface port {
-    /** 端口唯一識別碼 (可為裝置內局部 UID 或空間全域 UID) */
+export interface port 
+{
+    /** local */
     port_uid: uid;
-    /** 端口局部幾何座標（符合 2× 網格的面心座標規範） */
-    position: vector;
-    /** 流動方向契約 */
+    offset: vector;
     direction: port_direction;
-    /** 端口語意標籤（例如 'main_input', 'byproduct_output'） */
-    label?: string;
-    /** 擴充中繼資料 */
-    other_info?: Record<string, unknown>;
-}
-
-
-// ── Recipes ──────────────────────────────────────────────────────────────────
-
-export interface recipe_evaluation {
-    /** 此配方在當前上下文是否可用 */
-    valid: boolean;
-
-    /** 處理耗時 */
-    duration: number;
-
-    /** 動態所需輸入物品 */
-    inputs: item_stack[];
-
-    /** 動態產出物品 */
-    outputs: item_stack[];
-
-    /** Mod 擴充評估中繼資料 */
-    other_info?: Record<string, unknown>;
-}
-
-/**
- * 動態配方評估函式。
- */
-export type recipe_fn = (device_uid?: uid) => recipe_evaluation;
-
-export interface recipe extends namespaced_id {
-    evaluate: recipe_fn;
     other_info?: Record<string, unknown>;
 }
 
@@ -96,6 +61,38 @@ export type device_constructor = new
         position: vector,
         other_info?: Record<string, unknown>
     ) => device;
+
+
+// ── Recipes ──────────────────────────────────────────────────────────────────
+
+export interface recipe_evaluation 
+{
+    /** 此配方在當前上下文是否可用 */
+    valid: boolean;
+
+    /** 處理耗時 */
+    duration: number;
+
+    /** 動態所需輸入物品 */
+    inputs: item_stack[];
+
+    /** 動態產出物品 */
+    outputs: item_stack[];
+
+    /** Mod 擴充評估中繼資料 */
+    other_info?: Record<string, unknown>;
+}
+
+/**
+ * 動態配方評估函式。
+ */
+export type recipe_fn = (device_uid?: uid) => recipe_evaluation;
+
+export interface recipe extends namespaced_id {
+    evaluate: recipe_fn;
+    other_info?: Record<string, unknown>;
+}
+
 
 // ── Space ────────────────────────────────────────────────────────────────────
 

@@ -1,3 +1,5 @@
+/* they always exist */
+
 export type vector = number[];
 
 export interface namespaced_id
@@ -12,4 +14,4 @@ export type uid = number;
 /**
  * pack-> Map:{id->Array}
  */
-export type hook_list = Map<string, Map<string, Array<(...args: any[]) => void>>>
+export type empty_hook_list = Map<string, Map<string, Array<(...args: any[]) => void>>>

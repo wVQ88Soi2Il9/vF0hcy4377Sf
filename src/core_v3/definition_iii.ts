@@ -1,3 +1,5 @@
+/* how to control a world */
+
 import { namespaced_id } from "./definition_i";
 import { space } from "./definition_ii";
 
