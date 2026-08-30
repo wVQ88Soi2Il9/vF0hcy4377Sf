@@ -6,9 +6,10 @@
  * - 向下時間流：redo / jump_to_next_fork / jump_to_descendant
  * - 跨分支穿越：jump_to_node（由 LCA + jump_to_ancestor + jump_to_descendant 組裝）
  */
-import type { uid } from './primitives';
-import type { space, reversible_operation } from './domain';
-import { trigger_hook } from './hooks';
+import type { uid } from './definition_i';
+import { trigger_hook } from './definition_i';
+import type { space } from './definition_ii';
+import { reversible_operation } from './definition_iii';
 
 // ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
 
@@ -98,7 +99,7 @@ export function delete_node(tree: history_tree, target_history_uid: uid): boolea
 
 // ── 2. Upward / Backward Operators (逆向向上時間流) ──────────────────────────
 
-export function undo(tree: history_tree, sp: space): boolean
+export function jump_prev_node(tree: history_tree, sp: space): boolean
 {
     if (tree.current_history_uid === 0)
     {
@@ -156,7 +157,7 @@ export function jump_to_ancestor(tree: history_tree, sp: space, ancestor_history
 {
     while (tree.current_history_uid !== ancestor_history_uid)
     {
-        if (!undo(tree, sp))
+        if (!jump_prev_node(tree, sp))
         {
             return false;
         }
@@ -167,7 +168,7 @@ export function jump_to_ancestor(tree: history_tree, sp: space, ancestor_history
 export function jump_to_prev_fork(tree: history_tree, sp: space): boolean
 {
     let jumped = false;
-    while (undo(tree, sp))
+    while (jump_prev_node(tree, sp))
     {
         jumped = true;
         const current = tree.nodes.get(tree.current_history_uid);
@@ -186,7 +187,7 @@ export function jump_to_root(tree: history_tree, sp: space): boolean
 
 // ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
 
-export function redo(tree: history_tree, sp: space, target_child_history_uid?: uid): boolean
+export function jump_next_node(tree: history_tree, sp: space, target_child_history_uid?: uid): boolean
 {
     const current_node = tree.nodes.get(tree.current_history_uid);
     if (!current_node)
@@ -278,7 +279,7 @@ export function jump_to_descendant(tree: history_tree, sp: space, descendant_his
 
     for (const next_uid of forward_history_uids)
     {
-        if (!redo(tree, sp, next_uid))
+        if (!jump_next_node(tree, sp, next_uid))
         {
             return false;
         }
@@ -292,7 +293,7 @@ export function jump_to_descendant(tree: history_tree, sp: space, descendant_his
 export function jump_to_next_fork(tree: history_tree, sp: space): boolean
 {
     let jumped = false;
-    while (redo(tree, sp))
+    while (jump_next_node(tree, sp))
     {
         jumped = true;
     }

@@ -1,5 +1,6 @@
-import type { vector, uid } from './primitives';
-import { space, reversible_operation } from './domain';
+import type { vector, uid } from './definition_i';
+import { space } from './definition_ii';
+import { reversible_operation } from './definition_iii';
 import { pack_registry, create_pack_registry } from './registry';
 import
 {
@@ -7,8 +8,8 @@ import
     create_history_tree,
     record_command as core_record_command,
     delete_node as core_delete_node,
-    undo as core_undo,
-    redo as core_redo,
+    jump_prev_node as core_undo,
+    jump_next_node as core_redo,
     jump_to_node as core_jump_to_node,
     jump_to_prev_fork as core_jump_to_prev_fork,
     jump_to_root as core_jump_to_root,

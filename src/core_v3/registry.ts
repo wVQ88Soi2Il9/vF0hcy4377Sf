@@ -1,4 +1,4 @@
-import type { item_definition, recipe, device_constructor, reversible_operation_factory } from './domain';
+import type { item_definition, recipe, device_constructor, reversible_operation_factory } from './definition_ii';
 
 /**
  * 模組命名空間物件 (Pack-as-a-Module-Object)
