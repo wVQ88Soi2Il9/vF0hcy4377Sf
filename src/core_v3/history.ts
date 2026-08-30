@@ -330,16 +330,17 @@ export function find_lca(tree: history_tree, history_uid_a: uid, history_uid_b: 
     }
 }
 /**
- * 跨分支任意節點跳轉：由 LCA 拆解為「先向上跳至 LCA，再向下跳至目標子孫」。
+ * 跨分支任意節點跳轉：由 LCA 拆解為「先回到 LCA，再跳至目標子孫」。
  */
-export function jump_to_node(tree: history_tree, sp: space, target: uid): boolean
+export function jump_to_node(tree: history_tree, sp: space, target: uid): void
 {
     if (tree.current_history_uid === target)
     {
-        return true;
+        return;
     }
 
     const lca_uid = find_lca(tree, tree.current_history_uid, target);
 
-    return jump_to_ancestor(tree, sp, lca_uid) && jump_to_descendant(tree, sp, target);
+    jump_to_ancestor(tree, sp, lca_uid);
+    jump_to_descendant(tree, sp, target);
 }
