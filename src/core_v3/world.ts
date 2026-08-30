@@ -1,49 +1,40 @@
-import type { vector, uid } from './definition_i';
+import type { uid } from './definition_i';
 import { space } from './definition_ii';
 import { reversible_operation } from './definition_iii';
-import { pack_registry, create_pack_registry } from './registry';
 import
 {
     history_tree,
     create_history_tree,
-    record_command as core_record_command,
-    delete_node as core_delete_node,
-    jump_prev_node as core_undo,
-    jump_next_node as core_redo,
-    jump_to_node as core_jump_to_node,
-    jump_to_prev_fork as core_jump_to_prev_fork,
-    jump_to_root as core_jump_to_root,
-    jump_to_next_fork as core_jump_to_leaf
+    record_operation,
+    delete_node,
+    jump_prev_node,
+    jump_next_node,
+    jump_to_node,
+    jump_to_prev_fork,
+    jump_to_root,
+    jump_to_next_fork,
 } from './history';
 
-export interface world_options
-{
-    id?:       string;
-    space?:    space;
-    size?:     vector;
-    history?:  history_tree;
-    registry?: pack_registry;
-}
-
-/**
- * 實體類別：world = space + history + registry
- * 定義世界的本質結構與實體行為契約。
- */
-export class world
+export class empty_world
 {
     public readonly id:        string;
     public          space:     space;
     public          history:   history_tree;
-    public          registry:  pack_registry;
 
-    constructor(options: world_options = {})
+    constructor(sp: space, id?: string)
     {
-        this.id = options.id ?? `world_${Date.now()}`;
-        this.space = options.space ?? new space(options.size ?? [10, 10]);
-        this.history = options.history ?? create_history_tree();
-        this.registry = options.registry ?? create_pack_registry();
+        this.id = id ?? `world_${Date.now()}`;
+        this.space = sp
+        this.history = create_history_tree();
     }
+}
 
+/**
+ * 實體類別：world = space + history
+ * 定義世界的本質結構
+ */
+export class std_world extends empty_world
+{
     public get dimension(): number
     {
         return this.space.dimension;
@@ -52,9 +43,9 @@ export class world
     /**
      * 在該世界上執行可逆指令。
      */
-    public execute(cmd: reversible_operation): void
+    public execute(operation: reversible_operation): void
     {
-        core_record_command(this.history, this.space, cmd);
+        record_operation(this.history, this.space, operation);
     }
 
     /**
@@ -62,23 +53,23 @@ export class world
      */
     public undo(): boolean
     {
-        return core_undo(this.history, this.space);
+        return jump_prev_node(this.history, this.space);
     }
 
     /**
      * 在該世界上重做下一步。
      */
-    public redo(target_child_history_uid?: uid): boolean
+    public redo(target?: uid): boolean
     {
-        return core_redo(this.history, this.space, target_child_history_uid);
+        return jump_next_node(this.history, this.space, target);
     }
 
     /**
      * 跳轉至指定歷史節點。
      */
-    public jump_to(target_history_uid: uid): boolean
+    public jump_to(target: uid): void
     {
-        return core_jump_to_node(this.history, this.space, target_history_uid);
+        jump_to_node(this.history, this.space, target);
     }
 
     /**
@@ -86,7 +77,7 @@ export class world
      */
     public jump_to_prev_fork(): boolean
     {
-        return core_jump_to_prev_fork(this.history, this.space);
+        return jump_to_prev_fork(this.history, this.space);
     }
 
     /**
@@ -94,7 +85,7 @@ export class world
      */
     public jump_to_root(): boolean
     {
-        return core_jump_to_root(this.history, this.space);
+        return jump_to_root(this.history, this.space);
     }
 
     /**
@@ -102,14 +93,14 @@ export class world
      */
     public jump_to_leaf(): boolean
     {
-        return core_jump_to_leaf(this.history, this.space);
+        return jump_to_next_fork(this.history, this.space);
     }
 
     /**
      * 刪除指定歷史節點。
      */
-    public delete_history_node(target_history_uid: uid): boolean
+    public delete_history_node(target: uid): boolean
     {
-        return core_delete_node(this.history, target_history_uid);
+        return delete_node(this.history, target);
     }
 }

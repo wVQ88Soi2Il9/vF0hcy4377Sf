@@ -5,17 +5,17 @@
  * 維護當前操作焦點指標（_active_world），並提供 Active World 捷徑轉發。
  */
 
-import { world, type world_options, type space, type history_tree, type pack_registry, type reversible_operation } from './core_v3';
+import { std_world, type world_options, type space, type history_tree, type pack_registry, type reversible_operation } from './core_v3';
 
 // ── Multi-World Registry ─────────────────────────────────────────────────────
 
-const _worlds: Map<string, world> = new Map();
-let _active_world: world | undefined = undefined;
+const _worlds: Map<string, std_world> = new Map();
+let _active_world: std_world | undefined = undefined;
 
 /**
  * 註冊世界實例至多世界倉庫。
  */
-export function register_world(w: world): void
+export function register_world(w: std_world): void
 {
     _worlds.set(w.id, w);
     if (!_active_world)
@@ -40,7 +40,7 @@ export function unregister_world(id: string): boolean
 /**
  * 依 ID 取得世界實例。
  */
-export function get_world(id: string): world | undefined
+export function get_world(id: string): std_world | undefined
 {
     return _worlds.get(id);
 }
@@ -48,7 +48,7 @@ export function get_world(id: string): world | undefined
 /**
  * 取得所有已註冊世界實例清單。
  */
-export function get_all_worlds(): world[]
+export function get_all_worlds(): std_world[]
 {
     return Array.from(_worlds.values());
 }
@@ -56,7 +56,7 @@ export function get_all_worlds(): world[]
 /**
  * 設定當前操作焦點之世界實例（Active World）。
  */
-export function set_active_world(target: world | string): void
+export function set_active_world(target: std_world | string): void
 {
     if (typeof target === 'string')
     {
@@ -79,7 +79,7 @@ export function set_active_world(target: world | string): void
 /**
  * 取得當前操作焦點之世界實例（Active World）。
  */
-export function get_active_world(): world | undefined
+export function get_active_world(): std_world | undefined
 {
     return _active_world;
 }
@@ -87,9 +87,9 @@ export function get_active_world(): world | undefined
 /**
  * 便捷建立新世界實例，自動註冊並設為 Active World。
  */
-export function create_world(options: world_options = {}): world
+export function create_world(options: world_options = {}): std_world
 {
-    const w = new world(options);
+    const w = new std_world(options);
     register_world(w);
     set_active_world(w);
     return w;
@@ -215,4 +215,4 @@ export function delete_history_node(target_uid: number): boolean
     return _active_world?.delete_history_node(target_uid) ?? false;
 }
 
-export { world, type world_options };
+export { std_world as world, type world_options };
