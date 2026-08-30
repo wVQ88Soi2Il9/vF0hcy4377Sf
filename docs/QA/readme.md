@@ -44,4 +44,3 @@ docs/QA/<number>-<yymmddhhmm>_<topic>.md
 
 - **使用者 / 人類**：多人協作時優先讀取本地 `git config user.name` 標記為 `（human: <git_user_name>）`（例：`（human: alice）`、`（human: bob）`）；亦相容通用 `（human）` 或 `（使用者）`。
 - **Agent**：強制標註使用的模型名稱與強度，例如 `（agent: gemini-3.7-flash）`、`（agent: sonnet-3.7）`。
-
