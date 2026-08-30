@@ -26,7 +26,7 @@ docs/QA/<yymmddhhmm>_<topic>.md
 ```
 
 * `<yymmddhhmm>`：建立 QA 的時間，預設UTC+8。
-* `<topic>`：簡短英文主題，使用 kebab-case。
+* `<topic>`：optional, 簡短英文主題，使用 kebab-case。
 
 例如：
 
@@ -87,7 +87,7 @@ Agent 應記錄實際模型名稱；若 reasoning level、模式或其他設定�
 
 ## 4. Hashtags
 
-每份 QA 結尾應加入少量 hashtags，方便跨檔案搜尋相關討論。
+每份 QA 結尾應加入2~5個 hashtags，方便跨檔案搜尋相關討論。
 
 例如：
 
@@ -99,3 +99,21 @@ Agent 應記錄實際模型名稱；若 reasoning level、模式或其他設定�
 * 優先標記實際涉及的 subsystem / concept，例如 `#core`、`#runtime`、`#port`、`#hook`、`#graph`。
 * 同一概念應盡量使用一致名稱，避免同時出現 `#hook`、`#hooks`、`#hook-system` 等同義標籤。
 * Hashtag 用於搜尋，不必完整描述 QA；保留最有辨識力的數個標籤即可。
+
+## 5. 避免過強的結論
+
+Agent 容易使用比實際證據更強的語氣。整理 QA 時應保留原本的不確定性，不要把建議、偏好或暫時結論寫成必然規則。
+
+例如：
+
+```text
+「目前較適合」≠「必須」
+
+「尚未發現 standalone port 的需求」≠「port 必須屬於 device」
+
+「這個設計較簡單」≠「這是正確的設計」
+```
+
+除非已由明確需求、invariant、證明或團隊決策支持，否則避免使用 `must`、`always`、`never`、`obviously`、`the correct design` 等過強措辭。
+
+**QA 應記錄當時能支持多強的結論，就只寫到多強。**

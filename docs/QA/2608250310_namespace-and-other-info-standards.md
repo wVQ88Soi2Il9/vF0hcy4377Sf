@@ -1,4 +1,4 @@
-# 0002-2608250310_namespace-and-other-info-standards
+# 2608250310_namespace-and-other-info-standards
 
 - **status:** resolved
 - **topic:** 命名空間（Namespace）型態收斂與 other_info 擴充規範

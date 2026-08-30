@@ -1,4 +1,4 @@
-# 0008-2608300135_inside-what-is-a-world-outside-current-worlds
+# 2608300135_inside-what-is-a-world-outside-current-worlds
 
 - **status:** resolved
 - **topic:** 核心邊界定案：Core 內部定義「What is a world」、外部管理「Current worlds (may > 1)」

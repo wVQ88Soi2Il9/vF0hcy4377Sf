@@ -1,4 +1,4 @@
-# 0001-2608250130_core-vs-api-wrapper
+# 2608250130_core-vs-api-wrapper
 
 - **status:** resolved
 - **topic:** 為什麼 Core 與 API.ts 需要分層封裝？

@@ -1,4 +1,4 @@
-# 0003-2608251433_core-api-vs-inter-pack-import-boundaries
+# 2608251433_core-api-vs-inter-pack-import-boundaries
 
 - **status:** resolved
 - **topic:** `@/API` 核心邊界與 Pack 間直接引用的職責分界

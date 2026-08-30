@@ -1,4 +1,4 @@
-# 0006-2608260303_core-vs-runtime-architecture-boundaries
+# 2608260303_core-vs-runtime-architecture-boundaries
 
 - **status:** resolved
 - **topic:** Core / Runtime / Vanilla 職責邊界、歷史操作歸屬與多 Runtime 實例架構推演

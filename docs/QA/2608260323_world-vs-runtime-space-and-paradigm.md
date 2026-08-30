@@ -1,4 +1,4 @@
-# 0007-2608260323_world-vs-runtime-space-and-paradigm
+# 2608260323_world-vs-runtime-space-and-paradigm
 
 - **status:** resolved
 - **topic:** runtime 改名 world、map 改名 space 之語意與 class world / class space 選型雙向論證

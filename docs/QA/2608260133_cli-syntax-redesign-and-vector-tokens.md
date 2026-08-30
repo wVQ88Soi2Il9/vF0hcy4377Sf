@@ -1,4 +1,4 @@
-# 0005-2608260133_cli-syntax-redesign-and-vector-tokens
+# 2608260133_cli-syntax-redesign-and-vector-tokens
 
 - **status:** resolved
 - **topic:** CLI 指令語法重構（舊有旗標格式問題、空格 vs 分號、連續數字向量解析之架構權衡）

@@ -1,4 +1,4 @@
-# 0009-2608301512_hook-definition-and-runtime-ownership
+# 2608301512_hook-definition-and-runtime-ownership
 
 * **status:** resolved
 * **topic:** Core hook 的資料結構、callback 型別，以及 hook state 的 ownership
