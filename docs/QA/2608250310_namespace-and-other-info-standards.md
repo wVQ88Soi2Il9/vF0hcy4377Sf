@@ -36,3 +36,5 @@
 4. **`other_info` 擴充袋**強制以 `<pack_id>` 物件包裹且不帶 `$` 符號。
 5. **`$` 符號**專屬於檔案系統擴充目錄（`$<rely_pack>/`）。
 
+#core #registry #architecture
+

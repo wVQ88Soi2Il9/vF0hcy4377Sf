@@ -93,3 +93,5 @@ flowchart TD
 2. `jump_to_root`（`while (undo())`）與 `jump_to_leaf`（`while (redo())`）達到極致的鏡像對稱。
 3. 確立 Fork 節點無歧義路徑原則。
 4. 同步在 `@/core` 與 `@/runtime` 導出 `jump_to_root`。
+
+#core #history

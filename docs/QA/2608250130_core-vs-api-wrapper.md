@@ -22,3 +22,5 @@
 
 ## 結論
 `src/core/` 專注於純數學結構與演算法（零外部全域依賴）；`src/API.ts` 作為門面自動注入 Runtime 全域實例，分工清晰且杜絕循環依賴。
+
+#core #architecture

@@ -63,3 +63,5 @@ Core 保持 **100% 零全域實例、零外部狀態**，專注於描述構成�
 ## 結論
 
 正式拍板定案「**內部 What is a world（Core Layer 4 聚合實體）+ 外部 Current worlds（多實例管理中心）**」架構，依此標準推進 Core 內部重構與單向 DAG 拓撲演進。
+
+#world #architecture

@@ -93,3 +93,5 @@
 1. **命名全面定案**：`runtime` $\rightarrow$ **`world`**，`map` $\rightarrow$ **`space`**。
 2. **三位一體實體模型**：正式確立 $\text{World} = \text{Space} + \text{History} + \text{Registry}$。
 3. **OOP 領域層級定案**：全面採用 `class world` 與 `class space` 作為核心實體類別，內聚狀態異動與 Hooks 觸發，同時保留純函式轉發與可逆指令契約，兼具物件導向高內聚性與底層純粹性。
+
+#world #runtime #space #architecture

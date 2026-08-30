@@ -79,6 +79,8 @@ Array<(...args: any[]) => void>
 
 例如：
 
+#hook #core #runtime
+
 ```ts
 for (const hook of hooks)
 {

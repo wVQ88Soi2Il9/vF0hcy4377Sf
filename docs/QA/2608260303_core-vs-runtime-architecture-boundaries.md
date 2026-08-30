@@ -78,3 +78,5 @@ Core 是無狀態的（Stateless）＝ Core 的函式不依賴、不修改任何
 2. **runtime**：決定「操作永遠作用在哪一份資料上」。本質是把 `(tree, map)` 全域參數 Curry 掉的無邏輯轉發捷徑。
 3. **packs/vanilla**：業務語意層，透過 `other_info['vanilla']` 擴充通用容器。
 4. **多實例與「Global Arg 的 Curry」互斥**：一旦支援多個獨立地圖/歷史樹，實例操作回歸 Core 純函式，Runtime 僅作為當前 Active Instance 的指標。
+
+#core #runtime #architecture
