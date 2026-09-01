@@ -5,7 +5,7 @@ trigger: always_on
 
 # Project Guidelines & Architecture
 
-本文件為專案唯一的架構與開發規範（Single Source of Truth），所有開發與程式碼均須嚴格遵守。
+本文件為專案唯一的架構與開發規範，所有開發與程式碼均須嚴格遵守。
 
 ---
 
