@@ -11,7 +11,10 @@ export interface namespaced_id
 export type uid = number;
 
 // ── Hooks (發布 / 訂閱) ──────────────────────────────────────────────────────
+
+export type hook_callback = (...args: any[]) => void;
+
 /**
- * pack-> Map:{id->Array}
+ * pack -> Map: { id -> Array }
  */
-export type hook_list = Map<string, Map<string, Array<(...args: any[]) => void>>>
+export type hook_list = Map<string, Map<string, hook_callback[]>>;

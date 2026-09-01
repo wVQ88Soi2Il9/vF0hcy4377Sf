@@ -19,6 +19,7 @@ export interface pack_module
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
     operations?:   Record<string, reversible_operation_factory>;
+    hooks?:        namespaced_id[];
     init_pack?:    () => void;
     [key: string]: unknown;
 }
