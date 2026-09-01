@@ -1,4 +1,4 @@
-import type { uid, namespaced_id, vector, hook_list, hook_callback } from './definition_i';
+import type { uid, namespaced_id, vector, hook_list } from './definition_i';
 import { space, device_constructor, device } from './definition_ii';
 import type { reversible_operation } from './definition_iii';
 import * as history from './history';
@@ -15,19 +15,7 @@ export class pure_world
         this.id = id ?? `world_${Date.now()}`;
         this.space = sp;
         this.history = history.create_tree();
-        this.current_hook = new Map();
-        if (template)
-        {
-            for (const [namespace, pack_hooks] of template)
-            {
-                const inner = new Map<string, hook_callback[]>();
-                for (const hook_id of pack_hooks.keys())
-                {
-                    inner.set(hook_id, []);
-                }
-                this.current_hook.set(namespace, inner);
-            }
-        }
+        this.current_hook = template ? structuredClone(template) : new Map();
     }
 
     public trigger(namespaced_id: namespaced_id, ...args: any[]): void

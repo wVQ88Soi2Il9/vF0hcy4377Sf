@@ -41,6 +41,9 @@
 ### O7 · 2026-09-02 02:54:00+08:00 — 完成 inject_world_hook 單行無條件注入並清除舊有防禦殘留
 在 `src/core_v3/hooks.ts` 中將 `inject_world_hook` 徹底替換為單行 `target_world.current_hook.get(ns)!.get(id)!.push(cb)`，清除舊有 `if (!pack_hooks)` 等防禦殘留。
 
+### O8 · 2026-09-02 03:02:00+08:00 — pure_world 建構子改採原生 structuredClone 深拷貝槽位
+將 constructor 內手寫之雙層迴圈替換為單行 `this.current_hook = template ? structuredClone(template) : new Map()`，消除命令式樣板代碼。
+
 ---
 
 ## 待辦
@@ -92,6 +95,7 @@
 
 - H1 · 2026-09-02 02:46 決斷 —— 確立階段 4 讓各世界持有獨立回呼骨架（human: wVQ88Soi2Il9）
 - H2 · 2026-09-02 02:57 落地 —— pure_world 建構子內聚初始化獨立槽位，刪除 hooks.ts 多餘函式（agent: gemini-3.7-flash-high） → O6
+- H3 · 2026-09-02 03:02 落地 —— 改採原生 structuredClone 單行深拷貝槽位（agent: gemini-3.7-flash-high） → O8
 
 ### 5 實作階段 5 之單行無條件回呼注入 (Inject Callbacks in hooks.ts)
 - **state:** 等待確認
