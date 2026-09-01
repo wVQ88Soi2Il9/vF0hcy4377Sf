@@ -13,7 +13,7 @@
 - `0054#3` · **等待確認** — 實作階段 3 之全域空槽位清單建構 (Build Complete Empty Hook List in hooks.ts)
 - `0054#4` · **等待確認** — 實作階段 4 之世界專屬空槽位生成與 world 接軌 (New World Hook Slots in world.ts)
 - `0054#5` · **等待確認** — 實作階段 5 之單行無條件回呼注入 (Inject Callbacks in hooks.ts)
-- `0054#6` · **待實作** — 整合測試驗證 5 階段生命週期全流程與多世界隔離性 (Integration Verification)
+- `0054#6` · **等待確認** — 整合測試驗證 5 階段生命週期全流程與多世界隔離性 (Integration Verification)
 - `0053#1` · **等待確認** — 重命名 Core 空間型別為 class space 並維持純函式演算法 (class space & Core Algorithms)
 - `0053#2` · **等待確認** — 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
 - `0053#3` · **等待確認** — 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)

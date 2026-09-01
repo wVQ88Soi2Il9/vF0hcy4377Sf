@@ -44,6 +44,9 @@
 ### O8 · 2026-09-02 03:02:00+08:00 — pure_world 建構子改採原生 structuredClone 深拷貝槽位
 將 constructor 內手寫之雙層迴圈替換為單行 `this.current_hook = template ? structuredClone(template) : new Map()`，消除命令式樣板代碼。
 
+### O9 · 2026-09-02 03:03:00+08:00 — 完成 tests/core_v3_hooks.test.ts 整合測試驗證通過
+撰寫並執行 vitest 測試，驗證 1~5 階段生命週期運作正常，確認 world_1 與 world_2 回呼槽位與執行相互完全隔離。
+
 ---
 
 ## 待辦
@@ -113,8 +116,8 @@
 - H2 · 2026-09-02 02:54 落地 —— 替換為單行無條件注入並徹底清理舊防禦程式碼（agent: gemini-3.7-flash-high） → O7
 
 ### 6 整合測試驗證 5 階段生命週期全流程與多世界隔離性 (Integration Verification)
-- **state:** 待實作
-- **basis:** → O4
+- **state:** 等待確認
+- **basis:** → O4, O9
 
 撰寫自動化測試腳本，完整串連 5 階段：
 1. `init`：建立 pack_registry。
@@ -126,3 +129,4 @@
 **沿革**
 
 - H1 · 2026-09-02 02:46 決斷 —— 建立 5 階段全流程驗證測試（human: wVQ88Soi2Il9）
+- H2 · 2026-09-02 03:03 落地 —— 完成整合測試撰寫並通過 vitest 執行驗證（agent: gemini-3.7-flash-high） → O9
