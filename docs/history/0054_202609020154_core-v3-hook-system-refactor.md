@@ -6,10 +6,14 @@
 
 ## 主題簡述
 
-依據使用者明確指示之架構核心：「**Hook list is global, but inject callback is per-world (方式 B 顯式注入)**」，重構 `src/core_v3` 的 Hook 系統：
-1. **全域靜態 Hook 清單 (Global Hook List)**：系統 Init 時建立全域 registry 與 empty hook list，各 Pack 宣告並注入其提供的 Hook 槽位（定義整個系統支援哪些合法 Hook 點位）。
-2. **世界獨立回呼注入 (Per-World Callback Injection - 方式 B)**：回呼函式（callbacks）依附於各個 `world` 實例。外部透過顯式呼叫注入至指定目標 World，各世界的事件觸發與監聽互不干擾。
-
+依據使用者明確定義之 5 階段生命週期架構，重構 `src/core_v3` 的 Hook 系統：
+```text
+1. init
+2. complete registry
+3. complete empty hook list = Map<namespace, Map<id, callbacks[]>>
+4. new world
+5. inject callbacks
+```
 嚴格遵守「每次只動一小部分」原則，每次變更僅聚焦單一檔案之最小增量。
 
 ---
@@ -17,19 +21,25 @@
 ## 觀察與推論
 
 ### O1 · 2026-09-02 01:54:00+08:00 — 全域 Hook 規範與 World 實例回呼之職責分離
-若回呼函式為全世界共用，會導致多世界場景下事件互相污染；若 Hook 清單完全由世界私有，則各世界無法享有 Pack 宣告的一致規格。確立「Hook List 為全域靜態槽位規範、Callback 注入為世界實例獨立持有」的心智模型，並採方式 B（顯式向目標 World 注入回呼）。
+確立「Hook List 結構為全域靜態槽位規範、Callback 注入為世界實例獨立持有」的心智模型。
 
 ### O2 · 2026-09-02 01:54:30+08:00 — 完成 definition_i.ts Hook 回呼與結構型別定義
-在 `src/core_v3/definition_i.ts` 定義 `hook_callback` 型別，並以 `hook_callback[]` 表達 `hook_list`，維持 Level I 純契約。
+在 `src/core_v3/definition_i.ts` 定義 `hook_callback` 型別，並以 `hook_callback[]` 表達 `hook_list = Map<string, Map<string, hook_callback[]>>`，維持 Level I 純契約。
 
 ### O3 · 2026-09-02 02:02:00+08:00 — 完成 pack_module.hooks: namespaced_id[] 宣告與 register_pack 純粹化
-在 `src/core_v3/definition_iii.ts` 為 `pack_module` 擴充 `hooks?: namespaced_id[]` 欄位；`register_pack` 回歸最簡 `registry.packs.set`，使 Pack 註冊進 registry 即完整具備全域 Hook 宣告資訊。
+在 `src/core_v3/definition_iii.ts` 為 `pack_module` 擴充 `hooks?: namespaced_id[]` 欄位；`register_pack` 回歸最簡 `registry.packs.set`，Pack 註冊完畢即構成完整的 Registry（階段 1 & 2）。
 
-### O4 · 2026-09-02 02:03:00+08:00 — 完成 hooks.ts 之 inject_world_hook 顯式注入函式
-在 `src/core_v3/hooks.ts` 實作 `inject_world_hook(target_world, target_hook, callback)`，由外部顯式向特定 World 實例的 `current_hook` 注入回呼，並在 `src/core_v3/index.ts` 匯出。
+### O4 · 2026-09-02 02:46:00+08:00 — 確立 5 階段生命週期架構分解
+由使用者確立 5 階段生命週期順序（init -> complete registry -> complete empty hook list -> new world -> inject callbacks），各階段職責完全單一且正交。
 
-### O5 · 2026-09-02 02:28:00+08:00 — 徹底清理多餘預先初始化邏輯，保持 Core v3 極簡純粹
-移除多餘的 `create_world_hooks` 遍歷邏輯與 `pure_world` 的 `registry` 建構依賴。`hooks.ts` 僅收斂為純粹的 `inject_world_hook(target_world, target_hook, callback)`，維持零額外開銷與按需分配。
+### O5 · 2026-09-02 02:48:00+08:00 — 完成 hooks.ts 之 build_empty_hook_list 實作
+在 `src/core_v3/hooks.ts` 實作 `build_empty_hook_list(registry: pack_registry): hook_list`，走訪已就緒之 registry 產出完整的全域全空槽位模板。
+
+### O6 · 2026-09-02 02:51:00+08:00 — 完成 pure_world 建構子內聚初始化獨立槽位
+在 `src/core_v3/world.ts` 建構子內部直接由 template 生成世界專屬槽位；`src/core_v3/hooks.ts` 徹底刪除多餘的 `create_world_hook_list` 中介函式，消除模組跨檔案依賴。
+
+### O7 · 2026-09-02 02:54:00+08:00 — 完成 inject_world_hook 單行無條件注入並清除舊有防禦殘留
+在 `src/core_v3/hooks.ts` 中將 `inject_world_hook` 徹底替換為單行 `target_world.current_hook.get(ns)!.get(id)!.push(cb)`，清除舊有 `if (!pack_hooks)` 等防禦殘留。
 
 ---
 
@@ -49,41 +59,66 @@
 - H1 · 2026-09-02 01:54 決斷 —— 確立 Hook 回呼與巢狀 Map 資料結構純契約（human: wVQ88Soi2Il9）
 - H2 · 2026-09-02 01:54 落地 —— 完成 hook_callback 與 hook_list 型別定義（agent: gemini-3.7-flash-high） → O2
 
-### 2 擴充 Pack 模組契約並建立全域 Hook 容器與槽位註冊 (Global Hook Slot Registry)
+### 2 擴充 Pack 模組契約並建立完整 Registry (Complete Registry in definition_iii.ts)
 - **state:** 等待確認
 - **basis:** → O1, O3
 
-在 `src/core_v3/definition_iii.ts` 的 `pack_module` 擴充 `hooks?: namespaced_id[]` 宣告欄位，Pack 註冊進 registry 即天然具備全域 Hook 規範清單。
+在 `src/core_v3/definition_iii.ts` 的 `pack_module` 擴充 `hooks?: namespaced_id[]` 宣告欄位，Pack 註冊進 registry 即天然具備全域 Hook 規範清單（階段 1 與 2 就緒）。
 
 **沿革**
 
 - H1 · 2026-09-02 01:54 決斷 —— pack_module 宣告 hooks: namespaced_id[]，收斂由 registry 持有全域規範（human: wVQ88Soi2Il9）
 - H2 · 2026-09-02 02:02 落地 —— 完成 pack_module.hooks: namespaced_id[] 擴充與 registry.packs 收斂（agent: gemini-3.7-flash-medium） → O3
 
-### 3 實作 World 實例 Callback 顯式注入與事件派發 (Per-World Hook Injection & Trigger)
+### 3 實作階段 3 之全域空槽位清單建構 (Build Complete Empty Hook List in hooks.ts)
 - **state:** 等待確認
-- **basis:** → O1, O4, O5
+- **basis:** → O4, O5
 
-在 `src/core_v3/hooks.ts` 實作方式 B 的世界注入函式：
-- `inject_world_hook(target_world: pure_world, target_hook: namespaced_id, callback: hook_callback): void`：顯式向指定 World 實例的 `current_hook` 槽位注入回呼。
-並確認 `pure_world.trigger()` 依賴實例自身 `current_hook`，確保事件與回呼嚴格隔離於各自世界。
-在 `src/core_v3/index.ts` 匯出 `hooks.ts`。
+在 `src/core_v3/hooks.ts` 實作階段 3 工具函式：
+- `build_empty_hook_list(registry: pack_registry): hook_list`：遍歷 Registry 中所有 Pack 的 `hooks` 宣告，建立全域完整的 `Map<namespace, Map<id, []>>` 模板。此清單內部皆為乾淨空陣列，作為世界生成時的標準槽位藍圖。
 
 **沿革**
 
-- H1 · 2026-09-02 01:54 決斷 —— 依方式 B 實作 inject_world_hook 顯式向世界注入回呼（human: wVQ88Soi2Il9）
-- H2 · 2026-09-02 02:03 落地 —— 實作 inject_world_hook 並於 index.ts 匯出（agent: gemini-3.7-flash-medium） → O4
-- H3 · 2026-09-02 02:28 修正 —— 移除 create_world_hooks，僅保留 inject_world_hook 極簡實作（agent: gemini-3.7-flash-high） → O5
+- H1 · 2026-09-02 02:46 決斷 —— 確立階段 3 build_empty_hook_list 從 registry 建構完整全空槽位模板（human: wVQ88Soi2Il9）
+- H2 · 2026-09-02 02:48 落地 —— 實作 build_empty_hook_list 完成階段 3 全域槽位清單建構（agent: gemini-3.7-flash-high） → O5
 
-### 4 整合測試驗證全域 Hook 槽位與 World 實例隔離性 (Integration Verification)
+### 4 實作階段 4 之世界專屬空槽位生成與 world 接軌 (New World Hook Slots in world.ts)
+- **state:** 等待確認
+- **basis:** → O4, O6
+
+在 `src/core_v3/world.ts` 的 `pure_world` 建構子接收 `template?: hook_list`，內部直接由 template 內聚初始化該世界專屬的獨立槽位，消除多餘中介函式。
+
+**沿革**
+
+- H1 · 2026-09-02 02:46 決斷 —— 確立階段 4 讓各世界持有獨立回呼骨架（human: wVQ88Soi2Il9）
+- H2 · 2026-09-02 02:57 落地 —— pure_world 建構子內聚初始化獨立槽位，刪除 hooks.ts 多餘函式（agent: gemini-3.7-flash-high） → O6
+
+### 5 實作階段 5 之單行無條件回呼注入 (Inject Callbacks in hooks.ts)
+- **state:** 等待確認
+- **basis:** → O4, O7
+
+在 `src/core_v3/hooks.ts` 實作階段 5 注入函式：
+- `inject_world_hook(target_world: pure_world, target_hook: namespaced_id, callback: hook_callback): void`：
+  因前兩階段已保證槽位 100% 存在，注入端實現極致單行：
+  `target_world.current_hook.get(target_hook.namespace)!.get(target_hook.id)!.push(callback);`
+  無任何 `if (!has)` 或防禦性補洞邏輯。
+
+**沿革**
+
+- H1 · 2026-09-02 02:46 決斷 —— 確立階段 5 inject_world_hook 無判斷單行注入（human: wVQ88Soi2Il9）
+- H2 · 2026-09-02 02:54 落地 —— 替換為單行無條件注入並徹底清理舊防禦程式碼（agent: gemini-3.7-flash-high） → O7
+
+### 6 整合測試驗證 5 階段生命週期全流程與多世界隔離性 (Integration Verification)
 - **state:** 待實作
-- **basis:** → O1
+- **basis:** → O4
 
-撰寫驗證測試，驗證：
-1. 建立全域 registry 與全域 hook_list，Pack 成功注入槽位。
-2. 建立 `world_a` 與 `world_b`，分別顯式注入不同的 callbacks。
-3. `world_a` 觸發事件時，僅執行 `world_a` 之 callbacks，`world_b` 不受影響。
+撰寫自動化測試腳本，完整串連 5 階段：
+1. `init`：建立 pack_registry。
+2. `complete registry`：註冊多個宣告 hooks 的 Pack。
+3. `complete empty hook list`：呼叫 `build_empty_hook_list`，驗證全域所有槽位均初始化為空陣列。
+4. `new world`：建立 `world_1` 與 `world_2`，分別注入專屬槽位。
+5. `inject callbacks`：向 `world_1` 單行注入 callback，驗證 `world_1.trigger()` 執行回呼，而 `world_2.trigger()` 靜默隔離。
 
 **沿革**
 
-- H1 · 2026-09-02 01:54 決斷 —— 建立多世界隔離性驗證測試（human: wVQ88Soi2Il9）
+- H1 · 2026-09-02 02:46 決斷 —— 建立 5 階段全流程驗證測試（human: wVQ88Soi2Il9）
