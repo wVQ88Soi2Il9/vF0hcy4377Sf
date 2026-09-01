@@ -1,7 +1,8 @@
 import type { uid, namespaced_id, vector, hook_list } from './definition_i';
 import { space, device_constructor, device } from './definition_ii';
-import { reversible_operation } from './definition_iii';
+import type { reversible_operation, pack_registry } from './definition_iii';
 import * as history from './history';
+import { create_world_hooks } from './hooks';
 
 export class pure_world
 {
@@ -10,12 +11,12 @@ export class pure_world
     public          history:            history.tree;
     public          current_hook:       hook_list;
 
-    constructor(sp: space, id?: string)
+    constructor(sp: space, reg?: pack_registry, id?: string)
     {
         this.id = id ?? `world_${Date.now()}`;
         this.space = sp;
         this.history = history.create_tree();
-        this.current_hook = new Map();
+        this.current_hook = create_world_hooks(reg);
     }
 
     public trigger(namespaced_id: namespaced_id, ...args: any[]): void

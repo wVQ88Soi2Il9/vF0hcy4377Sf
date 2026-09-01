@@ -24,7 +24,11 @@ trigger: always_on
    - `state: 完成` 與 `state: 否決` 專屬 **Human（使用者）** 判定與勾選，**Agent 無權**將待辦狀態改為完成或否決。Agent 實作完成後一律只能更新為 `等待確認`。
 5. **禁止逕行實作未決項目 (Unknown Policy)**：
    - 標記 `⚠️ unknown` 之項目禁止逕行假設實作，標註 `// TODO: unknown — [reason]` 並向使用者確認。
-
+6. **以當前需求與已確認的設計為準，不要為假設的歷史包袱、安全性或相容性增加程式碼。**
+   - 不預設需要相容舊 API、舊資料或已棄用的設計。
+   - 不為「下游可能誤用」擅自加入防禦性檢查、fallback。
+   - 新增這些機制時，必須能指出目前實際存在的需求或具體風險；「比較安全」「以後可能需要」不足以構成理由。
+   
 ---
 
 ## 2. Plan History 核心溝通與任務列管 (Plan History Collaboration Protocol)

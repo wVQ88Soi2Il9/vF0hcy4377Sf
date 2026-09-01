@@ -11,7 +11,7 @@
 - `0054#1` · **等待確認** — 定義 Hook 回呼與資料結構契約 (Hook Types & Callback Contract in definition_i.ts)
 - `0054#2` · **等待確認** — 擴充 Pack 模組契約並建立全域 Hook 容器與槽位註冊 (Global Hook Slot Registry)
 - `0054#3` · **等待確認** — 實作 World 實例 Callback 顯式注入與事件派發 (Per-World Hook Injection & Trigger)
-- `0054#4` · **等待確認** — 整合測試驗證全域 Hook 槽位與 World 實例隔離性 (Integration Verification)
+- `0054#4` · **待實作** — 整合測試驗證全域 Hook 槽位與 World 實例隔離性 (Integration Verification)
 - `0053#1` · **等待確認** — 重命名 Core 空間型別為 class space 並維持純函式演算法 (class space & Core Algorithms)
 - `0053#2` · **等待確認** — 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
 - `0053#3` · **等待確認** — 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)

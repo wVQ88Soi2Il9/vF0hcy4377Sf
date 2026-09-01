@@ -28,6 +28,9 @@
 ### O4 · 2026-09-02 02:03:00+08:00 — 完成 hooks.ts 之 inject_world_hook 顯式注入函式
 在 `src/core_v3/hooks.ts` 實作 `inject_world_hook(target_world, target_hook, callback)`，由外部顯式向特定 World 實例的 `current_hook` 注入回呼，並在 `src/core_v3/index.ts` 匯出。
 
+### O5 · 2026-09-02 02:18:00+08:00 — 落地方案 B：create_world_hooks 骨架預先生成與 inject_world_hook 極簡化
+在 `src/core_v3/hooks.ts` 實作 `create_world_hooks(registry)`，於 `pure_world` 建構時自動生成該世界的 Hook 槽位骨架；`inject_world_hook` 簡化為極簡的單行注入。
+
 ---
 
 ## 待辦
@@ -59,17 +62,18 @@
 
 ### 3 實作 World 實例 Callback 顯式注入與事件派發 (Per-World Hook Injection & Trigger)
 - **state:** 等待確認
-- **basis:** → O1, O4
+- **basis:** → O1, O4, O5
 
 在 `src/core_v3/hooks.ts` 實作方式 B 的世界注入函式：
+- `create_world_hooks(registry?: pack_registry): hook_list` 依據 Registry 初始化 Hook 骨架。
 - `inject_world_hook(target_world: pure_world, target_hook: namespaced_id, callback: hook_callback): void`：顯式向指定 World 實例的 `current_hook` 槽位注入回呼。
-並確認 `pure_world.trigger()` 依賴實例自身 `current_hook`，確保事件與回呼嚴格隔離於各自世界。
-在 `src/core_v3/index.ts` 匯出 `hooks.ts`。
+並在 `pure_world` 建構時以 `create_world_hooks(reg)` 鋪設初始槽位，在 `src/core_v3/index.ts` 匯出 `hooks.ts`。
 
 **沿革**
 
 - H1 · 2026-09-02 01:54 決斷 —— 依方式 B 實作 inject_world_hook 顯式向世界注入回呼（human: wVQ88Soi2Il9）
 - H2 · 2026-09-02 02:03 落地 —— 實作 inject_world_hook 並於 index.ts 匯出（agent: gemini-3.7-flash-medium） → O4
+- H3 · 2026-09-02 02:18 落地 —— 實作 create_world_hooks 預先初始化與 inject_world_hook 單行注入（agent: gemini-3.7-flash-high） → O5
 
 ### 4 整合測試驗證全域 Hook 槽位與 World 實例隔離性 (Integration Verification)
 - **state:** 待實作
