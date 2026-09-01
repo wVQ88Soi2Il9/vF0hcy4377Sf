@@ -22,16 +22,16 @@ QA 記錄的是**思辨過程**，不只是最後答案。
 ## 1. 檔案命名
 
 ```text
-docs/QA/<yymmddhhmm>_<topic>.md
+docs/QA/<yymmddhhmm>.md
 ```
 
 * `<yymmddhhmm>`：建立 QA 的時間，預設UTC+8。
-* `<topic>`：optional, 簡短英文主題，使用 kebab-case。
+* 檔名只保留時間碼；主題改以檔尾 3～10 個 kebab-case hashtags 表示。
 
 例如：
 
 ```text
-docs/QA/2608301625_port-and-spatial-graph.md
+docs/QA/2608301625.md
 ```
 
 時間放在最前方，使檔案能自然依建立時間排序。
@@ -41,7 +41,7 @@ docs/QA/2608301625_port-and-spatial-graph.md
 ## 2. 建議格式
 
 ```markdown
-# <yymmddhhmm>_<topic>
+# <yymmddhhmm>
 
 - **status:** resolved  <!-- open | resolved | archived -->
 - **topic:** <討論主題>
@@ -87,7 +87,7 @@ Agent 應記錄實際模型名稱；若 reasoning level、模式或其他設定�
 
 ## 4. Hashtags
 
-每份 QA 結尾應加入2~5個 hashtags，方便跨檔案搜尋相關討論。
+每份 QA 結尾應加入 3～10 個 hashtags，作為該筆紀錄的主題標題並方便跨檔案搜尋。
 
 例如：
 
@@ -95,10 +95,11 @@ Agent 應記錄實際模型名稱；若 reasoning level、模式或其他設定�
 #core #architecture #port #graph
 ```
 
-* 使用小寫英文。
+* 使用小寫英文與 kebab-case。
 * 優先標記實際涉及的 subsystem / concept，例如 `#core`、`#runtime`、`#port`、`#hook`、`#graph`。
-* 同一概念應盡量使用一致名稱，避免同時出現 `#hook`、`#hooks`、`#hook-system` 等同義標籤。
-* Hashtag 用於搜尋，不必完整描述 QA；保留最有辨識力的數個標籤即可。
+* QA 數量較少時，搜尋召回率優先於極度精簡：除了 subsystem，也標記關鍵實體、API、架構決策與相近名詞；寧可多找到相關 QA，也不要因缺少同義詞而找不到。
+* 同一概念應有一個優先使用的 canonical tag；若有常見搜尋別名，可在不超過 10 個的前提下同時加入，例如 `#hook` 與 `#hooks`。
+* Hashtag 用於搜尋，不必完整描述 QA；保留可辨識且具搜尋價值的數個標籤即可。
 
 ## 5. 避免過強的結論
 
