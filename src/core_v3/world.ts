@@ -13,7 +13,7 @@ export class pure_world
     constructor(sp: space, id?: string)
     {
         this.id = id ?? `world_${Date.now()}`;
-        this.space = sp
+        this.space = sp;
         this.history = history.create_tree();
         this.current_hook = new Map();
     }
@@ -50,6 +50,81 @@ export class std_world extends pure_world
         this.trigger({namespace: 'std_world', id: 'create_device'}, this, dev);
 
         return dev;
+    }
+
+    /**
+     * 還原既有裝置實例（Redo / Undo 還原時使用），維持原 UID。
+     */
+    public restore_device(dev: device): void
+    {
+        const exists = this.space.devices.some(d => d.device_uid === dev.device_uid);
+        if (!exists)
+        {
+            this.space.devices.push(dev);
+            if (dev.device_uid >= this.space.next_device_uid)
+            {
+                this.space.next_device_uid = dev.device_uid + 1;
+            }
+            this.trigger({namespace: 'std_world', id: 'create_device'}, this, dev);
+        }
+    }
+
+    /**
+     * 依 UID 從空間中移除裝置。
+     */
+    public delete_device(device_uid: uid): device | undefined
+    {
+        const index = this.space.devices.findIndex(d => d.device_uid === device_uid);
+        if (index !== -1)
+        {
+            const dev = this.space.devices[index];
+            this.space.devices.splice(index, 1);
+            this.trigger({namespace: 'std_world', id: 'delete_device'}, this, dev);
+            return dev;
+        }
+        return undefined;
+    }
+
+    /**
+     * 移動指定 UID 之裝置至新位置。
+     */
+    public move_device(device_uid: uid, new_position: vector): void
+    {
+        const dev = this.space.devices.find(d => d.device_uid === device_uid);
+        if (dev)
+        {
+            const old_position = dev.position;
+            dev.position = new_position;
+            this.trigger
+            (
+                {namespace: 'std_world', id: 'move_device'},
+                this,
+                dev,
+                old_position,
+                new_position
+            );
+        }
+    }
+
+    /**
+     * 設定或清除裝置的選定配方。
+     */
+    public select_recipe(device_uid: uid, recipe_id?: namespaced_id): void
+    {
+        const dev = this.space.devices.find(d => d.device_uid === device_uid);
+        if (dev)
+        {
+            const old_recipe_id = dev.selected_recipe_id;
+            dev.selected_recipe_id = recipe_id;
+            this.trigger
+            (
+                {namespace: 'std_world', id: 'select_recipe'},
+                this,
+                dev,
+                old_recipe_id,
+                recipe_id
+            );
+        }
     }
     /**
      * 在該世界上執行可逆指令。
