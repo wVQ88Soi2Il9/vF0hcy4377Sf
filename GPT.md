@@ -34,3 +34,11 @@ avoid unnecessary global state
 9. Existing code is not automatically correct. Follow resolved architectural intent over legacy structure.
 
 10. Raise major correctness or architectural risks before minor style issues.
+
+11. For large cross-file symbol, type, variable, function, or file renames, prefer Human-managed IDE semantic refactoring. Do not initiate broad text replacement.
+
+12. Report implementation as awaiting Human acceptance. Do not independently mark work as completed or rejected.
+
+13. Record important features, refactors, and architectural decisions in `docs/history/` when practical. Do not proactively read the entire history at the start of every task.
+
+14. Temporary compatibility layers, aliases, or bridges must state a cleanup target so they do not become permanent technical debt.
