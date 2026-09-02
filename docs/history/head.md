@@ -4,10 +4,14 @@
 
 ## 目前使用中
 
-[0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
+[0055_202609022215_core-hook-multi-world-refactor](./0055_202609022215_core-hook-multi-world-refactor.md) — `in-progress`，待辦待決剩 4/4
 
 ## 現在開著的（逐格）
 
+- `0055#1` · **待實作** — 定義 Hook 清單藍圖機制 (Define Empty Hook List Blueprint)
+- `0055#2` · **待實作** — 賦予 World 獨立 Hook 實例 (World Unique Hook List)
+- `0055#3` · **待實作** — 替換全域注入為 World 綁定注入 (Bind Callbacks to Specific World)
+- `0055#4` · **待實作** — 遷移現有 Pack 並驗證隔離性 (Migrate & Verify)
 - `0054#1` · **等待確認** — 定義 Hook 回呼與資料結構契約 (Hook Types & Callback Contract in definition_i.ts)
 - `0054#2` · **等待確認** — 擴充 Pack 模組契約並建立完整 Registry (Complete Registry in definition_iii.ts)
 - `0054#3` · **等待確認** — 實作階段 3 之全域空槽位清單建構 (Build Complete Empty Hook List in hooks.ts)
@@ -30,11 +34,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0054#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0055#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0055** [0055_202609022215_core-hook-multi-world-refactor](./0055_202609022215_core-hook-multi-world-refactor.md) — `in-progress`，待辦待決剩 4/4
 - **0054** [0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
 - **0053** [0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4
 - **0052** [0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 1/3
