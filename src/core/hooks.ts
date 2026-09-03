@@ -1,120 +1,49 @@
-import type { device, vector, history_tree, namespaced_id } from './types';
-import type { space } from './space_manager';
+/**
+ * src/core_v3/hooks.ts — World 實例 Hook 回呼顯式注入操作
+ */
 
-export type device_create_hook = (sp: space, dev: device) => void;
-export type device_delete_hook = (sp: space, dev: device) => void;
-export type device_move_hook =
-(
-    sp:           space,
-    dev:          device,
-    old_position: vector,
-    new_position: vector
-) => void;
-export type device_select_recipe_hook =
-(
-    sp:            space,
-    dev:           device,
-    old_recipe_id: namespaced_id | undefined,
-    new_recipe_id: namespaced_id | undefined
-) => void;
-export type history_change_hook = (tree: history_tree) => void;
+import type { hook_callback, hook_list, namespaced_id } from './definition_i';
+import type { pack_registry } from './definition_iii';
+import type { pure_world } from './world';
 
-export const hooks = 
+/**
+ * 依據已就緒之 pack_registry，建構出完整的全域空 Hook 槽位清單（階段 3）。
+ * 結構為 Map<namespace, Map<id, []>>。
+ */
+export function build_empty_hook_list(registry: pack_registry): hook_list
 {
-    on_device_create:        [] as device_create_hook[],
-    on_device_delete:        [] as device_delete_hook[],
-    on_device_move:          [] as device_move_hook[],
-    on_device_select_recipe: [] as device_select_recipe_hook[],
-    on_history_change:       [] as history_change_hook[]
-};
-
-export function trigger_create_device(sp: space, dev: device): void
-{
-    for (const hook of hooks.on_device_create)
+    const hooks: hook_list = new Map();
+    for (const pack of registry.packs.values())
     {
-        hook(sp, dev);
-    }
-}
-
-export function trigger_delete_device(sp: space, dev: device): void
-{
-    for (const hook of hooks.on_device_delete)
-    {
-        hook(sp, dev);
-    }
-}
-
-export function trigger_move_device
-(
-    sp:           space,
-    dev:          device,
-    old_position: vector,
-    new_position: vector
-): void
-{
-    for (const hook of hooks.on_device_move)
-    {
-        hook(sp, dev, old_position, new_position);
-    }
-}
-
-export function trigger_select_recipe
-(
-    sp:            space,
-    dev:           device,
-    old_recipe_id: namespaced_id | undefined,
-    new_recipe_id: namespaced_id | undefined
-): void
-{
-    for (const hook of hooks.on_device_select_recipe)
-    {
-        hook(sp, dev, old_recipe_id, new_recipe_id);
-    }
-}
-
-export function trigger_history_change(tree: history_tree): void
-{
-    for (const hook of hooks.on_history_change)
-    {
-        hook(tree);
-    }
-}
-
-export type unsubscribe_function = () => void;
-
-function create_hook_subscriber<T>(list: T[]): (fn: T) => unsubscribe_function
-{
-    return (fn: T): unsubscribe_function =>
-    {
-        list.push(fn);
-        return () =>
+        if (pack.hooks)
         {
-            const index = list.indexOf(fn);
-            if (index !== -1)
+            for (const hook of pack.hooks)
             {
-                list.splice(index, 1);
+                let pack_hooks = hooks.get(hook.namespace);
+                if (!pack_hooks)
+                {
+                    pack_hooks = new Map();
+                    hooks.set(hook.namespace, pack_hooks);
+                }
+                if (!pack_hooks.has(hook.id))
+                {
+                    pack_hooks.set(hook.id, []);
+                }
             }
-        };
-    };
+        }
+    }
+    return hooks;
 }
 
-export const on_device_create = create_hook_subscriber(hooks.on_device_create);
-export const on_device_delete = create_hook_subscriber(hooks.on_device_delete);
-export const on_device_move = create_hook_subscriber(hooks.on_device_move);
-export const on_device_select_recipe = create_hook_subscriber(hooks.on_device_select_recipe);
-export const on_history_change = create_hook_subscriber(hooks.on_history_change);
-
-export function on_device_change(callback: () => void): unsubscribe_function
+/**
+ * 顯式向指定 World 實例的特定 Hook 槽位注入回呼函式（階段 5：單行無條件注入）。
+ */
+export function inject_world_hook
+(
+    target_world: pure_world,
+    target_hook:  namespaced_id,
+    callback:     hook_callback
+): void
 {
-    const unsub_create        = on_device_create(() => callback());
-    const unsub_delete        = on_device_delete(() => callback());
-    const unsub_move          = on_device_move(() => callback());
-    const unsub_select_recipe = on_device_select_recipe(() => callback());
-    return () =>
-    {
-        unsub_create();
-        unsub_delete();
-        unsub_move();
-        unsub_select_recipe();
-    };
+    target_world.current_hook.get(target_hook.namespace)!.get(target_hook.id)!.push(callback);
 }

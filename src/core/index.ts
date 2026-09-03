@@ -1,13 +1,23 @@
 /**
- * src/core/index.ts — Core 模組唯一公開 Public Entrypoint
+ * src/core_v3/index.ts — Core 模組唯一公開進入點
  *
- * 聚合導出 Core 引擎的所有公開型別、管理器、指令與 Hooks 介面。
- * 零全域狀態，零外部依賴。外部跨模組引用時，一律透過 `@/core` 存取。
+ * 聚合匯出所有子模組（primitives, domain, command, history, hooks, registry, world）。
  */
 
-export * from './types';
-export * from './pack_manager';
-export * from './space_manager';
-export * from './history_manager';
-export * from './commands';
+// ── Primitives & Utilities (Level I) ──────────────────────────────────────────
+export * from './definition_i';
+
+// ── Domain & Entities (Level II) ─────────────────────────────────────────────
+export * from './definition_ii';
+
+// ── Operations & Commands (Level III) ─────────────────────────────────────────
+export * from './definition_iii';
+
+// ── History ──────────────────────────────────────────────────────────────────
+export * from './history';
+
+// ── Hooks ────────────────────────────────────────────────────────────────────
 export * from './hooks';
+
+// ── Systems & Entities ───────────────────────────────────────────────────────
+export * from './world';

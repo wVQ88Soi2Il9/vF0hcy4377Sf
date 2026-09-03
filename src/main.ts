@@ -2,7 +2,7 @@ import
 {
     create_pack_registry,
     build_empty_hook_list
-} from '@/core_v3';
+} from '@/core';
 
 // ── 1. Initialize ────────────────────────────────────────────────────────────
 // Load packs in order and collect hook definitions into an empty hook template.
