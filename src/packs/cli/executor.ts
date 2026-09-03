@@ -1,20 +1,6 @@
-import type { pack_registry, map_command_factory, namespaced_id, device_constructor } from '@/core';
-import
-{
-    get_registry,
-    get_map,
-    get_dimension,
-    get_history_tree,
-    execute_command as api_execute_command,
-    undo,
-    redo,
-    jump_to_history,
-    jump_to_prev_fork,
-    jump_to_next_fork,
-    jump_to_root,
-    jump_to_leaf,
-    delete_history_node
-} from '@/world';
+import * as core from '@/core';
+import * as world from '@/world';
+
 import { tokenize_input, parse_vector, parse_integer } from './parser';
 import { format_cli_help } from './help';
 
@@ -33,24 +19,24 @@ function matches_alias(meta_alias: unknown, query: string): boolean
 
 function find_command
 (
-    registry: pack_registry,
+    registry: core.pack_registry,
     query:    string
-): { pack: string; id: string; factory: map_command_factory } | null
+): { pack: string; id: string; factory: any } | null
 {
     const normalized = query.toLowerCase().replace(/-/g, '_');
 
     if (normalized.includes(':'))
     {
         const [pack, id] = normalized.split(':');
-        const factory = registry.packs.get(pack)?.commands?.[id];
+        const factory = (registry.packs.get(pack) as any)?.commands?.[id];
         if (factory)
         {
             return { pack, id, factory };
         }
         const mod = registry.packs.get(pack);
-        if (mod?.commands)
+        if ((mod as any)?.commands)
         {
-            for (const [cmd_id, cmd_factory] of Object.entries(mod.commands))
+            for (const [cmd_id, cmd_factory] of Object.entries((mod as any).commands))
             {
                 if (matches_alias((cmd_factory as any)?.other_info?.cli?.alias, id))
                 {
@@ -61,12 +47,12 @@ function find_command
         return null;
     }
 
-    const matches: Array<{ pack: string; id: string; factory: map_command_factory }> = [];
+    const matches: Array<{ pack: string; id: string; factory: any }> = [];
     for (const [pack_name, mod] of registry.packs)
     {
-        if (mod.commands)
+        if ((mod as any).commands)
         {
-            for (const [cmd_id, factory] of Object.entries(mod.commands))
+            for (const [cmd_id, factory] of Object.entries((mod as any).commands))
             {
                 const is_direct_match = cmd_id.toLowerCase() === normalized;
                 const is_alias_match = matches_alias((factory as any)?.other_info?.cli?.alias, normalized);
@@ -92,9 +78,9 @@ function find_command
 
 function resolve_device_class
 (
-    registry: pack_registry,
+    registry: core.pack_registry,
     query:    string
-): { dev_class: device_constructor; ns_id: namespaced_id }
+): { dev_class: core.device_constructor; ns_id: core.namespaced_id }
 {
     if (query.includes(':'))
     {
@@ -107,7 +93,7 @@ function resolve_device_class
         return { dev_class, ns_id: { namespace: pack, id } };
     }
 
-    const matches: Array<{ dev_class: device_constructor; ns_id: namespaced_id }> = [];
+    const matches: Array<{ dev_class: core.device_constructor; ns_id: core.namespaced_id }> = [];
     for (const [pack_name, mod] of registry.packs)
     {
         if (mod.devices && mod.devices[query])
@@ -133,32 +119,32 @@ function execute_runtime_navigation(cmd: string, args: string[]): string | null
     switch (cmd)
     {
         case 'undo':
-            return undo() ? 'Undo: reverted 1 step.' : 'Undo: already at the root of history.';
+            return (world as any).undo?.() ? 'Undo: reverted 1 step.' : 'Undo: already at the root of history.';
         case 'redo':
-            return redo() ? 'Redo: stepped forward 1 step.' : 'Redo: already at the latest state.';
+            return (world as any).redo?.() ? 'Redo: stepped forward 1 step.' : 'Redo: already at the latest state.';
         case 'jump_to_history':
         {
             if (args.length === 0) throw new Error('Usage: jump_to_history <node_uid>');
             const uid = parse_integer(args[0], 'Node UID');
-            return jump_to_history(uid) ? `Jumped to history node #${uid}.` : `Failed to jump: node #${uid} not found.`;
+            return (world as any).jump_to_history?.(uid) ? `Jumped to history node #${uid}.` : `Failed to jump: node #${uid} not found.`;
         }
         case 'jump_to_prev_fork':
-            return jump_to_prev_fork() ? 'Jumped to previous fork.' : 'No previous fork found in history ancestry.';
+            return (world as any).jump_to_prev_fork?.() ? 'Jumped to previous fork.' : 'No previous fork found in history ancestry.';
         case 'jump_to_next_fork':
-            return jump_to_next_fork() ? 'Jumped to next fork.' : 'No forward fork found along this branch.';
+            return (world as any).jump_to_next_fork?.() ? 'Jumped to next fork.' : 'No forward fork found along this branch.';
         case 'jump_to_root':
-            return jump_to_root() ? 'Jumped to history root (node 0).' : 'Already at root.';
+            return (world as any).jump_to_root?.() ? 'Jumped to history root (node 0).' : 'Already at root.';
         case 'jump_to_leaf':
-            return jump_to_leaf() ? 'Jumped to branch leaf node.' : 'Already at leaf.';
+            return (world as any).jump_to_leaf?.() ? 'Jumped to branch leaf node.' : 'Already at leaf.';
         case 'delete_history_node':
         {
             if (args.length === 0) throw new Error('Usage: delete_history_node <node_uid>');
             const uid = parse_integer(args[0], 'Node UID');
-            return delete_history_node(uid) ? `Deleted history node #${uid}.` : `Failed to delete node #${uid}.`;
+            return (world as any).delete_history_node?.(uid) ? `Deleted history node #${uid}.` : `Failed to delete node #${uid}.`;
         }
         case 'history':
         {
-            const tree = get_history_tree();
+            const tree = (world as any).get_history_tree?.();
             return tree ? `History: ${tree.nodes.size} nodes. Active: #${tree.current_uid}.` : 'History tree not initialized.';
         }
         default:
@@ -182,7 +168,7 @@ export function execute_command(input: string): string
     const cmd    = tokens[0].toLowerCase().replace(/-/g, '_');
     const args   = tokens.slice(1);
 
-    const registry = get_registry();
+    const registry = (world as any).get_registry?.();
     if (!registry)
     {
         return 'Error: Global pack registry not found.';
@@ -215,7 +201,7 @@ export function execute_command(input: string): string
         {
             if (args.length < 2) throw new Error('Usage: create_device <device_id> <x> <y> [z...]');
             const { dev_class, ns_id } = resolve_device_class(registry, args[0]);
-            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const dim = (world as any).get_dimension?.() ?? (world as any).get_map?.()?.dimension ?? 3;
             const pos = parse_vector(args.slice(1), dim);
             cmd_obj = matched.factory(dev_class, ns_id, pos);
         }
@@ -223,7 +209,7 @@ export function execute_command(input: string): string
         {
             if (args.length < 2) throw new Error('Usage: move_device <device_uid> <x> <y> [z...]');
             const uid = parse_integer(args[0], 'Device UID');
-            const dim = get_dimension() ?? get_map()?.dimension ?? 3;
+            const dim = (world as any).get_dimension?.() ?? (world as any).get_map?.()?.dimension ?? 3;
             const pos = parse_vector(args.slice(1), dim);
             cmd_obj = matched.factory(uid, pos);
         }
@@ -247,7 +233,7 @@ export function execute_command(input: string): string
             cmd_obj = matched.factory(...args);
         }
 
-        api_execute_command(cmd_obj);
+        (world as any).execute_command?.(cmd_obj);
         return (cmd_obj as any).result_text || `Executed command "${matched.pack}:${matched.id}" successfully.`;
     }
     catch (err: unknown)

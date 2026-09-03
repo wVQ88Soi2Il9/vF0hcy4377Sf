@@ -86,7 +86,7 @@ trigger: always_on
   - `shirones_ui` 職責：僅負責面板渲染、DOM 事件處理與別名映射。
 - **邊界隔離與 Import 規範 (Public Entrypoint Rule)**：
   - **禁止深層引用**：跨模組引用時，**必須一律從目標模組的 `index.ts` 公開進入點 import**（例：`@/core`、`@/packs/<pack>`），嚴禁直接依賴目標內部檔案（例：禁止 `import ... from '@/core/commands'`）。
-  - **Namespace Import 規範**：引用 `core` 或 `pack`（包含 `world`）時，**只允許使用 `import * as (core/pack)` 命名空間引入**（例：`import * as core from '@/core'`、`import * as vanilla_alpha from '@/packs/vanilla_alpha'`、`import * as world from '@/world'`），嚴禁具名引用（named import）或單獨 `import type`。
+  - **Namespace Import 規範**：只有跨模組／跨 pack（包含引用 `core` 或 `world`）時才需要使用 `import * as (core/pack)` 命名空間引入（例：`import * as core from '@/core'`、`import * as vanilla_alpha from '@/packs/vanilla_alpha'`、`import * as world from '@/world'`），嚴禁具名引用（named import）或單獨 `import type`；同 pack 內部檔案之間互相引用則不在此限（可使用具名 import）。
   - **Hooks 保護**：外部禁止直接操作 `hooks` 物件，必須透過 `@/core` 導出的訂閱函式。
 
 ### 5.2 2× 網格與端口座標系統 (2× Grid & Face Ports)

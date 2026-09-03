@@ -1,10 +1,10 @@
-import type { pack_registry } from '@/core';
+import * as core from '@/core';
 
 /**
  * Dynamically generates help text from commands registered in Core Command Registry,
  * along with runtime navigation commands.
  */
-export function format_cli_help(registry: pack_registry): string
+export function format_cli_help(registry: core.pack_registry): string
 {
     const lines: string[] = ['=== Available CLI Commands ===\n'];
 
@@ -21,10 +21,11 @@ export function format_cli_help(registry: pack_registry): string
 
     for (const [pack_name, mod] of registry.packs)
     {
-        if (mod.commands && Object.keys(mod.commands).length > 0)
+        const commands = (mod as any).commands;
+        if (commands && Object.keys(commands).length > 0)
         {
             lines.push(`\n[${pack_name}]`);
-            for (const [cmd_id, factory] of Object.entries(mod.commands))
+            for (const [cmd_id, factory] of Object.entries(commands))
             {
                 const cli_meta = (factory as any)?.other_info?.cli;
                 const alias_str = cli_meta?.alias
