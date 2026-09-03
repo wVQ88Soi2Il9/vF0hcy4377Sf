@@ -29,12 +29,12 @@ export function check_map_overlap(map: core.space, _registry?: core.pack_registr
 
         if (cells.some(cell => is_out_of_bounds(cell, map.size)))
         {
-            out_of_bounds.push(dev.uid);
+            out_of_bounds.push(dev.device_uid);
         }
 
         for (const cell of cells)
         {
-            occupied_map.get_or_insert(cell, () => []).push(dev.uid);
+            occupied_map.get_or_insert(cell, () => []).push(dev.device_uid);
         }
     }
 

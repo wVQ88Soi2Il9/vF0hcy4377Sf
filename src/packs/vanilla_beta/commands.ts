@@ -2,7 +2,7 @@ import * as core from '@/core';
 import { delete_branch, toggle_node_pin, set_node_pin } from './history';
 import { inspect_device_text } from './device_inspector';
 
-export function delete_branch_command(target_uid: number): core.reversible_operation
+export function delete_branch_command(target_uid: number, tree?: core.tree): core.reversible_operation
 {
     return {
         namespace: 'vanilla',
@@ -16,7 +16,10 @@ export function delete_branch_command(target_uid: number): core.reversible_opera
         },
         execute(_map: core.space): void
         {
-            delete_branch(Number(target_uid));
+            if (tree)
+            {
+                delete_branch(tree, Number(target_uid));
+            }
         },
         inverse(_map: core.space): void
         {
@@ -31,7 +34,7 @@ export function delete_branch_command(target_uid: number): core.reversible_opera
     }
 };
 
-export function pin_node_command(target_uid: number): core.reversible_operation
+export function pin_node_command(target_uid: number, tree?: core.tree): core.reversible_operation
 {
     let previous_state: boolean | null = null;
     return {
@@ -46,13 +49,16 @@ export function pin_node_command(target_uid: number): core.reversible_operation
         },
         execute(_map: core.space): void
         {
-            previous_state = toggle_node_pin(Number(target_uid));
+            if (tree)
+            {
+                previous_state = toggle_node_pin(tree, Number(target_uid));
+            }
         },
         inverse(_map: core.space): void
         {
-            if (previous_state !== null)
+            if (tree && previous_state !== null)
             {
-                set_node_pin(Number(target_uid), !previous_state);
+                set_node_pin(tree, Number(target_uid), !previous_state);
             }
         }
     };

@@ -1,29 +1,30 @@
+/**
+ * src/packs/vanilla_beta/history.ts — 歷史樹中繼資料與分支工具
+ */
+
 import * as core from '@/core';
-import * as world from '@/world';
 
 export interface vanilla_history_node_info
 {
     pinned?:      boolean;
-    merged_from?: number;
+    merged_from?: core.uid;
 }
 
 /**
- * Gets the $vanilla metadata from a history node's other_info.
+ * 取得節點上 $vanilla 的中繼資料。
  */
-export function get_vanilla_node_info(uid: number): vanilla_history_node_info | undefined
+export function get_vanilla_node_info(tree: core.tree, uid: core.uid): vanilla_history_node_info | undefined
 {
-    const tree = get_history_tree();
-    const node = tree?.nodes.get(uid);
+    const node = tree.nodes.get(uid);
     return node?.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
 }
 
 /**
- * Updates the $vanilla metadata in a history node's other_info.
+ * 更新節點上 $vanilla 的中繼資料。
  */
-export function set_vanilla_node_info(uid: number, info: Partial<vanilla_history_node_info>): boolean
+export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Partial<vanilla_history_node_info>): boolean
 {
-    const tree = get_history_tree();
-    const node = tree?.nodes.get(uid);
+    const node = tree.nodes.get(uid);
     if (!node)
     {
         return false;
@@ -40,51 +41,43 @@ export function set_vanilla_node_info(uid: number, info: Partial<vanilla_history
 }
 
 /**
- * Checks if a specific history node is currently pinned.
+ * 檢查節點是否處於釘選狀態。
  */
-export function is_node_pinned(uid: number): boolean
+export function is_node_pinned(tree: core.tree, uid: core.uid): boolean
 {
-    return get_vanilla_node_info(uid)?.pinned ?? false;
+    return get_vanilla_node_info(tree, uid)?.pinned ?? false;
 }
 
 /**
- * Sets the pinned state for a history node in its other_info['vanilla'].
+ * 設定節點的釘選狀態。
  */
-export function set_node_pin(uid: number, pinned: boolean): boolean
+export function set_node_pin(tree: core.tree, uid: core.uid, pinned: boolean): boolean
 {
-    return set_vanilla_node_info(uid, { pinned });
+    return set_vanilla_node_info(tree, uid, { pinned });
 }
 
 /**
- * Toggles the pinned state of a history node.
- * Returns the new pinned state (boolean) or null if node does not exist.
+ * 切換節點的釘選狀態。
  */
-export function toggle_node_pin(uid: number): boolean | null
+export function toggle_node_pin(tree: core.tree, uid: core.uid): boolean | null
 {
-    const tree = get_history_tree();
-    if (!tree || !tree.nodes.has(uid))
+    if (!tree.nodes.has(uid))
     {
         return null;
     }
 
-    const current = is_node_pinned(uid);
+    const current = is_node_pinned(tree, uid);
     const next = !current;
-    set_node_pin(uid, next);
+    set_node_pin(tree, uid, next);
     return next;
 }
 
 /**
- * Gets a list of all currently pinned node UIDs.
+ * 取得所有釘選節點的 UID 清單。
  */
-export function get_pinned_nodes(): number[]
+export function get_pinned_nodes(tree: core.tree): core.uid[]
 {
-    const tree = get_history_tree();
-    if (!tree)
-    {
-        return [];
-    }
-
-    const pinned: number[] = [];
+    const pinned: core.uid[] = [];
     for (const [uid, node] of tree.nodes)
     {
         const info = node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
@@ -97,16 +90,10 @@ export function get_pinned_nodes(): number[]
 }
 
 /**
- * Clears all pinned nodes.
+ * 清除所有釘選節點。
  */
-export function clear_all_pinned_nodes(): void
+export function clear_all_pinned_nodes(tree: core.tree): void
 {
-    const tree = get_history_tree();
-    if (!tree)
-    {
-        return;
-    }
-
     for (const [_, node] of tree.nodes)
     {
         const info = node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
@@ -118,33 +105,27 @@ export function clear_all_pinned_nodes(): void
 }
 
 /**
- * Gets the merged_from node UID if this node is a merge node.
+ * 取得合併來源節點 UID。
  */
-export function get_node_merged_from(uid: number): number | undefined
+export function get_node_merged_from(tree: core.tree, uid: core.uid): core.uid | undefined
 {
-    return get_vanilla_node_info(uid)?.merged_from;
+    return get_vanilla_node_info(tree, uid)?.merged_from;
 }
 
 /**
- * Sets the merged_from node UID in this node's $vanilla metadata.
+ * 設定合併來源節點 UID。
  */
-export function set_node_merged_from(uid: number, source_uid: number): boolean
+export function set_node_merged_from(tree: core.tree, uid: core.uid, source_uid: core.uid): boolean
 {
-    return set_vanilla_node_info(uid, { merged_from: source_uid });
+    return set_vanilla_node_info(tree, uid, { merged_from: source_uid });
 }
 
 /**
- * Deletes an entire history branch (subtree) rooted at target_uid by repeatedly calling delete_node.
+ * 刪除目標節點及其所有子孫分支（Subtree）。
  */
-export function delete_branch(target_uid: number): boolean
+export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
 {
     if (target_uid === 0)
-    {
-        return false;
-    }
-
-    const tree = get_history_tree();
-    if (!tree)
     {
         return false;
     }
@@ -155,23 +136,27 @@ export function delete_branch(target_uid: number): boolean
         return false;
     }
 
-    // Refuse deletion if target_uid is on the active path leading to current_uid
-    const active_path = compute_path_to_root(tree, tree.current_uid);
-    if (active_path.includes(target_uid))
+    // 若 target_uid 位於當前活躍路徑（祖先線）上，拒絕刪除
+    let curr_check: core.uid | null = tree.current_history_uid;
+    while (curr_check !== null)
     {
-        return false;
+        if (curr_check === target_uid)
+        {
+            return false;
+        }
+        curr_check = tree.nodes.get(curr_check)?.parent_history_uid ?? null;
     }
 
-    // Collect all descendant nodes in target subtree via post-order traversal
-    const subtree_uids: number[] = [];
-    function collect_post_order(uid: number): void
+    // 後序走訪收集子樹節點
+    const subtree_uids: core.uid[] = [];
+    function collect_post_order(uid: core.uid): void
     {
-        const node = tree?.nodes.get(uid);
+        const node = tree.nodes.get(uid);
         if (!node)
         {
             return;
         }
-        for (const child_uid of node.children_uids)
+        for (const child_uid of node.children_history_uids)
         {
             collect_post_order(child_uid);
         }
@@ -179,27 +164,27 @@ export function delete_branch(target_uid: number): boolean
     }
     collect_post_order(target_uid);
 
-    // Repeatedly delete nodes from bottom up
+    // 由葉至根逐一刪除
     for (const uid of subtree_uids)
     {
-        delete_node(tree, uid);
+        core.delete_node(tree, uid);
     }
 
     return true;
 }
 
 /**
- * Extracts the chronological path of nodes from LCA to target_uid (excluding LCA itself).
+ * 擷取自 LCA 至 target_uid 之節點順序路徑（不包含 LCA 本身）。
  */
-export function extract_branch_path(tree: history_tree, lca_uid: number, target_uid: number): history_node[]
+export function extract_branch_path(tree: core.tree, lca_uid: core.uid, target_uid: core.uid): core.node[]
 {
     if (lca_uid === target_uid)
     {
         return [];
     }
 
-    const path: history_node[] = [];
-    let curr: number | null = target_uid;
+    const path: core.node[] = [];
+    let curr: core.uid | null = target_uid;
 
     while (curr !== null && curr !== lca_uid)
     {
@@ -208,7 +193,7 @@ export function extract_branch_path(tree: history_tree, lca_uid: number, target_
         {
             path.push(node);
         }
-        curr = node ? node.parent_uid : null;
+        curr = node?.parent_history_uid ?? null;
     }
 
     return path.reverse();

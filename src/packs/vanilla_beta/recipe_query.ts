@@ -1,5 +1,8 @@
+/**
+ * src/packs/vanilla_beta/recipe_query.ts — 配方查詢工具
+ */
+
 import * as core from '@/core';
-import * as world from '@/world';
 
 export interface available_recipe_entry
 {
@@ -8,37 +11,33 @@ export interface available_recipe_entry
 }
 
 /**
- * 取得指定裝置實體（uid）或全局環境下所有相容可用的配方與即時評估結果。
+ * 取得指定裝置實體（device_uid）在指定 registry 下所有可用的配方。
  */
 export function get_available_recipes
 (
-    registry?: pack_registry,
-    uid?: number
+    registry:    core.pack_registry,
+    device_uid?: core.uid
 ): available_recipe_entry[]
 {
-    const target_registry = registry ?? get_registry();
-    if (!target_registry)
+    if (!registry)
     {
         return [];
     }
 
     const results: available_recipe_entry[] = [];
 
-    for (const mod of target_registry.packs.values())
+    for (const mod of registry.packs.values())
     {
         if (mod.recipes)
         {
             for (const rec of Object.values(mod.recipes))
             {
-                const eval_result = rec.evaluate(uid);
-                if (eval_result.valid)
-                {
-                    results.push
-                    ({
-                        recipe: rec,
-                        evaluation: eval_result
-                    });
-                }
+                const eval_result = typeof rec.evaluate === 'function' ? rec.evaluate(device_uid!) : undefined;
+                results.push
+                ({
+                    recipe:     rec as core.recipe,
+                    evaluation: eval_result
+                });
             }
         }
     }

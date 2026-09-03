@@ -4,40 +4,34 @@ import { format_namespaced_id } from './identifier';
 /**
  * Inspects a device on the map and formats its complete status as readable text.
  */
-export function inspect_device_text(map: core.space, device_uid: number): string
+export function inspect_device_text(map: core.space, device_uid: core.uid): string
 {
-    const dev = map.devices.find(d => d.uid === device_uid);
+    const dev = map.devices.find(d => d.device_uid === device_uid);
     if (!dev)
     {
         return `Error: Device ID ${device_uid} not found.`;
     }
 
     const lines: string[] = [
-        `[Device #${dev.uid}] ${format_namespaced_id(dev.definition_id)}`,
+        `[Device #${dev.device_uid}] ${format_namespaced_id(dev.definition_id)}`,
         `  Position: [${dev.position.join(', ')}]`
     ];
 
     // Selected recipe
-    if (dev.selected_recipe_id)
+    const selected_recipe_id = (dev as any).selected_recipe_id;
+    if (selected_recipe_id)
     {
-        lines.push(`  Recipe:   ${format_namespaced_id(dev.selected_recipe_id)}`);
+        lines.push(`  Recipe:   ${format_namespaced_id(selected_recipe_id)}`);
     }
 
     // Ports
-    const in_ports = dev.get_port('input');
-    const out_ports = dev.get_port('output');
-    const total_ports = in_ports.length + out_ports.length;
-
-    if (total_ports > 0)
+    const ports = dev.get_port();
+    if (ports.length > 0)
     {
-        lines.push(`  Ports (${total_ports}):`);
-        for (const p of in_ports)
+        lines.push(`  Ports (${ports.length}):`);
+        for (const p of ports)
         {
-            lines.push(`    - input at rel [${p.join(', ')}]`);
-        }
-        for (const p of out_ports)
-        {
-            lines.push(`    - output at rel [${p.join(', ')}]`);
+            lines.push(`    - ${p.direction} (port #${p.port_uid}) at rel [${p.offset.join(', ')}]`);
         }
     }
 
