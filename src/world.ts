@@ -3,6 +3,7 @@ import * as core from '@/core';
 export class pure_world
 {
     public readonly id:                 string;
+    public readonly registry:           core.pack_registry
     public          space:              core.space;
     public          history:            core.tree;
     public          current_hook:       core.hook_list;
@@ -13,7 +14,8 @@ export class pure_world
         this.space = sp;
         this.history = core.create_tree();
         this.current_hook = template ? structuredClone(template) : new Map();
-
+        this.registry = registry;
+        
         for (const pack of registry.values())
         {
             pack.world_init?.(this);

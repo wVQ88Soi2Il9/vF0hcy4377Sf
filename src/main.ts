@@ -18,22 +18,13 @@ for (const pack of ENABLED_PACKS)
 
 const empty_hook_list: core.hook_list = new Map();
 
-for (const pack of registry.values())
+for (const [id, pack] of registry)
 {
     if (pack.hooks)
     {
-        empty_hook_list.push(new Map(pack.hooks));
+        empty_hook_list.set(id, new Map(pack.hooks));
     }
 }
-
 // ── 2. Create World ──────────────────────────────────────────────────────────
 const sp = new core.space([64, 64, 4]);
-const wwworld = new world.pure_world(sp, empty_hook_list, 'world_1');
-
-// ── 3. Run World / Local Init ────────────────────────────────────────────────
-for (const pack of ENABLED_PACKS)
-{
-    pack.world_init(wwworld);
-}
-
-// ── 4. Verify Trigger Event ──────────────────────────────────────────────────
+const wwworld = new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
