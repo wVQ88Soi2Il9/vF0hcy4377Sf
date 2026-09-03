@@ -24,7 +24,7 @@ export function create_device_command
     let created_dev: device | null = null;
 
     return {
-        pack: 'core',
+        namespace: 'core',
         id:   'create_device',
         other_info:
         {
@@ -65,7 +65,7 @@ export function delete_device_command(device_uid: number): map_command
     let deleted_dev: device | null = null;
 
     return {
-        pack: 'core',
+        namespace: 'core',
         id:   'delete_device',
         other_info:
         {
@@ -102,7 +102,7 @@ export function move_device_command(device_uid: number, new_position: vector): m
     let previous_position: vector | null = null;
 
     return {
-        pack: 'core',
+        namespace: 'core',
         id:   'move_device',
         other_info:
         {
@@ -144,7 +144,7 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
     let initialized = false;
 
     return {
-        pack: 'core',
+        namespace: 'core',
         id:   'select_recipe',
         other_info:
         {

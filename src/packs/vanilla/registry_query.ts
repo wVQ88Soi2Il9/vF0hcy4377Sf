@@ -13,7 +13,7 @@ import type {
  */
 export function has_item(registry: pack_registry, identifier: namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.pack)?.items?.[identifier.id]);
+    return Boolean(registry.packs.get(identifier.namespace)?.items?.[identifier.id]);
 }
 
 /**
@@ -21,10 +21,10 @@ export function has_item(registry: pack_registry, identifier: namespaced_id): bo
  */
 export function get_item(registry: pack_registry, identifier: namespaced_id): item_definition
 {
-    const item = registry.packs.get(identifier.pack)?.items?.[identifier.id];
+    const item = registry.packs.get(identifier.namespace)?.items?.[identifier.id];
     if (!item)
     {
-        throw new Error(`Item "${identifier.pack}:${identifier.id}" not found in registry.`);
+        throw new Error(`Item "${identifier.namespace}:${identifier.id}" not found in registry.`);
     }
     return item;
 }
@@ -34,7 +34,7 @@ export function get_item(registry: pack_registry, identifier: namespaced_id): it
  */
 export function has_recipe(registry: pack_registry, identifier: namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.pack)?.recipes?.[identifier.id]);
+    return Boolean(registry.packs.get(identifier.namespace)?.recipes?.[identifier.id]);
 }
 
 /**
@@ -42,10 +42,10 @@ export function has_recipe(registry: pack_registry, identifier: namespaced_id): 
  */
 export function get_recipe(registry: pack_registry, identifier: namespaced_id): recipe
 {
-    const rec = registry.packs.get(identifier.pack)?.recipes?.[identifier.id];
+    const rec = registry.packs.get(identifier.namespace)?.recipes?.[identifier.id];
     if (!rec)
     {
-        throw new Error(`Recipe "${identifier.pack}:${identifier.id}" not found in registry.`);
+        throw new Error(`Recipe "${identifier.namespace}:${identifier.id}" not found in registry.`);
     }
     return rec;
 }
@@ -55,7 +55,7 @@ export function get_recipe(registry: pack_registry, identifier: namespaced_id): 
  */
 export function has_device_class(registry: pack_registry, identifier: namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.pack)?.devices?.[identifier.id]);
+    return Boolean(registry.packs.get(identifier.namespace)?.devices?.[identifier.id]);
 }
 
 /**
@@ -63,10 +63,10 @@ export function has_device_class(registry: pack_registry, identifier: namespaced
  */
 export function get_device_class(registry: pack_registry, identifier: namespaced_id): device_constructor
 {
-    const cls = registry.packs.get(identifier.pack)?.devices?.[identifier.id];
+    const cls = registry.packs.get(identifier.namespace)?.devices?.[identifier.id];
     if (!cls)
     {
-        throw new Error(`Device class "${identifier.pack}:${identifier.id}" not found in registry.`);
+        throw new Error(`Device class "${identifier.namespace}:${identifier.id}" not found in registry.`);
     }
     return cls;
 }
@@ -76,7 +76,7 @@ export function get_device_class(registry: pack_registry, identifier: namespaced
  */
 export function has_command(registry: pack_registry, identifier: namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.pack)?.commands?.[identifier.id]);
+    return Boolean(registry.packs.get(identifier.namespace)?.commands?.[identifier.id]);
 }
 
 /**
@@ -84,10 +84,10 @@ export function has_command(registry: pack_registry, identifier: namespaced_id):
  */
 export function get_command(registry: pack_registry, identifier: namespaced_id): map_command_factory
 {
-    const cmd = registry.packs.get(identifier.pack)?.commands?.[identifier.id];
+    const cmd = registry.packs.get(identifier.namespace)?.commands?.[identifier.id];
     if (!cmd)
     {
-        throw new Error(`Command "${identifier.pack}:${identifier.id}" not found in registry.`);
+        throw new Error(`Command "${identifier.namespace}:${identifier.id}" not found in registry.`);
     }
     return cmd;
 }

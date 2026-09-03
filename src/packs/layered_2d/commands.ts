@@ -24,7 +24,7 @@ export function rotate_device_command(device_uid: number, steps: number = 1): ma
     let target_dev: rotatable_device | null = null;
 
     return {
-        pack: 'layered_2d',
+        namespace: 'layered_2d',
         id:   'rotate_device',
         other_info:
         {
@@ -67,7 +67,7 @@ export function flip_device_command(device_uid: number): map_command
     let target_dev: rotatable_device | null = null;
 
     return {
-        pack: 'layered_2d',
+        namespace: 'layered_2d',
         id:   'flip_device',
         other_info:
         {
@@ -108,7 +108,7 @@ export function set_device_transform_command(device_uid: number, transform: d4_t
     let target_dev: rotatable_device | null = null;
 
     return {
-        pack: 'layered_2d',
+        namespace: 'layered_2d',
         id:   'set_device_transform',
         other_info:
         {

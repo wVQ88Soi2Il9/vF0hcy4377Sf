@@ -10,12 +10,12 @@ export function parse_namespaced_id(identifier: string, default_pack: string = '
     if (idx !== -1)
     {
         return {
-            pack: identifier.slice(0, idx),
+            namespace: identifier.slice(0, idx),
             id:   identifier.slice(idx + 1)
         };
     }
     return {
-        pack: default_pack,
+        namespace: default_pack,
         id:   identifier
     };
 }
@@ -25,5 +25,5 @@ export function parse_namespaced_id(identifier: string, default_pack: string = '
  */
 export function format_namespaced_id(identifier: namespaced_id): string
 {
-    return `${identifier.pack}:${identifier.id}`;
+    return `${identifier.namespace}:${identifier.id}`;
 }

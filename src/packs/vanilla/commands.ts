@@ -5,7 +5,7 @@ import { inspect_device_text } from './device_inspector';
 export function delete_branch_command(target_uid: number): map_command
 {
     return {
-        pack: 'vanilla',
+        namespace: 'vanilla',
         id:   'delete_branch',
         other_info:
         {
@@ -35,7 +35,7 @@ export function pin_node_command(target_uid: number): map_command
 {
     let previous_state: boolean | null = null;
     return {
-        pack: 'vanilla',
+        namespace: 'vanilla',
         id:   'pin_node',
         other_info:
         {
@@ -69,7 +69,7 @@ export function info_device_command(device_uid: number): map_command
 {
     let result_text = '';
     const cmd: map_command = {
-        pack: 'vanilla',
+        namespace: 'vanilla',
         id:   'info_device',
         other_info:
         {

@@ -12,8 +12,8 @@ export type vector = number[];
  */
 export interface namespaced_id
 {
-    pack: string;
-    id:   string;
+    namespace: string;
+    id:        string;
 }
 
 // ── Pack Module ──────────────────────────────────────────────────────────────

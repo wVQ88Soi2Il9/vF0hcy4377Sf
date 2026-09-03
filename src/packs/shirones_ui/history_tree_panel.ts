@@ -86,7 +86,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'create_device')
+    if (cmd.namespace === 'core' && cmd.id === 'create_device')
     {
         const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
         const def_val = core_info?.definition_id;
@@ -98,7 +98,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'move_device')
+    if (cmd.namespace === 'core' && cmd.id === 'move_device')
     {
         const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
         const uid = core_info?.device_uid ?? '';
@@ -109,7 +109,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'select_recipe')
+    if (cmd.namespace === 'core' && cmd.id === 'select_recipe')
     {
         const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
         const uid = core_info?.device_uid ?? '';
@@ -121,7 +121,7 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.pack === 'core' && cmd.id === 'delete_device')
+    if (cmd.namespace === 'core' && cmd.id === 'delete_device')
     {
         const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
         const uid = core_info?.device_uid ?? '';

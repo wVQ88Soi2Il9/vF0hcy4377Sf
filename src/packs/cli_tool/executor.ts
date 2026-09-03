@@ -104,7 +104,7 @@ function resolve_device_class
         {
             throw new Error(`Device "${query}" not found in registry.`);
         }
-        return { dev_class, ns_id: { pack, id } };
+        return { dev_class, ns_id: { namespace: pack, id } };
     }
 
     const matches: Array<{ dev_class: device_constructor; ns_id: namespaced_id }> = [];
@@ -112,7 +112,7 @@ function resolve_device_class
     {
         if (mod.devices && mod.devices[query])
         {
-            matches.push({ dev_class: mod.devices[query], ns_id: { pack: pack_name, id: query } });
+            matches.push({ dev_class: mod.devices[query], ns_id: { namespace: pack_name, id: query } });
         }
     }
 
@@ -122,7 +122,7 @@ function resolve_device_class
     }
     if (matches.length > 1)
     {
-        throw new Error(`Ambiguous device "${query}". Matches: ${matches.map(m => `${m.ns_id.pack}:${m.ns_id.id}`).join(', ')}`);
+        throw new Error(`Ambiguous device "${query}". Matches: ${matches.map(m => `${m.ns_id.namespace}:${m.ns_id.id}`).join(', ')}`);
     }
 
     throw new Error(`Device "${query}" not found in any loaded pack.`);

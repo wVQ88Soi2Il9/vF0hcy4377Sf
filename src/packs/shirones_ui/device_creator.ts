@@ -253,7 +253,7 @@ export function create_device_creator
             }
             const ns_id = parse_namespaced_id(def_id);
             const dev_class = get_device_class(registry, ns_id);
-            const create_factory = get_command(registry, { pack: 'core', id: 'create_device' });
+            const create_factory = get_command(registry, { namespace: 'core', id: 'create_device' });
             const cmd = create_factory(dev_class, ns_id, parsed.position, merged_other_info);
             execute_command(cmd);
             coords_group.hide_error();

@@ -26,7 +26,7 @@ export function camera_command(equation_arg?: string): map_command
     let previous_plane: { dim_h: number; dim_v: number; slices: number[] } | null = null;
 
     return {
-        pack: 'basic_renderer',
+        namespace: 'basic_renderer',
         id:   'camera',
         other_info:
         {

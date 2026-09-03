@@ -8,7 +8,7 @@ import { get_map } from '@/runtime';
  */
 export const recipe: recipe_type =
 {
-    pack: 'test',
+    namespace: 'test',
     id:   'iron_gear',
     evaluate(uid?: number): recipe_evaluation
     {
@@ -16,7 +16,7 @@ export const recipe: recipe_type =
         {
             const map = get_map();
             const dev = map?.devices.find(d => d.uid === uid);
-            if (dev && (dev.definition_id.pack !== 'test' || dev.definition_id.id !== 'assembler'))
+            if (dev && (dev.definition_id.namespace !== 'test' || dev.definition_id.id !== 'assembler'))
             {
                 return {
                     valid: false,
@@ -32,11 +32,11 @@ export const recipe: recipe_type =
             duration: 2.0,
             inputs:
             [
-                { item_id: { pack: 'test', id: 'iron_plate' }, quantity: 2 }
+                { item_id: { namespace: 'test', id: 'iron_plate' }, quantity: 2 }
             ],
             outputs:
             [
-                { item_id: { pack: 'test', id: 'iron_gear' }, quantity: 1 }
+                { item_id: { namespace: 'test', id: 'iron_gear' }, quantity: 1 }
             ]
         };
     }
