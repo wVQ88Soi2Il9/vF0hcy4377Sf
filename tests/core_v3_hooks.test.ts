@@ -5,8 +5,7 @@ import
     pure_world,
     space
 } from '../src/core';
-import type { pack_module, pack_registry } from '../src/core';
-import { build_empty_hook_list } from '../src/main';
+import type { pack_module, pack_registry, hook_list } from '../src/core';
 
 describe('Core v3 Hook System 5-stage lifecycle', () =>
 {
@@ -41,7 +40,14 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
         expect(registry.packs.has('pack_b')).toBe(true);
 
         // ── 階段 3：complete empty hook list ────────────────────────────────────
-        const empty_hooks = build_empty_hook_list(registry);
+        const empty_hooks: hook_list = new Map();
+        for (const [id, pack] of registry.packs)
+        {
+            if (pack.hooks)
+            {
+                empty_hooks.set(id, new Map(pack.hooks));
+            }
+        }
 
         expect(empty_hooks.get('pack_a')?.get('event_created')).toEqual([]);
         expect(empty_hooks.get('pack_a')?.get('event_deleted')).toEqual([]);
