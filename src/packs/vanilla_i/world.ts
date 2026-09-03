@@ -89,6 +89,7 @@ export class std_world extends world.pure_world
     ): void
     {
         core.record_operation(this.history, this.space, ops, other_info);
+        this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
     }
 
     /**
@@ -96,7 +97,12 @@ export class std_world extends world.pure_world
      */
     public undo(): boolean
     {
-        return core.jump_prev_node(this.history, this.space);
+        const success = core.jump_prev_node(this.history, this.space);
+        if (success)
+        {
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
+        return success;
     }
 
     /**
@@ -104,7 +110,12 @@ export class std_world extends world.pure_world
      */
     public redo(target?: core.uid): boolean
     {
-        return core.jump_next_node(this.history, this.space, target);
+        const success = core.jump_next_node(this.history, this.space, target);
+        if (success)
+        {
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
+        return success;
     }
 
     /**
@@ -112,7 +123,11 @@ export class std_world extends world.pure_world
      */
     public jump_to(target: core.uid): void
     {
-        core.jump_to_node(this.history, this.space, target);
+        if (this.history.current_history_uid !== target)
+        {
+            core.jump_to_node(this.history, this.space, target);
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
     }
 
     /**
@@ -120,7 +135,12 @@ export class std_world extends world.pure_world
      */
     public jump_to_prev_fork(): void
     {
+        const before = this.history.current_history_uid;
         core.jump_to_prev_fork(this.history, this.space);
+        if (this.history.current_history_uid !== before)
+        {
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
     }
 
     /**
@@ -128,7 +148,11 @@ export class std_world extends world.pure_world
      */
     public jump_to_root(): void
     {
-        core.jump_to_root(this.history, this.space);
+        if (this.history.current_history_uid !== 0)
+        {
+            core.jump_to_root(this.history, this.space);
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
     }
 
     /**
@@ -136,7 +160,12 @@ export class std_world extends world.pure_world
      */
     public jump_to_leaf(): void
     {
+        const before = this.history.current_history_uid;
         core.jump_to_next_fork(this.history, this.space);
+        if (this.history.current_history_uid !== before)
+        {
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
     }
 
     /**
@@ -144,6 +173,11 @@ export class std_world extends world.pure_world
      */
     public delete_history_node(target: core.uid): boolean
     {
-        return core.delete_node(this.history, target);
+        const success = core.delete_node(this.history, target);
+        if (success)
+        {
+            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
+        }
+        return success;
     }
 }

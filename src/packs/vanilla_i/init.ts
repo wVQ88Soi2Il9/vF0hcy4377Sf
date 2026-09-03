@@ -9,7 +9,8 @@ export function global_init(registry: core.pack_registry): void
             ['create_device', []],
             ['delete_device', []],
             ['move_device', []],
-            ['select_recipe', []]
+            ['select_recipe', []],
+            ['history_change', []]
         ])
     });
 }
