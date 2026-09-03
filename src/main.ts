@@ -1,5 +1,7 @@
 import
 {
+    space,
+    pure_world,
     type hook_list,
     type pack_registry
 } from '@/core';
@@ -37,3 +39,16 @@ export function build_empty_hook_list(reg: pack_registry): hook_list
 }
 
 export const empty_hook_list: hook_list = build_empty_hook_list(registry);
+
+// ── 2. Create World ──────────────────────────────────────────────────────────
+export const sp = new space([64, 64, 4]);
+export const world = new pure_world(sp, empty_hook_list, 'world_1');
+
+// ── 3. Run World / Local Init ────────────────────────────────────────────────
+for (const pack of ENABLED_PACKS)
+{
+    pack.local_init(world);
+}
+
+// ── 4. Verify Trigger Event ──────────────────────────────────────────────────
+world.trigger({ namespace: 'empty_pack', id: 'foo' });
