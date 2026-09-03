@@ -22,7 +22,6 @@ export class std_world extends world.pure_world
         this.execute([op]);
         const dev = op.get_device()!;
         this.trigger({ namespace: 'vanilla_i', id: 'create_device' }, this, dev);
-        this.trigger({ namespace: 'vanilla_i', id: 'device_change' }, this, dev);
         return dev;
     }
 
@@ -34,7 +33,6 @@ export class std_world extends world.pure_world
         if (dev)
         {
             this.trigger({ namespace: 'vanilla_i', id: 'delete_device' }, this, dev);
-            this.trigger({ namespace: 'vanilla_i', id: 'device_change' }, this, dev);
         }
         return dev;
     }
@@ -57,7 +55,6 @@ export class std_world extends world.pure_world
                 old_position,
                 new_position
             );
-            this.trigger({ namespace: 'vanilla_i', id: 'device_change' }, this, dev);
         }
     }
 
@@ -79,7 +76,6 @@ export class std_world extends world.pure_world
                 old_recipe_id,
                 recipe_id
             );
-            this.trigger({ namespace: 'vanilla_i', id: 'device_change' }, this, dev);
         }
     }
 
@@ -94,7 +90,6 @@ export class std_world extends world.pure_world
     {
         const new_node = core.record_operation(this.history, this.space, ops, other_info);
         this.trigger({ namespace: 'vanilla_i', id: 'history_record' }, this, new_node);
-        this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
     }
 
     /**
@@ -106,7 +101,6 @@ export class std_world extends world.pure_world
         if (success)
         {
             this.trigger({ namespace: 'vanilla_i', id: 'history_undo' }, this, this.history);
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
         }
         return success;
     }
@@ -120,7 +114,6 @@ export class std_world extends world.pure_world
         if (success)
         {
             this.trigger({ namespace: 'vanilla_i', id: 'history_redo' }, this, this.history);
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
         }
         return success;
     }
@@ -133,7 +126,6 @@ export class std_world extends world.pure_world
         if (this.history.current_history_uid !== target)
         {
             core.jump_to_node(this.history, this.space, target);
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
         }
     }
 
@@ -142,12 +134,7 @@ export class std_world extends world.pure_world
      */
     public jump_to_prev_fork(): void
     {
-        const before = this.history.current_history_uid;
         core.jump_to_prev_fork(this.history, this.space);
-        if (this.history.current_history_uid !== before)
-        {
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
-        }
     }
 
     /**
@@ -158,7 +145,6 @@ export class std_world extends world.pure_world
         if (this.history.current_history_uid !== 0)
         {
             core.jump_to_root(this.history, this.space);
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
         }
     }
 
@@ -167,12 +153,7 @@ export class std_world extends world.pure_world
      */
     public jump_to_leaf(): void
     {
-        const before = this.history.current_history_uid;
         core.jump_to_next_fork(this.history, this.space);
-        if (this.history.current_history_uid !== before)
-        {
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
-        }
     }
 
     /**
@@ -184,7 +165,6 @@ export class std_world extends world.pure_world
         if (success)
         {
             this.trigger({ namespace: 'vanilla_i', id: 'history_delete' }, this, target);
-            this.trigger({ namespace: 'vanilla_i', id: 'history_change' }, this, this.history);
         }
         return success;
     }
