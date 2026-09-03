@@ -1,4 +1,4 @@
-import type { space, vector, pack_registry } from '@/core';
+import * as core from '@/core';
 import type { map_validation_result } from './types';
 import { add_vector } from './math';
 import { spatial_map } from './spatial_map';
@@ -6,7 +6,7 @@ import { spatial_map } from './spatial_map';
 /**
  * 檢查座標是否超出地圖邊界 (N 維通用)
  */
-export function is_out_of_bounds(pos: vector, map_size: vector): boolean
+export function is_out_of_bounds(pos: core.vector, map_size: core.vector): boolean
 {
     return pos.some((v, i) => v < 0 || v >= map_size[i]);
 }
@@ -17,7 +17,7 @@ export function is_out_of_bounds(pos: vector, map_size: vector): boolean
  * @param _registry 擴充註冊表（選填）
  * @returns 回傳包含問題裝置 uid 陣列的物件
  */
-export function check_map_overlap(map: space, _registry?: pack_registry): map_validation_result
+export function check_map_overlap(map: core.space, _registry?: core.pack_registry): map_validation_result
 {
     const occupied_map = new spatial_map<number[]>();
     const out_of_bounds: number[] = [];

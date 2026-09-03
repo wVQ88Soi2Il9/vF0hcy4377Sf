@@ -1,4 +1,4 @@
-import type { vector } from '@/core';
+import * as core from '@/core';
 import { vector_to_string } from './math';
 
 /**
@@ -11,7 +11,7 @@ export class spatial_map<T>
     /**
      * Sets a value at the given vector position.
      */
-    set(pos: vector, value: T): void
+    set(pos: core.vector, value: T): void
     {
         this.map.set(vector_to_string(pos), value);
     }
@@ -19,7 +19,7 @@ export class spatial_map<T>
     /**
      * Retrieves the value at the given vector position.
      */
-    get(pos: vector): T | undefined
+    get(pos: core.vector): T | undefined
     {
         return this.map.get(vector_to_string(pos));
     }
@@ -27,7 +27,7 @@ export class spatial_map<T>
     /**
      * Checks if a value exists at the given vector position.
      */
-    has(pos: vector): boolean
+    has(pos: core.vector): boolean
     {
         return this.map.has(vector_to_string(pos));
     }
@@ -35,7 +35,7 @@ export class spatial_map<T>
     /**
      * Gets the value at the given position, or inserts the default value if it doesn't exist.
      */
-    get_or_insert(pos: vector, default_factory: () => T): T
+    get_or_insert(pos: core.vector, default_factory: () => T): T
     {
         const key = vector_to_string(pos);
         if (!this.map.has(key))

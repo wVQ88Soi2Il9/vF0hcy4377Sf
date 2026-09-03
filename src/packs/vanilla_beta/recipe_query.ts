@@ -1,10 +1,10 @@
-import type { recipe, recipe_evaluation, pack_registry } from '@/core';
-import { get_registry } from '@/world';
+import * as core from '@/core';
+import * as world from '@/world';
 
 export interface available_recipe_entry
 {
-    recipe:     recipe;
-    evaluation: recipe_evaluation;
+    recipe:     core.recipe;
+    evaluation: any;
 }
 
 /**

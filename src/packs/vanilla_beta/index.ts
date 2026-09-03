@@ -22,8 +22,10 @@ export * from './recipe_query';
 export * from './overlap';
 export * from './history';
 
-export const vanilla = {
-    pack_id: 'vanilla',
+import * as core from '@/core';
+
+export const vanilla_beta = {
+    pack_id: 'vanilla_beta',
     commands: vanilla_commands,
     ...math,
     ...spatial_map,
@@ -37,12 +39,16 @@ export const vanilla = {
     ...device_inspector
 };
 
-/**
- * Initialize the vanilla pack.
- * Called automatically by loader.ts.
- */
-export function init_pack(): void
+export function global_init(registry: core.pack_registry): void
 {
+    registry.packs.set('vanilla_beta', {
+        pack_id: 'vanilla_beta'
+    });
+}
+
+export function local_init(): void
+{
+
 }
 
 export { delete_branch_command, pin_node_command };

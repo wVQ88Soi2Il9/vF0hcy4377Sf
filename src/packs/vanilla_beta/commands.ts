@@ -1,8 +1,8 @@
-import type { space, map_command } from '@/core';
+import * as core from '@/core';
 import { delete_branch, toggle_node_pin, set_node_pin } from './history';
 import { inspect_device_text } from './device_inspector';
 
-export function delete_branch_command(target_uid: number): map_command
+export function delete_branch_command(target_uid: number): core.reversible_operation
 {
     return {
         namespace: 'vanilla',
@@ -14,11 +14,11 @@ export function delete_branch_command(target_uid: number): map_command
                 target_uid
             }
         },
-        execute(_map: space): void
+        execute(_map: core.space): void
         {
             delete_branch(Number(target_uid));
         },
-        inverse(_map: space): void
+        inverse(_map: core.space): void
         {
         }
     };
@@ -31,7 +31,7 @@ export function delete_branch_command(target_uid: number): map_command
     }
 };
 
-export function pin_node_command(target_uid: number): map_command
+export function pin_node_command(target_uid: number): core.reversible_operation
 {
     let previous_state: boolean | null = null;
     return {
@@ -44,11 +44,11 @@ export function pin_node_command(target_uid: number): map_command
                 target_uid
             }
         },
-        execute(_map: space): void
+        execute(_map: core.space): void
         {
             previous_state = toggle_node_pin(Number(target_uid));
         },
-        inverse(_map: space): void
+        inverse(_map: core.space): void
         {
             if (previous_state !== null)
             {
@@ -65,10 +65,10 @@ export function pin_node_command(target_uid: number): map_command
     }
 };
 
-export function info_device_command(device_uid: number): map_command
+export function info_device_command(device_uid: number): core.reversible_operation
 {
     let result_text = '';
-    const cmd: map_command = {
+    const cmd: core.reversible_operation = {
         namespace: 'vanilla',
         id:   'info_device',
         other_info:
@@ -78,12 +78,12 @@ export function info_device_command(device_uid: number): map_command
                 device_uid
             }
         },
-        execute(map: space): void
+        execute(map: core.space): void
         {
             result_text = inspect_device_text(map, Number(device_uid));
             (cmd as any).result_text = result_text;
         },
-        inverse(_map: space): void
+        inverse(_map: core.space): void
         {
         }
     };

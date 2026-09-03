@@ -1,17 +1,9 @@
-import type {
-    item_definition,
-    recipe,
-    recipe_evaluation,
-    namespaced_id,
-    device_constructor,
-    map_command_factory,
-    pack_registry
-} from '@/core';
+import * as core from '@/core';
 
 /**
  * 檢查物品定義是否存在於指定 registry
  */
-export function has_item(registry: pack_registry, identifier: namespaced_id): boolean
+export function has_item(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.packs.get(identifier.namespace)?.items?.[identifier.id]);
 }
@@ -19,7 +11,7 @@ export function has_item(registry: pack_registry, identifier: namespaced_id): bo
 /**
  * 取得物品定義，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_item(registry: pack_registry, identifier: namespaced_id): item_definition
+export function get_item(registry: core.pack_registry, identifier: core.namespaced_id): core.item_definition
 {
     const item = registry.packs.get(identifier.namespace)?.items?.[identifier.id];
     if (!item)
@@ -32,7 +24,7 @@ export function get_item(registry: pack_registry, identifier: namespaced_id): it
 /**
  * 檢查配方定義是否存在於指定 registry
  */
-export function has_recipe(registry: pack_registry, identifier: namespaced_id): boolean
+export function has_recipe(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.packs.get(identifier.namespace)?.recipes?.[identifier.id]);
 }
@@ -40,7 +32,7 @@ export function has_recipe(registry: pack_registry, identifier: namespaced_id): 
 /**
  * 取得配方定義，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_recipe(registry: pack_registry, identifier: namespaced_id): recipe
+export function get_recipe(registry: core.pack_registry, identifier: core.namespaced_id): core.recipe
 {
     const rec = registry.packs.get(identifier.namespace)?.recipes?.[identifier.id];
     if (!rec)
@@ -53,7 +45,7 @@ export function get_recipe(registry: pack_registry, identifier: namespaced_id): 
 /**
  * 檢查裝置類別是否存在於指定 registry
  */
-export function has_device_class(registry: pack_registry, identifier: namespaced_id): boolean
+export function has_device_class(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.packs.get(identifier.namespace)?.devices?.[identifier.id]);
 }
@@ -61,7 +53,7 @@ export function has_device_class(registry: pack_registry, identifier: namespaced
 /**
  * 取得裝置類別建構子，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_device_class(registry: pack_registry, identifier: namespaced_id): device_constructor
+export function get_device_class(registry: core.pack_registry, identifier: core.namespaced_id): core.device_constructor
 {
     const cls = registry.packs.get(identifier.namespace)?.devices?.[identifier.id];
     if (!cls)
@@ -74,17 +66,17 @@ export function get_device_class(registry: pack_registry, identifier: namespaced
 /**
  * 檢查指令工廠是否存在於指定 registry
  */
-export function has_command(registry: pack_registry, identifier: namespaced_id): boolean
+export function has_command(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.namespace)?.commands?.[identifier.id]);
+    return Boolean(registry.packs.get(identifier.namespace)?.operations?.[identifier.id]);
 }
 
 /**
  * 取得指令工廠，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_command(registry: pack_registry, identifier: namespaced_id): map_command_factory
+export function get_command(registry: core.pack_registry, identifier: core.namespaced_id): core.reversible_operation_factory
 {
-    const cmd = registry.packs.get(identifier.namespace)?.commands?.[identifier.id];
+    const cmd = registry.packs.get(identifier.namespace)?.operations?.[identifier.id];
     if (!cmd)
     {
         throw new Error(`Command "${identifier.namespace}:${identifier.id}" not found in registry.`);
@@ -97,11 +89,11 @@ export function get_command(registry: pack_registry, identifier: namespaced_id):
  */
 export function evaluate_recipe
 (
-    registry:   pack_registry,
-    identifier: namespaced_id,
-    uid?:       number
-): recipe_evaluation
+    registry:   core.pack_registry,
+    identifier: core.namespaced_id,
+    device_uid: core.uid
+): any
 {
     const rec = get_recipe(registry, identifier);
-    return rec.evaluate(uid);
+    return rec.evaluate(device_uid);
 }

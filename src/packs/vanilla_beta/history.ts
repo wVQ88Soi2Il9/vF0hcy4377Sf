@@ -1,5 +1,5 @@
-import { delete_node, compute_path_to_root, type history_node, type history_tree } from '@/core';
-import { get_history_tree } from '@/world';
+import * as core from '@/core';
+import * as world from '@/world';
 
 export interface vanilla_history_node_info
 {
