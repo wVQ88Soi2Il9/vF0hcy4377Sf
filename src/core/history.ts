@@ -1,5 +1,5 @@
 /**
- * src/core_v3/history.ts — 分支歷史樹純演算法與操作
+ * src/core/history.ts — 分支歷史樹純演算法與操作
  *
  * 遵循極致鏡像對稱與無歧義路徑原則：
  * - 向上時間流：undo / jump_to_prev_fork / jump_to_root / jump_to_ancestor
@@ -157,13 +157,14 @@ export function find_prev_fork_node(tree: tree, start: uid = tree.current_histor
 }
 
 /**
- * 沿直系祖先路徑向上跳轉（當 target 為 current 之祖先節點時）。
- * you MUST ensure it REALLY is
+ * 沿直系祖先路徑向上跳轉（target 必須為 current 之直系祖先節點）。
  */
 export function jump_to_ancestor(tree: tree, sp: space, target: uid): void
 {
     while (tree.current_history_uid !== target)
-    { jump_prev_node(tree, sp) }
+    {
+        jump_prev_node(tree, sp);
+    }
 }
 
 export function jump_to_prev_fork(tree: tree, sp: space): void
@@ -289,7 +290,9 @@ export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
  */
 export function jump_to_next_fork(tree: tree, sp: space): void
 {
-    while (jump_next_node(tree, sp)){}
+    while (jump_next_node(tree, sp))
+    {
+    }
 }
 
 // ── 4. Core LCA & Target Jump (核心中樞：跨分支任意穿越) ─────────────────────

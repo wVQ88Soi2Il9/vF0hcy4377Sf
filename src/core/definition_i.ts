@@ -1,5 +1,3 @@
-/* they always exist */
-
 export type vector = number[];
 
 export interface namespaced_id
@@ -15,6 +13,7 @@ export type uid = number;
 export type hook_callback = (...args: any[]) => void;
 
 /**
- * pack -> Map: { id -> Array }
+ * Hook 槽位集合結構：
+ * namespace -> Map<id, callback[]>
  */
 export type hook_list = Map<string, Map<string, hook_callback[]>>;

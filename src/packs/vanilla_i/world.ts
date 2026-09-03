@@ -4,9 +4,9 @@
  * 繼承 pure_world，並提供包含 4 個基本可逆地圖操作與歷程快捷控制的高階 API。
  */
 
+import { pure_world } from '@/world';
 import
 {
-    pure_world,
     type uid,
     type namespaced_id,
     type vector,

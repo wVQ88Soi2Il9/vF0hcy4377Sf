@@ -1,7 +1,5 @@
-/* how to control a world */
-
-import { namespaced_id, hook_callback } from "./definition_i";
-import { space, item_definition, recipe, device_constructor } from "./definition_ii";
+import type { namespaced_id, hook_callback } from './definition_i';
+import type { space, item_definition, recipe, device_constructor } from './definition_ii';
 
 export interface reversible_operation extends namespaced_id 
 {

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import 
 {
-    pure_world,
     space
 } from '../src/core';
+import { pure_world } from '../src/world';
 import type { pack_module, pack_registry, hook_list } from '../src/core';
 
 describe('Core v3 Hook System 5-stage lifecycle', () =>

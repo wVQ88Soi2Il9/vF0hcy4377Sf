@@ -1,4 +1,5 @@
-import type { pack_registry, pure_world } from '@/core';
+import type { pack_registry } from '@/core';
+import type { pure_world } from '@/world';
 
 export function global_init(registry: pack_registry): void
 {
