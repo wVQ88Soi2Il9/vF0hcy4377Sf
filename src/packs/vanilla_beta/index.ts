@@ -10,7 +10,6 @@ import * as registry_query from './registry_query';
 import * as recipe_query from './recipe_query';
 import * as history from './history';
 
-export * from './types';
 export * from './axes';
 export * from './identifier';
 export * from './registry_query';
