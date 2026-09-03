@@ -9,7 +9,7 @@ import
 import * as empty_pack from '@/packs/empty_pack';
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
-export const registry: pack_registry = { packs: new Map() };
+const registry: pack_registry = { packs: new Map() };
 
 const ENABLED_PACKS =
 [
@@ -21,7 +21,7 @@ for (const pack of ENABLED_PACKS)
     pack.global_init(registry);
 }
 
-export const empty_hook_list: hook_list = new Map();
+const empty_hook_list: hook_list = new Map();
 
 for (const [id, pack] of registry.packs)
 {
@@ -32,8 +32,8 @@ for (const [id, pack] of registry.packs)
 }
 
 // ── 2. Create World ──────────────────────────────────────────────────────────
-export const sp = new space([64, 64, 4]);
-export const world = new pure_world(sp, empty_hook_list, 'world_1');
+const sp = new space([64, 64, 4]);
+const world = new pure_world(sp, empty_hook_list, 'world_1');
 
 // ── 3. Run World / Local Init ────────────────────────────────────────────────
 for (const pack of ENABLED_PACKS)
