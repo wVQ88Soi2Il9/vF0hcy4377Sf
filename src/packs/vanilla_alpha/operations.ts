@@ -1,5 +1,5 @@
 /**
- * src/packs/vanilla_i/operations.ts — Vanilla 基礎空間可逆操作工廠
+ * src/packs/vanilla_alpha/operations.ts — Vanilla 基礎空間可逆操作工廠
  *
  * 提供針對 space 裝置集合的 4 個標準原子可逆操作：
  * 1. create_device_operation
@@ -34,7 +34,7 @@ export function create_device_operation
     let created_dev: core.device | null = null;
 
     return {
-        namespace: 'vanilla_i',
+        namespace: 'vanilla_alpha',
         id:        'create_device',
         other_info:
         {
@@ -93,7 +93,7 @@ export function delete_device_operation(device_uid: core.uid): delete_device_op
     let deleted_dev: core.device | null = null;
 
     return {
-        namespace: 'vanilla_i',
+        namespace: 'vanilla_alpha',
         id:        'delete_device',
         other_info:
         {
@@ -142,7 +142,7 @@ export function move_device_operation(device_uid: core.uid, new_position: core.v
     let previous_position: core.vector | null = null;
 
     return {
-        namespace: 'vanilla_i',
+        namespace: 'vanilla_alpha',
         id:        'move_device',
         other_info:
         {
@@ -187,7 +187,7 @@ export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: co
     let initialized = false;
 
     return {
-        namespace: 'vanilla_i',
+        namespace: 'vanilla_alpha',
         id:        'select_recipe',
         other_info:
         {

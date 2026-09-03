@@ -1,5 +1,5 @@
 /**
- * src/packs/vanilla_i/world.ts — Vanilla 標準世界實體
+ * src/packs/vanilla_alpha/world.ts — Vanilla 標準世界實體
  *
  * 繼承 pure_world，並提供包含 4 個基本可逆地圖操作與歷程快捷控制的高階 API。
  */
@@ -21,7 +21,7 @@ export class std_world extends world.pure_world
         const op = operations.create_device_operation(device_class, definition_id, position, other_info);
         this.execute([op]);
         const dev = op.get_device()!;
-        this.trigger({ namespace: 'vanilla_i', id: 'create_device' }, this, dev);
+        this.trigger({ namespace: 'vanilla_alpha', id: 'create_device' }, this, dev);
         return dev;
     }
 
@@ -32,7 +32,7 @@ export class std_world extends world.pure_world
         const dev = op.get_deleted_device() ?? undefined;
         if (dev)
         {
-            this.trigger({ namespace: 'vanilla_i', id: 'delete_device' }, this, dev);
+            this.trigger({ namespace: 'vanilla_alpha', id: 'delete_device' }, this, dev);
         }
         return dev;
     }
@@ -49,7 +49,7 @@ export class std_world extends world.pure_world
         {
             this.trigger
             (
-                { namespace: 'vanilla_i', id: 'move_device' },
+                { namespace: 'vanilla_alpha', id: 'move_device' },
                 this,
                 dev,
                 old_position,
@@ -70,7 +70,7 @@ export class std_world extends world.pure_world
         {
             this.trigger
             (
-                { namespace: 'vanilla_i', id: 'select_recipe' },
+                { namespace: 'vanilla_alpha', id: 'select_recipe' },
                 this,
                 dev,
                 old_recipe_id,
@@ -89,7 +89,7 @@ export class std_world extends world.pure_world
     ): void
     {
         const new_node = core.record_operation(this.history, this.space, ops, other_info);
-        this.trigger({ namespace: 'vanilla_i', id: 'history_record' }, this, new_node);
+        this.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, this, new_node);
     }
 
     /**
@@ -100,7 +100,7 @@ export class std_world extends world.pure_world
         const success = core.jump_prev_node(this.history, this.space);
         if (success)
         {
-            this.trigger({ namespace: 'vanilla_i', id: 'history_undo' }, this, this.history);
+            this.trigger({ namespace: 'vanilla_alpha', id: 'history_undo' }, this, this.history);
         }
         return success;
     }
@@ -113,7 +113,7 @@ export class std_world extends world.pure_world
         const success = core.jump_next_node(this.history, this.space, target);
         if (success)
         {
-            this.trigger({ namespace: 'vanilla_i', id: 'history_redo' }, this, this.history);
+            this.trigger({ namespace: 'vanilla_alpha', id: 'history_redo' }, this, this.history);
         }
         return success;
     }
@@ -164,7 +164,7 @@ export class std_world extends world.pure_world
         const success = core.delete_node(this.history, target);
         if (success)
         {
-            this.trigger({ namespace: 'vanilla_i', id: 'history_delete' }, this, target);
+            this.trigger({ namespace: 'vanilla_alpha', id: 'history_delete' }, this, target);
         }
         return success;
     }
