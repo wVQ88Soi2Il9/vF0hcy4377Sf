@@ -1,7 +1,7 @@
-import { basic_renderer_commands, camera_command } from './commands';
-import * as camera_mod from './camera';
-import * as camera_control_mod from './camera_control';
-import * as renderer_mod from './renderer';
+import * as core from '@/core';
+import * as world from '@/world';
+import { camera_command } from './commands';
+import { on_camera_change } from './camera';
 
 export * from './types';
 export * from './camera';
@@ -9,32 +9,24 @@ export * from './camera_control';
 export * from './renderer';
 export * from './commands';
 
-export const basic_renderer = {
-    pack_id:              'basic_renderer',
-    commands:             basic_renderer_commands,
-    // Canvas & Redraw
-    get_canvas:           renderer_mod.get_renderer_canvas,
-    resize_canvas:        renderer_mod.resize_renderer_canvas,
-    redraw:               renderer_mod.redraw_renderer,
-    set_device_drawer:    renderer_mod.set_device_drawer,
-
-    // Camera & Viewport
-    get_camera:           camera_mod.get_camera_plane,
-    get_camera_state:     camera_mod.get_camera_state,
-    set_camera:           camera_control_mod.set_camera_plane,
-    set_camera_pan:       camera_control_mod.set_camera_pan,
-    set_camera_zoom:      camera_control_mod.set_camera_zoom,
-    set_camera_transform: camera_control_mod.set_camera_transform,
-    on_camera_change:     camera_mod.on_camera_change,
-    grid_to_screen:       renderer_mod.grid_to_screen
-};
-
-/**
- * Standard pack entry point called by pack loader.
- */
-export function init_pack(): void
+export function global_init(registry: core.pack_registry): void
 {
-    renderer_mod.init_renderer();
+    registry.set('basic_renderer', {
+        pack_id: 'basic_renderer',
+        hooks: new Map([
+            ['camera_change', []]
+        ]),
+        operations: {
+            camera: camera_command
+        },
+        world_init
+    });
 }
 
-export { camera_command };
+export function world_init(target_world: world.pure_world): void
+{
+    on_camera_change((cam) =>
+    {
+        target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, cam);
+    });
+}
