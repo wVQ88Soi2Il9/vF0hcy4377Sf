@@ -6,6 +6,7 @@ import * as core from '@/core';
 
 export * from './axes';
 export * from './history';
+export * from './spatial';
 
 export function global_init(registry: core.pack_registry): void
 {

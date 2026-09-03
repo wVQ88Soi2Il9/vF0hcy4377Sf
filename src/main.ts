@@ -27,4 +27,4 @@ for (const [id, pack] of registry)
 }
 // ── 2. Create World ──────────────────────────────────────────────────────────
 const sp = new core.space([64, 64, 4]);
-const wwworld = new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
+new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
