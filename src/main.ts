@@ -1,5 +1,5 @@
-import * as core from '@/core'
-import { pure_world } from './world';
+import * as core from '@/core';
+import * as world from '@/world';
 import * as empty_pack from '@/packs/empty_pack';
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
@@ -27,7 +27,7 @@ for (const [id, pack] of registry.packs)
 
 // ── 2. Create World ──────────────────────────────────────────────────────────
 const sp = new core.space([64, 64, 4]);
-const wwworld = new pure_world(sp, empty_hook_list, 'world_1');
+const wwworld = new world.pure_world(sp, empty_hook_list, 'world_1');
 
 // ── 3. Run World / Local Init ────────────────────────────────────────────────
 for (const pack of ENABLED_PACKS)

@@ -1,7 +1,7 @@
-import type { pack_registry } from '@/core';
-import type { pure_world } from '@/world';
+import * as core from '@/core';
+import * as world from '@/world';
 
-export function global_init(registry: pack_registry): void
+export function global_init(registry: core.pack_registry): void
 {
     registry.packs.set('vanilla_i', {
         pack_id: 'vanilla_i',
@@ -14,7 +14,7 @@ export function global_init(registry: pack_registry): void
     });
 }
 
-export function local_init(_target_world: pure_world): void
+export function local_init(_target_world: world.pure_world): void
 {
 
 }

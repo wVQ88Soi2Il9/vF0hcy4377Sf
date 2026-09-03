@@ -1,21 +1,17 @@
 import { describe, it, expect, vi } from 'vitest';
-import 
-{
-    space
-} from '../src/core';
-import { pure_world } from '../src/world';
-import type { pack_module, pack_registry, hook_list } from '../src/core';
+import * as core from '../src/core';
+import * as world from '../src/world';
 
 describe('Core v3 Hook System 5-stage lifecycle', () =>
 {
     it('應完整走通 5 階段生命週期並保證多世界事件隔離', () =>
     {
         // ── 階段 1：init ────────────────────────────────────────────────────────
-        const registry: pack_registry = { packs: new Map() };
+        const registry: core.pack_registry = { packs: new Map() };
         expect(registry.packs.size).toBe(0);
 
         // ── 階段 2：complete registry ───────────────────────────────────────────
-        const pack_a: pack_module =
+        const pack_a: core.pack_module =
         {
             pack_id: 'pack_a',
             hooks: new Map([
@@ -24,7 +20,7 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
             ])
         };
 
-        const pack_b: pack_module =
+        const pack_b: core.pack_module =
         {
             pack_id: 'pack_b',
             hooks: new Map([
@@ -39,7 +35,7 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
         expect(registry.packs.has('pack_b')).toBe(true);
 
         // ── 階段 3：complete empty hook list ────────────────────────────────────
-        const empty_hooks: hook_list = new Map();
+        const empty_hooks: core.hook_list = new Map();
         for (const [id, pack] of registry.packs)
         {
             if (pack.hooks)
@@ -53,11 +49,11 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
         expect(empty_hooks.get('pack_b')?.get('custom_action')).toEqual([]);
 
         // ── 階段 4：new world ───────────────────────────────────────────────────
-        const sp1 = new space([10, 10]);
-        const sp2 = new space([10, 10]);
+        const sp1 = new core.space([10, 10]);
+        const sp2 = new core.space([10, 10]);
 
-        const world_1 = new pure_world(sp1, empty_hooks, 'world_1');
-        const world_2 = new pure_world(sp2, empty_hooks, 'world_2');
+        const world_1 = new world.pure_world(sp1, empty_hooks, 'world_1');
+        const world_2 = new world.pure_world(sp2, empty_hooks, 'world_2');
 
         // 驗證槽位已自動繼承且保證記憶體實例獨立
         expect(world_1.current_hook).not.toBe(world_2.current_hook);

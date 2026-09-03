@@ -8,25 +8,16 @@
  * 4. select_recipe_operation
  */
 
-import type 
-{
-    uid,
-    namespaced_id,
-    vector,
-    device,
-    device_constructor,
-    space,
-    reversible_operation
-} from '@/core';
+import * as core from '@/core';
 
-export interface create_device_op extends reversible_operation
+export interface create_device_op extends core.reversible_operation
 {
-    get_device(): device | null;
+    get_device(): core.device | null;
 }
 
-export interface delete_device_op extends reversible_operation
+export interface delete_device_op extends core.reversible_operation
 {
-    get_deleted_device(): device | null;
+    get_deleted_device(): core.device | null;
 }
 
 /**
@@ -34,13 +25,13 @@ export interface delete_device_op extends reversible_operation
  */
 export function create_device_operation
 (
-    device_class:  device_constructor,
-    definition_id: namespaced_id,
-    position:      vector,
+    device_class:  core.device_constructor,
+    definition_id: core.namespaced_id,
+    position:      core.vector,
     other_info:    Record<string, unknown> = {}
 ): create_device_op
 {
-    let created_dev: device | null = null;
+    let created_dev: core.device | null = null;
 
     return {
         namespace: 'vanilla_i',
@@ -54,11 +45,11 @@ export function create_device_operation
                 position: [...position]
             }
         },
-        get_device(): device | null
+        get_device(): core.device | null
         {
             return created_dev;
         },
-        execute(sp: space): void
+        execute(sp: core.space): void
         {
             if (!created_dev)
             {
@@ -80,7 +71,7 @@ export function create_device_operation
                 }
             }
         },
-        inverse(sp: space): void
+        inverse(sp: core.space): void
         {
             if (created_dev)
             {
@@ -97,9 +88,9 @@ export function create_device_operation
 /**
  * 刪除裝置操作：從空間移除裝置並快取其實例；Undo 撤銷時完整還原其資料。
  */
-export function delete_device_operation(device_uid: uid): delete_device_op
+export function delete_device_operation(device_uid: core.uid): delete_device_op
 {
-    let deleted_dev: device | null = null;
+    let deleted_dev: core.device | null = null;
 
     return {
         namespace: 'vanilla_i',
@@ -111,11 +102,11 @@ export function delete_device_operation(device_uid: uid): delete_device_op
                 device_uid
             }
         },
-        get_deleted_device(): device | null
+        get_deleted_device(): core.device | null
         {
             return deleted_dev;
         },
-        execute(sp: space): void
+        execute(sp: core.space): void
         {
             const target_uid = deleted_dev ? deleted_dev.device_uid : device_uid;
             const index = sp.devices.findIndex(d => d.device_uid === target_uid);
@@ -125,7 +116,7 @@ export function delete_device_operation(device_uid: uid): delete_device_op
                 sp.devices.splice(index, 1);
             }
         },
-        inverse(sp: space): void
+        inverse(sp: core.space): void
         {
             if (deleted_dev)
             {
@@ -146,9 +137,9 @@ export function delete_device_operation(device_uid: uid): delete_device_op
 /**
  * 移動裝置操作：改變裝置座標並記憶原座標；Undo 撤銷時移回原位。
  */
-export function move_device_operation(device_uid: uid, new_position: vector): reversible_operation
+export function move_device_operation(device_uid: core.uid, new_position: core.vector): core.reversible_operation
 {
-    let previous_position: vector | null = null;
+    let previous_position: core.vector | null = null;
 
     return {
         namespace: 'vanilla_i',
@@ -161,7 +152,7 @@ export function move_device_operation(device_uid: uid, new_position: vector): re
                 position: [...new_position]
             }
         },
-        execute(sp: space): void
+        execute(sp: core.space): void
         {
             const dev = sp.devices.find(d => d.device_uid === device_uid);
             if (dev)
@@ -173,7 +164,7 @@ export function move_device_operation(device_uid: uid, new_position: vector): re
                 dev.position = [...new_position];
             }
         },
-        inverse(sp: space): void
+        inverse(sp: core.space): void
         {
             if (previous_position !== null)
             {
@@ -190,9 +181,9 @@ export function move_device_operation(device_uid: uid, new_position: vector): re
 /**
  * 選定配方操作：設定裝置選定配方並記憶舊配方；Undo 撤銷時還原舊配方。
  */
-export function select_recipe_operation(device_uid: uid, new_recipe_id?: namespaced_id): reversible_operation
+export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: core.namespaced_id): core.reversible_operation
 {
-    let previous_recipe_id: namespaced_id | undefined = undefined;
+    let previous_recipe_id: core.namespaced_id | undefined = undefined;
     let initialized = false;
 
     return {
@@ -206,7 +197,7 @@ export function select_recipe_operation(device_uid: uid, new_recipe_id?: namespa
                 new_recipe_id
             }
         },
-        execute(sp: space): void
+        execute(sp: core.space): void
         {
             const dev = sp.devices.find(d => d.device_uid === device_uid);
             if (dev)
@@ -219,7 +210,7 @@ export function select_recipe_operation(device_uid: uid, new_recipe_id?: namespa
                 dev.selected_recipe_id = new_recipe_id;
             }
         },
-        inverse(sp: space): void
+        inverse(sp: core.space): void
         {
             if (initialized)
             {

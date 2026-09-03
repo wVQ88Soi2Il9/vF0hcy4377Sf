@@ -4,45 +4,30 @@
  * 繼承 pure_world，並提供包含 4 個基本可逆地圖操作與歷程快捷控制的高階 API。
  */
 
-import { pure_world } from '@/world';
-import
-{
-    type uid,
-    type namespaced_id,
-    type vector,
-    type device,
-    type device_constructor,
-    type reversible_operation
-} from '@/core';
-import * as history from '@/core';
-import 
-{
-    create_device_operation,
-    delete_device_operation,
-    move_device_operation,
-    select_recipe_operation
-} from './operations';
+import * as core from '@/core';
+import * as world from '@/world';
+import * as operations from './operations';
 
-export class std_world extends pure_world
+export class std_world extends world.pure_world
 {
     public create_device
     (
-        device_class:  device_constructor,
-        definition_id: namespaced_id,
-        position:      vector,
+        device_class:  core.device_constructor,
+        definition_id: core.namespaced_id,
+        position:      core.vector,
         other_info:    Record<string, unknown> = {}
-    ): device
+    ): core.device
     {
-        const op = create_device_operation(device_class, definition_id, position, other_info);
+        const op = operations.create_device_operation(device_class, definition_id, position, other_info);
         this.execute([op]);
         const dev = op.get_device()!;
         this.trigger({ namespace: 'vanilla_i', id: 'create_device' }, this, dev);
         return dev;
     }
 
-    public delete_device(device_uid: uid): device | undefined
+    public delete_device(device_uid: core.uid): core.device | undefined
     {
-        const op = delete_device_operation(device_uid);
+        const op = operations.delete_device_operation(device_uid);
         this.execute([op]);
         const dev = op.get_deleted_device() ?? undefined;
         if (dev)
@@ -52,12 +37,12 @@ export class std_world extends pure_world
         return dev;
     }
 
-    public move_device(device_uid: uid, new_position: vector): void
+    public move_device(device_uid: core.uid, new_position: core.vector): void
     {
         const dev = this.space.devices.find(d => d.device_uid === device_uid);
         const old_position = dev ? [...dev.position] : undefined;
 
-        const op = move_device_operation(device_uid, new_position);
+        const op = operations.move_device_operation(device_uid, new_position);
         this.execute([op]);
 
         if (dev && old_position)
@@ -73,12 +58,12 @@ export class std_world extends pure_world
         }
     }
 
-    public select_recipe(device_uid: uid, recipe_id?: namespaced_id): void
+    public select_recipe(device_uid: core.uid, recipe_id?: core.namespaced_id): void
     {
         const dev = this.space.devices.find(d => d.device_uid === device_uid);
         const old_recipe_id = dev ? dev.selected_recipe_id : undefined;
 
-        const op = select_recipe_operation(device_uid, recipe_id);
+        const op = operations.select_recipe_operation(device_uid, recipe_id);
         this.execute([op]);
 
         if (dev)
@@ -99,11 +84,11 @@ export class std_world extends pure_world
      */
     public execute
     (
-        operations:  reversible_operation[],
+        ops:         core.reversible_operation[],
         other_info?: Record<string, unknown>
     ): void
     {
-        history.record_operation(this.history, this.space, operations, other_info);
+        core.record_operation(this.history, this.space, ops, other_info);
     }
 
     /**
@@ -111,23 +96,23 @@ export class std_world extends pure_world
      */
     public undo(): boolean
     {
-        return history.jump_prev_node(this.history, this.space);
+        return core.jump_prev_node(this.history, this.space);
     }
 
     /**
      * 在該世界上重做下一步。
      */
-    public redo(target?: uid): boolean
+    public redo(target?: core.uid): boolean
     {
-        return history.jump_next_node(this.history, this.space, target);
+        return core.jump_next_node(this.history, this.space, target);
     }
 
     /**
      * 跳轉至指定歷史節點。
      */
-    public jump_to(target: uid): void
+    public jump_to(target: core.uid): void
     {
-        history.jump_to_node(this.history, this.space, target);
+        core.jump_to_node(this.history, this.space, target);
     }
 
     /**
@@ -135,7 +120,7 @@ export class std_world extends pure_world
      */
     public jump_to_prev_fork(): void
     {
-        history.jump_to_prev_fork(this.history, this.space);
+        core.jump_to_prev_fork(this.history, this.space);
     }
 
     /**
@@ -143,7 +128,7 @@ export class std_world extends pure_world
      */
     public jump_to_root(): void
     {
-        history.jump_to_root(this.history, this.space);
+        core.jump_to_root(this.history, this.space);
     }
 
     /**
@@ -151,14 +136,14 @@ export class std_world extends pure_world
      */
     public jump_to_leaf(): void
     {
-        history.jump_to_next_fork(this.history, this.space);
+        core.jump_to_next_fork(this.history, this.space);
     }
 
     /**
      * 刪除指定歷史節點。
      */
-    public delete_history_node(target: uid): boolean
+    public delete_history_node(target: core.uid): boolean
     {
-        return history.delete_node(this.history, target);
+        return core.delete_node(this.history, target);
     }
 }
