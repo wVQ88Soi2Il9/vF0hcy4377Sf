@@ -1,93 +1,155 @@
-import { space, create_history_tree, create_pack_registry } from '@/core';
-import { set_space, set_registry, set_history_tree, jump_to_history } from '@/world';
-import { load_all_packs, call_all_pack_inits } from './packs/loader';
-import { execute_command } from '@/packs/cli_tool';
+/**
+ * src/main.ts — 依據 src/README.md 實裝之 Runtime 生命週期示範
+ *
+ * 核心哲學：
+ * - Packs 定義「系統能做什麼（What the system can do）」
+ * - Worlds 容納「當前正在運行什麼（What is currently running）」
+ *
+ * 核心不變量（Invariant）：
+ * - Hook definitions are global. Hook callbacks are per-world.
+ * - 注入至 World A 的回呼絕不影響 World B。
+ */
 
-// 1. 建立 registry，載入所有 Pack 模組
+import
+{
+    create_pack_registry,
+    register_pack,
+    build_empty_hook_list,
+    inject_world_hook,
+    space,
+    pure_world,
+    type pack_module
+} from '@/core_v3';
+
+// ── 1. Initialize (初始化) ───────────────────────────────────────────────────
+// 依序加載所有 Pack，每個 Pack 宣告其能力與 Hook 定義清單。
+
+console.log('[Runtime Architecture] === Stage 1: Initialize ===');
+
 const registry = create_pack_registry();
-load_all_packs(registry);
 
-// 2. 建立空間（3 維空間: 64×64×4，全偶數網格錨點）與歷史樹
-const sp = new space([64, 64, 4]);
-const history_tree = create_history_tree();
+// 宣告示範 Pack A：工廠流水線模組
+const factory_pack: pack_module =
+{
+    pack_id: 'factory',
+    hooks:
+    [
+        { namespace: 'factory', id: 'device_produced' },
+        { namespace: 'factory', id: 'machine_overheated' }
+    ]
+};
 
-// 3. 在 loader 呼叫 init_pack() 之前，註冊 space, registry 和 history_tree
-set_space(sp);
-set_registry(registry);
-set_history_tree(history_tree);
+// 宣告示範 Pack B：物流傳輸模組
+const logistics_pack: pack_module =
+{
+    pack_id: 'logistics',
+    hooks:
+    [
+        { namespace: 'logistics', id: 'item_shipped' },
+        { namespace: 'logistics', id: 'conveyor_jammed' }
+    ]
+};
 
-// 4. 呼叫所有 pack 的 init_pack()
-call_all_pack_inits();
+register_pack(registry, factory_pack);
+register_pack(registry, logistics_pack);
 
-// 5. 模擬真實開發操作：建立豐富多分支歷程（約 50 步歷史操作）
-// --- 主線幹道：工廠流水線第 1 期 (#1 ~ #12) ---
-execute_command('create_device test:assembler 4 4 0');      // #1
-execute_command('create_device test:belt 10 4 0');           // #2
-execute_command('create_device test:merger 16 4 0');         // #3
-execute_command('move_device 2 10 8 0');                     // #4
-execute_command('create_device test:belt 4 12 0');          // #5
-execute_command('create_device test:assembler 4 18 0');     // #6
-execute_command('create_device test:belt 10 18 0');         // #7
-execute_command('create_device test:splitter 16 18 0');     // #8
-execute_command('move_device 6 4 20 0');                     // #9
-execute_command('create_device test:belt 22 18 0');         // #10
-execute_command('create_device test:merger 28 18 0');        // #11
-execute_command('create_device test:belt 28 12 0');         // #12
+// 走訪已就緒之 registry，建構全域空 Hook 槽位模板：
+// namespace
+// └── hook
+//     └── callbacks[]
+const hook_template = build_empty_hook_list(registry);
 
-// --- 分支 A：從 #2 探索原料輸入線 (#13 ~ #19) ---
-jump_to_history(2);
-execute_command('create_device test:splitter 10 16 0');     // #13
-execute_command('move_device 1 4 8 0');                      // #14
-execute_command('create_device test:belt 16 16 0');         // #15
-execute_command('create_device test:assembler 22 16 0');    // #16
-execute_command('move_device 16 24 16 0');                   // #17
-execute_command('create_device test:belt 30 16 0');         // #18
-execute_command('create_device test:merger 36 16 0');        // #19
+console.log('Registered Packs:', Array.from(registry.packs.keys()));
+console.log('Global Hook Template Namespaces:', Array.from(hook_template.keys()));
 
-// --- 分支 B：從 #4 探索南側高密度產線 (#20 ~ #27) ---
-jump_to_history(4);
-execute_command('create_device test:assembler 16 12 0');    // #20
-execute_command('create_device test:belt 22 12 0');         // #21
-execute_command('create_device test:splitter 28 12 0');     // #22
-execute_command('move_device 20 16 14 0');                   // #23
-execute_command('create_device test:belt 28 6 0');          // #24
-execute_command('create_device test:assembler 34 6 0');     // #25
-execute_command('create_device test:belt 40 6 0');          // #26
-execute_command('move_device 26 40 8 0');                    // #27
+// ── 2. Create World (建立世界實例) ───────────────────────────────────────────
+// 每個新世界實例接收從 template 深拷貝獲得的獨立槽位清單。
 
-// --- 分支 C：從 #8 延伸出次級加工區 (#28 ~ #36) ---
-jump_to_history(8);
-execute_command('create_device test:belt 16 24 0');         // #28
-execute_command('create_device test:assembler 16 30 0');    // #29
-execute_command('move_device 29 18 30 0');                   // #30
-execute_command('create_device test:splitter 24 30 0');     // #31
-execute_command('create_device test:belt 24 36 0');         // #32
-execute_command('create_device test:belt 30 30 0');         // #33
-execute_command('create_device test:merger 36 30 0');        // #34
-execute_command('move_device 32 24 38 0');                   // #35
-execute_command('create_device test:assembler 30 38 0');    // #36
+console.log('\n[Runtime Architecture] === Stage 2: Create World ===');
 
-// --- 分支 D：從 #15 測試分流迴路 (#37 ~ #43) ---
-jump_to_history(15);
-execute_command('create_device test:merger 16 22 0');        // #37
-execute_command('create_device test:belt 10 22 0');         // #38
-execute_command('move_device 38 8 22 0');                    // #39
-execute_command('create_device test:assembler 8 28 0');     // #40
-execute_command('create_device test:belt 8 34 0');          // #41
-execute_command('move_device 40 8 30 0');                    // #42
-execute_command('create_device test:splitter 14 34 0');     // #43
+const space_a = new space([16, 16, 4]);
+const space_b = new space([32, 32, 4]);
 
-// --- 回到主線 #12 繼續推展主幹工程 (#44 ~ #52) ---
-jump_to_history(12);
-execute_command('create_device test:assembler 34 12 0');    // #44
-execute_command('create_device test:belt 40 12 0');         // #45
-execute_command('create_device test:splitter 46 12 0');     // #46
-execute_command('move_device 44 34 14 0');                   // #47
-execute_command('create_device test:belt 46 18 0');         // #48
-execute_command('create_device test:belt 46 6 0');          // #49
-execute_command('create_device test:merger 52 12 0');        // #50
-execute_command('move_device 50 52 14 0');                   // #51
-execute_command('create_device test:assembler 58 14 0');    // #52
+const world_a = new pure_world(space_a, hook_template, 'world_alpha');
+const world_b = new pure_world(space_b, hook_template, 'world_beta');
 
-// --- 最終切換至最新主幹末端 #52 ---
-jump_to_history(52);
+console.log(`Created ${world_a.id} (Space: 16×16×4)`);
+console.log(`Created ${world_b.id} (Space: 32×32×4)`);
+console.log('Hook slot memory isolation check (world_a !== world_b):', world_a.current_hook !== world_b.current_hook);
+
+// ── 3. Run World (運行世界與回呼獨立注入) ──────────────────────────────────────
+// Pack 針對特定世界實例注入獨立回呼，世界運作時觸發其專屬 Hook。
+
+console.log('\n[Runtime Architecture] === Stage 3: Run World ===');
+
+const logs: string[] = [];
+
+function record_log(msg: string): void
+{
+    console.log(msg);
+    logs.push(msg);
+}
+
+// 向 World Alpha 注入專屬產線監聽回呼
+inject_world_hook
+(
+    world_a,
+    { namespace: 'factory', id: 'device_produced' },
+    (payload: { item: string; quantity: number }) =>
+    {
+        record_log(`[World Alpha Hook] Device produced: ${payload.item} × ${payload.quantity}`);
+    }
+);
+
+// 向 World Beta 注入不同的監聽回呼
+inject_world_hook
+(
+    world_b,
+    { namespace: 'factory', id: 'device_produced' },
+    (payload: { item: string; quantity: number }) =>
+    {
+        record_log(`[World Beta Hook] Telemetry received: ${payload.item} (Qty: ${payload.quantity})`);
+    }
+);
+
+inject_world_hook
+(
+    world_a,
+    { namespace: 'logistics', id: 'item_shipped' },
+    (route: string) =>
+    {
+        record_log(`[World Alpha Hook] Cargo dispatched via route: ${route}`);
+    }
+);
+
+// ── 4. 驗證核心不變量（Invariant Verification） ──────────────────────────────
+// Invariant: Hook definitions are global. Hook callbacks are per-world.
+
+record_log('\n--- Triggering event on World Alpha ---');
+world_a.trigger({ namespace: 'factory', id: 'device_produced' }, { item: 'assembler', quantity: 2 });
+world_a.trigger({ namespace: 'logistics', id: 'item_shipped' }, 'Sector-7G');
+
+record_log('\n--- Triggering event on World Beta ---');
+world_b.trigger({ namespace: 'factory', id: 'device_produced' }, { item: 'fusion_core', quantity: 1 });
+
+// ── 5. 若在瀏覽器中運行，渲染視覺化架構狀態 ──────────────────────────────────
+if (typeof document !== 'undefined')
+{
+    const app = document.getElementById('app');
+    if (app)
+    {
+        app.innerHTML = `
+            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: #181825; color: #cdd6f4; min-height: 100vh; padding: 2rem; box-sizing: border-box;">
+                <div style="max-width: 800px; margin: 0 auto; background: #1e1e2e; border: 1px solid #313244; border-radius: 8px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                    <h1 style="color: #89b4fa; margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid #313244; padding-bottom: 0.75rem;">
+                        Runtime Architecture · 5-Stage Hook Lifecycle
+                    </h1>
+                    <div style="margin-bottom: 1rem; color: #a6adc8; font-size: 0.9rem;">
+                        <strong>Invariant:</strong> Hook definitions are global. Hook callbacks are per-world.
+                    </div>
+                    <div style="background: #11111b; border: 1px solid #313244; border-radius: 6px; padding: 1rem; white-space: pre-wrap; line-height: 1.5; font-size: 0.85rem; color: #a6e3a1;">${logs.join('\n')}</div>
+                </div>
+            </div>
+        `;
+    }
+}
