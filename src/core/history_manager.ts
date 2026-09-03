@@ -44,38 +44,22 @@ export function record_command(tree: history_tree, map: game_map, cmd: map_comma
     return new_node;
 }
 
+/**
+ * 從歷史樹中刪除一個末端葉節點（Leaf Node）。
+ * 嚴格限制：僅能刪除無子節點（children_uids.length === 0）的葉節點，避免破壞因果歷史連續性。
+ */
 export function delete_node(tree: history_tree, target_uid: number): boolean
 {
-    if (target_uid === 0 || target_uid === tree.current_uid)
+    const target = tree.nodes.get(target_uid);
+    if (!target || target_uid === tree.current_uid || target.children_uids.length > 0 || target.parent_uid === null)
     {
         return false;
     }
 
-    const target_node = tree.nodes.get(target_uid);
-    if (!target_node || target_node.parent_uid === null)
+    const parent = tree.nodes.get(target.parent_uid);
+    if (parent)
     {
-        return false;
-    }
-
-    const parent_node = tree.nodes.get(target_node.parent_uid);
-    if (!parent_node)
-    {
-        return false;
-    }
-
-    for (const child_uid of target_node.children_uids)
-    {
-        const child = tree.nodes.get(child_uid);
-        if (child)
-        {
-            child.parent_uid = parent_node.uid;
-        }
-    }
-
-    const idx = parent_node.children_uids.indexOf(target_uid);
-    if (idx !== -1)
-    {
-        parent_node.children_uids.splice(idx, 1, ...target_node.children_uids);
+        parent.children_uids = parent.children_uids.filter(id => id !== target_uid);
     }
 
     tree.nodes.delete(target_uid);
@@ -221,21 +205,86 @@ export function compute_path_to_root(tree: history_tree, start_uid: number): num
     return path;
 }
 
+/**
+ * 尋找兩節點之最近公共祖先（LCA）。
+ * 沿 A 向上收集所有祖先至 Set，再沿 B 向上查找第一個交集節點。
+ * 時間複雜度 O(depth_A + depth_B)，且不依賴 UID 之數值單調遞增特性。
+ */
 export function find_lca(tree: history_tree, uid_a: number, uid_b: number): number | null
 {
-    const path_a = compute_path_to_root(tree, uid_a);
-    const path_b = compute_path_to_root(tree, uid_b);
-    const set_b  = new Set(path_b);
+    const ancestors = new Set<number>();
+    let curr: number | null = uid_a;
 
-    for (const uid of path_a)
+    while (curr !== null)
     {
-        if (set_b.has(uid))
+        ancestors.add(curr);
+        const node = tree.nodes.get(curr);
+        if (!node)
         {
-            return uid;
+            break;
         }
+        curr = node.parent_uid;
+    }
+
+    curr = uid_b;
+    while (curr !== null)
+    {
+        if (ancestors.has(curr))
+        {
+            return curr;
+        }
+        const node = tree.nodes.get(curr);
+        if (!node)
+        {
+            break;
+        }
+        curr = node.parent_uid;
     }
 
     return null;
+}
+
+/**
+ * 沿直系祖先路徑向上跳轉（當 ancestor_uid 為 current 之祖先節點時）。
+ */
+export function jump_to_ancestor(tree: history_tree, map: game_map, ancestor_uid: number): boolean
+{
+    while (tree.current_uid !== ancestor_uid)
+    {
+        if (!undo(tree, map))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * 沿直系子孫路徑向下跳轉（當 descendant_uid 為 current 之子孫節點時）。
+ */
+export function jump_to_descendant(tree: history_tree, map: game_map, descendant_uid: number): boolean
+{
+    const forward_uids: number[] = [];
+    let curr: number | null = descendant_uid;
+    while (curr !== null && curr !== tree.current_uid)
+    {
+        forward_uids.unshift(curr);
+        curr = tree.nodes.get(curr)?.parent_uid ?? null;
+    }
+
+    if (curr !== tree.current_uid)
+    {
+        return false;
+    }
+
+    for (const next_uid of forward_uids)
+    {
+        if (!redo(tree, map, next_uid))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
@@ -276,6 +325,9 @@ export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
     return true;
 }
 
+/**
+ * 跨分支任意節點跳轉：由 LCA 拆解為「先向上回到 LCA，再向下跳至目標子孫」。
+ */
 export function jump_to_node(tree: history_tree, map: game_map, target_uid: number): boolean
 {
     if (tree.current_uid === target_uid)
@@ -289,34 +341,7 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
         return false;
     }
 
-    while (tree.current_uid !== lca_uid)
-    {
-        if (!undo(tree, map))
-        {
-            return false;
-        }
-    }
-
-    const path_from_target = compute_path_to_root(tree, target_uid);
-    const forward_uids: number[] = [];
-    for (const uid of path_from_target)
-    {
-        if (uid === lca_uid)
-        {
-            break;
-        }
-        forward_uids.unshift(uid);
-    }
-
-    for (const next_uid of forward_uids)
-    {
-        if (!redo(tree, map, next_uid))
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return jump_to_ancestor(tree, map, lca_uid) && jump_to_descendant(tree, map, target_uid);
 }
 
 export function jump_to_root(tree: history_tree, map: game_map): boolean
