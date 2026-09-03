@@ -1,4 +1,4 @@
-import { register_pack, type pack_registry, type pure_world } from '@/core';
+import type { pack_registry, pure_world } from '@/core';
 
 export function bar(): void
 {
@@ -7,7 +7,7 @@ export function bar(): void
 
 export function global_init(registry: pack_registry): void
 {
-    register_pack(registry, {
+    registry.packs.set('empty_pack', {
         pack_id: 'empty_pack',
         hooks: new Map([
             ['foo', []]

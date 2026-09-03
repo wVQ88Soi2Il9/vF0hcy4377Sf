@@ -28,11 +28,3 @@ export interface pack_registry
 {
     packs: Map<string, pack_module>;
 }
-
-/**
- * 註冊一個 pack_module 物件進 registry。
- */
-export function register_pack(registry: pack_registry, mod: pack_module): void
-{
-    registry.packs.set(mod.pack_id, mod);
-}

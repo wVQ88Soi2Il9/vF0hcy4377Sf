@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import 
 {
-    register_pack,
     pure_world,
     space
 } from '../src/core';
@@ -33,8 +32,8 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
             ])
         };
 
-        register_pack(registry, pack_a);
-        register_pack(registry, pack_b);
+        registry.packs.set(pack_a.pack_id, pack_a);
+        registry.packs.set(pack_b.pack_id, pack_b);
 
         expect(registry.packs.has('pack_a')).toBe(true);
         expect(registry.packs.has('pack_b')).toBe(true);
