@@ -1,5 +1,5 @@
 /**
- * src/core/operations.ts — 核心空間可逆操作工廠
+ * src/packs/vanilla_i/operations.ts — Vanilla 基礎空間可逆操作工廠
  *
  * 提供針對 space 裝置集合的 4 個標準原子可逆操作：
  * 1. create_device_operation
@@ -8,9 +8,16 @@
  * 4. select_recipe_operation
  */
 
-import type { uid, namespaced_id, vector } from './definition_i';
-import type { device, device_constructor, space } from './definition_ii';
-import type { reversible_operation } from './definition_iii';
+import type 
+{
+    uid,
+    namespaced_id,
+    vector,
+    device,
+    device_constructor,
+    space,
+    reversible_operation
+} from '@/core';
 
 export interface create_device_op extends reversible_operation
 {
@@ -36,7 +43,7 @@ export function create_device_operation
     let created_dev: device | null = null;
 
     return {
-        namespace: 'core',
+        namespace: 'vanilla_i',
         id:        'create_device',
         other_info:
         {
@@ -95,7 +102,7 @@ export function delete_device_operation(device_uid: uid): delete_device_op
     let deleted_dev: device | null = null;
 
     return {
-        namespace: 'core',
+        namespace: 'vanilla_i',
         id:        'delete_device',
         other_info:
         {
@@ -144,7 +151,7 @@ export function move_device_operation(device_uid: uid, new_position: vector): re
     let previous_position: vector | null = null;
 
     return {
-        namespace: 'core',
+        namespace: 'vanilla_i',
         id:        'move_device',
         other_info:
         {
@@ -189,7 +196,7 @@ export function select_recipe_operation(device_uid: uid, new_recipe_id?: namespa
     let initialized = false;
 
     return {
-        namespace: 'core',
+        namespace: 'vanilla_i',
         id:        'select_recipe',
         other_info:
         {

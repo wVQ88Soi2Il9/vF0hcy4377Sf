@@ -1,7 +1,20 @@
-import type { uid, namespaced_id, vector, hook_list, hook_callback } from './definition_i';
-import { space, device_constructor, device } from './definition_ii';
-import type { reversible_operation } from './definition_iii';
-import * as history from './history';
+/**
+ * src/packs/vanilla_i/world.ts — Vanilla 標準世界實體
+ *
+ * 繼承 pure_world，並提供包含 4 個基本可逆地圖操作與歷程快捷控制的高階 API。
+ */
+
+import
+{
+    pure_world,
+    type uid,
+    type namespaced_id,
+    type vector,
+    type device,
+    type device_constructor,
+    type reversible_operation
+} from '@/core';
+import * as history from '@/core';
 import 
 {
     create_device_operation,
@@ -10,39 +23,6 @@ import
     select_recipe_operation
 } from './operations';
 
-export class pure_world
-{
-    public readonly id:                 string;
-    public          space:              space;
-    public          history:            history.tree;
-    public          current_hook:       hook_list;
-
-    constructor(sp: space, template?: hook_list, id?: string)
-    {
-        this.id = id ?? `world_${Date.now()}`;
-        this.space = sp;
-        this.history = history.create_tree();
-        this.current_hook = template ? structuredClone(template) : new Map();
-    }
-
-    public inject_hook(target_hook: namespaced_id, callback: hook_callback): void
-    {
-        this.current_hook.get(target_hook.namespace)!.get(target_hook.id)!.push(callback);
-    }
-
-    public trigger(namespaced_id: namespaced_id, ...args: any[]): void
-    {
-        const trigger_functions = this.current_hook.get(namespaced_id.namespace)?.get(namespaced_id.id) ?? [];
-        for (const f of trigger_functions)
-        {
-            f(...args);
-        }
-    }
-}
-/**
- * 實體類別：world = space + history
- * 定義世界的本質結構
- */
 export class std_world extends pure_world
 {
     public create_device
@@ -56,7 +36,7 @@ export class std_world extends pure_world
         const op = create_device_operation(device_class, definition_id, position, other_info);
         this.execute([op]);
         const dev = op.get_device()!;
-        this.trigger({ namespace: 'std_world', id: 'create_device' }, this, dev);
+        this.trigger({ namespace: 'vanilla_i', id: 'create_device' }, this, dev);
         return dev;
     }
 
@@ -67,7 +47,7 @@ export class std_world extends pure_world
         const dev = op.get_deleted_device() ?? undefined;
         if (dev)
         {
-            this.trigger({ namespace: 'std_world', id: 'delete_device' }, this, dev);
+            this.trigger({ namespace: 'vanilla_i', id: 'delete_device' }, this, dev);
         }
         return dev;
     }
@@ -84,7 +64,7 @@ export class std_world extends pure_world
         {
             this.trigger
             (
-                { namespace: 'std_world', id: 'move_device' },
+                { namespace: 'vanilla_i', id: 'move_device' },
                 this,
                 dev,
                 old_position,
@@ -105,7 +85,7 @@ export class std_world extends pure_world
         {
             this.trigger
             (
-                { namespace: 'std_world', id: 'select_recipe' },
+                { namespace: 'vanilla_i', id: 'select_recipe' },
                 this,
                 dev,
                 old_recipe_id,
@@ -113,6 +93,7 @@ export class std_world extends pure_world
             );
         }
     }
+
     /**
      * 在該世界上執行可逆指令序列。
      */
