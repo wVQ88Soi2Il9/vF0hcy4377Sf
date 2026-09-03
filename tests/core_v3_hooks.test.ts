@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import 
 {
-    create_pack_registry,
     register_pack,
     build_empty_hook_list,
     inject_world_hook,
     pure_world,
     space
-} from '../src/core_v3';
-import type { pack_module } from '../src/core_v3';
+} from '../src/core';
+import type { pack_module } from '../src/core';
+import { create_pack_registry } from '../src/main';
 
 describe('Core v3 Hook System 5-stage lifecycle', () =>
 {
