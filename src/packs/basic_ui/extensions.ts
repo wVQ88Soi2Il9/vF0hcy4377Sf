@@ -1,4 +1,4 @@
-import type { device, game_map, unsubscribe_function } from '@/core';
+import type { device, space, unsubscribe_function } from '@/core';
 
 export interface device_action
 {
@@ -23,7 +23,7 @@ export interface device_creation_option_entry
     render:    device_creation_option_fn;
 }
 
-export type panel_section_fn = (container: HTMLElement, map: game_map) => void;
+export type panel_section_fn = (container: HTMLElement, map: space) => void;
 
 export interface panel_section_entry
 {

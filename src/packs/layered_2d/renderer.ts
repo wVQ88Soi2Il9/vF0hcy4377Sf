@@ -1,4 +1,4 @@
-import type { game_map, device } from '@/core';
+import type { space, device } from '@/core';
 import type { camera_type, drawable_device } from '@/packs/basic_renderer';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { add_vector_3d } from './math';
@@ -68,7 +68,7 @@ function render_device_item
 export function draw_layered_devices
 (
     ctx:      CanvasRenderingContext2D,
-    map:      game_map,
+    map:      space,
     camera:   camera_type,
     canvas:   HTMLCanvasElement,
     options:  layered_render_options = {}

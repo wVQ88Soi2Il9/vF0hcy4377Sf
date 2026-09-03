@@ -5,7 +5,7 @@
  */
 
 import type { vector } from '@/core';
-import { get_dimension } from '@/runtime';
+import { get_dimension } from '@/world';
 
 export function cuboid_to_shape(device_size: vector): vector[]
 {

@@ -1,5 +1,5 @@
 import { camera, notify_camera_change, adapt_camera_plane } from './camera';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 
 /**
  * Updates camera pan position.

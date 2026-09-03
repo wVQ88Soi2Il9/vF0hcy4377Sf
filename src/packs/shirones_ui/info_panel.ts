@@ -1,4 +1,4 @@
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import { on_history_change } from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';

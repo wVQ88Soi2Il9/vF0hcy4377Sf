@@ -132,7 +132,7 @@ export function render_pipe_creator_options(container: HTMLElement, _def_id: str
     };
 }
 
-import { get_registry } from '@/runtime';
+import { get_registry } from '@/world';
 import { parse_namespaced_id, has_device_class, get_device_class } from '@/packs/vanilla';
 
 /**

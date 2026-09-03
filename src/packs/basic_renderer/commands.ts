@@ -1,5 +1,5 @@
-import type { game_map, map_command } from '@/core';
-import { get_map } from '@/runtime';
+import type { space, map_command } from '@/core';
+import { get_map } from '@/world';
 import { parse_axis_name, format_axis_name, get_right_oriented_axes } from '@/packs/vanilla';
 import { get_camera_plane } from './camera';
 import { set_camera_plane } from './camera_control';
@@ -35,7 +35,7 @@ export function camera_command(equation_arg?: string): map_command
                 equation_arg
             }
         },
-        execute(_map: game_map): void
+        execute(_map: space): void
         {
             const current = get_camera_plane();
             if (!previous_plane)
@@ -87,7 +87,7 @@ export function camera_command(equation_arg?: string): map_command
                 set_camera_plane(axes.dim_h, axes.dim_v, new_slices);
             }
         },
-        inverse(_map: game_map): void
+        inverse(_map: space): void
         {
             if (previous_plane)
             {

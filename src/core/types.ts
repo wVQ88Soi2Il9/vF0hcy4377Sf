@@ -113,7 +113,7 @@ export abstract class device
 
 // ── Map ──────────────────────────────────────────────────────────────────────
 
-export interface game_map
+export interface space
 {
     /**
      * Spatial dimension count N (e.g. 2 for 2D, 3 for 3D, 4 for 4D).
@@ -147,10 +147,10 @@ export interface game_map
 export interface map_command extends namespaced_id
 {
     /** Apply the change to the map. */
-    execute(map: game_map): void;
+    execute(map: space): void;
 
     /** Revert the change to the map. Must be the exact logical inverse of execute(). */
-    inverse(map: game_map): void;
+    inverse(map: space): void;
 
     /** Optional mod-extensible metadata associated with this command instance. */
     other_info?: Record<string, unknown>;

@@ -1,4 +1,4 @@
-import type { game_map, device, vector, map_command, map_command_factory, namespaced_id, device_constructor } from './types';
+import type { space, device, vector, map_command, map_command_factory, namespaced_id, device_constructor } from './types';
 import
 {
     create_device,
@@ -35,7 +35,7 @@ export function create_device_command
                 position: [...position]
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             if (!created_dev)
             {
@@ -46,7 +46,7 @@ export function create_device_command
                 restore_device(map, created_dev);
             }
         },
-        inverse(map: game_map): void
+        inverse(map: space): void
         {
             if (created_dev)
             {
@@ -74,7 +74,7 @@ export function delete_device_command(device_uid: number): map_command
                 device_uid
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const target_uid = deleted_dev ? deleted_dev.uid : device_uid;
             const dev = delete_device(map, target_uid);
@@ -83,7 +83,7 @@ export function delete_device_command(device_uid: number): map_command
                 deleted_dev = dev;
             }
         },
-        inverse(map: game_map): void
+        inverse(map: space): void
         {
             if (deleted_dev)
             {
@@ -112,7 +112,7 @@ export function move_device_command(device_uid: number, new_position: vector): m
                 position: [...new_position]
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
             if (dev)
@@ -124,7 +124,7 @@ export function move_device_command(device_uid: number, new_position: vector): m
                 move_device(map, device_uid, new_position);
             }
         },
-        inverse(map: game_map): void
+        inverse(map: space): void
         {
             if (previous_position !== null)
             {
@@ -154,7 +154,7 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
                 new_recipe_id
             }
         },
-        execute(map: game_map): void
+        execute(map: space): void
         {
             const dev = map.devices.find(d => d.uid === device_uid);
             if (dev)
@@ -167,7 +167,7 @@ export function select_recipe_command(device_uid: number, new_recipe_id?: namesp
                 select_recipe(map, device_uid, new_recipe_id);
             }
         },
-        inverse(map: game_map): void
+        inverse(map: space): void
         {
             if (initialized)
             {

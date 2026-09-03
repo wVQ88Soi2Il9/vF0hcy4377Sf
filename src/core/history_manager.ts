@@ -1,4 +1,4 @@
-import type { game_map, history_node, history_tree, map_command } from './types';
+import type { space, history_node, history_tree, map_command } from './types';
 import { trigger_history_change } from './hooks';
 
 export function create_history_tree(): history_tree
@@ -18,7 +18,7 @@ export function create_history_tree(): history_tree
     };
 }
 
-export function record_command(tree: history_tree, map: game_map, cmd: map_command): history_node
+export function record_command(tree: history_tree, map: space, cmd: map_command): history_node
 {
     cmd.execute(map);
 
@@ -67,7 +67,7 @@ export function delete_node(tree: history_tree, target_uid: number): boolean
     return true;
 }
 
-export function undo(tree: history_tree, map: game_map): boolean
+export function undo(tree: history_tree, map: space): boolean
 {
     if (tree.current_uid === 0)
     {
@@ -90,7 +90,7 @@ export function undo(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-export function redo(tree: history_tree, map: game_map, target_child_uid?: number): boolean
+export function redo(tree: history_tree, map: space, target_child_uid?: number): boolean
 {
     const current_node = tree.nodes.get(tree.current_uid);
     if (!current_node)
@@ -247,7 +247,7 @@ export function find_lca(tree: history_tree, uid_a: number, uid_b: number): numb
 /**
  * 沿直系祖先路徑向上跳轉（當 ancestor_uid 為 current 之祖先節點時）。
  */
-export function jump_to_ancestor(tree: history_tree, map: game_map, ancestor_uid: number): boolean
+export function jump_to_ancestor(tree: history_tree, map: space, ancestor_uid: number): boolean
 {
     while (tree.current_uid !== ancestor_uid)
     {
@@ -262,7 +262,7 @@ export function jump_to_ancestor(tree: history_tree, map: game_map, ancestor_uid
 /**
  * 沿直系子孫路徑向下跳轉（當 descendant_uid 為 current 之子孫節點時）。
  */
-export function jump_to_descendant(tree: history_tree, map: game_map, descendant_uid: number): boolean
+export function jump_to_descendant(tree: history_tree, map: space, descendant_uid: number): boolean
 {
     const forward_uids: number[] = [];
     let curr: number | null = descendant_uid;
@@ -287,7 +287,7 @@ export function jump_to_descendant(tree: history_tree, map: game_map, descendant
     return true;
 }
 
-export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
+export function jump_to_prev_fork(tree: history_tree, map: space): boolean
 {
     const target_uid = find_prev_fork_node(tree, tree.current_uid) ?? (tree.current_uid !== 0 ? 0 : null);
     if (target_uid === null)
@@ -306,7 +306,7 @@ export function jump_to_prev_fork(tree: history_tree, map: game_map): boolean
     return true;
 }
 
-export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
+export function jump_to_next_fork(tree: history_tree, map: space): boolean
 {
     const target_uid = find_next_fork_node(tree, tree.current_uid);
     if (target_uid === null)
@@ -328,7 +328,7 @@ export function jump_to_next_fork(tree: history_tree, map: game_map): boolean
 /**
  * 跨分支任意節點跳轉：由 LCA 拆解為「先向上回到 LCA，再向下跳至目標子孫」。
  */
-export function jump_to_node(tree: history_tree, map: game_map, target_uid: number): boolean
+export function jump_to_node(tree: history_tree, map: space, target_uid: number): boolean
 {
     if (tree.current_uid === target_uid)
     {
@@ -344,7 +344,7 @@ export function jump_to_node(tree: history_tree, map: game_map, target_uid: numb
     return jump_to_ancestor(tree, map, lca_uid) && jump_to_descendant(tree, map, target_uid);
 }
 
-export function jump_to_root(tree: history_tree, map: game_map): boolean
+export function jump_to_root(tree: history_tree, map: space): boolean
 {
     let jumped = false;
     while (undo(tree, map))
@@ -354,7 +354,7 @@ export function jump_to_root(tree: history_tree, map: game_map): boolean
     return jumped;
 }
 
-export function jump_to_leaf(tree: history_tree, map: game_map): boolean
+export function jump_to_leaf(tree: history_tree, map: space): boolean
 {
     let jumped = false;
     while (redo(tree, map))

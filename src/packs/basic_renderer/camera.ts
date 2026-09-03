@@ -1,5 +1,5 @@
 import type { camera_type, view_plane } from './types';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import type { unsubscribe_function } from '@/core';
 
 export const camera: camera_type =

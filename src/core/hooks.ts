@@ -1,17 +1,17 @@
-import type { game_map, device, vector, history_tree, namespaced_id } from './types';
+import type { space, device, vector, history_tree, namespaced_id } from './types';
 
-export type device_create_hook = (map: game_map, dev: device) => void;
-export type device_delete_hook = (map: game_map, dev: device) => void;
+export type device_create_hook = (map: space, dev: device) => void;
+export type device_delete_hook = (map: space, dev: device) => void;
 export type device_move_hook =
 (
-    map:          game_map,
+    map:          space,
     dev:          device,
     old_position: vector,
     new_position: vector
 ) => void;
 export type device_select_recipe_hook =
 (
-    map:           game_map,
+    map:           space,
     dev:           device,
     old_recipe_id: namespaced_id | undefined,
     new_recipe_id: namespaced_id | undefined
@@ -27,7 +27,7 @@ export const hooks =
     on_history_change:       [] as history_change_hook[]
 };
 
-export function trigger_create_device(map: game_map, dev: device): void
+export function trigger_create_device(map: space, dev: device): void
 {
     for (const hook of hooks.on_device_create)
     {
@@ -35,7 +35,7 @@ export function trigger_create_device(map: game_map, dev: device): void
     }
 }
 
-export function trigger_delete_device(map: game_map, dev: device): void
+export function trigger_delete_device(map: space, dev: device): void
 {
     for (const hook of hooks.on_device_delete)
     {
@@ -45,7 +45,7 @@ export function trigger_delete_device(map: game_map, dev: device): void
 
 export function trigger_move_device
 (
-    map:          game_map,
+    map:          space,
     dev:          device,
     old_position: vector,
     new_position: vector
@@ -59,7 +59,7 @@ export function trigger_move_device
 
 export function trigger_select_recipe
 (
-    map:           game_map,
+    map:           space,
     dev:           device,
     old_recipe_id: namespaced_id | undefined,
     new_recipe_id: namespaced_id | undefined

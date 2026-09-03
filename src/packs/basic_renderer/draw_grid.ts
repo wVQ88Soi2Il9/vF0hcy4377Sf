@@ -1,4 +1,4 @@
-import type { game_map } from '@/core';
+import type { space } from '@/core';
 import type { camera_type } from './types';
 
 const GRID_STEP = 2;   // 每個網格區塊跨度為 2 單位
@@ -12,7 +12,7 @@ export function draw_grid
     ctx:    CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
     camera: camera_type,
-    map:    game_map
+    map:    space
 ): void
 {
     const w = canvas.width;

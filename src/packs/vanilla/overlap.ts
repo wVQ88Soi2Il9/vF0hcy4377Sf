@@ -1,4 +1,4 @@
-import type { game_map, vector, pack_registry } from '@/core';
+import type { space, vector, pack_registry } from '@/core';
 import type { map_validation_result } from './types';
 import { add_vector } from './math';
 import { spatial_map } from './spatial_map';
@@ -17,7 +17,7 @@ export function is_out_of_bounds(pos: vector, map_size: vector): boolean
  * @param _registry 擴充註冊表（選填）
  * @returns 回傳包含問題裝置 uid 陣列的物件
  */
-export function check_map_overlap(map: game_map, _registry?: pack_registry): map_validation_result
+export function check_map_overlap(map: space, _registry?: pack_registry): map_validation_result
 {
     const occupied_map = new spatial_map<number[]>();
     const out_of_bounds: number[] = [];

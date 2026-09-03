@@ -4,7 +4,7 @@
  * 應用啟動期的全域狀態容器（地圖、全域 Registry、歷史樹）與捷徑輔助函式。
  */
 
-import type { game_map, history_tree, map_command } from '@/core';
+import type { space, history_tree, map_command } from '@/core';
 import type { pack_registry } from '@/core';
 import
 {
@@ -19,16 +19,16 @@ import
     delete_node as core_delete_node
 } from '@/core';
 
-let _map:          game_map      | undefined = undefined;
+let _map:          space      | undefined = undefined;
 let _registry:     pack_registry | undefined = undefined;
 let _history_tree: history_tree  | undefined = undefined;
 
-export function set_map(map: game_map): void
+export function set_map(map: space): void
 {
     _map = map;
 }
 
-export function get_map(): game_map | undefined
+export function get_map(): space | undefined
 {
     return _map;
 }

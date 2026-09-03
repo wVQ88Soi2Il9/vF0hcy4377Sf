@@ -1,10 +1,10 @@
-import type { game_map } from '@/core';
+import type { space } from '@/core';
 import { format_namespaced_id } from './identifier';
 
 /**
  * Inspects a device on the map and formats its complete status as readable text.
  */
-export function inspect_device_text(map: game_map, device_uid: number): string
+export function inspect_device_text(map: space, device_uid: number): string
 {
     const dev = map.devices.find(d => d.uid === device_uid);
     if (!dev)

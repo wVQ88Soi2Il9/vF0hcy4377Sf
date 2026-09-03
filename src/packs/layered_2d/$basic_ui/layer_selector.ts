@@ -1,4 +1,4 @@
-import type { game_map } from '@/core';
+import type { space } from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { layered_2d } from '../index';
@@ -8,7 +8,7 @@ import { layered_2d } from '../index';
  * Allows interactive switching across integer Z elevation levels (Z = 0, 1, 2, ...),
  * showing content in the depth window [Z, Z + 3).
  */
-export function render_layer_selector_section(container: HTMLElement, map: game_map): void
+export function render_layer_selector_section(container: HTMLElement, map: space): void
 {
     // Only show layer selector if map has 3 or more dimensions and height > 2
     if (map.dimension < 3 || map.size[2] <= 2)

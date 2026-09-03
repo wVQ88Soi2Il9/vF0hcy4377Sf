@@ -1,10 +1,10 @@
-import type { game_map, device, vector, namespaced_id, device_constructor } from './types';
+import type { space, device, vector, namespaced_id, device_constructor } from './types';
 import { trigger_create_device, trigger_delete_device, trigger_move_device, trigger_select_recipe } from './hooks';
 
 /**
  * Creates a new map instance with next uid starting from 1.
  */
-export function create_map(size: vector): game_map
+export function create_map(size: vector): space
 {
     return {
         dimension: size.length,
@@ -21,7 +21,7 @@ export function create_map(size: vector): game_map
  */
 export function create_device
 (
-    map:           game_map, 
+    map:           space, 
     device_class:  device_constructor,
     definition_id: namespaced_id, 
     position:      vector, 
@@ -42,7 +42,7 @@ export function create_device
  * If dev.uid is >= map.uid, map.uid is updated to dev.uid + 1.
  * Modifies the map in place and triggers create hook.
  */
-export function restore_device(map: game_map, dev: device): void
+export function restore_device(map: space, dev: device): void
 {
     const exists = map.devices.some(d => d.uid === dev.uid);
     if (!exists)
@@ -60,7 +60,7 @@ export function restore_device(map: game_map, dev: device): void
  * Removes a device by its uid.
  * Modifies the map in place and returns the removed device instance if found.
  */
-export function delete_device(map: game_map, device_uid: number): device | undefined
+export function delete_device(map: space, device_uid: number): device | undefined
 {
     const index = map.devices.findIndex(d => d.uid === device_uid);
     if (index !== -1)
@@ -77,7 +77,7 @@ export function delete_device(map: game_map, device_uid: number): device | undef
  * Moves a device.
  * Modifies the device in place.
  */
-export function move_device(map: game_map, device_uid: number, new_position: vector): void
+export function move_device(map: space, device_uid: number, new_position: vector): void
 {
     const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)
@@ -98,7 +98,7 @@ export function move_device(map: game_map, device_uid: number, new_position: vec
  * Sets or clears the selected recipe for a device.
  * Modifies the device in place.
  */
-export function select_recipe(map: game_map, device_uid: number, recipe_id?: namespaced_id): void
+export function select_recipe(map: space, device_uid: number, recipe_id?: namespaced_id): void
 {
     const dev = map.devices.find(d => d.uid === device_uid);
     if (dev)

@@ -1,7 +1,7 @@
 import './style.css';
 import { basic_renderer } from '@/packs/basic_renderer';
 import { basic_ui } from '@/packs/basic_ui';
-import { get_map } from '@/runtime';
+import { get_map } from '@/world';
 import type { unsubscribe_function } from '@/core';
 import { on_device_change } from '@/core';
 import { create_ui_layout, type shirones_ui_layout_nodes } from './layout';
