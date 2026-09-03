@@ -33,7 +33,7 @@ const wwworld = new world.pure_world(sp, empty_hook_list, 'world_1');
 // ── 3. Run World / Local Init ────────────────────────────────────────────────
 for (const pack of ENABLED_PACKS)
 {
-    pack.local_init(wwworld);
+    pack.world_init(wwworld);
 }
 
 // ── 4. Verify Trigger Event ──────────────────────────────────────────────────

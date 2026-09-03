@@ -26,7 +26,7 @@ export function global_init(registry: core.pack_registry): void
     );
 }
 
-export function local_init(target_world: world.pure_world): void
+export function world_init(target_world: world.pure_world): void
 {
     // 將 device_change 綁定至所有裝置異動事件
     const relay_device_change = (...args: any[]) =>

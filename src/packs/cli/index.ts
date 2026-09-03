@@ -12,7 +12,7 @@ export function global_init(registry: core.pack_registry): void
     });
 }
 
-export function local_init(): void
+export function world_init(): void
 {
 
 }
