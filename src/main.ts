@@ -1,13 +1,14 @@
 import * as core from '@/core';
 import * as world from '@/world';
-import * as empty_pack from '@/packs/empty_pack';
+
+import * as vanilla_i from '@/packs/vanilla_i'
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
 const registry: core.pack_registry = { packs: new Map() };
 
 const ENABLED_PACKS =
 [
-    empty_pack
+    vanilla_i
 ];
 
 for (const pack of ENABLED_PACKS)
@@ -36,4 +37,3 @@ for (const pack of ENABLED_PACKS)
 }
 
 // ── 4. Verify Trigger Event ──────────────────────────────────────────────────
-empty_pack.foo(wwworld);
