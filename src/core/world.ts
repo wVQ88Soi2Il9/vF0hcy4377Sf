@@ -132,11 +132,15 @@ export class std_world extends pure_world
         }
     }
     /**
-     * 在該世界上執行可逆指令。
+     * 在該世界上執行可逆指令序列。
      */
-    public execute(operation: reversible_operation): void
+    public execute
+    (
+        operations:  reversible_operation[],
+        other_info?: Record<string, unknown>
+    ): void
     {
-        history.record_operation(this.history, this.space, operation);
+        history.record_operation(this.history, this.space, operations, other_info);
     }
 
     /**

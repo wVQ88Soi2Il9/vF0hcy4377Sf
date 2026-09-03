@@ -17,7 +17,7 @@ export interface node
     history_uid:           uid;
     parent_history_uid:    uid | null;
     children_history_uids: uid[];
-    operation:             reversible_operation | null;
+    operations:            reversible_operation[];
     other_info?:           Record<string, unknown>;
 }
 
@@ -37,7 +37,7 @@ export function create_tree(): tree
         history_uid:           0,
         parent_history_uid:    null,
         children_history_uids: [],
-        operation:               null
+        operations:            []
     };
 
     return {
@@ -47,16 +47,26 @@ export function create_tree(): tree
     };
 }
 
-export function record_operation(tree: tree, sp: space, operation: reversible_operation): node
+export function record_operation
+(
+    tree:        tree,
+    sp:          space,
+    operations:  reversible_operation[],
+    other_info?: Record<string, unknown>
+): node
 {
-    operation.execute(sp);
+    for (const op of operations)
+    {
+        op.execute(sp);
+    }
 
     const new_node: node =
     {
         history_uid:           tree.next_history_uid,
         parent_history_uid:    tree.current_history_uid,
         children_history_uids: [],
-        operation:               operation
+        operations:            operations,
+        other_info
     };
 
     const parent = tree.nodes.get(tree.current_history_uid);
@@ -109,9 +119,9 @@ export function jump_prev_node(tree: tree, sp: space): boolean
         return false;
     }
 
-    if (current_node.operation)
+    for (let i = current_node.operations.length - 1; i >= 0; i--)
     {
-        current_node.operation.inverse(sp);
+        current_node.operations[i].inverse(sp);
     }
 
     tree.current_history_uid = current_node.parent_history_uid;
@@ -202,12 +212,15 @@ export function jump_next_node(tree: tree, sp: space, target_child?: uid): boole
     }
 
     const next_node = tree.nodes.get(next_history_uid);
-    if (!next_node || !next_node.operation)
+    if (!next_node)
     {
         return false;
     }
 
-    next_node.operation.execute(sp);
+    for (const op of next_node.operations)
+    {
+        op.execute(sp);
+    }
     tree.current_history_uid = next_node.history_uid;
 
     return true;
