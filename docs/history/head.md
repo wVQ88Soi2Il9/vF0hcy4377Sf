@@ -4,6 +4,8 @@
 
 ## 目前使用中
 
+[0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
+
 ## 現在開著的（逐格）
 
 - `0054#1` · **等待確認** — 定義 Hook 回呼與資料結構契約 (Hook Types & Callback Contract in definition_i.ts)
@@ -28,7 +30,7 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0055#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0054#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
