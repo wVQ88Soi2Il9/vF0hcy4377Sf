@@ -18,8 +18,7 @@ export interface pack_module
     devices?:      Record<string, device_constructor>;
     operations?:   Record<string, reversible_operation_factory>;
     hooks?:        Map<string, hook_callback[]>;
-    init_pack?:    () => void;
-    [key: string]: unknown;
+    other_info?:  Record<string, unknown>;
 }
 
 export interface pack_registry
