@@ -1,4 +1,4 @@
-import { register_pack, inject_world_hook, type pack_registry, type pure_world } from '@/core';
+import { register_pack, type pack_registry, type pure_world } from '@/core';
 
 export function bar(): void
 {
@@ -17,5 +17,5 @@ export function global_init(registry: pack_registry): void
 
 export function local_init(target_world: pure_world): void
 {
-    inject_world_hook(target_world, { namespace: 'empty_pack', id: 'foo' }, bar);
+    target_world.inject_hook({ namespace: 'empty_pack', id: 'foo' }, bar);
 }

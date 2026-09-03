@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import 
 {
     register_pack,
-    inject_world_hook,
     pure_world,
     space
 } from '../src/core';
@@ -66,14 +65,12 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
         const callback_1 = vi.fn();
         const callback_2 = vi.fn();
 
-        inject_world_hook(
-            world_1,
+        world_1.inject_hook(
             { namespace: 'pack_a', id: 'event_created' },
             callback_1
         );
 
-        inject_world_hook(
-            world_2,
+        world_2.inject_hook(
             { namespace: 'pack_a', id: 'event_created' },
             callback_2
         );
