@@ -1,11 +1,9 @@
 import
 {
-    build_empty_hook_list,
-    type hook_list,
     type pack_registry
 } from '@/core';
 
-import * as empty_pack from '@/packs/empty_pack';
+import * as empty_pack from '@/packs/empty_pack/index';
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
 export const registry: pack_registry = { packs: new Map() };
@@ -19,5 +17,3 @@ for (const pack of ENABLED_PACKS)
 {
     pack.global_init();
 }
-
-export const empty_hook_list: hook_list = build_empty_hook_list(registry);
