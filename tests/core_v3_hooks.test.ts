@@ -21,20 +21,18 @@ describe('Core v3 Hook System 5-stage lifecycle', () =>
         const pack_a: pack_module =
         {
             pack_id: 'pack_a',
-            hooks:
-            [
-                { namespace: 'pack_a', id: 'event_created' },
-                { namespace: 'pack_a', id: 'event_deleted' }
-            ]
+            hooks: new Map([
+                ['event_created', []],
+                ['event_deleted', []]
+            ])
         };
 
         const pack_b: pack_module =
         {
             pack_id: 'pack_b',
-            hooks:
-            [
-                { namespace: 'pack_b', id: 'custom_action' }
-            ]
+            hooks: new Map([
+                ['custom_action', []]
+            ])
         };
 
         register_pack(registry, pack_a);

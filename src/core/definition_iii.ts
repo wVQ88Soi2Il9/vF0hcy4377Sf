@@ -1,6 +1,6 @@
 /* how to control a world */
 
-import { namespaced_id } from "./definition_i";
+import { namespaced_id, hook_callback } from "./definition_i";
 import { space, item_definition, recipe, device_constructor } from "./definition_ii";
 
 export interface reversible_operation extends namespaced_id 
@@ -19,7 +19,7 @@ export interface pack_module
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
     operations?:   Record<string, reversible_operation_factory>;
-    hooks?:        namespaced_id[];
+    hooks?:        Map<string, hook_callback[]>;
     init_pack?:    () => void;
     [key: string]: unknown;
 }

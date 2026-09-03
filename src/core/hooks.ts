@@ -8,28 +8,16 @@ import type { pure_world } from './world';
 
 /**
  * 依據已就緒之 pack_registry，建構出完整的全域空 Hook 槽位清單（階段 3）。
- * 結構為 Map<namespace, Map<id, []>>。
+ * 直接對齊並照搬各 Pack 所宣告之 Hook Map。
  */
 export function build_empty_hook_list(registry: pack_registry): hook_list
 {
     const hooks: hook_list = new Map();
-    for (const pack of registry.packs.values())
+    for (const [id, pack] of registry.packs)
     {
         if (pack.hooks)
         {
-            for (const hook of pack.hooks)
-            {
-                let pack_hooks = hooks.get(hook.namespace);
-                if (!pack_hooks)
-                {
-                    pack_hooks = new Map();
-                    hooks.set(hook.namespace, pack_hooks);
-                }
-                if (!pack_hooks.has(hook.id))
-                {
-                    pack_hooks.set(hook.id, []);
-                }
-            }
+            hooks.set(id, new Map(pack.hooks));
         }
     }
     return hooks;
