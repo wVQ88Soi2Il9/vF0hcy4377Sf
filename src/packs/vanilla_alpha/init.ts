@@ -3,7 +3,7 @@ import * as world from '@/world';
 
 export function global_init(registry: core.pack_registry): void
 {
-    registry.packs.set
+    registry.set
     ('vanilla_alpha', 
     {
         pack_id: 'vanilla_alpha',

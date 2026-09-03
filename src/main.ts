@@ -4,7 +4,7 @@ import * as world from '@/world';
 import * as vanilla_alpha from '@/packs/vanilla_alpha'
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
-const registry: core.pack_registry = { packs: new Map() };
+const registry: core.pack_registry = new Map();
 
 const ENABLED_PACKS =
 [
@@ -18,11 +18,11 @@ for (const pack of ENABLED_PACKS)
 
 const empty_hook_list: core.hook_list = new Map();
 
-for (const [id, pack] of registry.packs)
+for (const pack of registry.values())
 {
     if (pack.hooks)
     {
-        empty_hook_list.set(id, new Map(pack.hooks));
+        empty_hook_list.push(new Map(pack.hooks));
     }
 }
 

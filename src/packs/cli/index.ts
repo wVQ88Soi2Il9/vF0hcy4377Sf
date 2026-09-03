@@ -7,7 +7,7 @@ export * from './executor';
 
 export function global_init(registry: core.pack_registry): void
 {
-    registry.packs.set('cli', {
+    registry.set('cli', {
         pack_id: 'cli'
     });
 }

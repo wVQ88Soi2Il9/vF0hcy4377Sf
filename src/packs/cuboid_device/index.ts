@@ -66,7 +66,7 @@ export abstract class base_cuboid_device extends core.device
 
 export function global_init(registry: core.pack_registry): void
 {
-    registry.packs.set('cuboid_device', {
+    registry.set('cuboid_device', {
         pack_id: 'cuboid_device'
     });
 }

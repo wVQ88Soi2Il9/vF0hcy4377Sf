@@ -18,10 +18,9 @@ export interface pack_module
     devices?:      Record<string, device_constructor>;
     operations?:   Record<string, reversible_operation_factory>;
     hooks?:        Map<string, hook_callback[]>;
+    global_init?:  (...args: any[])=>void;
+    world_init?:   (...args: any[]) => void;
     other_info?:  Record<string, unknown>;
 }
 
-export interface pack_registry
-{
-    packs: Map<string, pack_module>;
-}
+export type pack_registry = Map<string, pack_module>;

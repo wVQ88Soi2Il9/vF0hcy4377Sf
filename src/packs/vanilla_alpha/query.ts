@@ -41,7 +41,7 @@ export function format_namespaced_id(identifier: core.namespaced_id): string
  */
 export function has_item(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.namespace)?.items?.[identifier.id]);
+    return Boolean(registry.get(identifier.namespace)?.items?.[identifier.id]);
 }
 
 /**
@@ -49,7 +49,7 @@ export function has_item(registry: core.pack_registry, identifier: core.namespac
  */
 export function get_item(registry: core.pack_registry, identifier: core.namespaced_id): core.item_definition
 {
-    const item = registry.packs.get(identifier.namespace)?.items?.[identifier.id];
+    const item = registry.get(identifier.namespace)?.items?.[identifier.id];
     if (!item)
     {
         throw new Error(`Item "${format_namespaced_id(identifier)}" not found in registry.`);
@@ -62,7 +62,7 @@ export function get_item(registry: core.pack_registry, identifier: core.namespac
  */
 export function has_recipe(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.namespace)?.recipes?.[identifier.id]);
+    return Boolean(registry.get(identifier.namespace)?.recipes?.[identifier.id]);
 }
 
 /**
@@ -70,7 +70,7 @@ export function has_recipe(registry: core.pack_registry, identifier: core.namesp
  */
 export function get_recipe(registry: core.pack_registry, identifier: core.namespaced_id): core.recipe
 {
-    const rec = registry.packs.get(identifier.namespace)?.recipes?.[identifier.id];
+    const rec = registry.get(identifier.namespace)?.recipes?.[identifier.id];
     if (!rec)
     {
         throw new Error(`Recipe "${format_namespaced_id(identifier)}" not found in registry.`);
@@ -83,7 +83,7 @@ export function get_recipe(registry: core.pack_registry, identifier: core.namesp
  */
 export function has_device_class(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.namespace)?.devices?.[identifier.id]);
+    return Boolean(registry.get(identifier.namespace)?.devices?.[identifier.id]);
 }
 
 /**
@@ -91,7 +91,7 @@ export function has_device_class(registry: core.pack_registry, identifier: core.
  */
 export function get_device_class(registry: core.pack_registry, identifier: core.namespaced_id): core.device_constructor
 {
-    const cls = registry.packs.get(identifier.namespace)?.devices?.[identifier.id];
+    const cls = registry.get(identifier.namespace)?.devices?.[identifier.id];
     if (!cls)
     {
         throw new Error(`Device class "${format_namespaced_id(identifier)}" not found in registry.`);
@@ -104,7 +104,7 @@ export function get_device_class(registry: core.pack_registry, identifier: core.
  */
 export function has_operation(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.packs.get(identifier.namespace)?.operations?.[identifier.id]);
+    return Boolean(registry.get(identifier.namespace)?.operations?.[identifier.id]);
 }
 
 /**
@@ -112,7 +112,7 @@ export function has_operation(registry: core.pack_registry, identifier: core.nam
  */
 export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.reversible_operation_factory
 {
-    const op = registry.packs.get(identifier.namespace)?.operations?.[identifier.id];
+    const op = registry.get(identifier.namespace)?.operations?.[identifier.id];
     if (!op)
     {
         throw new Error(`Operation "${format_namespaced_id(identifier)}" not found in registry.`);

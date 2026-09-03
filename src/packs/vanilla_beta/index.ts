@@ -9,7 +9,7 @@ export * from './history';
 
 export function global_init(registry: core.pack_registry): void
 {
-    registry.packs.set('vanilla_beta', {
+    registry.set('vanilla_beta', {
         pack_id: 'vanilla_beta'
     });
 }
