@@ -1,5 +1,11 @@
 /**
- * Tokenizes command input while respecting double-quoted strings.
+ * src/packs/cli/parser.ts — CLI 字串分詞與座標向量解析工具
+ */
+
+import * as core from '@/core';
+
+/**
+ * 分詞命令列輸入，保留雙引號字串完整性。
  */
 export function tokenize_input(input: string): string[]
 {
@@ -27,33 +33,36 @@ export function tokenize_input(input: string): string[]
             current += char;
         }
     }
+
     if (current.length > 0)
     {
         tokens.push(current);
     }
+
     return tokens;
 }
 
 /**
- * Parses consecutive string tokens into a numeric coordinate vector.
- * Strictly verifies all components are valid numbers and matches expected dimension.
+ * 解析連續字串 tokens 為數值座標向量。
+ * 嚴格校驗每個分量皆為合法數字，並比對預期維度。
  */
-export function parse_vector(tokens: string[], expected_dim?: number): number[]
+export function parse_vector(tokens: string[], expected_dim?: number): core.vector
 {
     if (tokens.length === 0)
     {
         throw new Error('Missing coordinates.');
     }
 
-    const vec = tokens.map(t =>
+    const vec: core.vector = [];
+    for (const t of tokens)
     {
         const n = Number(t);
         if (isNaN(n))
         {
             throw new Error(`Invalid coordinate "${t}": must be a valid number.`);
         }
-        return n;
-    });
+        vec.push(n);
+    }
 
     if (expected_dim !== undefined && vec.length !== expected_dim)
     {
@@ -64,7 +73,7 @@ export function parse_vector(tokens: string[], expected_dim?: number): number[]
 }
 
 /**
- * Parses an integer token (e.g. UID, steps), failing fast if non-integer.
+ * 解析整數 token（例如 UID、步數），若非整數則立即拋出例外。
  */
 export function parse_integer(token: string, field_name: string = 'Value'): number
 {

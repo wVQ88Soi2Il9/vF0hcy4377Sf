@@ -1,22 +1,18 @@
-import * as parser from './parser';
-import * as help from './help';
-import * as executor from './executor';
+import * as core from '@/core';
+
 
 export * from './parser';
 export * from './help';
 export * from './executor';
 
-export const cli_tool = {
-    pack_id: 'cli_tool',
-    ...parser,
-    ...help,
-    ...executor
-};
-
-export function init_pack(): void
+export function global_init(registry: core.pack_registry): void
 {
-    if (typeof window !== 'undefined')
-    {
-        (window as any).cli = executor.execute_command;
-    }
+    registry.packs.set('cli', {
+        pack_id: 'cli'
+    });
+}
+
+export function local_init(): void
+{
+
 }
