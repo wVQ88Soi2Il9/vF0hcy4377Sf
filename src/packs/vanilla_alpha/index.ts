@@ -1,5 +1,5 @@
 export * from './init';
 export * from './operations';
 export * from './world';
-export * from './spatial';
+export * from '../vanilla_beta/spatial';
 export * from './query';
