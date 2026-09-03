@@ -7,15 +7,14 @@ import
     pure_world,
     space
 } from '../src/core';
-import type { pack_module } from '../src/core';
-import { create_pack_registry } from '../src/main';
+import type { pack_module, pack_registry } from '../src/core';
 
 describe('Core v3 Hook System 5-stage lifecycle', () =>
 {
     it('應完整走通 5 階段生命週期並保證多世界事件隔離', () =>
     {
         // ── 階段 1：init ────────────────────────────────────────────────────────
-        const registry = create_pack_registry();
+        const registry: pack_registry = { packs: new Map() };
         expect(registry.packs.size).toBe(0);
 
         // ── 階段 2：complete registry ───────────────────────────────────────────
