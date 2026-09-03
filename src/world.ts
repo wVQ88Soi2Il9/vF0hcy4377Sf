@@ -15,9 +15,22 @@ export class pure_world
         this.current_hook = template ? structuredClone(template) : new Map();
     }
 
-    public inject_hook(target_hook: core.namespaced_id, callback: core.hook_callback): void
+    public inject_hook(target_hook: core.namespaced_id, callback: core.hook_callback): () => void
     {
-        this.current_hook.get(target_hook.namespace)!.get(target_hook.id)!.push(callback);
+        const list = this.current_hook.get(target_hook.namespace)?.get(target_hook.id);
+        if (list)
+        {
+            list.push(callback);
+            return () =>
+            {
+                const index = list.indexOf(callback);
+                if (index !== -1)
+                {
+                    list.splice(index, 1);
+                }
+            };
+        }
+        return () => {};
     }
 
     public trigger(namespaced_id: core.namespaced_id, ...args: any[]): void

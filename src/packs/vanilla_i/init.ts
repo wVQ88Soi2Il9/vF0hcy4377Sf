@@ -10,7 +10,12 @@ export function global_init(registry: core.pack_registry): void
             ['delete_device', []],
             ['move_device', []],
             ['select_recipe', []],
-            ['history_change', []]
+            ['device_change', []],
+            ['history_change', []],
+            ['history_record', []],
+            ['history_undo', []],
+            ['history_redo', []],
+            ['history_delete', []]
         ])
     });
 }
