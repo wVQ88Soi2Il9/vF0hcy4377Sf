@@ -12,6 +12,7 @@ export * from './definition_ii';
 
 // ── Operations & Commands (Level III) ─────────────────────────────────────────
 export * from './definition_iii';
+export * from './operations';
 
 // ── History ──────────────────────────────────────────────────────────────────
 export * from './history';

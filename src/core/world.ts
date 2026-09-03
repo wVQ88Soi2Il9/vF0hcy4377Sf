@@ -2,6 +2,13 @@ import type { uid, namespaced_id, vector, hook_list, hook_callback } from './def
 import { space, device_constructor, device } from './definition_ii';
 import type { reversible_operation } from './definition_iii';
 import * as history from './history';
+import 
+{
+    create_device_operation,
+    delete_device_operation,
+    move_device_operation,
+    select_recipe_operation
+} from './operations';
 
 export class pure_world
 {
@@ -46,63 +53,38 @@ export class std_world extends pure_world
         other_info:    Record<string, unknown> = {}
     ): device
     {
-        const assigned_id = this.space.next_device_uid;
-        const dev = new device_class(assigned_id, definition_id, position, other_info);
-
-        this.space.next_device_uid += 1;
-        this.space.devices.push(dev);
-
-        this.trigger({namespace: 'std_world', id: 'create_device'}, this, dev);
-
+        const op = create_device_operation(device_class, definition_id, position, other_info);
+        this.execute([op]);
+        const dev = op.get_device()!;
+        this.trigger({ namespace: 'std_world', id: 'create_device' }, this, dev);
         return dev;
     }
 
-    /**
-     * 還原既有裝置實例（Redo / Undo 還原時使用），維持原 UID。
-     */
-    public restore_device(dev: device): void
-    {
-        const exists = this.space.devices.some(d => d.device_uid === dev.device_uid);
-        if (!exists)
-        {
-            this.space.devices.push(dev);
-            if (dev.device_uid >= this.space.next_device_uid)
-            {
-                this.space.next_device_uid = dev.device_uid + 1;
-            }
-            this.trigger({namespace: 'std_world', id: 'create_device'}, this, dev);
-        }
-    }
-
-    /**
-     * 依 UID 從空間中移除裝置。
-     */
     public delete_device(device_uid: uid): device | undefined
     {
-        const index = this.space.devices.findIndex(d => d.device_uid === device_uid);
-        if (index !== -1)
+        const op = delete_device_operation(device_uid);
+        this.execute([op]);
+        const dev = op.get_deleted_device() ?? undefined;
+        if (dev)
         {
-            const dev = this.space.devices[index];
-            this.space.devices.splice(index, 1);
-            this.trigger({namespace: 'std_world', id: 'delete_device'}, this, dev);
-            return dev;
+            this.trigger({ namespace: 'std_world', id: 'delete_device' }, this, dev);
         }
-        return undefined;
+        return dev;
     }
 
-    /**
-     * 移動指定 UID 之裝置至新位置。
-     */
     public move_device(device_uid: uid, new_position: vector): void
     {
         const dev = this.space.devices.find(d => d.device_uid === device_uid);
-        if (dev)
+        const old_position = dev ? [...dev.position] : undefined;
+
+        const op = move_device_operation(device_uid, new_position);
+        this.execute([op]);
+
+        if (dev && old_position)
         {
-            const old_position = dev.position;
-            dev.position = new_position;
             this.trigger
             (
-                {namespace: 'std_world', id: 'move_device'},
+                { namespace: 'std_world', id: 'move_device' },
                 this,
                 dev,
                 old_position,
@@ -111,19 +93,19 @@ export class std_world extends pure_world
         }
     }
 
-    /**
-     * 設定或清除裝置的選定配方。
-     */
     public select_recipe(device_uid: uid, recipe_id?: namespaced_id): void
     {
         const dev = this.space.devices.find(d => d.device_uid === device_uid);
+        const old_recipe_id = dev ? dev.selected_recipe_id : undefined;
+
+        const op = select_recipe_operation(device_uid, recipe_id);
+        this.execute([op]);
+
         if (dev)
         {
-            const old_recipe_id = dev.selected_recipe_id;
-            dev.selected_recipe_id = recipe_id;
             this.trigger
             (
-                {namespace: 'std_world', id: 'select_recipe'},
+                { namespace: 'std_world', id: 'select_recipe' },
                 this,
                 dev,
                 old_recipe_id,
