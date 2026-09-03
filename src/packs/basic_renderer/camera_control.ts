@@ -1,108 +1,131 @@
-import * as world from '@/world';
-import { camera, notify_camera_change, adapt_camera_plane } from './camera';
+import { camera } from './camera';
 
 /**
  * Updates camera pan position.
  */
-export function set_camera_pan(pan_x: number, pan_y: number): void
+export function set_camera_pan(cam: camera, pan_x: number, pan_y: number): void
 {
-    camera.pan_x = pan_x;
-    camera.pan_y = pan_y;
-    notify_camera_change();
+    cam.pan_x = pan_x;
+    cam.pan_y = pan_y;
+    cam.notify_change();
 }
 
 /**
  * Updates camera zoom factor.
  */
-export function set_camera_zoom(zoom: number): void
+export function set_camera_zoom(cam: camera, zoom: number): void
 {
-    camera.zoom = Math.max(10, Math.min(200, zoom));
-    notify_camera_change();
+    cam.zoom = Math.max(10, Math.min(200, zoom));
+    cam.notify_change();
 }
 
 /**
  * Sets full camera transform (pan and zoom).
  */
-export function set_camera_transform(pan_x: number, pan_y: number, zoom: number): void
+export function set_camera_transform(cam: camera, pan_x: number, pan_y: number, zoom: number): void
 {
-    camera.pan_x = pan_x;
-    camera.pan_y = pan_y;
-    camera.zoom  = Math.max(10, Math.min(200, zoom));
-    notify_camera_change();
+    cam.pan_x = pan_x;
+    cam.pan_y = pan_y;
+    cam.zoom  = Math.max(10, Math.min(200, zoom));
+    cam.notify_change();
 }
 
 /**
- * Updates the camera view plane and triggers a redraw.
+ * Updates the camera view plane and triggers a change notification.
  */
-export function set_camera_plane(dim_h: number, dim_v: number, slices?: number[]): void
+export function set_camera_plane(cam: camera, dim_h: number, dim_v: number, target_dim: number, slices?: number[]): void
 {
-    const map = (world as any).get_map?.();
     const slice_count = slices ? slices.length : 0;
-    const target_dim = map ? map.dimension : Math.max(3, dim_h + 1, dim_v + 1, slice_count);
+    const effective_dim = Math.max(target_dim, 3, dim_h + 1, dim_v + 1, slice_count);
 
-    if (dim_h >= 0 && dim_h < target_dim)
+    if (dim_h >= 0 && dim_h < effective_dim)
     {
-        camera.plane.dim_h = dim_h;
+        cam.plane.dim_h = dim_h;
     }
-    if (dim_v >= 0 && dim_v < target_dim && dim_v !== camera.plane.dim_h)
+    if (dim_v >= 0 && dim_v < effective_dim && dim_v !== cam.plane.dim_h)
     {
-        camera.plane.dim_v = dim_v;
+        cam.plane.dim_v = dim_v;
     }
 
     if (slices)
     {
-        const new_slices = new Array(target_dim).fill(0);
-        for (let i = 0; i < target_dim; i++)
+        const new_slices = new Array(effective_dim).fill(0);
+        for (let i = 0; i < effective_dim; i++)
         {
             if (i < slices.length && typeof slices[i] === 'number')
             {
                 new_slices[i] = slices[i];
             }
         }
-        camera.plane.slices = new_slices;
+        cam.plane.slices = new_slices;
     }
     else
     {
-        adapt_camera_plane(camera, target_dim);
+        cam.adapt_plane(effective_dim);
     }
 
-    notify_camera_change();
+    cam.notify_change();
+}
+
+/**
+ * Swaps horizontal and vertical axes (Clockwise 90-degree view change).
+ */
+export function rotate_camera_cw(cam: camera): void
+{
+    const old_h = cam.plane.dim_h;
+    const old_v = cam.plane.dim_v;
+    cam.plane.dim_h = old_v;
+    cam.plane.dim_v = old_h;
+    cam.notify_change();
+}
+
+/**
+ * Swaps vertical and horizontal axes (Counter-Clockwise 90-degree view change).
+ */
+export function rotate_camera_ccw(cam: camera): void
+{
+    const old_h = cam.plane.dim_h;
+    const old_v = cam.plane.dim_v;
+    cam.plane.dim_h = old_v;
+    cam.plane.dim_v = old_h;
+    cam.notify_change();
 }
 
 /**
  * Sets up mouse dragging and wheel zooming event listeners on the canvas.
+ * Returns an unbind function.
  */
-export function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => void): void
+export function setup_camera_control(canvas: HTMLCanvasElement, cam: camera, redraw: () => void): () => void
 {
     let is_dragging = false;
     let drag_start_x = 0;
     let drag_start_y = 0;
 
-    canvas.addEventListener('mousedown', (e) =>
+    const on_mousedown = (e: MouseEvent) =>
     {
         is_dragging = true;
-        drag_start_x = e.clientX - camera.pan_x;
-        drag_start_y = e.clientY - camera.pan_y;
-    });
+        drag_start_x = e.clientX - cam.pan_x;
+        drag_start_y = e.clientY - cam.pan_y;
+    };
 
-    window.addEventListener('mousemove', (e) =>
+    const on_mousemove = (e: MouseEvent) =>
     {
         if (!is_dragging)
         {
             return;
         }
-        camera.pan_x = e.clientX - drag_start_x;
-        camera.pan_y = e.clientY - drag_start_y;
-        notify_camera_change();
+        cam.pan_x = e.clientX - drag_start_x;
+        cam.pan_y = e.clientY - drag_start_y;
+        cam.notify_change();
         redraw();
-    });
+    };
 
-    window.addEventListener('mouseup', () =>
+    const on_mouseup = () =>
     {
         is_dragging = false;
-    });
+    };
 
-    canvas.addEventListener('wheel', (e) =>
+    const on_wheel = (e: WheelEvent) =>
     {
         e.preventDefault();
 
@@ -111,16 +134,29 @@ export function setup_camera_control(canvas: HTMLCanvasElement, redraw: () => vo
         const offset_x = e.clientX - rect.left;
         const offset_y = e.clientY - rect.top;
 
-        const mouse_h = (offset_x - camera.pan_x) / camera.zoom;
-        const mouse_v = (canvas_h + camera.pan_y - offset_y) / camera.zoom;
+        const mouse_h = (offset_x - cam.pan_x) / cam.zoom;
+        const mouse_v = (canvas_h + cam.pan_y - offset_y) / cam.zoom;
 
         const factor = e.deltaY < 0 ? 1.12 : 0.88;
-        camera.zoom = Math.max(10, Math.min(200, camera.zoom * factor));
+        cam.zoom = Math.max(10, Math.min(200, cam.zoom * factor));
 
-        camera.pan_x = offset_x - mouse_h * camera.zoom;
-        camera.pan_y = offset_y - canvas_h + mouse_v * camera.zoom;
+        cam.pan_x = offset_x - mouse_h * cam.zoom;
+        cam.pan_y = offset_y - canvas_h + mouse_v * cam.zoom;
 
-        notify_camera_change();
+        cam.notify_change();
         redraw();
-    }, { passive: false });
+    };
+
+    canvas.addEventListener('mousedown', on_mousedown);
+    window.addEventListener('mousemove', on_mousemove);
+    window.addEventListener('mouseup', on_mouseup);
+    canvas.addEventListener('wheel', on_wheel, { passive: false });
+
+    return () =>
+    {
+        canvas.removeEventListener('mousedown', on_mousedown);
+        window.removeEventListener('mousemove', on_mousemove);
+        window.removeEventListener('mouseup', on_mouseup);
+        canvas.removeEventListener('wheel', on_wheel);
+    };
 }

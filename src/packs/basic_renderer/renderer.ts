@@ -1,75 +1,159 @@
-import * as core from '@/core';
 import * as world from '@/world';
 import type { camera_type } from './types';
+import { camera } from './camera';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { camera, adapt_camera_plane, on_camera_change } from './camera';
 import { setup_camera_control } from './camera_control';
 
-let renderer_canvas: HTMLCanvasElement | null = null;
-let current_draw_fn: (() => void) | null = null;
-let active_draw_devices_fn: typeof draw_devices = draw_devices;
-let is_redraw_scheduled = false;
-
-/**
- * Registers a custom device drawing function for the renderer.
- */
-export function set_device_drawer(fn: typeof draw_devices): void
+export interface renderer_options
 {
-    active_draw_devices_fn = fn;
-    redraw_renderer();
+    canvas?: HTMLCanvasElement;
+    camera?: camera;
+    drawer?: typeof draw_devices;
 }
 
-/**
- * Returns the Canvas element created by basic_renderer.
- */
-export function get_renderer_canvas(): HTMLCanvasElement | null
+export class basic_renderer
 {
-    return renderer_canvas;
-}
+    public readonly target_world: world.pure_world;
+    public readonly camera:       camera;
+    public readonly canvas:       HTMLCanvasElement;
 
-/**
- * Resizes the renderer canvas to the specified dimensions and triggers a redraw.
- */
-export function resize_renderer_canvas(width: number, height: number): void
-{
-    if (!renderer_canvas || width <= 0 || height <= 0)
-    {
-        return;
-    }
+    private drawer:              typeof draw_devices;
+    private is_redraw_scheduled: boolean = false;
+    private unbind_hooks:        (() => void)[] = [];
 
-    if (renderer_canvas.width === width && renderer_canvas.height === height)
+    constructor(target_world: world.pure_world, options?: renderer_options)
     {
-        return;
-    }
+        this.target_world = target_world;
+        this.camera = options?.camera ?? new camera(target_world.space.dimension);
+        this.drawer = options?.drawer ?? draw_devices;
 
-    renderer_canvas.width = width;
-    renderer_canvas.height = height;
-
-    if (current_draw_fn)
-    {
-        current_draw_fn();
-    }
-}
-
-/**
- * Triggers a debounced redraw of the renderer via requestAnimationFrame.
- */
-export function redraw_renderer(): void
-{
-    if (is_redraw_scheduled)
-    {
-        return;
-    }
-    is_redraw_scheduled = true;
-    requestAnimationFrame(() =>
-    {
-        is_redraw_scheduled = false;
-        if (current_draw_fn)
+        if (options?.canvas)
         {
-            current_draw_fn();
+            this.canvas = options.canvas;
         }
-    });
+        else if (typeof document !== 'undefined')
+        {
+            this.canvas = document.createElement('canvas');
+            this.canvas.id = `renderer_canvas_${target_world.id}`;
+            this.canvas.width = typeof window !== 'undefined' ? window.innerWidth : 800;
+            this.canvas.height = typeof window !== 'undefined' ? window.innerHeight : 600;
+            this.canvas.style.cssText = 'display:block;width:100%;height:100%;';
+        }
+        else
+        {
+            this.canvas = {} as HTMLCanvasElement;
+        }
+
+        this.camera.adapt_plane(this.target_world.space.dimension);
+        this.bind_events();
+    }
+
+    private bind_events(): void
+    {
+        // 1. 世界裝置異動重繪
+        const unbind_device = this.target_world.inject_hook(
+            { namespace: 'vanilla_alpha', id: 'device_change' },
+            () => this.redraw()
+        );
+        this.unbind_hooks.push(unbind_device);
+
+        // 2. 世界歷史異動重繪
+        const unbind_history = this.target_world.inject_hook(
+            { namespace: 'vanilla_alpha', id: 'history_change' },
+            () => this.redraw()
+        );
+        this.unbind_hooks.push(unbind_history);
+
+        // 3. 相機變更重繪，並向世界廣播 camera_change
+        const unbind_cam = this.camera.on_change((cam) =>
+        {
+            this.redraw();
+            this.target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, cam);
+        });
+        this.unbind_hooks.push(unbind_cam);
+
+        // 4. 若畫布支援 DOM 事件監聽，掛載相機控制器
+        if (typeof this.canvas.addEventListener === 'function')
+        {
+            const unbind_ctrl = setup_camera_control(this.canvas, this.camera, () => this.redraw());
+            this.unbind_hooks.push(unbind_ctrl);
+        }
+    }
+
+    public set_device_drawer(fn: typeof draw_devices): void
+    {
+        this.drawer = fn;
+        this.redraw();
+    }
+
+    public resize(width: number, height: number): void
+    {
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+        if (this.canvas.width === width && this.canvas.height === height)
+        {
+            return;
+        }
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.draw();
+    }
+
+    public draw(): void
+    {
+        if (typeof this.canvas.getContext !== 'function')
+        {
+            return;
+        }
+        const ctx = this.canvas.getContext('2d');
+        if (!ctx)
+        {
+            return;
+        }
+
+        this.camera.adapt_plane(this.target_world.space.dimension);
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        draw_grid(ctx, this.canvas, this.camera.get_state(), this.target_world.space);
+        this.drawer(ctx, this.target_world.space, this.camera.get_state(), this.canvas);
+    }
+
+    public redraw(): void
+    {
+        if (this.is_redraw_scheduled)
+        {
+            return;
+        }
+        this.is_redraw_scheduled = true;
+
+        if (typeof requestAnimationFrame === 'function')
+        {
+            requestAnimationFrame(() =>
+            {
+                this.is_redraw_scheduled = false;
+                this.draw();
+            });
+        }
+        else
+        {
+            queueMicrotask(() =>
+            {
+                this.is_redraw_scheduled = false;
+                this.draw();
+            });
+        }
+    }
+
+    public destroy(): void
+    {
+        for (const unbind of this.unbind_hooks)
+        {
+            unbind();
+        }
+        this.unbind_hooks = [];
+    }
 }
 
 /**
@@ -78,59 +162,19 @@ export function redraw_renderer(): void
 export function grid_to_screen
 (
     pos:           number[],
-    cam:           camera_type,
-    canvas_height: number = (renderer_canvas ? renderer_canvas.height : window.innerHeight)
+    cam:           camera_type | camera,
+    canvas_height: number
 )
 {
-    const h = pos[cam.plane.dim_h];
-    const v = pos[cam.plane.dim_v];
+    const plane = cam instanceof camera ? cam.plane : cam.plane;
+    const pan_x = cam.pan_x;
+    const pan_y = cam.pan_y;
+    const zoom  = cam.zoom;
 
-    const sx = cam.pan_x + h * cam.zoom;
-    const sy = canvas_height + cam.pan_y - v * cam.zoom;
+    const h = pos[plane.dim_h];
+    const v = pos[plane.dim_v];
+
+    const sx = pan_x + h * zoom;
+    const sy = canvas_height + pan_y - v * zoom;
     return { sx, sy };
-}
-
-/**
- * Creates the canvas, sets up camera controls and redraw loop.
- */
-export function init_renderer(): void
-{
-    const map = (world as any).get_map?.();
-
-    if (!map)
-    {
-        console.error('[basic_renderer] init_pack() called before set_map(). Renderer aborted.');
-        return;
-    }
-
-    adapt_camera_plane(camera, map.dimension);
-
-    renderer_canvas = document.createElement('canvas');
-    renderer_canvas.id = 'renderer_canvas';
-    renderer_canvas.width  = window.innerWidth;
-    renderer_canvas.height = window.innerHeight;
-    renderer_canvas.style.cssText = 'display:block;width:100%;height:100%;';
-
-    const ctx = renderer_canvas.getContext('2d')!;
-
-    function draw(): void
-    {
-        if (!renderer_canvas || !map)
-        {
-            return;
-        }
-        adapt_camera_plane(camera, map.dimension);
-        ctx.clearRect(0, 0, renderer_canvas.width, renderer_canvas.height);
-        draw_grid(ctx, renderer_canvas, camera, map);
-        active_draw_devices_fn(ctx, map, camera, renderer_canvas);
-    }
-
-    current_draw_fn = draw;
-
-    setup_camera_control(renderer_canvas, redraw_renderer);
-    (core as any).on_device_change?.(redraw_renderer);
-    (core as any).on_history_change?.(redraw_renderer);
-    on_camera_change(redraw_renderer);
-
-    queueMicrotask(redraw_renderer);
 }

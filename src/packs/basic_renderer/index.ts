@@ -1,7 +1,6 @@
 import * as core from '@/core';
 import * as world from '@/world';
 import { camera_command } from './commands';
-import { on_camera_change } from './camera';
 
 export * from './types';
 export * from './camera';
@@ -23,10 +22,7 @@ export function global_init(registry: core.pack_registry): void
     });
 }
 
-export function world_init(target_world: world.pure_world): void
+export function world_init(_target_world: world.pure_world): void
 {
-    on_camera_change((cam) =>
-    {
-        target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, cam);
-    });
+
 }

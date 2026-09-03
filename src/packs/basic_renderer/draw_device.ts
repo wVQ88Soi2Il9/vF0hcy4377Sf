@@ -35,8 +35,11 @@ function render_device_item
     const sw = (max_h - min_h + 2) * camera.zoom;
     const sh = (max_v - min_v + 2) * camera.zoom;
 
-    // Directly call the device's polymorphic draw method.
-    (device as drawable_device).draw(ctx, sx, sy, sw, sh, camera.zoom, camera);
+    // Directly call the device's polymorphic draw method if implemented.
+    if (typeof (device as any).draw === 'function')
+    {
+        (device as drawable_device).draw(ctx, sx, sy, sw, sh, camera.zoom, camera);
+    }
 }
 
 export function draw_devices

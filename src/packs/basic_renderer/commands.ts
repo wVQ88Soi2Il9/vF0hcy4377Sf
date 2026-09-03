@@ -1,7 +1,6 @@
 import * as core from '@/core';
-import * as world from '@/world';
 import * as vanilla_beta from '@/packs/vanilla_beta';
-import { get_camera_plane } from './camera';
+import { camera } from './camera';
 import { set_camera_plane } from './camera_control';
 import type { view_plane } from './types';
 
@@ -21,78 +20,77 @@ export function format_camera_equation(plane: view_plane, num_dims?: number): st
     return `camera ${eq_parts.join(' ')}`;
 }
 
+/**
+ * Parses a camera equation (e.g. "z=0" or "w=0, z=2") and applies it to the target camera.
+ */
+export function apply_camera_equation(cam: camera, equation_arg: string, num_dims: number): boolean
+{
+    if (!equation_arg || equation_arg.trim() === '')
+    {
+        return false;
+    }
+
+    const fixed_map = new Map<number, number>();
+    const parts = equation_arg.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+    for (const part of parts)
+    {
+        const kv = part.split('=');
+        if (kv.length === 2)
+        {
+            const axis_idx = vanilla_beta.parse_axis_name(kv[0]);
+            const depth_val = parseInt(kv[1].trim(), 10);
+            if (axis_idx !== null && !isNaN(depth_val))
+            {
+                fixed_map.set(axis_idx, depth_val);
+            }
+        }
+    }
+
+    if (fixed_map.size === 0)
+    {
+        return false;
+    }
+
+    const fixed_axes_set = new Set(fixed_map.keys());
+    const axes = vanilla_beta.get_right_oriented_axes(num_dims, fixed_axes_set);
+    if (axes)
+    {
+        const new_slices = [...cam.plane.slices];
+        fixed_map.forEach((depth, axis_idx) =>
+        {
+            if (axis_idx < num_dims)
+            {
+                new_slices[axis_idx] = depth;
+            }
+        });
+        set_camera_plane(cam, axes.dim_h, axes.dim_v, num_dims, new_slices);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Camera command matching reversible_operation_factory.
+ * Viewport operations do not mutate core.space geometry.
+ */
 export function camera_command(equation_arg?: string): core.reversible_operation
 {
-    let previous_plane: { dim_h: number; dim_v: number; slices: number[] } | null = null;
-
     return {
         namespace: 'basic_renderer',
-        id:   'camera',
-        other_info:
-        {
-            basic_renderer:
-            {
+        id: 'camera',
+        other_info: {
+            basic_renderer: {
                 equation_arg
             }
         },
-        execute(_map: core.space): void
+        execute(_sp: core.space): void
         {
-            const current = get_camera_plane();
-            if (!previous_plane)
-            {
-                previous_plane = { dim_h: current.dim_h, dim_v: current.dim_v, slices: [...current.slices] };
-            }
-
-            if (!equation_arg || equation_arg.trim() === '')
-            {
-                return;
-            }
-
-            const fixed_map = new Map<number, number>();
-            const parts = equation_arg.split(',').map(s => s.trim()).filter(s => s.length > 0);
-
-            for (const part of parts)
-            {
-                const kv = part.split('=');
-                if (kv.length === 2)
-                {
-                    const axis_idx = vanilla_beta.parse_axis_name(kv[0]);
-                    const depth_val = parseInt(kv[1].trim(), 10);
-                    if (axis_idx !== null && !isNaN(depth_val))
-                    {
-                        fixed_map.set(axis_idx, depth_val);
-                    }
-                }
-            }
-
-            if (fixed_map.size === 0)
-            {
-                return;
-            }
-
-            const map = (world as any).get_map?.();
-            const num_dims = map ? map.dimension : current.slices.length;
-            const fixed_axes_set = new Set(fixed_map.keys());
-            const axes = vanilla_beta.get_right_oriented_axes(num_dims, fixed_axes_set);
-            if (axes)
-            {
-                const new_slices = [...current.slices];
-                fixed_map.forEach((depth, axis_idx) =>
-                {
-                    if (axis_idx < num_dims)
-                    {
-                        new_slices[axis_idx] = depth;
-                    }
-                });
-                set_camera_plane(axes.dim_h, axes.dim_v, new_slices);
-            }
+            // Viewport camera command does not mutate core.space geometry
         },
-        inverse(_map: core.space): void
+        inverse(_sp: core.space): void
         {
-            if (previous_plane)
-            {
-                set_camera_plane(previous_plane.dim_h, previous_plane.dim_v, previous_plane.slices);
-            }
+            // Viewport camera command does not mutate core.space geometry
         }
     };
 }

@@ -1,103 +1,88 @@
-import * as world from '@/world';
 import type { camera_type, view_plane } from './types';
 
-export const camera: camera_type =
+export class camera
 {
-    pan_x: 0,
-    pan_y: 0,
-    zoom:  40,
-    plane: { dim_h: 0, dim_v: 1, slices: [0, 0, 0] }
-};
+    public pan_x: number;
+    public pan_y: number;
+    public zoom:  number;
+    public plane: view_plane;
 
-const camera_listeners = new Set<(cam: camera_type) => void>();
+    private readonly listeners: Set<(cam: camera) => void>;
 
-export function notify_camera_change(): void
-{
-    const snapshot = get_camera_state();
-    for (const listener of camera_listeners)
+    constructor(initial_dim: number = 3, initial_state?: Partial<camera_type>)
     {
-        listener(snapshot);
-    }
-}
-
-/**
- * Adapts camera plane slices and axes to match the N-dimensional map.
- */
-export function adapt_camera_plane(cam: camera_type, target_dim: number): void
-{
-    if (target_dim <= 0)
-    {
-        return;
+        this.pan_x = initial_state?.pan_x ?? 0;
+        this.pan_y = initial_state?.pan_y ?? 0;
+        this.zoom  = initial_state?.zoom  ?? 40;
+        this.plane = initial_state?.plane ?? {
+            dim_h: 0,
+            dim_v: 1,
+            slices: new Array(Math.max(2, initial_dim)).fill(0)
+        };
+        this.listeners = new Set();
     }
 
-    if (cam.plane.dim_h < 0 || cam.plane.dim_h >= target_dim)
+    public notify_change(): void
     {
-        cam.plane.dim_h = 0;
-    }
-    if (cam.plane.dim_v < 0 || cam.plane.dim_v >= target_dim || cam.plane.dim_v === cam.plane.dim_h)
-    {
-        cam.plane.dim_v = target_dim > 1 ? (cam.plane.dim_h === 0 ? 1 : 0) : 0;
-    }
-
-    const current_slices = cam.plane.slices || [];
-    const new_slices = new Array(target_dim).fill(0);
-    for (let i = 0; i < target_dim; i++)
-    {
-        if (i < current_slices.length && typeof current_slices[i] === 'number')
+        for (const listener of this.listeners)
         {
-            new_slices[i] = current_slices[i];
+            listener(this);
         }
     }
-    cam.plane.slices = new_slices;
-}
 
-/**
- * Returns a shallow copy of the current camera view plane.
- */
-export function get_camera_plane(): view_plane
-{
-    const map = (world as any).get_map?.();
-    if (map)
+    public on_change(listener: (cam: camera) => void): () => void
     {
-        adapt_camera_plane(camera, map.dimension);
+        this.listeners.add(listener);
+        return () =>
+        {
+            this.listeners.delete(listener);
+        };
     }
-    return {
-        dim_h:  camera.plane.dim_h,
-        dim_v:  camera.plane.dim_v,
-        slices: [...camera.plane.slices]
-    };
-}
 
-/**
- * Returns a snapshot of the current camera state.
- */
-export function get_camera_state(): camera_type
-{
-    const map = (world as any).get_map?.();
-    if (map)
+    public get_state(): camera_type
     {
-        adapt_camera_plane(camera, map.dimension);
+        return {
+            pan_x: this.pan_x,
+            pan_y: this.pan_y,
+            zoom:  this.zoom,
+            plane: {
+                dim_h:  this.plane.dim_h,
+                dim_v:  this.plane.dim_v,
+                slices: [...this.plane.slices]
+            }
+        };
     }
-    return {
-        pan_x: camera.pan_x,
-        pan_y: camera.pan_y,
-        zoom:  camera.zoom,
-        plane: {
-            dim_h:  camera.plane.dim_h,
-            dim_v:  camera.plane.dim_v,
-            slices: [...camera.plane.slices]
+
+    public get_plane(): view_plane
+    {
+        return {
+            dim_h:  this.plane.dim_h,
+            dim_v:  this.plane.dim_v,
+            slices: [...this.plane.slices]
+        };
+    }
+
+    public adapt_plane(target_dim: number): void
+    {
+        if (target_dim <= 0)
+        {
+            return;
         }
-    };
-}
 
-/**
- * Subscribes to camera pan/zoom/plane state changes.
- */
-export function on_camera_change(listener: (cam: camera_type) => void): () => void
-{
-    camera_listeners.add(listener);
-    return () =>
-    {
-        camera_listeners.delete(listener);
-    };
+        if (this.plane.dim_h < 0 || this.plane.dim_h >= target_dim)
+        {
+            this.plane.dim_h = 0;
+        }
+        if (this.plane.dim_v < 0 || this.plane.dim_v >= target_dim || this.plane.dim_v === this.plane.dim_h)
+        {
+            this.plane.dim_v = target_dim > 1 ? (this.plane.dim_h === 0 ? 1 : 0) : 0;
+        }
+
+        const new_slices = new Array(target_dim).fill(0);
+        for (let i = 0; i < Math.min(this.plane.slices.length, target_dim); i++)
+        {
+            new_slices[i] = this.plane.slices[i];
+        }
+        this.plane.slices = new_slices;
+    }
 }

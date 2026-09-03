@@ -4,10 +4,14 @@
 
 ## 目前使用中
 
-[0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
+[0055_202609040315_basic-renderer-world-instance-refactor](./0055_202609040315_basic-renderer-world-instance-refactor.md) — `in-progress`，待辦待決剩 4/4
 
 ## 現在開著的（逐格）
 
+- `0055#1` · **等待確認** — 移除全域狀態並實例化 camera 模組 (Instance-based Camera & Eliminate Global Lookups)
+- `0055#2` · **等待確認** — 實例化 basic_renderer 並接軌 target_world (Instance-based Renderer with World Hooks)
+- `0055#3` · **等待確認** — 對齊 index.ts 公開進入點與 CLI Camera 指令定位 (Harmonize Entrypoint & Camera Command)
+- `0055#4` · **等待確認** — 整合測試驗證多世界多視口隔離 (Integration Verification & Multi-World Isolation Tests)
 - `0054#1` · **等待確認** — 定義 Hook 回呼與資料結構契約 (Hook Types & Callback Contract in definition_i.ts)
 - `0054#2` · **等待確認** — 擴充 Pack 模組契約並建立完整 Registry (Complete Registry in definition_iii.ts)
 - `0054#3` · **等待確認** — 實作階段 3 之全域空槽位清單建構 (Build Complete Empty Hook List in hooks.ts)
@@ -30,11 +34,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0054#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0055#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0055** [0055_202609040315_basic-renderer-world-instance-refactor](./0055_202609040315_basic-renderer-world-instance-refactor.md) — `in-progress`，待辦待決剩 4/4
 - **0054** [0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
 - **0053** [0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4
 - **0052** [0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 1/3
