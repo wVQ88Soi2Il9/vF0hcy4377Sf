@@ -33,13 +33,13 @@ for (const [id, pack] of registry.packs)
 
 // ── 2. Create World ──────────────────────────────────────────────────────────
 const sp = new space([64, 64, 4]);
-const world = new pure_world(sp, empty_hook_list, 'world_1');
+const wwworld = new pure_world(sp, empty_hook_list, 'world_1');
 
 // ── 3. Run World / Local Init ────────────────────────────────────────────────
 for (const pack of ENABLED_PACKS)
 {
-    pack.local_init(world);
+    pack.local_init(wwworld);
 }
 
 // ── 4. Verify Trigger Event ──────────────────────────────────────────────────
-world.trigger({ namespace: 'empty_pack', id: 'foo' });
+empty_pack.foo(wwworld);

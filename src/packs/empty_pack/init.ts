@@ -2,7 +2,13 @@ import type { pack_registry, pure_world } from '@/core';
 
 export function bar(): void
 {
+    console.log('bar');
+}
 
+export function foo(target_world: pure_world): void
+{
+    console.log('foo');
+    target_world.trigger({ namespace: 'empty_pack', id: 'foo' });
 }
 
 export function global_init(registry: pack_registry): void
