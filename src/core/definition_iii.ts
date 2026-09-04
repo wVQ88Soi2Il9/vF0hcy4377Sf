@@ -10,6 +10,12 @@ export interface reversible_operation extends namespaced_id
 
 export type reversible_operation_factory = (...args: any[]) => reversible_operation;
 
+export interface cmd extends namespaced_id
+{
+    execute(...args: any[]): any;
+    other_info?: Record<string, unknown>;
+}
+
 export interface pack_module
 {
     pack_id:       string;
@@ -17,6 +23,7 @@ export interface pack_module
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
     operations?:   Record<string, reversible_operation_factory>;
+    commands?:     Record<string, cmd>;
     hooks?:        Map<string, hook_callback[]>;
     global_init?:  (...args: any[])=>void;
     world_init?:   (...args: any[]) => void;

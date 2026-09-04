@@ -1,5 +1,6 @@
 import * as core from '@/core';
 import { tokenize_input } from './parser';
+import { generate_help } from './help';
 
 /**
  * 將 token 字串轉型為基礎型別 (number, boolean, null) 或保留原字串。
@@ -14,25 +15,26 @@ function parse_argument(token: string): any
 }
 
 /**
- * 在 registry 中查找指定指令名稱/ID 的執行函式。
+ * 在 registry 中查找指定指令名稱/ID 的執行目標 (core.cmd 或函式)。
  * 支援:
- * 1. 帶 namespace 查找: "namespace:cmd" -> registry.get(namespace)
- * 2. 不帶 namespace 查找: 遍歷所有 pack 查找 operations 或 commands
+ * 1. 帶 namespace 查找: "namespace:cmd" -> pack.commands / pack.operations
+ * 2. 不帶 namespace 查找: 遍歷所有 pack 查找 commands 或 operations
  */
-function find_command(registry: core.pack_registry, cmd: string): ((...args: any[]) => any) | null
+function find_command(registry: core.pack_registry, cmd: string): core.cmd | ((...args: any[]) => any) | null
 {
     if (cmd.includes(':'))
     {
         const [namespace, id] = cmd.split(':');
-        return registry.get(namespace)?.operations?.[id] ?? null;
+        const pack = registry.get(namespace);
+        return pack?.commands?.[id] ?? pack?.operations?.[id] ?? null;
     }
 
     for (const pack of registry.values())
     {
-        const fn = pack.operations?.[cmd];
-        if (fn)
+        const target = pack.commands?.[cmd] ?? pack.operations?.[cmd];
+        if (target)
         {
-            return fn;
+            return target;
         }
     }
 
@@ -51,16 +53,32 @@ export function execute_command(input: string, registry: core.pack_registry): an
         return undefined;
     }
 
+    if (tokens[0] === '--help')
+    {
+        if (tokens.length === 1)
+        {
+            return generate_help(registry);
+        }
+        if (tokens.length === 2)
+        {
+            return generate_help(registry, tokens[1]);
+        }
+    }
+
     const [cmd, ...raw_args] = tokens;
     const args = raw_args.map(parse_argument);
 
-    const fn = find_command(registry, cmd);
-    if (!fn)
+    const target = find_command(registry, cmd);
+    if (!target)
     {
         throw new Error(`Command "${cmd}" not found in registry.`);
     }
 
-    return fn(...args);
+    if (typeof target === 'function')
+    {
+        return target(...args);
+    }
+    return target.execute(...args);
 }
 
 // ── 需求 3: 在 console 也能用 (單獨做) ──────────────────────────────────────────
