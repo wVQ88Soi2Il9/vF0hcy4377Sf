@@ -1,4 +1,3 @@
-import * as core from '@/core';
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import { camera } from './camera';
 import { set_camera_plane } from './camera_control';
@@ -21,7 +20,7 @@ export function format_camera_equation(plane: view_plane, num_dims?: number): st
 }
 
 /**
- * Parses a camera equation (e.g. "z=0" or "w=0, z=2") and applies it to the target camera.
+ * Parses a camera equation (e.g. "d3=0" or "d4=0, d3=2") and applies it to the target camera.
  */
 export function apply_camera_equation(cam: camera, equation_arg: string, num_dims: number): boolean
 {
@@ -71,36 +70,21 @@ export function apply_camera_equation(cam: camera, equation_arg: string, num_dim
 }
 
 /**
- * Camera command matching reversible_operation_factory.
- * Viewport operations do not mutate core.space geometry.
+ * Camera viewport control command (operates on renderer-local camera state, not core.space).
  */
-export function camera_command(equation_arg?: string): core.reversible_operation
+export function camera_command(cam: camera, num_dims: number, equation_arg?: string): string
 {
-    return {
-        namespace: 'basic_renderer',
-        id: 'camera',
-        other_info: {
-            basic_renderer: {
-                equation_arg
-            }
-        },
-        execute(_sp: core.space): void
-        {
-            // Viewport camera command does not mutate core.space geometry
-        },
-        inverse(_sp: core.space): void
-        {
-            // Viewport camera command does not mutate core.space geometry
-        }
-    };
-}
-
-(camera_command as any).other_info = {
-    cli: {
-        alias:    'camera',
-        describe: 'Get or set 2D projection camera view plane equation'
+    if (!equation_arg || equation_arg.trim() === '')
+    {
+        return format_camera_equation(cam.plane, num_dims);
     }
-};
+    const success = apply_camera_equation(cam, equation_arg, num_dims);
+    if (!success)
+    {
+        return `Failed to parse camera equation: ${equation_arg}`;
+    }
+    return format_camera_equation(cam.plane, num_dims);
+}
 
 export const basic_renderer_commands = {
     camera: camera_command

@@ -27,6 +27,17 @@ basic_renderer 全面淘汰全域單例（Singleton），將 camera 與 renderer
 ### O5 · 2026-09-04 03:16:00+08:00 — 整合測試 tests/basic_renderer.test.ts 驗證通過
 撰寫並通過 5 項單元測試，驗證多個 Camera / Renderer 實例在多世界環境下的完全隔離性、世界 Hooks 驅動重繪、相機事件廣播與方程式解析。
 
+### O6 · 2026-09-05 00:55:00+08:00 — 清除 camera_command 偽操作與 camera_change 舊膠水代碼
+依據審查意見徹底修正抽象錯配：
+1. `commands.ts` 中的 `camera_command` 移除假的 `core.reversible_operation` 實作（徹底清除 dummy `execute`/`inverse`），明確定位為 renderer-local 視口命令。
+2. `index.ts` 與 `renderer.ts` 清除 `camera_change` 偽世界 Hook，相機異動改由 Renderer 直接訂閱自身 Camera 實例觸發重繪，`world_init` 僅保留正當世界層級事件（`device_change` / `history_change`）。
+
+### O7 · 2026-09-05 00:59:00+08:00 — 確立 camera instance -> target_world.trigger 直連橋接
+依據審查原則確立 `world └─ camera instance └─ listeners` 架構：
+1. `basic_renderer:camera_change` 登記為正式世界 Hook 槽位（於 `global_init` 宣告）。
+2. 在 `get_world_camera` 建立 world-specific 相機實例時，直接將 `cam.on_change` 接至 `target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, c)`，完全避免中介全域回呼或可變事件狀態。
+3. `tests/basic_renderer.test.ts` 6 項測試全數通過。
+
 ---
 
 ## 待辦
@@ -55,7 +66,7 @@ basic_renderer 全面淘汰全域單例（Singleton），將 camera 與 renderer
 
 ### 3 對齊 index.ts 公開進入點與 CLI Camera 指令定位 (Harmonize Entrypoint & Camera Command)
 - **state:** 等待確認
-- **basis:** → O1, O4
+- **basis:** → O1, O4, O6, O7
 
 更新 `src/packs/basic_renderer/index.ts` 導出現代化實例工廠與介面；確定 `camera_command` 作為純 Viewport 控制指令，不產生冗餘的 Undo Tree 空間歷史。
 
@@ -63,10 +74,12 @@ basic_renderer 全面淘汰全域單例（Singleton），將 camera 與 renderer
 
 - H1 · 2026-09-04 03:15 決斷 —— camera_command 定位為純 Viewport 控制，不進 History（human）
 - H2 · 2026-09-04 03:16 落地 —— 完成公開進入點精簡與 camera_command 契約對齊（agent: gemini-3.8-flash-high） → O4
+- H3 · 2026-09-05 00:55 落地 —— 移除假的 reversible_operation 並清除 camera_change 舊膠水（agent: gemini-3.8-flash-high） → O6
+- H4 · 2026-09-05 00:59 落地 —— 建立 camera instance 直連世界 hook 橋接並通過測試（agent: gemini-3.8-flash-high） → O7
 
 ### 4 整合測試驗證多世界多視口隔離 (Integration Verification & Multi-World Isolation Tests)
 - **state:** 等待確認
-- **basis:** → O1, O5
+- **basis:** → O1, O5, O6, O7
 
 撰寫 `tests/basic_renderer.test.ts`，驗證多個世界實例各自建立 Renderer 時，相機視口、縮放與空間重繪完全互不干擾，並通過 `npx tsc -b` 驗證。
 

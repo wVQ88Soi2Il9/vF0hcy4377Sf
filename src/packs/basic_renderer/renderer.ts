@@ -21,6 +21,11 @@ export function get_world_camera(target_world: world.pure_world): camera
     if (!cam)
     {
         cam = new camera(target_world.space.dimension);
+        // Direct bridge: camera instance -> target_world.trigger
+        cam.on_change((c) =>
+        {
+            target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, c);
+        });
         world_cameras.set(target_world, cam);
     }
     return cam;
@@ -87,7 +92,14 @@ export class basic_renderer
 
     private bind_controls(): void
     {
-        // 掛載畫布 DOM 互動監聽
+        // 1. 相機本體異動時，自身排程重繪
+        const unbind_cam = this.camera.on_change(() =>
+        {
+            this.redraw();
+        });
+        this.unbind_hooks.push(unbind_cam);
+
+        // 2. 掛載畫布 DOM 互動監聽
         if (typeof this.canvas.addEventListener === 'function')
         {
             const unbind_ctrl = setup_camera_control(this.canvas, this.camera, () => this.redraw());
