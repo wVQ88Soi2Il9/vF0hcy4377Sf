@@ -1,4 +1,5 @@
-import type { camera_type, view_plane } from './types';
+import * as world from '@/world';
+import { camera_type, view_plane } from './types';
 
 export class camera
 {
@@ -85,4 +86,22 @@ export class camera
         }
         this.plane.slices = new_slices;
     }
+}
+
+const world_cameras = new WeakMap<world.pure_world, camera>();
+
+export function get_world_camera(target_world: world.pure_world): camera
+{
+    let cam = world_cameras.get(target_world);
+    if (!cam)
+    {
+        cam = new camera(target_world.space.dimension);
+        // Direct bridge: camera instance -> target_world.trigger
+        cam.on_change((c) =>
+        {
+            target_world.trigger({ namespace: 'camera', id: 'camera_change' }, c);
+        });
+        world_cameras.set(target_world, cam);
+    }
+    return cam;
 }

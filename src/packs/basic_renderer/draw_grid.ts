@@ -1,5 +1,5 @@
 import * as core from '@/core';
-import type { camera_type } from './types';
+import * as camera from '@/packs/camera';
 
 const GRID_STEP = 2;   // 每個網格區塊跨度為 2 單位
 
@@ -11,13 +11,13 @@ export function draw_grid
 (
     ctx:    CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
-    camera: camera_type,
+    cam:    camera.camera_type,
     map:    core.space
 ): void
 {
     const w = canvas.width;
     const h = canvas.height;
-    const zoom = camera.zoom;
+    const zoom = cam.zoom;
 
     // 1. 填滿深灰背景底色 (#333333)
     ctx.fillStyle = '#333333';
@@ -32,11 +32,11 @@ export function draw_grid
     const line_width = Math.max(1, Math.round(zoom * 0.03));
 
     // 2. 計算目前視窗可見的世界座標範圍
-    const min_x_units = Math.floor((-camera.pan_x) / step_px) * GRID_STEP;
-    const max_x_units = Math.ceil((w - camera.pan_x) / step_px) * GRID_STEP;
+    const min_x_units = Math.floor((-cam.pan_x) / step_px) * GRID_STEP;
+    const max_x_units = Math.ceil((w - cam.pan_x) / step_px) * GRID_STEP;
 
-    const min_y_units = Math.floor((camera.pan_y) / step_px) * GRID_STEP;
-    const max_y_units = Math.ceil((h + camera.pan_y) / step_px) * GRID_STEP;
+    const min_y_units = Math.floor((cam.pan_y) / step_px) * GRID_STEP;
+    const max_y_units = Math.ceil((h + cam.pan_y) / step_px) * GRID_STEP;
 
     // 3. 繪製精確的網格線
     ctx.save();
@@ -49,7 +49,7 @@ export function draw_grid
     // 垂直網格線
     for (let x = min_x_units; x <= max_x_units; x += GRID_STEP)
     {
-        const sx = Math.floor(camera.pan_x + x * zoom) + offset;
+        const sx = Math.floor(cam.pan_x + x * zoom) + offset;
         ctx.moveTo(sx, 0);
         ctx.lineTo(sx, h);
     }
@@ -57,7 +57,7 @@ export function draw_grid
     // 水平網格線
     for (let y = min_y_units; y <= max_y_units; y += GRID_STEP)
     {
-        const sy = Math.floor(h + camera.pan_y - y * zoom) + offset;
+        const sy = Math.floor(h + cam.pan_y - y * zoom) + offset;
         ctx.moveTo(0, sy);
         ctx.lineTo(w, sy);
     }
@@ -65,16 +65,16 @@ export function draw_grid
     ctx.stroke();
     ctx.restore();
 
-    // 4. 在地圖邊界繪製黑線 (依據 camera.plane.dim_h 與 dim_v 動態取得世界長度)
-    const dim_h  = camera.plane.dim_h;
-    const dim_v  = camera.plane.dim_v;
+    // 4. 在地圖邊界繪製黑線 (依據 cam.plane.dim_h 與 dim_v 動態取得世界長度)
+    const dim_h  = cam.plane.dim_h;
+    const dim_v  = cam.plane.dim_v;
     const size_h = map.size[dim_h];
     const size_v = map.size[dim_v];
 
     if (size_h > 0 && size_v > 0)
     {
-        const sx = camera.pan_x;
-        const sy = h + camera.pan_y - size_v * zoom;
+        const sx = cam.pan_x;
+        const sy = h + cam.pan_y - size_v * zoom;
         const sw = size_h * zoom;
         const sh = size_v * zoom;
 

@@ -4,10 +4,13 @@
 
 ## 目前使用中
 
-[0055_202609040315_basic-renderer-world-instance-refactor](./0055_202609040315_basic-renderer-world-instance-refactor.md) — `in-progress`，待辦待決剩 5/5
+[0056_202609050145_extract-camera-pack](./0056_202609050145_extract-camera-pack.md) — `in-progress`，待辦待決剩 3/3
 
 ## 現在開著的（逐格）
 
+- `0056#1` · **等待確認** — 建立獨立 src/packs/camera 模組 (Implement Standalone Camera Pack)
+- `0056#2` · **等待確認** — 解耦並精簡 basic_renderer 職責 (Decouple & Streamline basic_renderer)
+- `0056#3` · **等待確認** — 拆分並補齊獨立單元測試 (Separate Unit Tests & Verification)
 - `0055#1` · **等待確認** — 移除全域狀態並實例化 camera 模組 (Instance-based Camera & Eliminate Global Lookups)
 - `0055#2` · **等待確認** — 實例化 basic_renderer 並接軌 target_world (Instance-based Renderer with World Hooks)
 - `0055#3` · **等待確認** — 對齊 index.ts 公開進入點與 CLI Camera 指令定位 (Harmonize Entrypoint & Camera Command)
@@ -35,11 +38,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0055#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0056#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0056** [0056_202609050145_extract-camera-pack](./0056_202609050145_extract-camera-pack.md) — `in-progress`，待辦待決剩 3/3
 - **0055** [0055_202609040315_basic-renderer-world-instance-refactor](./0055_202609040315_basic-renderer-world-instance-refactor.md) — `in-progress`，待辦待決剩 5/5
 - **0054** [0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
 - **0053** [0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4

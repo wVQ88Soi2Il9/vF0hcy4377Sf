@@ -1,7 +1,7 @@
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import { camera } from './camera';
 import { set_camera_plane } from './camera_control';
-import type { view_plane } from './types';
+import { view_plane } from './types';
 
 export function format_camera_equation(plane: view_plane, num_dims?: number): string
 {
@@ -70,7 +70,7 @@ export function apply_camera_equation(cam: camera, equation_arg: string, num_dim
 }
 
 /**
- * Camera viewport control command (operates on renderer-local camera state, not core.space).
+ * Camera viewport control command (operates on camera state, not core.space).
  */
 export function camera_command(cam: camera, num_dims: number, equation_arg?: string): string
 {
@@ -86,6 +86,6 @@ export function camera_command(cam: camera, num_dims: number, equation_arg?: str
     return format_camera_equation(cam.plane, num_dims);
 }
 
-export const basic_renderer_commands = {
+export const camera_commands = {
     camera: camera_command
 };

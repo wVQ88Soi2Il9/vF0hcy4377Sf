@@ -1,35 +1,16 @@
 import * as world from '@/world';
-import type { camera_type } from './types';
-import { camera } from './camera';
+import * as camera from '@/packs/camera';
 import { draw_grid } from './draw_grid';
 import { draw_devices } from './draw_device';
-import { setup_camera_control } from './camera_control';
 
 export interface renderer_options
 {
     canvas?: HTMLCanvasElement;
-    camera?: camera;
+    camera?: camera.camera;
     drawer?: typeof draw_devices;
 }
 
-const world_cameras = new WeakMap<world.pure_world, camera>();
 const world_renderers = new WeakMap<world.pure_world, Set<basic_renderer>>();
-
-export function get_world_camera(target_world: world.pure_world): camera
-{
-    let cam = world_cameras.get(target_world);
-    if (!cam)
-    {
-        cam = new camera(target_world.space.dimension);
-        // Direct bridge: camera instance -> target_world.trigger
-        cam.on_change((c) =>
-        {
-            target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, c);
-        });
-        world_cameras.set(target_world, cam);
-    }
-    return cam;
-}
 
 export function redraw_world(target_world: world.pure_world): void
 {
@@ -46,7 +27,7 @@ export function redraw_world(target_world: world.pure_world): void
 export class basic_renderer
 {
     public readonly target_world: world.pure_world;
-    public readonly camera:       camera;
+    public readonly camera:       camera.camera;
     public readonly canvas:       HTMLCanvasElement;
 
     private drawer:              typeof draw_devices;
@@ -56,7 +37,7 @@ export class basic_renderer
     constructor(target_world: world.pure_world, options?: renderer_options)
     {
         this.target_world = target_world;
-        this.camera = options?.camera ?? get_world_camera(target_world);
+        this.camera = options?.camera ?? camera.get_world_camera(target_world);
         this.drawer = options?.drawer ?? draw_devices;
 
         if (options?.canvas)
@@ -102,7 +83,7 @@ export class basic_renderer
         // 2. 掛載畫布 DOM 互動監聽
         if (typeof this.canvas.addEventListener === 'function')
         {
-            const unbind_ctrl = setup_camera_control(this.canvas, this.camera, () => this.redraw());
+            const unbind_ctrl = camera.setup_camera_control(this.canvas, this.camera, () => this.redraw());
             this.unbind_hooks.push(unbind_ctrl);
         }
     }
@@ -181,27 +162,4 @@ export class basic_renderer
         }
         this.unbind_hooks = [];
     }
-}
-
-/**
- * Maps an N-dimensional world grid position to a 2-D canvas position.
- */
-export function grid_to_screen
-(
-    pos:           number[],
-    cam:           camera_type | camera,
-    canvas_height: number
-)
-{
-    const plane = cam.plane;
-    const pan_x = cam.pan_x;
-    const pan_y = cam.pan_y;
-    const zoom  = cam.zoom;
-
-    const h = pos[plane.dim_h];
-    const v = pos[plane.dim_v];
-
-    const sx = pan_x + h * zoom;
-    const sy = canvas_height + pan_y - v * zoom;
-    return { sx, sy };
 }

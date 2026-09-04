@@ -1,6 +1,7 @@
 import * as core from '@/core';
 import * as vanilla_beta from '@/packs/vanilla_beta';
-import type { camera_type, drawable_device } from './types';
+import * as camera from '@/packs/camera';
+import { drawable_device } from './types';
 
 interface render_item
 {
@@ -10,13 +11,13 @@ interface render_item
 
 function render_device_item
 (
-    ctx:      CanvasRenderingContext2D,
-    item:     render_item,
-    camera:   camera_type,
-    canvas:   HTMLCanvasElement
+    ctx:    CanvasRenderingContext2D,
+    item:   render_item,
+    cam:    camera.camera_type,
+    canvas: HTMLCanvasElement
 ): void
 {
-    const { dim_h, dim_v } = camera.plane;
+    const { dim_h, dim_v } = cam.plane;
     const { device, visible_cells } = item;
 
     // Compute bounding box in world coordinates (across visible cells).
@@ -30,27 +31,27 @@ function render_device_item
     // Convert bounding box to screen coordinates.
     // Each cell anchor [x, y, z] occupies a 2x2x2 block [x, x+2) * [y, y+2) * [z, z+2).
     // Y is flipped: larger v → smaller sy (higher on screen).
-    const sx = camera.pan_x + min_h * camera.zoom;
-    const sy = canvas.height + camera.pan_y - (max_v + 2) * camera.zoom;
-    const sw = (max_h - min_h + 2) * camera.zoom;
-    const sh = (max_v - min_v + 2) * camera.zoom;
+    const sx = cam.pan_x + min_h * cam.zoom;
+    const sy = canvas.height + cam.pan_y - (max_v + 2) * cam.zoom;
+    const sw = (max_h - min_h + 2) * cam.zoom;
+    const sh = (max_v - min_v + 2) * cam.zoom;
 
     // Directly call the device's polymorphic draw method if implemented.
     if (typeof (device as any).draw === 'function')
     {
-        (device as drawable_device).draw(ctx, sx, sy, sw, sh, camera.zoom, camera);
+        (device as drawable_device).draw(ctx, sx, sy, sw, sh, cam.zoom, cam);
     }
 }
 
 export function draw_devices
 (
-    ctx:      CanvasRenderingContext2D,
-    map:      core.space,
-    camera:   camera_type,
-    canvas:   HTMLCanvasElement
+    ctx:    CanvasRenderingContext2D,
+    map:    core.space,
+    cam:    camera.camera_type,
+    canvas: HTMLCanvasElement
 ): void
 {
-    const { dim_h, dim_v, slices } = camera.plane;
+    const { dim_h, dim_v, slices } = cam.plane;
 
     for (const device of map.devices)
     {
@@ -67,7 +68,7 @@ export function draw_devices
 
         if (visible_cells.length > 0)
         {
-            render_device_item(ctx, { device, visible_cells }, camera, canvas);
+            render_device_item(ctx, { device, visible_cells }, cam, canvas);
         }
     }
 }
