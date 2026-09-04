@@ -12,6 +12,32 @@ export interface renderer_options
     drawer?: typeof draw_devices;
 }
 
+const world_cameras = new WeakMap<world.pure_world, camera>();
+const world_renderers = new WeakMap<world.pure_world, Set<basic_renderer>>();
+
+export function get_world_camera(target_world: world.pure_world): camera
+{
+    let cam = world_cameras.get(target_world);
+    if (!cam)
+    {
+        cam = new camera(target_world.space.dimension);
+        world_cameras.set(target_world, cam);
+    }
+    return cam;
+}
+
+export function redraw_world(target_world: world.pure_world): void
+{
+    const renderers = world_renderers.get(target_world);
+    if (renderers)
+    {
+        for (const r of renderers)
+        {
+            r.redraw();
+        }
+    }
+}
+
 export class basic_renderer
 {
     public readonly target_world: world.pure_world;
@@ -25,7 +51,7 @@ export class basic_renderer
     constructor(target_world: world.pure_world, options?: renderer_options)
     {
         this.target_world = target_world;
-        this.camera = options?.camera ?? new camera(target_world.space.dimension);
+        this.camera = options?.camera ?? get_world_camera(target_world);
         this.drawer = options?.drawer ?? draw_devices;
 
         if (options?.canvas)
@@ -46,34 +72,22 @@ export class basic_renderer
         }
 
         this.camera.adapt_plane(this.target_world.space.dimension);
-        this.bind_events();
+
+        // 註冊至世界渲染器集合
+        let set = world_renderers.get(target_world);
+        if (!set)
+        {
+            set = new Set();
+            world_renderers.set(target_world, set);
+        }
+        set.add(this);
+
+        this.bind_controls();
     }
 
-    private bind_events(): void
+    private bind_controls(): void
     {
-        // 1. 世界裝置異動重繪
-        const unbind_device = this.target_world.inject_hook(
-            { namespace: 'vanilla_alpha', id: 'device_change' },
-            () => this.redraw()
-        );
-        this.unbind_hooks.push(unbind_device);
-
-        // 2. 世界歷史異動重繪
-        const unbind_history = this.target_world.inject_hook(
-            { namespace: 'vanilla_alpha', id: 'history_change' },
-            () => this.redraw()
-        );
-        this.unbind_hooks.push(unbind_history);
-
-        // 3. 相機變更重繪，並向世界廣播 camera_change
-        const unbind_cam = this.camera.on_change((cam) =>
-        {
-            this.redraw();
-            this.target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, cam);
-        });
-        this.unbind_hooks.push(unbind_cam);
-
-        // 4. 若畫布支援 DOM 事件監聽，掛載相機控制器
+        // 掛載畫布 DOM 互動監聽
         if (typeof this.canvas.addEventListener === 'function')
         {
             const unbind_ctrl = setup_camera_control(this.canvas, this.camera, () => this.redraw());
@@ -148,6 +162,7 @@ export class basic_renderer
 
     public destroy(): void
     {
+        world_renderers.get(this.target_world)?.delete(this);
         for (const unbind of this.unbind_hooks)
         {
             unbind();

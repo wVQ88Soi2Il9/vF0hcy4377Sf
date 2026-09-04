@@ -1,6 +1,6 @@
 import * as core from '@/core';
 import * as world from '@/world';
-import { camera_command } from './commands';
+import { get_world_camera, redraw_world } from './renderer';
 
 export * from './types';
 export * from './camera';
@@ -15,14 +15,27 @@ export function global_init(registry: core.pack_registry): void
         hooks: new Map([
             ['camera_change', []]
         ]),
-        operations: {
-            camera: camera_command
-        },
         world_init
     });
 }
 
-export function world_init(_target_world: world.pure_world): void
+export function world_init(target_world: world.pure_world): void
 {
+    const cam = get_world_camera(target_world);
 
+    // 1. 相機本體異動時，向 target_world 廣播 camera_change
+    cam.on_change((c) =>
+    {
+        target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, c);
+    });
+
+    // 2. 當 target_world 發生 device_change / history_change / camera_change 時，通知重繪
+    const trigger_redraw = () =>
+    {
+        redraw_world(target_world);
+    };
+
+    target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'device_change' }, trigger_redraw);
+    target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'history_change' }, trigger_redraw);
+    target_world.inject_hook({ namespace: 'basic_renderer', id: 'camera_change' }, trigger_redraw);
 }
