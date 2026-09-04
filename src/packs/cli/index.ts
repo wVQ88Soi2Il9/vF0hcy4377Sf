@@ -1,5 +1,4 @@
 import * as core from '@/core';
-import { generate_help } from './help';
 
 export * from './parser';
 export * from './executor';
