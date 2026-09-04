@@ -66,7 +66,7 @@ trigger: always_on
 
 ## 4. 程式碼風格與語法規範 (Code Conventions - 程式碼約束)
 
-- **Allman 大括號**：大括號 `{` 一律強制換行。
+- **Allman 大括號**：函式、類別、介面／型別及控制流程（if/for/while/switch）之大括號 `{` 一律強制換行；物件字面量作為引數傳遞時允許行內定義。
 - **全小寫 `snake_case`**：變數、函式、型別、檔案、JSON key 一律全小寫底線命名。
 - **分號結尾**：所有陳述句結尾強制加上半形分號 `;`。
 - **拒絕隱性補齊 (No Implicit Zero-Padding)**：嚴禁使用 `?? 0` 修補缺漏維度，向量長度須嚴格符合運算維度。
@@ -77,17 +77,22 @@ trigger: always_on
 ## 5. 系統架構與領域規範 (System Architecture & Domain Specifications)
 
 ### 5.1 系統架構與邊界隔離
-- **依賴單向性**：`packs` → `core`（空間幾何與通用工具收斂於 `@/packs/vanilla`，世界容器收斂於 `@/world`）。
-- **Core Layer（`src/core/`）**：定義「何謂世界（What is a world）」——包含純契約型別、裝置基類（`abstract class device`）、空間實體（`class space`）、世界聚合實體（`class world = space + history + registry`）、Hooks 系統與 Undo Tree 純演算法。零業務邏輯、零全域活體狀態。唯一公開進入點為 `src/core/index.ts`。
-- **World Layer（`src/world.ts`）**：管理「當前世界實例（Current worlds, may > 1）」——多世界實例倉庫（`_worlds: Map`）、Active World 焦點指標切換與快捷分派代理。
-- **Packs Layer（`src/packs/`）**：所有具體遊戲規則、渲染器、UI 介面、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`。
-- **CLI 與 UI 邊界**：
-  - `cli_tool` 純粹化：純文字解析與 Core Registry 指令分派，嚴禁嵌入業務邏輯或要求專屬橋接檔。
-  - `shirones_ui` 職責：僅負責面板渲染、DOM 事件處理與別名映射。
+- **依賴單向性**：`packs` → `core`（空間幾何收斂於 `@/packs/vanilla_alpha` / `@/packs/vanilla_beta`，世界實體收斂於 `@/world`）。
+- **Core Layer（`src/core/`）**：定義世界運行的契約型別與純演算法——包含 Level I 純契約（向量、UID、名稱空間 ID、Hook 槽位型別）、Level II 實體與幾何（裝置基類 `abstract class device`、空間實體 `class space`、物品與配方契約）、Level III 模組與可逆操作契約（`reversible_operation`、`pack_module`、`pack_registry`），以及 Undo Tree 純演算法（`src/core/history.ts`）。零業務邏輯、零全域活體狀態。唯一公開進入點為 `src/core/index.ts`。
+- **World Layer（`src/world.ts`）**：定義世界實體類別 `class pure_world`——聚合 `space: core.space`、`history: core.tree`、`registry: core.pack_registry` 與世界專屬之獨立槽位 `current_hook: core.hook_list`。建構時自動觸發各 Pack 之 `world_init`。提供 `inject_hook` 與 `trigger` 作為世界層級的發布／訂閱機制。零單例、零全域倉庫，世界實例彼此完全隔離。
+- **Packs Layer（`src/packs/`）**：所有具體遊戲規則、渲染器、UI 介面、相機、CLI 與資料包。每個 Pack 的唯一公開進入點為其 `index.ts`。
+- **模組邊界職責**：
+  - `cli`（`src/packs/cli`）：純文字解析與 Core Registry 指令分派，嚴禁嵌入業務邏輯。
+  - `basic_ui`（`src/packs/basic_ui`）：負責佈局、分割面板與 UI 狀態渲染。
+  - `camera`（`src/packs/camera`）：獨立封裝相機實例（`class camera`）、視口控制、投影換算與相機 CLI 指令。
+  - `basic_renderer`（`src/packs/basic_renderer`）：專注於 2D 投影渲染、單元格與端口繪製，提供 Fallback 降級渲染。
 - **邊界隔離與 Import 規範 (Public Entrypoint Rule)**：
   - **禁止深層引用**：跨模組引用時，**必須一律從目標模組的 `index.ts` 公開進入點 import**（例：`@/core`、`@/packs/<pack>`），嚴禁直接依賴目標內部檔案（例：禁止 `import ... from '@/core/commands'`）。
   - **Namespace Import 規範**：只有跨模組／跨 pack（包含引用 `core` 或 `world`）時才需要使用 `import * as (core/pack)` 命名空間引入（例：`import * as core from '@/core'`、`import * as vanilla_alpha from '@/packs/vanilla_alpha'`、`import * as world from '@/world'`），嚴禁具名引用（named import）或單獨 `import type`；同 pack 內部檔案之間互相引用則不在此限（可使用具名 import）。
-  - **Hooks 保護**：外部禁止直接操作 `hooks` 物件，必須透過 `@/core` 導出的訂閱函式。
+  - **Hooks 生命週期與世界隔離**：
+    - Hook 定義為全域靜態槽位（由 Pack 在 `global_init` 中透過 `pack_module.hooks` 宣告）。
+    - Hook 回呼（Callback）為世界實例獨立持有（由各 Pack 於 `world_init` 或執行期透過 `target_world.inject_hook` 注入）。
+    - 嚴禁外部直接操作 `current_hook` 物件，必須統一透過 `target_world.inject_hook` 註冊與 `target_world.trigger` 發布。
 
 ### 5.2 2× 網格與端口座標系統 (2× Grid & Face Ports)
 - **裝置錨點 (`position`)**：全為偶數座標 $(2i, 2j, 2k, \dots)$，代表網格最小頂點。
@@ -100,15 +105,18 @@ trigger: always_on
 - **水平能力（Can-Do）**：`implements` 組合能力契約（`drawable_device`, `rotatable_device`）。
 - **繪圖內聚**：裝置類別實作 `draw()` 方法，渲染器直接多型呼叫。
 
-### 5.4 Pack 模組與自動載入
-- **目錄結構**：`data/items.json`、`recipes/*.ts`、`devices/*.ts`、`index.ts`、`$<rely_pack>/`。
-- **自動掃描**：`src/packs/loader.ts` 自動載入並呼叫 `init_pack()`。
-- **物件導出**：對外介面統一封裝為命名物件（例：`export const basic_renderer = { ... }`）。
+### 5.4 Pack 生命週期與模組規範
+- **兩階段生命週期契約 (Two-Stage Lifecycle)**：每個 Pack 的唯一公開進入點為其 `index.ts`，強制導出兩階段生命週期函式：
+  1. `global_init(registry: core.pack_registry): void`：系統啟動階段呼叫（由 `main.ts` 依序調用），負責向 `registry` 登記該 Pack 的靜態宣告（`pack_id`、`items`、`recipes`、`devices`、`operations`、`hooks` 等）及 `world_init`。
+  2. `world_init(target_world?: world.pure_world): void`：世界實例生成階段呼叫（由 `pure_world` 建構子自動遍歷調用），負責為特定世界實例初始化狀態或注入世界回呼（`target_world.inject_hook(...)`）。若 Pack 無世界層級邏輯，仍須保留空白 `world_init(): void {}` 以符合統一契約。
+- **導出與引用規範 (Export & Namespace Import)**：
+  - Pack 內部：`index.ts` 透過 `export * from './...'` 聚合子模組能力與型別，不額外封裝多餘的命名物件包裝。
+  - 外部引用：跨模組一律使用命名空間引入（`import * as <pack_name> from '@/packs/<pack_name>'`），命名空間自然成為對外具名介面，嚴禁具名引用。
 
 ### 5.5 分支歷史樹 (Undo Tree)
-- **可逆指令**：所有空間異動封裝為具備 `execute(space)` 與 `inverse(space)` 的 `space_command`。
+- **可逆操作契約**：所有空間異動封裝為具備 `execute(space)` 與 `inverse(space)` 的 `reversible_operation`。
 - **非線性分支**：Undo 後執行新操作自動開闢新分支。
-- **節點跳轉**：`jump_to_history` 透過 LCA 最短路徑重放轉換狀態。
+- **節點跳轉**：`jump_to_node` 透過 LCA 最短路徑重放轉換狀態。
 
 ### 5.6 CLI 命令列規範
 - **嚴格語法**：空格分隔位置參數（`cmd <arg1> <arg2> ...`）、連續數字座標向量（`create_device conveyor 4 4 0`）、相機切片 `d<n>=<val>`。
