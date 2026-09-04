@@ -35,33 +35,22 @@ export function set_camera_transform(cam: camera, pan_x: number, pan_y: number, 
  */
 export function set_camera_plane(cam: camera, dim_h: number, dim_v: number, target_dim: number, slices?: number[]): void
 {
-    const slice_count = slices ? slices.length : 0;
-    const effective_dim = Math.max(target_dim, 3, dim_h + 1, dim_v + 1, slice_count);
-
-    if (dim_h >= 0 && dim_h < effective_dim)
+    if (dim_h >= 0 && dim_h < target_dim)
     {
         cam.plane.dim_h = dim_h;
     }
-    if (dim_v >= 0 && dim_v < effective_dim && dim_v !== cam.plane.dim_h)
+    if (dim_v >= 0 && dim_v < target_dim && dim_v !== cam.plane.dim_h)
     {
         cam.plane.dim_v = dim_v;
     }
 
-    if (slices)
+    if (slices && slices.length === target_dim)
     {
-        const new_slices = new Array(effective_dim).fill(0);
-        for (let i = 0; i < effective_dim; i++)
-        {
-            if (i < slices.length && typeof slices[i] === 'number')
-            {
-                new_slices[i] = slices[i];
-            }
-        }
-        cam.plane.slices = new_slices;
+        cam.plane.slices = [...slices];
     }
     else
     {
-        cam.adapt_plane(effective_dim);
+        cam.adapt_plane(target_dim);
     }
 
     cam.notify_change();
