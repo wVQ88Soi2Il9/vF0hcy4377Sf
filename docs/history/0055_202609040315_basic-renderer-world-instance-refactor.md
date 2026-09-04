@@ -38,6 +38,9 @@ basic_renderer 全面淘汰全域單例（Singleton），將 camera 與 renderer
 2. 在 `get_world_camera` 建立 world-specific 相機實例時，直接將 `cam.on_change` 接至 `target_world.trigger({ namespace: 'basic_renderer', id: 'camera_change' }, c)`，完全避免中介全域回呼或可變事件狀態。
 3. `tests/basic_renderer.test.ts` 6 項測試全數通過。
 
+### O8 · 2026-09-05 01:39:00+08:00 — 清理 basic_renderer/assets 未引用靜態圖稿
+經 /grill-me 邊界審查確認，draw_grid.ts 已全面採用程序化向量繪製，assets/（grid.svg、another_grid.svg）在 Runtime 完全未被載入，屬冗餘資產；已將 assets/ 徹底移除，並同步修正 draw_grid.ts 註解描述，保持 basic_renderer 模組代碼純淨。
+
 ---
 
 ## 待辦
@@ -87,3 +90,15 @@ basic_renderer 全面淘汰全域單例（Singleton），將 camera 與 renderer
 
 - H1 · 2026-09-04 03:15 決斷 —— 建立多世界渲染隔離測試（human）
 - H2 · 2026-09-04 03:16 落地 —— tests/basic_renderer.test.ts 5 項測試全數通過（agent: gemini-3.8-flash-high） → O5
+
+### 5 清理 basic_renderer 未引用靜態資源 (Cleanup Unused Static Assets)
+- **state:** 等待確認
+- **basis:** → O8
+
+清理 `src/packs/basic_renderer/assets/` 目錄與未被邏輯引用的 SVG 檔案，並對齊 `draw_grid.ts` 樣式註解。
+
+**沿革**
+
+- H1 · 2026-09-05 01:38 決斷 —— 經 /grill-me 確認 assets/ 不進生產代碼，徹底移除（human）
+- H2 · 2026-09-05 01:39 落地 —— 刪除 assets/ 檔案並對齊 draw_grid.ts 註解（agent: gemini-3.8-flash-low） → O8
+

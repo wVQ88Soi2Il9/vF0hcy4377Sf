@@ -4,7 +4,7 @@ import type { camera_type } from './types';
 const GRID_STEP = 2;   // 每個網格區塊跨度為 2 單位
 
 /**
- * Renders the viewport background grid matching another_grid.svg (#333333 with #b0b0b0 grid lines)
+ * Renders the viewport background grid (#333333 with #b0b0b0 grid lines)
  * using procedural vector rendering to eliminate scaling distortion, subpixel aliasing, and moiré artifacts at any zoom level.
  */
 export function draw_grid
@@ -19,7 +19,7 @@ export function draw_grid
     const h = canvas.height;
     const zoom = camera.zoom;
 
-    // 1. 填滿背景底色 (another_grid.svg: #333333)
+    // 1. 填滿深灰背景底色 (#333333)
     ctx.fillStyle = '#333333';
     ctx.fillRect(0, 0, w, h);
 
