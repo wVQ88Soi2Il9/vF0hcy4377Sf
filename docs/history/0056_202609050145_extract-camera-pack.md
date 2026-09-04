@@ -24,13 +24,16 @@
 ### O4 · 2026-09-05 01:50:00+08:00 — 測試驗證通過
 撰寫 tests/camera.test.ts 覆蓋 5 項相機核心測試；更新 tests/basic_renderer.test.ts 驗證多世界渲染隔離與世界 hooks 重繪；8 項單元測試全數通過。
 
+### O5 · 2026-09-05 03:29:00+08:00 — camera 重構為純函式投影運算器與 Pipeline 渲染主入口
+經 /grill-me 審查，確立 camera「不必過度追求解耦」，回歸極致純函式管線：(space, args) => projection，並作為 Pipeline 渲染主入口直連 basic_renderer.render。空間裝置遵循「接觸即傳」，原物件透通傳遞，內部零 class、零狀態。
+
 ---
 
 ## 待辦
 
 ### 1 建立獨立 src/packs/camera 模組 (Implement Standalone Camera Pack)
 - **state:** 等待確認
-- **basis:** → O1, O2
+- **basis:** → O1, O2, O5
 
 建立 `src/packs/camera/`，封裝相機實例、視口平移/縮放控制、grid_to_screen 投影換算與 CLI camera 指令，並於 global_init 註冊 camera_change hook。
 
@@ -38,6 +41,7 @@
 
 - H1 · 2026-09-05 01:45 決斷 —— 確立 camera 獨立 pack 設計與邊界（human）
 - H2 · 2026-09-05 01:48 落地 —— 建立 src/packs/camera 並完成各子模組（agent: gemini-3.8-flash-high） → O2
+- H3 · 2026-09-05 03:30 落地 —— 完成 types.ts、projection.ts、render.ts 與 index.ts 純函式模組實作（agent: gemini-3.8-flash-high） → O5
 
 ### 2 解耦並精簡 basic_renderer 職責 (Decouple & Streamline basic_renderer)
 - **state:** 等待確認
@@ -52,7 +56,7 @@
 
 ### 3 拆分並補齊獨立單元測試 (Separate Unit Tests & Verification)
 - **state:** 等待確認
-- **basis:** → O1, O4
+- **basis:** → O1, O4, O5
 
 建立 `tests/camera.test.ts` 驗證相機獨立運作；更新 `tests/basic_renderer.test.ts` 驗證多世界渲染與世界 hooks 重繪。
 
@@ -60,3 +64,4 @@
 
 - H1 · 2026-09-05 01:45 決斷 —— 拆分測試為 camera.test.ts 與 basic_renderer.test.ts（human）
 - H2 · 2026-09-05 01:50 落地 —— 撰寫測試並通過全數 8 項單元測試（agent: gemini-3.8-flash-high） → O4
+- H3 · 2026-09-05 03:30 落地 —— 更新 tests/camera.test.ts 覆蓋切片、接觸即傳、任意雙軸與 Pipeline 渲染，全數測試通過（agent: gemini-3.8-flash-high） → O5
