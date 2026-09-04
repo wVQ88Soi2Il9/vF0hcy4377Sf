@@ -26,6 +26,9 @@
 2. `src/packs/cli/index.ts`：移除 `commands` 與 `other_info` 偽註冊之 `'--help'`，回歸純淨 pack 宣告；CLI 執行器以頂層保留字元支援 `--help`。
 3. `src/packs/cli/help.ts` & `executor.ts`：支援優先由 `cmd.other_info` 讀取 describe，並調用 `cmd.execute`。
 
+### O4 · 2026-09-05 05:11:00+08:00 — 依指示將 help.ts 改以假資料支撐並清空內部實作
+依使用者指示「對外用假資料撐著，裡面盡量刪光」，將 `src/packs/cli/help.ts` 內部的複雜檢索與格式化邏輯全數移除，僅保留導出介面並回傳假資料。
+
 ---
 
 ## 待辦
@@ -44,7 +47,7 @@
 
 ### 2 實作 CLI --help 與 cmd.other_info 描述解析 (CLI --help & cmd.other_info Parsing)
 - **state:** 等待確認
-- **basis:** → O1, O2, O3
+- **basis:** → O1, O2, O3, O4
 
 在 `src/packs/cli/executor.ts` 實作 `execute_command` 攔截 `--help` 分派並支援 `cmd.execute`；在 `src/packs/cli/help.ts` 實作 `get_command_describe(cmd)` 專門由 `cmd.other_info` 讀取 describe 並由 `generate_help` 排版輸出；徹底杜絕並移除 `pack.other_info` 與 `src/packs/cli/index.ts` 之偽註冊。
 
@@ -55,6 +58,7 @@
 - H3 · 2026-09-05 04:15 落地 —— 建立 help.ts 獨立封裝說明邏輯，精簡 executor.ts 並更新 index.ts 導出（agent: gemini-3.8-flash-high） → O2
 - H4 · 2026-09-05 04:22 落地 —— 移除 cli/index.ts 偽註冊，help.ts 支援由 cmd.other_info 直接讀取 describe，executor 支援 cmd.execute（agent: gemini-3.8-flash-high） → O3
 - H5 · 2026-09-05 04:24 落地 —— 徹底清理 pack.other_info 殘留，get_command_describe 直接接收 cmd 物件並自 cmd.other_info 解析描述（agent: gemini-3.8-flash-high） → O3
+- H6 · 2026-09-05 05:11 落地 —— 依指示將 help.ts 內部邏輯刪除，對外介面改以假資料支撐（agent: gemini-3.8-flash-high） → O4
 
 ### 3 CLI 單元測試覆蓋 commands 與 --help 功能 (Unit Tests Verification)
 - **state:** 等待確認
