@@ -193,7 +193,7 @@ export function grid_to_screen
     canvas_height: number
 )
 {
-    const plane = cam instanceof camera ? cam.plane : cam.plane;
+    const plane = cam.plane;
     const pan_x = cam.pan_x;
     const pan_y = cam.pan_y;
     const zoom  = cam.zoom;

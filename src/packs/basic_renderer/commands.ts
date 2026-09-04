@@ -12,7 +12,7 @@ export function format_camera_equation(plane: view_plane, num_dims?: number): st
         if (i !== plane.dim_h && i !== plane.dim_v)
         {
             const axis_name = vanilla_beta.format_axis_name(i);
-            const depth = plane.slices[i] ?? 0;
+            const depth = plane.slices[i];
             eq_parts.push(`${axis_name}=${depth}`);
         }
     }
@@ -30,7 +30,7 @@ export function apply_camera_equation(cam: camera, equation_arg: string, num_dim
     }
 
     const fixed_map = new Map<number, number>();
-    const parts = equation_arg.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const parts = equation_arg.split(/[,\s]+/).map(s => s.trim()).filter(s => s.length > 0);
 
     for (const part of parts)
     {
