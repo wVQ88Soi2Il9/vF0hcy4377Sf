@@ -97,4 +97,48 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         const retrieved = vanilla_alpha.get_operation(registry, { namespace: 'custom_pack', id: 'echo_op' });
         expect(retrieved).toBe(op_instance);
     });
+
+    it('Vanilla 基礎操作之 other_info 統一使用 vanilla_alpha 命名空間', () =>
+    {
+        class mock_device extends core.device
+        {
+            public get_shape(): core.vector[] { return [[0, 0]]; }
+            public get_port(): core.port[] { return []; }
+        }
+
+        const create_op = vanilla_alpha.create_device_operation(
+            mock_device,
+            { namespace: 'vanilla_alpha', id: 'test_dev' },
+            [0, 0]
+        );
+        expect(create_op.other_info?.['vanilla_alpha']).toBeDefined();
+        expect(create_op.other_info?.['core']).toBeUndefined();
+
+        const delete_op = vanilla_alpha.delete_device_operation(1);
+        expect(delete_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: 1 });
+        expect(delete_op.other_info?.['core']).toBeUndefined();
+
+        const move_op = vanilla_alpha.move_device_operation(1, [2, 2]);
+        expect(move_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: 1, position: [2, 2] });
+
+        const select_op = vanilla_alpha.select_recipe_operation(1, { namespace: 'vanilla_alpha', id: 'rec_1' });
+        expect(select_op.other_info?.['vanilla_alpha']).toEqual({
+            device_uid: 1,
+            new_recipe_id: { namespace: 'vanilla_alpha', id: 'rec_1' }
+        });
+    });
+
+    it('delete/move/select_recipe 找不到裝置時拋出明確例外 (Fail-Fast)', () =>
+    {
+        const sp = new core.space([10, 10]);
+
+        const delete_op = vanilla_alpha.delete_device_operation(999);
+        expect(() => delete_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
+
+        const move_op = vanilla_alpha.move_device_operation(999, [2, 2]);
+        expect(() => move_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
+
+        const select_op = vanilla_alpha.select_recipe_operation(999);
+        expect(() => select_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
+    });
 });

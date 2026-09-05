@@ -39,7 +39,7 @@ export function create_device_operation
         other_info:
         {
             ...other_info,
-            core:
+            vanilla_alpha:
             {
                 definition_id,
                 position: [...position]
@@ -97,7 +97,7 @@ export function delete_device_operation(device_uid: core.uid): delete_device_op
         id:        'delete_device',
         other_info:
         {
-            core:
+            vanilla_alpha:
             {
                 device_uid
             }
@@ -110,11 +110,12 @@ export function delete_device_operation(device_uid: core.uid): delete_device_op
         {
             const target_uid = deleted_dev ? deleted_dev.device_uid : device_uid;
             const index = sp.devices.findIndex(d => d.device_uid === target_uid);
-            if (index !== -1)
+            if (index === -1)
             {
-                deleted_dev = sp.devices[index];
-                sp.devices.splice(index, 1);
+                throw new Error(`Device with UID ${target_uid} not found in space.`);
             }
+            deleted_dev = sp.devices[index];
+            sp.devices.splice(index, 1);
         },
         inverse(sp: core.space): void
         {
@@ -146,7 +147,7 @@ export function move_device_operation(device_uid: core.uid, new_position: core.v
         id:        'move_device',
         other_info:
         {
-            core:
+            vanilla_alpha:
             {
                 device_uid,
                 position: [...new_position]
@@ -155,24 +156,26 @@ export function move_device_operation(device_uid: core.uid, new_position: core.v
         execute(sp: core.space): void
         {
             const dev = sp.devices.find(d => d.device_uid === device_uid);
-            if (dev)
+            if (!dev)
             {
-                if (previous_position === null)
-                {
-                    previous_position = [...dev.position];
-                }
-                dev.position = [...new_position];
+                throw new Error(`Device with UID ${device_uid} not found in space.`);
             }
+            if (previous_position === null)
+            {
+                previous_position = [...dev.position];
+            }
+            dev.position = [...new_position];
         },
         inverse(sp: core.space): void
         {
             if (previous_position !== null)
             {
                 const dev = sp.devices.find(d => d.device_uid === device_uid);
-                if (dev)
+                if (!dev)
                 {
-                    dev.position = [...previous_position];
+                    throw new Error(`Device with UID ${device_uid} not found in space.`);
                 }
+                dev.position = [...previous_position];
             }
         }
     };
@@ -191,7 +194,7 @@ export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: co
         id:        'select_recipe',
         other_info:
         {
-            core:
+            vanilla_alpha:
             {
                 device_uid,
                 new_recipe_id
@@ -200,25 +203,27 @@ export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: co
         execute(sp: core.space): void
         {
             const dev = sp.devices.find(d => d.device_uid === device_uid);
-            if (dev)
+            if (!dev)
             {
-                if (!initialized)
-                {
-                    previous_recipe_id = dev.selected_recipe_id;
-                    initialized = true;
-                }
-                dev.selected_recipe_id = new_recipe_id;
+                throw new Error(`Device with UID ${device_uid} not found in space.`);
             }
+            if (!initialized)
+            {
+                previous_recipe_id = dev.selected_recipe_id;
+                initialized = true;
+            }
+            dev.selected_recipe_id = new_recipe_id;
         },
         inverse(sp: core.space): void
         {
             if (initialized)
             {
                 const dev = sp.devices.find(d => d.device_uid === device_uid);
-                if (dev)
+                if (!dev)
                 {
-                    dev.selected_recipe_id = previous_recipe_id;
+                    throw new Error(`Device with UID ${device_uid} not found in space.`);
                 }
+                dev.selected_recipe_id = previous_recipe_id;
             }
         }
     };
