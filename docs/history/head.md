@@ -4,69 +4,12 @@
 
 ## 目前使用中
 
-[0060_202609060315_vanilla-alpha-merge-init-to-index](./0060_202609060315_vanilla-alpha-merge-init-to-index.md) — `in-progress`，待辦待決剩 2/2
+（尚無任何計畫）
 
 ## 現在開著的（逐格）
 
-- `0060#1` · **等待確認** — 整併初始化邏輯至 index.ts 並刪除 init.ts (Merge init Logic into index.ts and Remove init.ts)
-- `0060#2` · **等待確認** — 驗證測試套件 (Verification with Test Suite)
-- `0059#1` · **等待確認** — 標準化 operations 的 other_info 命名空間為 vanilla_alpha (Namespace other_info to vanilla_alpha)
-- `0059#2` · **等待確認** — 在 delete/move/select_recipe 加入 Fail-Fast 檢查 (Fail-Fast Verification on Missing Devices)
-- `0059#3` · **等待確認** — 補充 operations Fail-Fast 與 other_info 之單元測試 (Unit Tests for Fail-Fast & other_info)
-- `0058#1` · **等待確認** — 重構 Core definition_iii 取消 factory 並更新 reversible_operation 介面 (Core Reversible Operation Refactor)
-- `0058#2` · **等待確認** — 同步修訂 vanilla_alpha query 工具函式型別 (Sync vanilla_alpha query get_operation Type)
-- `0058#3` · **等待確認** — 補充可逆操作 ...args 特性之單元測試 (Unit Test for ...args Trailing Arguments)
-- `0057#1` · **等待確認** — Core 擴充 commands 契約與分離可逆操作 (Core cmd Type & pack_module.commands)
-- `0057#2` · **等待確認** — 實作 CLI --help 與 cmd.other_info 描述解析 (CLI --help & cmd.other_info Parsing)
-- `0057#3` · **等待確認** — CLI 單元測試覆蓋 commands 與 --help 功能 (Unit Tests Verification)
-- `0056#1` · **等待確認** — 建立獨立 src/packs/camera 模組 (Implement Standalone Camera Pack)
-- `0056#2` · **等待確認** — 解耦並精簡 basic_renderer 職責 (Decouple & Streamline basic_renderer)
-- `0056#3` · **等待確認** — 拆分並補齊獨立單元測試 (Separate Unit Tests & Verification)
-- `0055#1` · **等待確認** — 移除全域狀態並實例化 camera 模組 (Instance-based Camera & Eliminate Global Lookups)
-- `0055#2` · **等待確認** — 實例化 basic_renderer 並接軌 target_world (Instance-based Renderer with World Hooks)
-- `0055#3` · **等待確認** — 對齊 index.ts 公開進入點與 CLI Camera 指令定位 (Harmonize Entrypoint & Camera Command)
-- `0055#4` · **等待確認** — 整合測試驗證多世界多視口隔離 (Integration Verification & Multi-World Isolation Tests)
-- `0055#5` · **等待確認** — 清理 basic_renderer 未引用靜態資源 (Cleanup Unused Static Assets)
-- `0054#1` · **等待確認** — 定義 Hook 回呼與資料結構契約 (Hook Types & Callback Contract in definition_i.ts)
-- `0054#2` · **等待確認** — 擴充 Pack 模組契約並建立完整 Registry (Complete Registry in definition_iii.ts)
-- `0054#3` · **等待確認** — 實作階段 3 之全域空槽位清單建構 (Build Complete Empty Hook List in hooks.ts)
-- `0054#4` · **等待確認** — 實作階段 4 之世界專屬空槽位生成與 world 接軌 (New World Hook Slots in world.ts)
-- `0054#5` · **等待確認** — 實作階段 5 之單行無條件回呼注入 (Inject Callbacks in hooks.ts)
-- `0054#6` · **等待確認** — 整合測試驗證 5 階段生命週期全流程與多世界隔離性 (Integration Verification)
-- `0053#1` · **等待確認** — 重命名 Core 空間型別為 class space 並維持純函式演算法 (class space & Core Algorithms)
-- `0053#2` · **等待確認** — 實作 class world 實體類別與多世界管理 (Implement class world & Multi-World Management)
-- `0053#3` · **等待確認** — 釐清 Vanilla 歷史擴充邊界並適配 space / world 型別 (Adapt Vanilla History Semantics to space & world)
-- `0053#4` · **等待確認** — 跨模組依賴更新、過渡設施清理與 CLI / UI 整合驗證 (Cross-Pack Migration, Transitional Cleanup & Validation)
-- `0052#3` · **等待確認** — 補齊 Runtime 歷程控制指令註冊至 Core Registry (Register History Commands in Core Registry)
-- `0046#18` · **待實作** — 3-Way 衝突檢測器（3-Way Conflict Detector）
-- `0046#19` · **待實作** — UID 重映射與指令轉換重放器（UID Remapping & Command Replayer）
-- `0046#20` · **待實作** — 複合合併指令封裝與 merge_branch 主流程整合（Composite Command & Orchestration）
-- `0046#14` · **待實作** — CLI 實作 merge 指令與參數解析
-- `0046#15` · **待實作** — Shirones UI 實作分支合併按鈕與 Git Graph 雙親拓撲線條
-- `0046#16` · **待實作** — 歷史分支合併功能之整合測試與驗證
-- `0042#1` · **待實作** — 實作視口座標逆變換 (screen_to_grid) 與裝置拾取檢測
-- `0042#2` · **待實作** — 實作畫布內裝置拖曳移動 (Drag to Move) 與偶數座標吸附
-- `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
-- `0042#4` · **待實作** — 整合測試與建構驗證
-
-> 要做某一格：`python3 docs/history/plan-item.py 0060#1`
-> —— 只回那一格的正文與它的依據，不必讀整份計畫。
+（沒有開著的項目）
 
 ## draft / in-progress（流水號降序）
 
-- **0060** [0060_202609060315_vanilla-alpha-merge-init-to-index](./0060_202609060315_vanilla-alpha-merge-init-to-index.md) — `in-progress`，待辦待決剩 2/2
-- **0059** [0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace](./0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace.md) — `in-progress`，待辦待決剩 3/3
-- **0058** [0058_202609060241_core-reversible-operation-refactor](./0058_202609060241_core-reversible-operation-refactor.md) — `in-progress`，待辦待決剩 3/3
-- **0057** [0057_202609050412_cli-help-and-describe](./0057_202609050412_cli-help-and-describe.md) — `in-progress`，待辦待決剩 3/3
-- **0056** [0056_202609050145_extract-camera-pack](./0056_202609050145_extract-camera-pack.md) — `in-progress`，待辦待決剩 3/3
-- **0055** [0055_202609040315_basic-renderer-world-instance-refactor](./0055_202609040315_basic-renderer-world-instance-refactor.md) — `in-progress`，待辦待決剩 5/5
-- **0054** [0054_202609020154_core-v3-hook-system-refactor](./0054_202609020154_core-v3-hook-system-refactor.md) — `in-progress`，待辦待決剩 6/6
-- **0053** [0053_202608260315_core-vs-runtime-architecture-boundaries](./0053_202608260315_core-vs-runtime-architecture-boundaries.md) — `in-progress`，待辦待決剩 4/4
-- **0052** [0052_202608260133_cli-syntax-redesign-and-vector-tokens](./0052_202608260133_cli-syntax-redesign-and-vector-tokens.md) — `in-progress`，待辦待決剩 1/3
-- **0051** [0051_202608252208_cli-tool-pure-logic-core-registry](./0051_202608252208_cli-tool-pure-logic-core-registry.md) — `in-progress`，待辦待決剩 0/2
-- **0050** [0050_202608252115_pack-module-command-registry](./0050_202608252115_pack-module-command-registry.md) — `in-progress`，待辦待決剩 0/4
-- **0049** [0049_202608250332_unified-pack-module-index-architecture](./0049_202608250332_unified-pack-module-index-architecture.md) — `in-progress`，待辦待決剩 0/4
-- **0048** [0048_202608241716_history-human-agent-roles-and-qa](./0048_202608241716_history-human-agent-roles-and-qa.md) — `in-progress`，待辦待決剩 0/3
-- **0047** [0047_202608240341_optimize-shirones-ui](./0047_202608240341_optimize-shirones-ui.md) — `in-progress`，待辦待決剩 0/5
-- **0046** [0046_202608240333_history-edit-branch-and-node-tags](./0046_202608240333_history-edit-branch-and-node-tags.md) — `in-progress`，待辦待決剩 6/20，已移交 5
-- **0042** [0042_202608232304_drag-and-drop-items](./0042_202608232304_drag-and-drop-items.md) — `in-progress`，待辦待決剩 4/4
+（無）
