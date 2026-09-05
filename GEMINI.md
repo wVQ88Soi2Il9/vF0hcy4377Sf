@@ -17,7 +17,8 @@ For this project in particular:
 - preserve meaningful observations and rationale;
 - record implementation results with appropriate evidence;
 - after implementing an item itself, the Agent must not mark that item as `done` or `rejected`;
-- `done` and `rejected` require confirmation independent of the Agent's own implementation judgment.
+- `done` and `rejected` require confirmation independent of the Agent's own implementation judgment;
+- do not force observations into a uniform schema. Structure must follow the evidence, not the other way around. Include a category, inference, uncertainty, alternative, or recommendation only when it actually applies. Do not manufacture fields or symmetry merely for consistency of presentation.
 
 ## 2. Plan History
 
