@@ -23,20 +23,13 @@ from pathlib import Path
 
 
 def force_utf8_stdio() -> None:
-    """Make both CLIs print their Chinese output verbatim on Windows.
-
-    Python picks the console codepage for stdout, which on a zh-TW Windows box is
-    cp950 — every plan title and every conflict message comes out as mojibake, and
-    the whole point of these tools is printing that text to a reader. Written files
-    already pin `encoding="utf-8"`; this is only the streams.
-    """
+    """Ensure standard streams use UTF-8 on all platforms."""
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
 
-# The corpus root. `PLAN_HISTORY_ROOT` exists so the tests can point both CLIs at a
-# fixture directory and exercise the real entry points instead of a re-implementation
-# of them; in normal use it is unset and this is simply where the scripts live.
+# The corpus root. `PLAN_HISTORY_ROOT` exists so tests can point both CLIs at a
+# fixture directory; in normal use it is unset and this is where the scripts live.
 HERE = Path(os.environ.get("PLAN_HISTORY_ROOT") or Path(__file__).resolve().parent).resolve()
 
 
@@ -48,8 +41,6 @@ def _display_root() -> str:
     return HERE.as_posix()
 
 
-# Spelled once, at import: every tool prints the same root, and it is only a filesystem
-# walk in the first place.
 ROOT_DISPLAY = _display_root()
 
 FILENAME_RE = re.compile(r"^(\d{4})_(\d{8,12})_([a-z0-9][a-z0-9-]*)\.md$")
@@ -57,11 +48,9 @@ PREV_RE = re.compile(r"^-\s*\*\*prev:\*\*\s*(.+?)\s*$")
 SKILL_RE = re.compile(r"^-\s*\*\*skill:\*\*\s*(.+?)\s*$")
 SKILL_VERSION_RE = re.compile(r"\bv(\d+)\b")
 STATUS_RE = re.compile(r"^-\s*\*\*status:\*\*\s*`?([A-Za-z-]+)`?\s*$")
-CHECKBOX_RE = re.compile(r"^\s*-\s*\[([ xX])\]")
 BACKTICK_RE = re.compile(r"`([^`]+)`")
 
-# `### O3 · 2026-08-07 15:04:12+08:00 — 短標題`. The offset is required from v3 on; the
-# plans written before it are all UTC, and `_instant` reads them that way.
+# `### O3 · 2026-08-07 15:04:12+08:00 — Short title`
 OBS_HEADING_RE = re.compile(
     r"^###\s+O(\d+)\s+·\s+"
     r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?)\s+[—-]\s+\S"
@@ -69,30 +58,42 @@ OBS_HEADING_RE = re.compile(
 OBS_OFFSET_RE = re.compile(r"[+-]\d{2}:\d{2}$")
 OBS_ID_RE = re.compile(r"\bO(\d+)\b")
 OBS_REF_RE = re.compile(r"→\s*O(\d+)\b")
-# `- **更正:** O30` / `- **推翻:** O30` / `- **更新:** O30`. One word did all three jobs
-# through v2, and they are not the same job: only 更正 says the earlier *fact* was wrong,
-# and only that one makes work already done on it wrong too.
-OBS_RELATION_RE = re.compile(r"^\s*-\s*\*\*(更正|推翻|更新):\*\*\s*(.+?)\s*$")
-CORRECTS = "更正"
+# `- **corrects:** O30` / `- **overturns:** O30` / `- **updates:** O30`
+OBS_RELATION_RE = re.compile(
+    r"^\s*-\s*\*\*(corrects|overturns|updates):\*\*\s*(.+?)\s*$",
+    re.IGNORECASE,
+)
+CORRECTS = "corrects"
 LIST_ITEM_RE = re.compile(r"^\s*-\s+\S")
 
 # --- v3 ---------------------------------------------------------------------
-# `### 14 讓消融說得出成因`
+# `### 14 Short title`
 ITEM_HEADING_RE = re.compile(r"^###\s+(\d+)\s+(\S.*?)\s*$")
-# `- **state:** 待實作`
+# `- **state:** todo`
 FIELD_RE = re.compile(r"^\s*-\s*\*\*([^:*]+):\*\*\s*(.*?)\s*$")
-# `- H2 · 2026-08-09 15:04 落地 —— judge() 回 (verdicts, basis) → O52`
+# `- H2 · 2026-08-09 15:04 landed —— judge() returns (verdicts, basis) → O52`
 HIST_RE = re.compile(r"^\s*-\s+H(\d+)\s+·\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?)\s+(\S+)\s+——\s*(\S.*)$")
-HIST_MARKER = "**沿革**"
-# `取代 H1` inside a 修正 entry. It marks an entry in `--history` and nothing more:
-# no view filters on it, so nothing breaks when an author does not write it.
-SUPERSEDE_RE = re.compile(r"取代\s*H(\d+)")
-# `0007#14` — the one address form, valid anywhere including prose.
+HIST_MARKER = "**History**"
+# `supersedes H1` inside a revised entry
+SUPERSEDE_RE = re.compile(r"supersedes\s*H(\d+)", re.IGNORECASE)
+# `0007#14` — address form
 ADDR_RE = re.compile(r"\b(\d{4})#(\d+)\b")
 
-ITEM_STATES = ("待決斷", "待實作", "實作中", "等待確認", "完成", "否決", "移交")
-TERMINAL_STATES = ("完成", "否決", "移交")
-HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交", "提問", "回答")
+ITEM_STATES = ("pending", "todo", "in-progress", "pending-review", "done", "rejected", "handed-off")
+TERMINAL_STATES = ("done", "rejected", "handed-off")
+
+HIST_KINDS = (
+    "decision",
+    "landed",
+    "revised",
+    "rejected",
+    "split",
+    "merged",
+    "retitle",
+    "handed-off",
+    "question",
+    "answer",
+)
 ACTOR_TAG_RE = re.compile(r"[（\(]([^（\(\)）]+)[）\)](?:\s*→\s*O\d+)?\s*$")
 
 BODY_MAX_LINES = 15
@@ -104,19 +105,15 @@ SUMMARY_MAX_LINES = 20
 STATUSES = ("draft", "in-progress", "done", "superseded", "abandoned")
 CLOSED = ("superseded", "abandoned")
 LIVE_STATUSES = ("draft", "in-progress")
-OPEN_ITEMS_HEADING = "## 待決斷/待完成事項"
-TODO_HEADING = "## 待辦"
-SUMMARY_HEADING = "## 主題簡述"
-REASON_HEADING = "## 捨棄原因"
-OBSERVATION_HEADING = "## 觀察與推論"
-HANDOFF_HEADING = "## 已移交"
+
+TODO_HEADING = "## Tasks"
+SUMMARY_HEADING = "## Summary"
+REASON_HEADING = "## Abandonment Reason"
+OBSERVATION_HEADING = "## Observations & Inferences"
 
 CURRENT_VERSION = 3
-# A plan with no `- **skill:**` line predates versioning and is v1 — the v2 checks
-# below never apply to it, and it is never rewritten into the newer format.
-DEFAULT_VERSION = 1
+DEFAULT_VERSION = 3
 
-# Files in this directory that are not plans.
 NON_PLAN_FILES = ("head.md", "readme.md", "README.md")
 
 
@@ -125,14 +122,13 @@ class Observation:
     num: int
     stamp: str
     heading: str
-    lines: list[str] = field(default_factory=list)  # body, without the heading
-    relations: dict[str, list[int]] = field(default_factory=dict)  # kind -> targets
-    inbound: dict[str, list[int]] = field(default_factory=dict)  # kind -> sources
+    lines: list[str] = field(default_factory=list)
+    relations: dict[str, list[int]] = field(default_factory=dict)
+    inbound: dict[str, list[int]] = field(default_factory=dict)
 
     @property
     def corrected_by(self) -> list[int]:
-        """Observations that declared this one's *fact* wrong — the only relation with
-        a machine consequence, because everything still resting on it is now wrong."""
+        """Observations that declared this one's fact wrong."""
         return self.inbound.get(CORRECTS, [])
 
 
@@ -143,7 +139,7 @@ class HistoryEntry:
     kind: str
     text: str
     obs_refs: list[int] = field(default_factory=list)
-    supersedes: list[int] = field(default_factory=list)  # `取代 H<n>`, a reader's marker
+    supersedes: list[int] = field(default_factory=list)
 
     @property
     def line(self) -> str:
@@ -152,17 +148,17 @@ class HistoryEntry:
 
 @dataclass
 class Item:
-    """One `### <n> 標題` block in a v3 plan's `## 待辦`."""
+    """One task block in a v3 plan's tasks section."""
 
-    seq: str  # the owning plan's seq, so `addr` is self-contained
+    seq: str
     num: int
     title: str
     state: str | None = None
-    needs: list[str] = field(default_factory=list)  # `<seq>#<n>` addresses
-    handoff: list[str] = field(default_factory=list)  # `- **移交:**`
-    claims: list[str] = field(default_factory=list)  # `- **承接:**`
+    needs: list[str] = field(default_factory=list)
+    handoff: list[str] = field(default_factory=list)
+    claims: list[str] = field(default_factory=list)
     basis: list[int] = field(default_factory=list)
-    body: list[str] = field(default_factory=list)  # 正文, verbatim
+    body: list[str] = field(default_factory=list)
     history: list[HistoryEntry] = field(default_factory=list)
 
     @property
@@ -179,19 +175,18 @@ class Item:
 
     @property
     def retitles(self) -> int:
-        return sum(1 for h in self.history if h.kind == "改題")
+        return sum(1 for h in self.history if h.kind == "retitle")
 
     def overgrown_signals(self) -> list[str]:
-        """Which size signals this item trips. Two or more is a warning."""
         hits = []
         if self.body_lines > BODY_MAX_LINES:
-            hits.append(f"正文 {self.body_lines} 行 > {BODY_MAX_LINES}")
+            hits.append(f"body {self.body_lines} lines > {BODY_MAX_LINES}")
         if len(self.basis) > BASIS_MAX_REFS:
-            hits.append(f"basis {len(self.basis)} 條 > {BASIS_MAX_REFS}")
+            hits.append(f"basis {len(self.basis)} items > {BASIS_MAX_REFS}")
         if len(self.history) >= HISTORY_MAX_ENTRIES:
-            hits.append(f"沿革 {len(self.history)} 條 ≥ {HISTORY_MAX_ENTRIES}")
+            hits.append(f"history {len(self.history)} entries >= {HISTORY_MAX_ENTRIES}")
         if self.retitles >= RETITLE_MAX:
-            hits.append(f"改題 {self.retitles} 次 ≥ {RETITLE_MAX}")
+            hits.append(f"retitled {self.retitles} times >= {RETITLE_MAX}")
         return hits
 
 
@@ -203,19 +198,19 @@ class Plan:
     topic: str
     title: str | None = None
     status: str | None = None
-    prev: str | None = None  # target filename, or None for "no parent"
+    prev: str | None = None
     prev_raw: str = ""
     skill_raw: str = ""
-    version: int = DEFAULT_VERSION
+    version: int = CURRENT_VERSION
     has_reason: bool = False
     total: int = 0
     open_items: int = 0
     obs_ids: set[int] = field(default_factory=set)
     obs_refs: set[int] = field(default_factory=set)
-    handoffs: list[str] = field(default_factory=list)  # target filenames ("" = missing)
-    items: list[Item] = field(default_factory=list)  # v3 only
-    addr_refs: set[str] = field(default_factory=set)  # every `<seq>#<n>` in the file
-    summary: list[str] = field(default_factory=list)  # `## 主題簡述`, verbatim
+    handoffs: list[str] = field(default_factory=list)
+    items: list[Item] = field(default_factory=list)
+    addr_refs: set[str] = field(default_factory=set)
+    summary: list[str] = field(default_factory=list)
     observations: dict[int, Observation] = field(default_factory=dict)
 
     @property
@@ -232,9 +227,7 @@ class Plan:
 
     @property
     def handoff_count(self) -> int:
-        if self.version >= 3:
-            return sum(1 for it in self.items if it.state == "移交")
-        return len(self.handoffs)
+        return sum(1 for it in self.items if it.state == "handed-off")
 
 
 @dataclass
@@ -242,7 +235,7 @@ class Conflict:
     code: str
     plan: str
     detail: str
-    severity: str = "conflict"  # or "warning" — warnings never fail the exit code
+    severity: str = "conflict"
 
 
 @dataclass
@@ -260,17 +253,12 @@ class Report:
 
 
 def _instant(stamp: str) -> datetime:
-    """A comparable moment, so a file may hold both stamp forms and still order right.
-
-    An observation written before the offset rule carries no zone; every one of those
-    was taken on a UTC machine, so that is what they are read as.
-    """
     dt = datetime.fromisoformat(stamp)
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def section(lines: list[str], heading: str) -> list[str]:
-    """Lines under `heading`, up to the next `## ` heading."""
+    """Lines under heading, up to the next `## ` heading."""
     out: list[str] = []
     inside = False
     for line in lines:
@@ -284,13 +272,7 @@ def section(lines: list[str], heading: str) -> list[str]:
     return out
 
 
-def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
-    """Observation section and handoff section — v2 plans only.
-
-    Observations are evidence stamped with the moment they were taken; the checklist
-    cites them with `→ O<n>`. They are append-only, so timestamps never go backwards,
-    and an observation that a later one overturns still stays exactly as written.
-    """
+def parse_observations(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
     obs_lines = section(lines, OBSERVATION_HEADING)
     last_ts = ""
     current: Observation | None = None
@@ -307,12 +289,12 @@ def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -
                     "BAD_FORMAT",
                     plan.name,
                     f"observation heading {line.strip()!r} is not "
-                    "`### O<n> · YYYY-MM-DD HH:MM:SS — 標題`",
+                    "`### O<n> · YYYY-MM-DD HH:MM:SS — Title`",
                 )
             )
             continue
         num, ts = int(m.group(1)), m.group(2)
-        if plan.version >= 3 and not OBS_OFFSET_RE.search(ts):
+        if not OBS_OFFSET_RE.search(ts):
             conflicts.append(
                 Conflict(
                     "BAD_FORMAT",
@@ -339,21 +321,18 @@ def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -
 
     if not plan.obs_ids:
         conflicts.append(
-            Conflict("BAD_FORMAT", plan.name, f"no observation under {OBSERVATION_HEADING!r}")
+            Conflict("BAD_FORMAT", plan.name, f"no observation found under {OBSERVATION_HEADING!r}")
         )
 
-    # `→ O<n>` in the checklist, and `- **推翻:** O<n>` inside the observations.
-    for line in section(lines, OPEN_ITEMS_HEADING):
-        plan.obs_refs.update(int(n) for n in OBS_REF_RE.findall(line))
-    current = None
     for line in obs_lines:
         if line.startswith("### ") and (m := OBS_HEADING_RE.match(line)):
             current = plan.observations.get(int(m.group(1)))
         elif om := OBS_RELATION_RE.match(line):
-            kind, hit = om.group(1), [int(n) for n in OBS_ID_RE.findall(om.group(2))]
+            rel_kind = om.group(1).lower()
+            hit = [int(n) for n in OBS_ID_RE.findall(om.group(2))]
             plan.obs_refs.update(hit)
             if current is not None:
-                current.relations.setdefault(kind, []).extend(hit)
+                current.relations.setdefault(rel_kind, []).extend(hit)
 
     for obs in plan.observations.values():
         for kind, targets in obs.relations.items():
@@ -361,40 +340,19 @@ def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -
                 if target := plan.observations.get(num):
                     target.inbound.setdefault(kind, []).append(obs.num)
 
-    for line in section(lines, HANDOFF_HEADING):
-        if not LIST_ITEM_RE.match(line):
-            continue
-        bt = BACKTICK_RE.search(line)
-        plan.handoffs.append(bt.group(1).strip().lstrip("./") if bt else "")
-        if not bt:
-            conflicts.append(
-                Conflict(
-                    "BROKEN_HANDOFF",
-                    plan.name,
-                    f"handoff {line.strip()!r} names no target plan — a handed-off item "
-                    "must say which plan took it",
-                )
-            )
-
 
 def _split_addrs(raw: str) -> list[str]:
     return [f"{a}#{b}" for a, b in ADDR_RE.findall(raw)]
 
 
 def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
-    """`## 待辦` — one `### <n> 標題` block per item.
-
-    An item carries its present (rewritable 正文) and its past (append-only 沿革) in
-    separate containers, so the current state is readable without replaying history.
-    """
-
     def bad(detail: str) -> None:
         conflicts.append(Conflict("BAD_ITEM_FORMAT", plan.name, detail))
 
     todo_lines = section(lines, TODO_HEADING)
     if not todo_lines:
         conflicts.append(
-            Conflict("BAD_FORMAT", plan.name, f"no item section under {TODO_HEADING!r}")
+            Conflict("BAD_FORMAT", plan.name, f"no task section under {TODO_HEADING!r}")
         )
         return
 
@@ -406,7 +364,7 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
         if line.startswith("### "):
             m = ITEM_HEADING_RE.match(line)
             if not m:
-                bad(f"item heading {line.strip()!r} is not `### <n> 標題`")
+                bad(f"item heading {line.strip()!r} is not `### <n> Title`")
                 item, in_history = None, False
                 continue
             num = int(m.group(1))
@@ -421,36 +379,38 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
         if item is None:
             continue
 
-        if line.strip() == HIST_MARKER:
+        trimmed = line.strip()
+        if trimmed == HIST_MARKER:
             in_history = True
             continue
 
         if in_history:
-            if not line.strip():
+            if not trimmed:
                 continue
             hm = HIST_RE.match(line)
             if not hm:
-                bad(f"{item.addr} 沿革 line {line.strip()[:40]!r} is not `- H<n> · YYYY-MM-DD <kind> —— …`")
+                bad(f"{item.addr} history line {trimmed[:40]!r} is not `- H<n> · YYYY-MM-DD <kind> —— …`")
                 continue
             hnum, kind, text = int(hm.group(1)), hm.group(3), hm.group(4)
             if kind not in HIST_KINDS:
                 bad(f"{item.addr} H{hnum} kind {kind!r} not one of {', '.join(HIST_KINDS)}")
-            if kind in ("提問", "回答"):
+            if kind in ("question", "answer"):
                 tag_m = ACTOR_TAG_RE.search(text)
                 if not tag_m:
-                    bad(f"{item.addr} H{hnum} {kind} 必須在結尾標明身分，例如 `（human）` 或 `（agent: <model>）`")
+                    bad(f"{item.addr} H{hnum} {kind} must end with actor tag, e.g. `(human: <name>)` or `(agent: <model>)`")
                 else:
                     actor = tag_m.group(1).strip()
-                    if actor.lower() in ("human", "使用者") or actor.lower().startswith("human:") or actor.startswith("使用者:"):
+                    low = actor.lower()
+                    if low in ("human", "user") or low.startswith(("human:", "user:")):
                         pass
-                    elif actor.lower().startswith("agent:"):
+                    elif low.startswith("agent:"):
                         model_part = actor.split(":", 1)[1].strip()
                         if not model_part:
-                            bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
-                    elif actor.lower() == "agent":
-                        bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
+                            bad(f"{item.addr} H{hnum} {kind} agent must specify model name, e.g. `(agent: gemini-3.7-flash)`")
+                    elif low == "agent":
+                        bad(f"{item.addr} H{hnum} {kind} agent must specify model name, e.g. `(agent: gemini-3.7-flash)`")
                     else:
-                        bad(f"{item.addr} H{hnum} {kind} 身分標記 {actor!r} 不符規範，須為 `（human）`、`（使用者）` 或 `（agent: <model>）`")
+                        bad(f"{item.addr} H{hnum} {kind} actor tag {actor!r} invalid, must be `(human: <name>)` or `(agent: <model>)`")
             if any(h.num == hnum for h in item.history):
                 bad(f"{item.addr} H{hnum} used twice")
             refs = [int(n) for n in OBS_REF_RE.findall(line)]
@@ -468,19 +428,17 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
             continue
 
         if fm := FIELD_RE.match(line):
-            key, value = fm.group(1).strip(), fm.group(2)
+            raw_key, value = fm.group(1).strip(), fm.group(2)
+            key = raw_key.lower()
             if key == "state":
-                item.state = value
+                item.state = value.strip()
             elif key == "needs":
                 item.needs.extend(_split_addrs(value))
-            elif key == "移交":
+            elif key == "handoff":
                 item.handoff.extend(_split_addrs(value))
-            elif key == "承接":
+            elif key == "claims":
                 item.claims.extend(_split_addrs(value))
             elif key == "basis":
-                # The whole field is a list of observations behind one arrow
-                # (`→ O51、O30、O15`), so every `O<n>` in it counts — unlike a 沿革
-                # line, where only the arrow-anchored one is the citation.
                 item.basis.extend(int(n) for n in OBS_ID_RE.findall(value))
                 plan.obs_refs.update(item.basis)
             continue
@@ -493,15 +451,15 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
             bad(f"{it.addr} has no `- **state:**` line")
         elif it.state not in ITEM_STATES:
             bad(f"{it.addr} state {it.state!r} not one of {', '.join(ITEM_STATES)}")
-        if it.state == "移交" and not it.handoff:
-            bad(f"{it.addr} is 移交 but names no target — write `- **移交:** <seq>#<n>`")
-        if it.handoff and it.state != "移交":
-            bad(f"{it.addr} names a 移交 target but its state is {it.state!r}")
+        if it.state == "handed-off" and not it.handoff:
+            bad(f"{it.addr} is handed-off but names no target — write `- **handoff:** <seq>#<n>`")
+        if it.handoff and it.state != "handed-off":
+            bad(f"{it.addr} names a handoff target but its state is {it.state!r}")
 
     plan.total = len(plan.items)
     plan.open_items = sum(1 for it in plan.items if it.is_open)
     if plan.total == 0:
-        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"no item under {TODO_HEADING!r}"))
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"no task items found under {TODO_HEADING!r}"))
 
 
 def parse_plan(path: Path, conflicts: list[Conflict]) -> Plan | None:
@@ -519,7 +477,7 @@ def parse_plan(path: Path, conflicts: list[Conflict]) -> Plan | None:
         if plan.title is None and line.startswith("# "):
             plan.title = line[2:].strip()
         elif plan.status is None and (sm := STATUS_RE.match(line)):
-            plan.status = sm.group(1)
+            plan.status = sm.group(1).lower()
         elif not plan.prev_raw and (pm := PREV_RE.match(line)):
             plan.prev_raw = pm.group(1)
             if bt := BACKTICK_RE.search(plan.prev_raw):
@@ -552,35 +510,12 @@ def parse_plan(path: Path, conflicts: list[Conflict]) -> Plan | None:
     if not plan.prev_raw:
         conflicts.append(Conflict("BAD_FORMAT", plan.name, "no `- **prev:**` line"))
 
-    if plan.skill_raw and plan.version == DEFAULT_VERSION and "v1" not in plan.skill_raw:
-        conflicts.append(
-            Conflict(
-                "BAD_FORMAT",
-                plan.name,
-                f"`- **skill:** {plan.skill_raw}` carries no `v<n>` version",
-            )
-        )
+    plan.summary = section(lines, SUMMARY_HEADING)
+    plan.addr_refs.update(_split_addrs("\n".join(lines)))
 
-    if plan.version >= 3:
-        plan.summary = section(lines, SUMMARY_HEADING)
-        plan.addr_refs.update(_split_addrs("\n".join(lines)))
-    else:
-        items = [CHECKBOX_RE.match(line) for line in section(lines, OPEN_ITEMS_HEADING)]
-        boxes = [m.group(1) for m in items if m]
-        plan.total = len(boxes)
-        plan.open_items = sum(1 for b in boxes if b == " ")
-        if plan.total == 0:
-            conflicts.append(
-                Conflict("BAD_FORMAT", plan.name, f"no checklist under {OPEN_ITEMS_HEADING!r}")
-            )
+    parse_observations(plan, lines, conflicts)
+    parse_v3_items(plan, lines, conflicts)
 
-    if plan.version >= 2:
-        parse_v2_sections(plan, lines, conflicts)
-    if plan.version >= 3:
-        parse_v3_items(plan, lines, conflicts)
-
-    # After every section has contributed its references, so a v3 `basis` arrow is
-    # checked by the same rule as a v2 checklist arrow.
     for num in sorted(plan.obs_refs - plan.obs_ids):
         conflicts.append(
             Conflict("BROKEN_OBS_REF", plan.name, f"O{num} is referenced but never defined")
@@ -602,8 +537,8 @@ def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
                 Conflict(
                     "DONE_WITH_OPEN_ITEMS",
                     p.name,
-                    f"status is done but {p.open_items}/{p.total} checklist item(s) "
-                    "are still unchecked — finish them, or move the status back",
+                    f"status is done but {p.open_items}/{p.total} task item(s) "
+                    "are still open — finish them, or move the status back",
                 )
             )
         if p.status in CLOSED and not p.has_reason:
@@ -611,7 +546,7 @@ def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
                 Conflict(
                     "MISSING_REASON",
                     p.name,
-                    f"status is {p.status} but there is no non-empty {REASON_HEADING!r} section",
+                    f"status is {p.status} but there is no non-empty abandonment reason section",
                 )
             )
         if p.status == "superseded" and not successors.get(p.name):
@@ -631,7 +566,7 @@ def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
             conflicts.append(Conflict("BROKEN_PREV", p.name, "prev points at itself"))
         for target in p.handoffs:
             if not target:
-                continue  # already reported at parse time
+                continue
             if target == p.name:
                 conflicts.append(
                     Conflict("BROKEN_HANDOFF", p.name, "an item is handed off to this same plan")
@@ -645,34 +580,24 @@ def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
 
 
 def item_index(plans: list[Plan]) -> dict[str, Item]:
-    """Every addressable item in the corpus, keyed by `<seq>#<n>`."""
-    return {it.addr: it for p in plans if p.version >= 3 for it in p.items}
+    return {it.addr: it for p in plans for it in p.items}
 
 
 def blockers(item: Item, index: dict[str, Item]) -> list[str]:
-    """Prerequisites of `item` that have not reached a terminal state.
-
-    Blockedness is computed, never stored — a stored copy would go stale the moment a
-    prerequisite lands. `STARVED` and `head.md` both read it from here, so they can
-    never disagree about who can start.
-    """
     return [a for a in item.needs if (t := index.get(a)) and t.is_open]
 
 
 def startable(item: Item, index: dict[str, Item]) -> bool:
-    """The agent can act on this item without asking anyone."""
-    return item.is_open and item.state != "待決斷" and not blockers(item, index)
+    return item.is_open and item.state != "pending" and not blockers(item, index)
 
 
 def display_state(item: Item, index: dict[str, Item]) -> str:
-    """What to show a reader: the stored state, unless something is in the way."""
     if item.is_open and blockers(item, index):
-        return "阻塞"
+        return "blocked"
     return item.state or "?"
 
 
 def _cycles(edges: dict[str, list[str]]) -> list[list[str]]:
-    """Every cycle root reachable in the `needs` graph, as a path for the message."""
     WHITE, GREY, BLACK = 0, 1, 2
     colour: dict[str, int] = {}
     found: list[list[str]] = []
@@ -696,13 +621,11 @@ def _cycles(edges: dict[str, list[str]]) -> list[list[str]]:
 
 
 def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
-    """Cross-item and cross-plan rules. Only items in v3 plans take part."""
-    v3 = [p for p in plans if p.version >= 3]
-    if not v3:
+    if not plans:
         return
 
     by_addr = item_index(plans)
-    plan_of: dict[str, Plan] = {it.addr: p for p in v3 for it in p.items}
+    plan_of: dict[str, Plan] = {it.addr: p for p in plans for it in p.items}
     known_seqs = {p.seq for p in plans}
 
     def resolve(src: Plan, addr: str, what: str) -> Item | None:
@@ -712,30 +635,24 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
         why = (
             f"plan {seq} does not exist"
             if seq not in known_seqs
-            else f"plan {seq} is not v3, so it has no addressable items"
-            if not any(p.seq == seq for p in v3)
             else "no such item in that plan"
         )
         conflicts.append(Conflict("DANGLING_REF", src.name, f"{what} names {addr} — {why}"))
         return None
 
-    for p in v3:
+    for p in plans:
         for it in p.items:
             for addr in it.needs:
                 resolve(p, addr, f"{it.addr} needs")
             for addr in it.handoff:
-                resolve(p, addr, f"{it.addr} 移交")
+                resolve(p, addr, f"{it.addr} handoff")
             for addr in it.claims:
-                resolve(p, addr, f"{it.addr} 承接")
-        # Prose references get the same treatment — they are the ones nothing could
-        # check before, and they are how one plan silently invalidates another.
+                resolve(p, addr, f"{it.addr} claims")
         owned = {a for it in p.items for a in (*it.needs, *it.handoff, *it.claims)}
         for addr in sorted(p.addr_refs - owned - {it.addr for it in p.items}):
             resolve(p, addr, "a reference in the text")
 
-    # Handoff is only real when both ends say so; one-sided handoff is how an
-    # obligation evaporates between two files.
-    for p in v3:
+    for p in plans:
         for it in p.items:
             for addr in it.handoff:
                 if (target := by_addr.get(addr)) and it.addr not in target.claims:
@@ -744,7 +661,7 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
                             "UNCLAIMED_HANDOFF",
                             p.name,
                             f"{it.addr} hands off to {addr}, but {addr} carries no "
-                            f"`- **承接:** {it.addr}` — nothing is holding that obligation",
+                            f"`- **claims:** {it.addr}` — nothing is holding that obligation",
                         )
                     )
             for addr in it.claims:
@@ -758,43 +675,35 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
                         )
                     )
 
-    edges = {it.addr: [a for a in it.needs if a in by_addr] for p in v3 for it in p.items}
+    edges = {it.addr: [a for a in it.needs if a in by_addr] for p in plans for it in p.items}
     for cycle in _cycles(edges):
         conflicts.append(
             Conflict("CYCLIC_NEEDS", plan_of[cycle[0]].name, " → ".join(cycle))
         )
 
-    # An item's `basis` is its *current* justification. If an observation there has been
-    # 更正'd — declared factually wrong, not merely superseded — the item is arguing from
-    # a number we have disavowed, which is `0007` F8's "a false machine fact is worse than
-    # no check: it argues the right verdict into the wrong box".
-    #
-    # 沿革 is deliberately not checked: a past entry citing an observation that was later
-    # corrected is a true record of what we believed then, not a mistake to fix.
-    for p in v3:
+    for p in plans:
         for it in p.items:
             for num in it.basis:
                 obs = p.observations.get(num)
                 if obs and obs.corrected_by:
-                    by = "、".join(f"O{n}" for n in obs.corrected_by)
+                    by = ", ".join(f"O{n}" for n in obs.corrected_by)
                     conflicts.append(
                         Conflict(
                             "STALE_BASIS",
                             p.name,
-                            f"{it.addr} still rests on O{num}, whose fact {by} 更正 — "
+                            f"{it.addr} still rests on O{num}, whose fact was corrected by {by} — "
                             "re-point the basis, and re-examine what was already built on it",
                         )
                     )
 
-    for p in v3:
+    for p in plans:
         if p.summary_lines > SUMMARY_MAX_LINES:
             conflicts.append(
                 Conflict(
                     "HEADER_TOO_LONG",
                     p.name,
-                    f"{SUMMARY_HEADING} is {p.summary_lines} lines (cap {SUMMARY_MAX_LINES}) — "
-                    "it is the only section a per-item reader is shown, not a summary "
-                    "of the plan",
+                    f"summary is {p.summary_lines} lines (cap {SUMMARY_MAX_LINES}) — "
+                    "it is the only section a per-item reader is shown, not a full plan summary",
                     severity="warning",
                 )
             )
@@ -805,7 +714,7 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
                         "OVERGROWN",
                         p.name,
                         f"{it.addr} trips {len(hits)} size signals ({'; '.join(hits)}) — "
-                        "propose a 拆格 to the user",
+                        "propose splitting the item to the user",
                         severity="warning",
                     )
                 )
@@ -818,7 +727,7 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
                 Conflict(
                     "STARVED",
                     p.name,
-                    f"all {len(open_items)} open item(s) are 待決斷 or blocked by one — "
+                    f"all {len(open_items)} open item(s) are pending or blocked — "
                     "nobody can proceed until the user decides",
                     severity="warning",
                 )
@@ -826,7 +735,6 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
 
 
 def collect(directory: Path | None = None) -> Report:
-    """Parse and check every plan in `directory` (defaults to this one)."""
     root = directory or HERE
     report = Report()
     for path in sorted(root.glob("*.md")):
@@ -849,7 +757,6 @@ def _block(conflicts: list[Conflict], noun: str) -> list[str]:
 
 
 def format_conflicts(conflicts: list[Conflict]) -> str:
-    """Errors first, then warnings — warnings never change the exit code."""
     errors = [c for c in conflicts if c.severity != "warning"]
     warnings = [c for c in conflicts if c.severity == "warning"]
     out: list[str] = []

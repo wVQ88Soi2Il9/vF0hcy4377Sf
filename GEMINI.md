@@ -16,8 +16,8 @@ For this project in particular:
 - keep task state current;
 - preserve meaningful observations and rationale;
 - record implementation results with appropriate evidence;
-- after implementing an item itself, the Agent must not mark that item as `完成` or `否決`;
-- `完成` and `否決` require confirmation independent of the Agent's own implementation judgment.
+- after implementing an item itself, the Agent must not mark that item as `done` or `rejected`;
+- `done` and `rejected` require confirmation independent of the Agent's own implementation judgment.
 
 ## 2. Plan History
 
@@ -32,8 +32,8 @@ During implementation:
 - keep task state current;
 - preserve meaningful observations and rationale;
 - record implementation results with appropriate evidence;
-- after implementation, set the item to `等待確認`;
-- Human decides `完成` or `否決`.
+- after implementation, set the item to `pending-review`;
+- Human decides `done` or `rejected`.
 
 After modifying Plan files, run:
 
