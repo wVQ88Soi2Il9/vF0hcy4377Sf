@@ -3,12 +3,10 @@ import type { space, item_definition, recipe, device_constructor } from './defin
 
 export interface reversible_operation extends namespaced_id 
 {
-    execute(sp: space): void;
-    inverse(sp: space): void;
+    execute(sp: space,...args: any[]): void;
+    inverse(sp: space,...args: any[]): void;
     other_info?: Record<string, unknown>;
 }
-
-export type reversible_operation_factory = (...args: any[]) => reversible_operation;
 
 export interface cmd extends namespaced_id
 {
@@ -22,7 +20,7 @@ export interface pack_module
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
-    operations?:   Record<string, reversible_operation_factory>;
+    operations?:   Record<string, reversible_operation>;
     commands?:     Record<string, cmd>;
     hooks?:        Map<string, hook_callback[]>;
     global_init?:  (...args: any[])=>void;
