@@ -1,7 +1,7 @@
 /**
  * Splitter Component & Controller
  *
- * 建立可拖曳調整相鄰容器尺寸的分割線元件。
+ * Draggable splitter component to resize adjacent containers.
  */
 
 export interface splitter_options

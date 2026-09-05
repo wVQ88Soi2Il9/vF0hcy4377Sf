@@ -1,13 +1,3 @@
-/**
- * src/packs/vanilla_alpha/operations.ts — Vanilla 基礎空間可逆操作工廠
- *
- * 提供針對 space 裝置集合的 4 個標準原子可逆操作：
- * 1. create_device_operation
- * 2. delete_device_operation
- * 3. move_device_operation
- * 4. select_recipe_operation
- */
-
 import * as core from '@/core';
 
 export interface create_device_op extends core.rev_op
@@ -21,7 +11,7 @@ export interface delete_device_op extends core.rev_op
 }
 
 /**
- * 建立裝置操作：首度執行分配新裝置並佔據空間；Redo 重放時精準還原同一實例與 UID。
+ * Create device operation: allocates and inserts a device; on redo restores the identical instance and UID.
  */
 export function create_device_operation
 (
@@ -86,7 +76,7 @@ export function create_device_operation
 }
 
 /**
- * 刪除裝置操作：從空間移除裝置並快取其實例；Undo 撤銷時完整還原其資料。
+ * Delete device operation: removes device from space and caches it; on undo restores it completely.
  */
 export function delete_device_operation(device_uid: core.uid): delete_device_op
 {
@@ -136,7 +126,7 @@ export function delete_device_operation(device_uid: core.uid): delete_device_op
 }
 
 /**
- * 移動裝置操作：改變裝置座標並記憶原座標；Undo 撤銷時移回原位。
+ * Move device operation: updates device position and remembers previous position; on undo restores it.
  */
 export function move_device_operation(device_uid: core.uid, new_position: core.vector): core.rev_op
 {
@@ -182,7 +172,7 @@ export function move_device_operation(device_uid: core.uid, new_position: core.v
 }
 
 /**
- * 選定配方操作：設定裝置選定配方並記憶舊配方；Undo 撤銷時還原舊配方。
+ * Select recipe operation: sets selected recipe and remembers previous recipe; on undo restores it.
  */
 export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: core.namespaced_id): core.rev_op
 {

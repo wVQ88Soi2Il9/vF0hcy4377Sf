@@ -1,6 +1,3 @@
-/**
- * src/packs/basic_renderer/fallback.ts — 裝置預設降級渲染器
- */
 
 import * as core from '@/core';
 import type { render_options } from './types';
@@ -19,7 +16,7 @@ export function render_fallback_device(dev: core.device, options?: render_option
     container.style.top = `${dev.position[1] * unit_px}px`;
     container.style.pointerEvents = 'auto';
 
-    // 1. 繪製單元格 (Cells)
+    // 1. Cells
     const shapes = dev.get_shape();
     for (const cell of shapes)
     {
@@ -37,7 +34,7 @@ export function render_fallback_device(dev: core.device, options?: render_option
         container.appendChild(cell_elem);
     }
 
-    // 2. 繪製裝置標籤 (Label)
+    // 2. Labels
     if (show_labels && shapes.length > 0)
     {
         const label_elem = document.createElement('div');
@@ -61,7 +58,7 @@ export function render_fallback_device(dev: core.device, options?: render_option
         container.appendChild(label_elem);
     }
 
-    // 3. 繪製端口 (Ports)
+    // 3. Ports
     if (show_ports)
     {
         const ports = dev.get_port();

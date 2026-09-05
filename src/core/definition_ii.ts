@@ -44,10 +44,10 @@ export abstract class device
         this.other_info = other_info;
     }
 
-    /** 取得局部形狀格點 (Local Coordinates) */
+    /** Local shape cells (local coordinates) */
     public abstract get_shape(): vector[];
 
-    /** 取得局部連接埠清單 (Local Ports) */
+    /** Local ports */
     public abstract get_port(): port[];
 }
 
@@ -62,9 +62,9 @@ export type device_constructor = new
 // ── Recipes ──────────────────────────────────────────────────────────────────
 
 /**
- * 單一 port 上的輸出物品堆疊。
- * recipe 只描述輸出——input 是 context 的一部分（device 目前收到什麼），
- * 不由 recipe 宣告或計算，即便 device 被迫持有 input 庫存也一樣。
+ * Output item stack on a single port.
+ * Recipes only specify outputs; inputs are part of the context (what the device currently receives),
+ * not declared or computed by recipes, even if the device holds input inventory.
  */
 export interface recipe_output
 {
@@ -73,7 +73,7 @@ export interface recipe_output
 }
 
 /**
- * // TODO: unknown — 錯誤訊息格式與 context/device_uid 求值機制待決策
+ * // TODO: Error message format and context/device_uid evaluation mechanism TBD
  */
 export interface recipe extends namespaced_id
 {

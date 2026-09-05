@@ -32,7 +32,7 @@ export function global_init(registry: core.pack_registry): void
 
 export function world_init(target_world: world.pure_world): void
 {
-    // 將 device_change 綁定至所有裝置異動事件
+    // Forward device_change on all device mutations
     const relay_device_change = (...args: any[]) =>
     {
         target_world.trigger({ namespace: 'vanilla_alpha', id: 'device_change' }, ...args);
@@ -42,7 +42,7 @@ export function world_init(target_world: world.pure_world): void
     target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'move_device' }, relay_device_change);
     target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'select_recipe' }, relay_device_change);
 
-    // 將 history_change 綁定至所有歷史異動事件
+    // Forward history_change on all history mutations
     const relay_history_change = (...args: any[]) =>
     {
         target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_change' }, ...args);

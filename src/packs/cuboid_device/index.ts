@@ -1,13 +1,7 @@
-/**
- * src/packs/cuboid_device/index.ts — cuboid_device Pack
- *
- * 封裝長方體設備抽象基底類別與 2× 網格單元格跨度轉換演算法。
- */
-
 import * as core from '@/core';
 
 /**
- * 將長方體跨度向量轉換為 2× 網格單元格座標集合。
+ * Converts a cuboid span vector into 2x grid cell local coordinates.
  */
 export function cuboid_to_shape(device_size: core.vector): core.vector[]
 {
@@ -35,13 +29,13 @@ export function cuboid_to_shape(device_size: core.vector): core.vector[]
 }
 
 /**
- * 長方體設備抽象基底類別
- * 下游設備指定 device_size: [delta_x, delta_y, delta_z, ...]，
- * 即自動依據維度產生對應的 2× 網格單元格 shape 座標集合。
+ * Cuboid device base class.
+ * Downstream devices specify device_size: [delta_x, delta_y, delta_z, ...]
+ * which automatically generates 2x grid cell shape coordinates.
  */
 export abstract class base_cuboid_device extends core.device
 {
-    /** 各維度長度跨度 [delta_x, delta_y, delta_z, ...] */
+    /** Span per dimension [delta_x, delta_y, delta_z, ...] */
     public abstract readonly device_size: core.vector;
 
     constructor
@@ -55,9 +49,6 @@ export abstract class base_cuboid_device extends core.device
         super(device_uid, definition_id, position, other_info);
     }
 
-    /**
-     * 取得長方體所有單元格的局部座標列表
-     */
     public get_shape(): core.vector[]
     {
         return cuboid_to_shape(this.device_size);

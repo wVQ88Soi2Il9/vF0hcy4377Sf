@@ -1,6 +1,3 @@
-/**
- * src/packs/vanilla_beta/index.ts — vanilla_beta Pack 公開進入點
- */
 
 import * as core from '@/core';
 

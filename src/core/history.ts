@@ -1,16 +1,16 @@
 /**
- * src/core/history.ts — 分支歷史樹純演算法與操作
+ * src/core/history.ts — Non-linear undo tree algorithms and operations
  *
- * 遵循極致鏡像對稱與無歧義路徑原則：
- * - 向上時間流：undo / jump_to_prev_fork / jump_to_root / jump_to_ancestor
- * - 向下時間流：redo / jump_to_next_fork / jump_to_descendant
- * - 跨分支穿越：jump_to_node（由 LCA + jump_to_ancestor + jump_to_descendant 組裝）
+ * Follows mirror symmetry and unambiguous path navigation:
+ * - Upward time flow: undo / jump_to_prev_fork / jump_to_root / jump_to_ancestor
+ * - Downward time flow: redo / jump_to_next_fork / jump_to_descendant
+ * - Cross-branch navigation: jump_to_node (composed via LCA + jump_to_ancestor + jump_to_descendant)
  */
 import type { uid } from './definition_i';
 import type { space } from './definition_ii';
 import { rev_op } from './definition_iii';
 
-// ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
+// ── History Tree Data Structures ───────────────────────────────────────────
 
 export interface node
 {
@@ -28,7 +28,7 @@ export interface tree
     next_history_uid:    uid;
 }
 
-// ── 1. Elementary Operators (基礎原子操作) ───────────────────────────────────
+// ── 1. Elementary Operators ────────────────────────────────────────────────
 
 export function create_tree(): tree
 {
@@ -83,8 +83,9 @@ export function record_operation
 }
 
 /**
- * 從歷史樹中刪除一個末端葉節點（Leaf Node）。
- * 嚴格限制：僅能刪除無子節點（children_history_uids.length === 0）的葉節點，避免破壞因果歷史連續性。
+ * Deletes a leaf node from the history tree.
+ * Strict constraint: only nodes without children (children_history_uids.length === 0)
+ * can be deleted to maintain causal continuity.
  */
 export function delete_node(tree: tree, target_uid: uid): boolean
 {
@@ -104,7 +105,7 @@ export function delete_node(tree: tree, target_uid: uid): boolean
     return true;
 }
 
-// ── 2. Upward / Backward Operators (逆向向上時間流) ──────────────────────────
+// ── 2. Upward / Backward Operators ─────────────────────────────────────────
 
 export function jump_prev_node(tree: tree, sp: space): boolean
 {
@@ -157,7 +158,7 @@ export function find_prev_fork_node(tree: tree, start: uid = tree.current_histor
 }
 
 /**
- * 沿直系祖先路徑向上跳轉（target 必須為 current 之直系祖先節點）。
+ * Jumps upward along direct ancestor line (target must be an ancestor of current node).
  */
 export function jump_to_ancestor(tree: tree, sp: space, target: uid): void
 {
@@ -184,7 +185,7 @@ export function jump_to_root(tree: tree, sp: space): void
     jump_to_ancestor(tree, sp, 0);
 }
 
-// ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
+// ── 3. Downward / Forward Operators ────────────────────────────────────────
 
 export function jump_next_node(tree: tree, sp: space, target_child?: uid): boolean
 {
@@ -261,7 +262,7 @@ export function find_next_fork_node(tree: tree, start: uid = tree.current_histor
 }
 
 /**
- * 沿直系子孫路徑向下跳轉（當 target 為 current 之子孫節點時）。
+ * Jumps downward along direct descendant line (target must be a descendant of current node).
  */
 export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
 {
@@ -286,7 +287,7 @@ export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
 }
 
 /**
- * 沿當前無歧義單一路徑前進至最深處（葉節點或下一個分岔點）。
+ * Advances along current unambiguous path to the furthest node (leaf or next fork).
  */
 export function jump_to_next_fork(tree: tree, sp: space): void
 {
@@ -295,7 +296,7 @@ export function jump_to_next_fork(tree: tree, sp: space): void
     }
 }
 
-// ── 4. Core LCA & Target Jump (核心中樞：跨分支任意穿越) ─────────────────────
+// ── 4. Core LCA & Target Jump ──────────────────────────────────────────────
 
 export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): uid
 {
@@ -328,8 +329,9 @@ export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): ui
         curr = tree.nodes.get(curr)!.parent_history_uid!;
     }
 }
+
 /**
- * 跨分支任意節點跳轉：由 LCA 拆解為「先回到 LCA，再跳至目標子孫」。
+ * Cross-branch jump: decomposed via LCA into "jump to LCA, then jump to target descendant".
  */
 export function jump_to_node(tree: tree, sp: space, target: uid): void
 {

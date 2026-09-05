@@ -1,7 +1,3 @@
-/**
- * src/packs/basic_renderer/renderer.ts — 投影渲染主要入口
- */
-
 import type { projection, render_options } from './types';
 import { render_fallback_device } from './fallback';
 
@@ -23,7 +19,7 @@ export function render(proj: projection, options?: render_options): HTMLElement
     root.style.overflow = 'hidden';
     root.style.boxSizing = 'border-box';
 
-    // 1. 繪製背景格線 (Grid)
+    // 1. Grid
     if (show_grid)
     {
         const grid_svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -61,7 +57,7 @@ export function render(proj: projection, options?: render_options): HTMLElement
         root.appendChild(grid_svg);
     }
 
-    // 2. 繪製裝置層 (Devices Layer)
+    // 2. Devices Layer
     const devices_layer = document.createElement('div');
     devices_layer.className = 'basic_renderer_devices';
     devices_layer.style.position = 'absolute';
