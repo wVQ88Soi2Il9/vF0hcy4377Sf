@@ -4,10 +4,12 @@
 
 ## 目前使用中
 
-[0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace](./0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace.md) — `in-progress`，待辦待決剩 3/3
+[0060_202609060315_vanilla-alpha-merge-init-to-index](./0060_202609060315_vanilla-alpha-merge-init-to-index.md) — `in-progress`，待辦待決剩 2/2
 
 ## 現在開著的（逐格）
 
+- `0060#1` · **等待確認** — 整併初始化邏輯至 index.ts 並刪除 init.ts (Merge init Logic into index.ts and Remove init.ts)
+- `0060#2` · **等待確認** — 驗證測試套件 (Verification with Test Suite)
 - `0059#1` · **等待確認** — 標準化 operations 的 other_info 命名空間為 vanilla_alpha (Namespace other_info to vanilla_alpha)
 - `0059#2` · **等待確認** — 在 delete/move/select_recipe 加入 Fail-Fast 檢查 (Fail-Fast Verification on Missing Devices)
 - `0059#3` · **等待確認** — 補充 operations Fail-Fast 與 other_info 之單元測試 (Unit Tests for Fail-Fast & other_info)
@@ -47,11 +49,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0059#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0060#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0060** [0060_202609060315_vanilla-alpha-merge-init-to-index](./0060_202609060315_vanilla-alpha-merge-init-to-index.md) — `in-progress`，待辦待決剩 2/2
 - **0059** [0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace](./0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace.md) — `in-progress`，待辦待決剩 3/3
 - **0058** [0058_202609060241_core-reversible-operation-refactor](./0058_202609060241_core-reversible-operation-refactor.md) — `in-progress`，待辦待決剩 3/3
 - **0057** [0057_202609050412_cli-help-and-describe](./0057_202609050412_cli-help-and-describe.md) — `in-progress`，待辦待決剩 3/3
