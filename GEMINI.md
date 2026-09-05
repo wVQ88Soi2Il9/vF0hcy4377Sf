@@ -1,81 +1,34 @@
----
-description: Project architecture and development conventions
-trigger: always_on
----
+# Project Guidelines
 
-# Project Guidelines & Architecture
-
-## 1. Collaboration Boundaries
+## 1. Collaboration
 
 Follow `coding_agents.md`.
 
-For this project in particular:
+- Architecture-critical decisions belong to the Human.
+- Ask rather than infer unresolved architectural intent.
+- Distinguish observed facts from inference, recommendations, and Human decisions.
+- Preserve uncertainty when the available evidence does not determine an answer.
+- Do not force observations into a uniform schema; structure follows evidence.
+- Do not expand implementation scope merely because related issues are discovered.
 
-- Architecture-critical decisions belong to the user.
-- Ask rather than infer unresolved intent from surrounding repository code.
-- keep task state current;
-- preserve meaningful observations and rationale;
-- record implementation results with appropriate evidence;
-- after implementing an item itself, the Agent must not mark that item as `done` or `rejected`;
-- `done` and `rejected` require confirmation independent of the Agent's own implementation judgment;
-- do not force observations into a uniform schema. Structure must follow the evidence, not the other way around. Include a category, inference, uncertainty, alternative, or recommendation only when it actually applies. Do not manufacture fields or symmetry merely for consistency of presentation.
+## 2. Plan & QA
 
-## 2. Plan History
+`docs/history/` records non-trivial implementation work and its rationale.
 
-`docs/history/` is the primary Human-Agent task alignment and implementation history.
-
-Except for trivial debugging, record feature development, refactors, new Packs, and API/UI changes.
-
-The Agent maintains relevant Plan records autonomously.
-
-During implementation:
-
-- keep task state current;
-- preserve meaningful observations and rationale;
-- record implementation results with appropriate evidence;
-- after implementation, set the item to `pending-review`;
-- Human decides `done` or `rejected`.
-
-After modifying Plan files, run:
+- Keep relevant records current during implementation.
+- After implementing an item, mark it `pending-review`.
+- The implementing Agent must not mark its own work `done` or `rejected`; Human confirmation is required.
+- After modifying Plan files, run:
 
 ```text
 python docs/history/update-head.py
 ```
 
-Plan History is a record of work and decisions. Its existence does not justify expanding implementation scope.
+`docs/QA/` records architectural discussions, decisions, unresolved questions, rejected alternatives when relevant, and rationale needed to reconstruct intent.
 
-## 3. QA Records
+Recording information in Plan or QA does not make it an implementation requirement.
 
-`docs/QA/` preserves architectural discussions, technical questions, requirement clarification, alternatives, and decision rationale.
-
-Prefer preserving useful information over discarding it.
-
-Record:
-
-- questions and answers;
-- settled decisions;
-- unresolved questions;
-- rejected alternatives when the reason may matter later;
-- contradictions discovered between specification and implementation;
-- rationale needed to reconstruct architectural intent.
-
-Clearly distinguish observations, assumptions, recommendations, unresolved questions, and Human decisions.
-
-QA may be detailed. Documentation volume is not itself a problem.
-
-Recording an idea or alternative does not make it an implementation requirement.
-
-Naming:
-
-```text
-docs/QA/<number>-<yymmddhhmm>_<topic>.md
-```
-
-Include Human/Agent identity according to the established QA convention.
-
-When the user requests an architectural evaluation with genuinely competing alternatives, present meaningful reasons for and against them. Do not manufacture artificial symmetry when one option is already determined by an invariant or settled requirement.
-
-## 4. Code Conventions
+## 3. Code Conventions
 
 - Allman braces.
 - Lowercase `snake_case` for variables, functions, types, files, and JSON keys.
@@ -83,9 +36,7 @@ When the user requests an architectural evaluation with genuinely competing alte
 - Never use implicit `?? 0` dimensional padding.
 - `space.uid` starts from `1`.
 
-## 5. Architecture
-
-### 5.1 Dependency and Ownership
+## 4. Architecture
 
 Dependency direction:
 
@@ -93,68 +44,17 @@ Dependency direction:
 packs → core
 ```
 
-Runtime world ownership resides in `src/world.ts`.
+`src/core/` contains contracts and pure algorithms. It contains no Pack business logic and no global live runtime state.
 
-### Core — `src/core/`
+`src/world.ts` owns runtime state. Each `pure_world` independently owns its space, history, registry, and Hook callbacks.
 
-Core contains contracts and pure algorithms:
-
-- vectors, UIDs, namespaced IDs;
-- Hook slot types;
-- `device` and `space`;
-- item and recipe contracts;
-- `reversible_operation`;
-- `pack_module`;
-- `pack_registry`;
-- history / undo-tree algorithms.
-
-Core contains:
-
-- no business logic;
-- no global live runtime state.
-
-Public entrypoint:
-
-```ts
-@/core
-```
-
-### World — `src/world.ts`
-
-`pure_world` owns runtime state:
-
-- `space: core.space`;
-- `history: core.tree`;
-- `registry: core.pack_registry`;
-- `current_hook: core.hook_list`.
-
-World instances have independent runtime state and Hook callbacks.
-
-`pure_world` provides world-level Hook injection and triggering.
+`src/packs/` contains concrete behavior and data.
 
 No singleton or global runtime store.
 
-### Packs — `src/packs/`
+Space mutations are represented by `reversible_operation`. History remains independent of Hooks and Pack business logic.
 
-Packs contain concrete:
-
-- game rules;
-- rendering;
-- UI;
-- camera;
-- CLI;
-- data.
-
-Each Pack exposes its public API through `index.ts`.
-
-Responsibilities:
-
-- `cli`: text parsing and Core Registry command dispatch;
-- `basic_ui`: layout, panels, and UI state rendering;
-- `camera`: camera state, viewport control, projection, and camera CLI;
-- `basic_renderer`: 2D projection and device/port rendering.
-
-## 6. Module Boundaries & Imports
+## 5. Module Boundaries
 
 Cross-module imports use only the target module's public `index.ts`.
 
@@ -170,111 +70,36 @@ Do not deep-import another module's internal files.
 
 Within the same Pack, named imports are allowed.
 
-Pack `index.ts` aggregates internal exports directly:
+## 6. Hooks & Pack Lifecycle
 
-```ts
-export * from './...';
-```
+Hook definitions are global static slots. Hook callbacks belong to individual world instances.
 
-Do not introduce redundant wrapper namespace objects.
-
-## 7. Hooks
-
-Hook definitions are global static slots declared by Packs during `global_init`.
-
-Hook callbacks belong to individual world instances.
-
-Callbacks are injected during `world_init` or runtime through:
-
-```ts
-target_world.inject_hook(...);
-```
-
-Hooks are triggered through:
-
-```ts
-target_world.trigger(...);
-```
-
-External code must not mutate `current_hook` directly.
-
-## 8. Pack Lifecycle
-
-Each Pack exposes:
+Packs expose:
 
 ```ts
 global_init(registry: core.pack_registry): void;
 world_init(target_world?: world.pure_world): void;
 ```
 
-`global_init` registers static Pack declarations and `world_init`.
+`global_init` registers static declarations. `world_init` initializes world-specific state or callbacks.
 
-`world_init` initializes world-specific state or callbacks.
+External code must not mutate a world's Hook list directly.
 
-Packs without world-specific behavior retain an empty `world_init`.
+## 7. Domain Invariants
 
-## 9. Domain Rules
+- Device anchors contain only even coordinates.
+- A valid face port has exactly one even coordinate and all remaining coordinates odd.
+- Use project position-validation utilities rather than implicit coordinate repair.
+- Inheritance represents **is-a** relationships; capability interfaces represent independent **can-do** properties.
 
-### 9.1 2× Grid
-
-Device anchors contain only even coordinates.
-
-A cell anchored at `(x, y, z, ...)` occupies the corresponding length-2 interval on each axis.
-
-A valid face port has exactly one even coordinate and all remaining coordinates odd.
-
-Use the project's position validation utilities rather than implicit coordinate repair.
-
-### 9.2 Object Model
-
-Vertical inheritance represents **is-a** relationships:
-
-```text
-device
-└── base_device
-    └── assembler
-```
-
-Capability interfaces represent independent **can-do** properties such as drawing or rotation.
-
-Device-specific drawing behavior remains on the device capability; renderers invoke it polymorphically.
-
-## 10. History
-
-Space mutations are represented by `reversible_operation`.
-
-History is a non-linear undo tree.
-
-Undo followed by a new operation creates a new branch.
-
-`jump_to_node` uses the LCA path to transition between history nodes.
-
-History remains independent of Hooks and Pack business logic.
-
-## 11. CLI
+## 8. CLI
 
 CLI uses space-separated positional arguments.
 
-Example:
+Do not infer additional CLI syntax or argument semantics from examples alone.
 
-```text
-create_device conveyor 4 4 0
-```
+## 9. Tooling
 
-Camera slice arguments use:
-
-```text
-d<n>=<val>
-```
-
-Aliases belong to individual Packs. Core/history navigation does not define aliases.
-
-## 12. Tooling
-
-When explicitly asked to perform a Git commit:
-
-1. stage the intended changes;
-2. generate an appropriate commit message;
-3. commit.
+When explicitly asked to commit, stage the intended changes, generate an appropriate commit message, and commit.
 
 Do not run `npx tsc -b` unless explicitly requested.
