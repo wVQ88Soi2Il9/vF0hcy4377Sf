@@ -3,7 +3,7 @@ import * as core from '@/core';
 /**
  * 自指令取得描述文字（假資料）
  */
-export function get_command_describe(_command?: core.cmd | core.reversible_operation): string
+export function get_command_describe(_command?: core.cmd | core.rev_op): string
 {
     return 'mock describe';
 }

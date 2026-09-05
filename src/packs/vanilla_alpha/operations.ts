@@ -10,12 +10,12 @@
 
 import * as core from '@/core';
 
-export interface create_device_op extends core.reversible_operation
+export interface create_device_op extends core.rev_op
 {
     get_device(): core.device | null;
 }
 
-export interface delete_device_op extends core.reversible_operation
+export interface delete_device_op extends core.rev_op
 {
     get_deleted_device(): core.device | null;
 }
@@ -138,7 +138,7 @@ export function delete_device_operation(device_uid: core.uid): delete_device_op
 /**
  * 移動裝置操作：改變裝置座標並記憶原座標；Undo 撤銷時移回原位。
  */
-export function move_device_operation(device_uid: core.uid, new_position: core.vector): core.reversible_operation
+export function move_device_operation(device_uid: core.uid, new_position: core.vector): core.rev_op
 {
     let previous_position: core.vector | null = null;
 
@@ -184,7 +184,7 @@ export function move_device_operation(device_uid: core.uid, new_position: core.v
 /**
  * 選定配方操作：設定裝置選定配方並記憶舊配方；Undo 撤銷時還原舊配方。
  */
-export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: core.namespaced_id): core.reversible_operation
+export function select_recipe_operation(device_uid: core.uid, new_recipe_id?: core.namespaced_id): core.rev_op
 {
     let previous_recipe_id: core.namespaced_id | undefined = undefined;
     let initialized = false;

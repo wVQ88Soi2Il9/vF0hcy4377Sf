@@ -84,7 +84,7 @@ export class std_world extends world.pure_world
      */
     public execute
     (
-        ops:         core.reversible_operation[],
+        ops:         core.rev_op[],
         other_info?: Record<string, unknown>
     ): void
     {

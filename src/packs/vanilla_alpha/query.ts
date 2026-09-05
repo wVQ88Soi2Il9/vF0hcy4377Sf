@@ -110,7 +110,7 @@ export function has_operation(registry: core.pack_registry, identifier: core.nam
 /**
  * 取得可逆操作，若不存在則拋出例外 (Fail-Fast)
  */
-export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.reversible_operation
+export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.rev_op
 {
     const op = registry.get(identifier.namespace)?.operations?.[identifier.id];
     if (!op)

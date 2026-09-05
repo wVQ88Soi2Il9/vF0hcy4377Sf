@@ -8,7 +8,7 @@
  */
 import type { uid } from './definition_i';
 import type { space } from './definition_ii';
-import { reversible_operation } from './definition_iii';
+import { rev_op } from './definition_iii';
 
 // ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
 
@@ -17,7 +17,7 @@ export interface node
     history_uid:           uid;
     parent_history_uid:    uid | null;
     children_history_uids: uid[];
-    operations:            reversible_operation[];
+    operations:            rev_op[];
     other_info?:           Record<string, unknown>;
 }
 
@@ -51,7 +51,7 @@ export function record_operation
 (
     tree:        tree,
     sp:          space,
-    operations:  reversible_operation[],
+    operations:  rev_op[],
     other_info?: Record<string, unknown>
 ): node
 {
