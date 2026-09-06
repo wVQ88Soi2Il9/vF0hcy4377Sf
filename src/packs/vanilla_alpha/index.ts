@@ -25,7 +25,8 @@ export function global_init(registry: core.pack_registry): void
                 ['history_redo', []],
                 ['history_delete', []]
             ]
-        )
+        ),
+        world_init
     }
     );
 }

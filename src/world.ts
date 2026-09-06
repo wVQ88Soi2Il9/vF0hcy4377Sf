@@ -15,6 +15,11 @@ export class pure_world
         this.history = core.create_tree();
         this.current_hook = template ? structuredClone(template) : new Map();
         this.registry = registry;
+        
+        for (const pack of registry.values())
+        {
+            pack.world_init?.(this);
+        }
     }
 
     public inject_hook(target_hook: core.namespaced_id, callback: core.hook_callback): () => void

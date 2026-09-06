@@ -23,6 +23,7 @@ export interface pack_module
     operations?:   Record<string, rev_op>;
     commands?:     Record<string, cmd>;
     hooks?:        Map<string, hook_callback[]>;
+    world_init?:   (...args: any[]) => void;
     other_info?:  Record<string, unknown>;
 }
 
