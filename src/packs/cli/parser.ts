@@ -35,6 +35,27 @@ export function tokenize_input(input: string): string[]
     return tokens;
 }
 
+export function parse_argument(token: string): any
+{
+    if (token === 'true')
+    {
+        return true;
+    }
+    if (token === 'false')
+    {
+        return false;
+    }
+    if (token === 'null')
+    {
+        return null;
+    }
+    if (token.trim() !== '' && !isNaN(Number(token)))
+    {
+        return Number(token);
+    }
+    return token;
+}
+
 export function parse_vector(tokens: string[], expected_dim?: number): core.vector
 {
     if (tokens.length === 0)

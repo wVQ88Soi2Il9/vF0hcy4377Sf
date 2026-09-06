@@ -3,8 +3,8 @@ import type { space, item_definition, recipe, device_constructor } from './defin
 
 export interface rev_op extends namespaced_id 
 {
-    execute(sp: space,...args: any[]): void;
-    inverse(sp: space,...args: any[]): void;
+    execute(sp: space): void;
+    inverse(sp: space): void;
     other_info?: Record<string, any>;
 }
 
@@ -23,8 +23,6 @@ export interface pack_module
     operations?:   Record<string, rev_op>;
     commands?:     Record<string, cmd>;
     hooks?:        Map<string, hook_callback[]>;
-    global_init?:  (...args: any[])=>void;
-    world_init?:   (...args: any[]) => void;
     other_info?:  Record<string, unknown>;
 }
 

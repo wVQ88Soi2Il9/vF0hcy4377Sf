@@ -1,14 +1,16 @@
 import * as core from '@/core';
 import * as world from '@/world';
 
-import * as vanilla_alpha from '@/packs/vanilla_alpha'
+import * as vanilla_alpha from '@/packs/vanilla_alpha';
+import * as cli from '@/packs/cli';
 
 // ── 1. Initialize, Load all packs in order ────────────────────────────────────
 const registry: core.pack_registry = new Map();
 
 const ENABLED_PACKS =
 [
-    vanilla_alpha
+    vanilla_alpha,
+    cli
 ];
 
 for (const pack of ENABLED_PACKS)
@@ -27,4 +29,9 @@ for (const [id, pack] of registry)
 }
 // ── 2. Create World ──────────────────────────────────────────────────────────
 const sp = new core.space([64, 64, 4]);
-new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
+const my_world = new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
+
+for (const pack of ENABLED_PACKS)
+{
+    pack.world_init(my_world);
+}

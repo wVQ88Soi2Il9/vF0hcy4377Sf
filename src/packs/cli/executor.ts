@@ -1,38 +1,8 @@
-import * as core from '@/core';
-import { tokenize_input } from './parser';
-import { generate_help } from './help';
+import * as world from '@/world';
+import { tokenize_input, parse_argument } from './parser';
+import { generate_help, find_target } from './help';
 
-function parse_argument(token: string): any
-{
-    if (token === 'true'){ return true; }
-    if (token === 'false'){ return false; }
-    if (token === 'null'){ return null; }
-    if (token.trim() !== '' && !isNaN(Number(token))){ return Number(token); }    
-    return token;
-}
-
-function find_command(registry: core.pack_registry, cmd: string): core.cmd | ((...args: any[]) => any) | null
-{
-    if (cmd.includes(':'))
-    {
-        const [namespace, id] = cmd.split(':');
-        const pack = registry.get(namespace);
-        return pack?.commands?.[id] ?? pack?.operations?.[id] ?? null;
-    }
-
-    for (const pack of registry.values())
-    {
-        const target = pack.commands?.[cmd] ?? pack.operations?.[cmd];
-        if (target)
-        {
-            return target;
-        }
-    }
-
-    return null;
-}
-
-export function execute_command(input: string, registry: core.pack_registry): any
+export function execute_command(input: string, target_world: world.pure_world): any
 {
     const tokens = tokenize_input(input);
     if (tokens.length === 0)
@@ -42,53 +12,46 @@ export function execute_command(input: string, registry: core.pack_registry): an
 
     if (tokens[0] === '--help')
     {
-        if (tokens.length === 1)
-        {
-            return generate_help(registry);
-        }
-        if (tokens.length === 2)
-        {
-            return generate_help(registry, tokens[1]);
-        }
+        return generate_help(target_world.registry, tokens[1]);
     }
 
-    const [cmd, ...raw_args] = tokens;
+    const [name, ...raw_args] = tokens;
+    const entry = find_target(target_world.registry, name);
+    if (!entry)
+    {
+        throw new Error(`Command or operation "${name}" not found in registry.`);
+    }
+
+    if ('inverse' in entry.target)
+    {
+        return entry.target.execute(target_world.space);
+    }
+
     const args = raw_args.map(parse_argument);
-
-    const target = find_command(registry, cmd);
-    if (!target)
-    {
-        throw new Error(`Command "${cmd}" not found in registry.`);
-    }
-
-    if (typeof target === 'function')
-    {
-        return target(...args);
-    }
-    return target.execute(...args);
+    return entry.target.execute(...args);
 }
 
-let console_registry: core.pack_registry | null = null;
+let console_world: world.pure_world | null = null;
 
-export function set_console_registry(registry: core.pack_registry): void
+export function set_console_world(target_world: world.pure_world): void
 {
-    console_registry = registry;
+    console_world = target_world;
 }
 
 export function execute_in_console(input: string): any
 {
-    if (!console_registry)
+    if (!console_world)
     {
-        throw new Error('CLI Console Error: Registry is not bound. Call set_console_registry(registry) or register_console_cli(registry) first.');
+        throw new Error('CLI Console Error: World is not bound. Call set_console_world(target_world) or register_console_cli(target_world) first.');
     }
-    return execute_command(input, console_registry);
+    return execute_command(input, console_world);
 }
 
-export function register_console_cli(registry?: core.pack_registry): void
+export function register_console_cli(target_world?: world.pure_world): void
 {
-    if (registry)
+    if (target_world)
     {
-        console_registry = registry;
+        console_world = target_world;
     }
 
     const runner = (input: string) =>
