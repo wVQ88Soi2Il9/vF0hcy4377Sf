@@ -1,6 +1,6 @@
 # GPT / Codex Rules
 
-0. You can use Google Antigravity CLI.
+0. You can use Google Antigravity CLI, it maybe faster than you. `agy --args ...`.
 
 1. Read relevant `docs/QA/`, README, and surrounding code before modifying architecture.
 
