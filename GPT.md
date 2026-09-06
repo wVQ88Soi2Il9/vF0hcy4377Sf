@@ -1,5 +1,7 @@
 # GPT / Codex Rules
 
+0. You can use Google Antigravity CLI.
+
 1. Read relevant `docs/QA/`, README, and surrounding code before modifying architecture.
 
 2. Priority of authority:
