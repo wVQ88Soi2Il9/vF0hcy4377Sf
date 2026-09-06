@@ -4,12 +4,15 @@
 
 ## Current in Use
 
-(No plans yet)
+[0001_202609070009_port-shirones-ui-per-world](./0001_202609070009_port-shirones-ui-per-world.md) — `draft`
 
 ## Open Items (Itemized)
 
-(No open items)
+- `0001#1` · **in-progress** — Port shirones_ui to Per-World Architecture
+
+> To work on a specific item: `python3 docs/history/plan-item.py 0001#1`
+> —— returns only that item's body and basis, without needing to read the entire plan.
 
 ## draft / in-progress (Descending by Seq)
 
-(None)
+- **0001** [0001_202609070009_port-shirones-ui-per-world](./0001_202609070009_port-shirones-ui-per-world.md) — `draft`

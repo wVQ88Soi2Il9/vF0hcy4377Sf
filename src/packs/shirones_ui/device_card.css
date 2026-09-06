@@ -1,0 +1,40 @@
+/* ─── Device Card Dynamic Evaluation & Action Rows ───────────────────────────── */
+
+.basic_ui_eval_card {
+    background: var(--basic-ui-bg-crust);
+    border: 1px solid var(--basic-ui-border);
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 2px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.basic_ui_eval_row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.basic_ui_kv_list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 8px;
+    border-left: 2px solid var(--basic-ui-border);
+}
+
+.basic_ui_actions_row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--basic-ui-surface1);
+    padding-top: 8px;
+}
