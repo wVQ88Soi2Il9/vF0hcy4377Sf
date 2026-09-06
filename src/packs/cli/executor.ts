@@ -2,7 +2,7 @@ import * as world from '@/world';
 import { tokenize_input, parse_argument } from './parser';
 import { generate_help, find_target } from './help';
 
-export function execute_command(input: string, target_world: world.pure_world): any
+export function exe(input: string, target_world: world.pure_world): any
 {
     const tokens = tokenize_input(input);
     if (tokens.length === 0)
@@ -44,7 +44,7 @@ export function execute_in_console(input: string): any
     {
         throw new Error('CLI Console Error: World is not bound. Call set_console_world(target_world) or register_console_cli(target_world) first.');
     }
-    return execute_command(input, console_world);
+    return exe(input, console_world);
 }
 
 export function register_console_cli(target_world?: world.pure_world): void
