@@ -4,7 +4,7 @@ import type { vector, namespaced_id, uid } from './definition_i';
 
 export interface item_definition extends namespaced_id 
 {
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
 
 export interface item_stack 
@@ -23,7 +23,7 @@ export interface port
     port_uid:    uid;
     offset:      vector;
     direction:   port_direction;
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
 
 // ── Devices ──────────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export interface recipe_output
 export interface recipe extends namespaced_id
 {
     evaluate:    (device_uid: uid) => recipe_output[] | string;
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
 
 // ── Space ────────────────────────────────────────────────────────────────────

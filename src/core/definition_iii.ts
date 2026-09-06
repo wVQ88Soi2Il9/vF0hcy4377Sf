@@ -5,13 +5,13 @@ export interface rev_op extends namespaced_id
 {
     execute(sp: space,...args: any[]): void;
     inverse(sp: space,...args: any[]): void;
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
 
 export interface cmd extends namespaced_id
 {
     execute(...args: any[]): any;
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
 
 export interface pack_module

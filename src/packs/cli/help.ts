@@ -1,13 +1,8 @@
 import * as core from '@/core';
 
-export function get_command_describe(command?: core.cmd | core.rev_op): string
+export function get_command_describe(command: core.cmd | core.rev_op): string
 {
-    const cli_info = command?.other_info?.cli as { describe?: unknown } | undefined;
-    if (typeof cli_info?.describe === 'string')
-    {
-        return cli_info.describe;
-    }
-    return '';
+    return command.other_info?.cli?.describe ?? ''
 }
 
 export function generate_help(registry: core.pack_registry, target_cmd?: string): string

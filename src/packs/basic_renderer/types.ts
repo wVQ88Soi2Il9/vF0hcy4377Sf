@@ -18,5 +18,5 @@ export interface projection
 {
     size:        core.vector;
     devices:     core.device[];
-    other_info?: Record<string, unknown>;
+    other_info?: Record<string, any>;
 }
