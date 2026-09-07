@@ -58,6 +58,14 @@ The current runtime boundary is `pure_world` (`space`, `history`, `registry`, an
 
 Inference: the first implementation slice should establish an explicit `pure_world` binding and current lifecycle entry points at `shirones_ui/index.ts`; child components should then be migrated against that binding in later slices. The audit does not justify compatibility wrappers or a renderer/core redesign.
 
+### O5 · 2026-09-08 12:00:00+08:00 — Lifecycle boundary is now explicit at the UI pack entry point
+
+`shirones_ui/index.ts` now exposes `global_init(registry)` and registers a pack module with `world_init(target_world)`. The former `init_pack()` entry point and the invalid UI-specific fields on the `pack_module` object were removed. `world_init` records the bound `pure_world` without constructing a global UI tree; UI factories remain separately exported.
+
+The focused build no longer reports syntax or type errors in `shirones_ui/index.ts`. The build still fails in child components on the legacy imports and symbols recorded by O4.
+
+Inference: the pack lifecycle can proceed independently from world-bound component migration; later items can consume `get_bound_world()` while preserving a single UI construction path.
+
 ## Tasks
 
 ### 1 Audit legacy API dependencies
@@ -96,7 +104,7 @@ The first cheap discriminating check is `pnpm build`; it currently fails on the 
 
 ### 2 Align pack lifecycle
 
-- **state:** todo
+- **state:** pending-review
 - **needs:** 0001#1
 - **basis:** → O2, O3
 
@@ -112,9 +120,17 @@ Acceptance criteria:
 - UI initialization follows the current pack module contract;
 - world-specific state can be identified explicitly.
 
+Landed result:
+
+- `global_init(registry)` registers `shirones_ui` using the current pack module contract.
+- `world_init(target_world)` records the explicit world binding exposed by `get_bound_world()`.
+- Legacy `init_pack()` and the old UI-specific pack object fields were removed.
+- UI factories remain independently exportable and are not invoked by global registration.
+
 **History**
 
 - H1 · 2026-09-07 decision —— Treat UI lifetime and world binding as separate concerns (agent: gpt-5.6-sol)
+- H2 · 2026-09-08 landed —— Added current pack lifecycle and explicit world binding; focused build leaves only downstream legacy API errors (agent: gpt-5.6-sol)
 
 ### 3 Replace legacy world access
 
