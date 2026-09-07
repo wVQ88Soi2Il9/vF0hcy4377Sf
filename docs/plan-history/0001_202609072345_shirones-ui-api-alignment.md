@@ -1,6 +1,7 @@
 # 0001_202609072345_shirones-ui-api-alignment
 
 - **status:** draft
+- **prev:** none
 - **skill:** plan-history v3
 
 ## Summary
@@ -49,11 +50,19 @@ Inference: `shirones_ui` should bind to a world explicitly rather than recover t
 
 Inference: retain global UI construction where possible and make world-dependent behavior explicitly rebindable.
 
+### O4 · 2026-09-08 12:00:00+08:00 — Audit found a complete legacy boundary in `shirones_ui`
+
+The current `shirones_ui` entry point still exposes `init_pack()` and imports the removed global `get_map()` and `on_device_change()` APIs. Its child components additionally depend on global world command/history access, legacy history types, `@/packs/vanilla`, `@/packs/cli_tool`, and pack-object imports such as `basic_ui` and `basic_renderer` that are not exported by the current pack indexes.
+
+The current runtime boundary is `pure_world` (`space`, `history`, `registry`, and `current_hook`), while the current pack lifecycle is exposed by `global_init(registry)` and `world_init(target_world)`. The current build fails in the audited UI surface before runtime verification, with errors spanning `cli_panel.ts`, `device_card.ts`, `device_creator.ts`, `history_navigation.ts`, `history_tree_panel.ts`, and `index.ts`.
+
+Inference: the first implementation slice should establish an explicit `pure_world` binding and current lifecycle entry points at `shirones_ui/index.ts`; child components should then be migrated against that binding in later slices. The audit does not justify compatibility wrappers or a renderer/core redesign.
+
 ## Tasks
 
 ### 1 Audit legacy API dependencies
 
-- **state:** todo
+- **state:** pending-review
 - **basis:** → O2
 
 Inspect all files under `src/packs/shirones_ui`.
@@ -69,9 +78,21 @@ Record usages of removed, renamed, or ownership-incompatible APIs, especially:
 
 The result should determine the actual migration surface before implementation.
 
+Audit result:
+
+- `index.ts`: legacy `init_pack()`, global `get_map()`, and global `on_device_change()`; renderer and basic UI are imported as pack objects rather than current public APIs.
+- `device_card.ts` and `device_creator.ts`: removed global world command/registry access, removed `move_device_command`/`delete_device_command`/`select_recipe_command` exports, and stale `@/packs/vanilla` imports.
+- `history_navigation.ts`, `history_tree_panel.ts`, and `info_panel.ts`: legacy `history_tree`/`history_node`/`map_command` types and global history callbacks/actions; current runtime exposes `tree`, `node`, `rev_op`, and world-owned history.
+- `cli_panel.ts`: stale `@/packs/cli_tool` import and stale `basic_ui` pack-object import.
+- `device_creator.ts` and `index.ts`: stale `basic_renderer` pack-object imports and global map assumptions.
+- `layout.ts`, `viewport_panel.ts`, and CSS files are primarily structural; renderer/camera ownership should remain outside this audit slice.
+
+The first cheap discriminating check is `pnpm build`; it currently fails on the above stale imports and symbols, confirming the migration surface before implementation.
+
 **History**
 
 - H1 · 2026-09-07 decision —— Migrate against current APIs instead of introducing compatibility wrappers (human: user)
+- H2 · 2026-09-08 landed —— Audit completed; implementation must begin with explicit world binding and lifecycle alignment (agent: gpt-5.6-sol)
 
 ### 2 Align pack lifecycle
 
