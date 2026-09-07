@@ -4,12 +4,23 @@
 
 ## Current in Use
 
-(No plans yet)
+[0001_202609072345_shirones-ui-api-alignment](./0001_202609072345_shirones-ui-api-alignment.md) — `draft`
 
 ## Open Items (Itemized)
 
-(No open items)
+- `0001#1` · **pending-review** — Audit legacy API dependencies
+- `0001#2` · **blocked** (waiting for `0001#1`) — Align pack lifecycle
+- `0001#3` · **blocked** (waiting for `0001#2`) — Replace legacy world access
+- `0001#4` · **blocked** (waiting for `0001#3`) — Migrate UI refresh hooks
+- `0001#5` · **blocked** (waiting for `0001#3`) — Align history UI
+- `0001#6` · **blocked** (waiting for `0001#3`) — Align device and CLI components
+- `0001#7` · **blocked** (waiting for `0001#3`) — Verify renderer and camera boundary
+- `0001#8` · **blocked** (waiting for `0001#4`, `0001#5`, `0001#6`, `0001#7`) — Remove obsolete migration residue
+- `0001#9` · **blocked** (waiting for `0001#8`) — Verify integrated shirones_ui
+
+> To work on a specific item: `python3 docs/plan-history/plan-item.py 0001#1`
+> —— returns only that item's body and basis, without needing to read the entire plan.
 
 ## draft / in-progress (Descending by Seq)
 
-(None)
+- **0001** [0001_202609072345_shirones-ui-api-alignment](./0001_202609072345_shirones-ui-api-alignment.md) — `draft`
