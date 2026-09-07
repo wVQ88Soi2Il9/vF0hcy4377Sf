@@ -66,6 +66,14 @@ The focused build no longer reports syntax or type errors in `shirones_ui/index.
 
 Inference: the pack lifecycle can proceed independently from world-bound component migration; later items can consume `get_bound_world()` while preserving a single UI construction path.
 
+### O6 · 2026-09-08 12:00:00+08:00 — CLI panel now consumes an explicit world
+
+`cli_panel.ts` now receives `pure_world` through `create_cli_bar(target_world, ...)`, and `layout.ts` forwards the binding. CLI input executes through the current `exe(input, target_world)` API rather than the removed `@/packs/cli_tool` global executor.
+
+The focused build no longer reports a CLI execution signature error. Other `shirones_ui` components still depend on legacy world, registry, history, and device APIs.
+
+Inference: world binding can be migrated component-by-component; the remaining components should not regain a global singleton merely to match the CLI path.
+
 ## Tasks
 
 ### 1 Audit legacy API dependencies
@@ -134,7 +142,7 @@ Landed result:
 
 ### 3 Replace legacy world access
 
-- **state:** todo
+- **state:** in-progress
 - **needs:** 0001#2
 - **basis:** → O2, O3
 
@@ -144,11 +152,17 @@ Introduce the smallest explicit world-binding mechanism needed by the UI compone
 
 Components that operate on devices, history, commands, or space must derive those objects from the bound `pure_world`.
 
+Progress:
+
+- `cli_panel.ts` receives its target world explicitly through `create_cli_bar` and executes commands against that world.
+- Device, info, and history components remain to be migrated.
+
 Do not create a second authoritative world singleton inside `shirones_ui`.
 
 **History**
 
 - H1 · 2026-09-07 decision —— World-dependent UI reads and operations must originate from the bound world (agent: gpt-5.6-sol)
+- H2 · 2026-09-08 landed —— CLI panel now receives and uses an explicit pure_world; remaining component migration is still in progress (agent: gpt-5.6-sol)
 
 ### 4 Migrate UI refresh hooks
 

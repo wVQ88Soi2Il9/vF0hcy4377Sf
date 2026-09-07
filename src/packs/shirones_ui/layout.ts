@@ -1,3 +1,4 @@
+import type * as world from '@/world';
 import { basic_ui, type splitter_component } from '@/packs/basic_ui';
 import { create_info_bar, type info_bar_component } from './info_panel';
 import { create_cli_bar, type cli_bar_component } from './cli_panel';
@@ -19,7 +20,7 @@ export interface shirones_ui_layout_nodes
  * Center Column hosts Viewport (flex: 1) and CLI (default collapsed to 36px, expands to 100px).
  * Right Column hosts Map Status (default collapsed to 38px strip, expands to 240px inspector).
  */
-export function create_ui_layout(): shirones_ui_layout_nodes
+export function create_ui_layout(target_world: world.pure_world): shirones_ui_layout_nodes
 {
     const root = basic_ui.get_ui_root();
     root.innerHTML = '';
@@ -71,7 +72,7 @@ export function create_ui_layout(): shirones_ui_layout_nodes
     const viewport_panel = create_viewport_panel();
     viewport_panel.panel.element.style.flex = '1';
 
-    const cli_bar = create_cli_bar((collapsed: boolean) =>
+    const cli_bar = create_cli_bar(target_world, (collapsed: boolean) =>
     {
         if (collapsed)
         {

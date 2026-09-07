@@ -1,4 +1,5 @@
-import { execute_command } from '@/packs/cli_tool';
+import type * as world from '@/world';
+import { exe } from '@/packs/cli';
 import { basic_ui } from '@/packs/basic_ui';
 
 export interface cli_bar_component
@@ -8,16 +9,21 @@ export interface cli_bar_component
     set_collapsed: (collapsed: boolean) => void;
 }
 
-function handle_ui_cli_input(input: string): string
+function handle_ui_cli_input(input: string, target_world: world.pure_world): string
 {
-    return execute_command(input);
+    const result = exe(input, target_world);
+    return result === undefined ? '' : String(result);
 }
 
 /**
  * Creates the bottom Command Line Interface (CLI) panel.
  * Default collapsed (36px single input line), expands to a compact 100px output log.
  */
-export function create_cli_bar(on_collapse_change?: (collapsed: boolean) => void): cli_bar_component
+export function create_cli_bar
+(
+    target_world:       world.pure_world,
+    on_collapse_change?: (collapsed: boolean) => void
+): cli_bar_component
 {
     const panel = basic_ui.create_floating_panel({
         id:          'cli_bar',
@@ -95,7 +101,7 @@ export function create_cli_bar(on_collapse_change?: (collapsed: boolean) => void
     {
         if (e.key === 'Enter' && input_el.value.trim() !== '')
         {
-            const result = handle_ui_cli_input(input_el.value);
+            const result = handle_ui_cli_input(input_el.value, target_world);
 
             output_el.textContent = result;
             output_el.classList.remove('success', 'error');
