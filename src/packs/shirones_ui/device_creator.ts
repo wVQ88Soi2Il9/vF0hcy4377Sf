@@ -1,7 +1,8 @@
-import { get_map, get_registry, execute_command } from '@/world';
-import { parse_namespaced_id, get_device_class, get_command } from '@/packs/vanilla';
-import { basic_renderer } from '@/packs/basic_renderer';
-import { basic_ui } from '@/packs/basic_ui';
+import type * as world from '@/world';
+import { record_operation } from '@/core';
+import { parse_namespaced_id, get_device_class } from '@/packs/vanilla_alpha';
+import { create_device_operation } from '@/packs/vanilla_alpha/operations';
+import { get_device_creation_options } from '@/packs/basic_ui/extensions';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
 export interface device_creator_component
@@ -17,6 +18,7 @@ export interface device_creator_component
  */
 export function create_device_creator
 (
+    target_world:      world.pure_world,
     on_device_created?: (uid: number) => void
 ): device_creator_component
 {
@@ -72,7 +74,7 @@ export function create_device_creator
             return;
         }
 
-        const option_renderers = basic_ui.get_device_creation_options(def_id);
+        const option_renderers = get_device_creation_options(def_id);
         for (const render of option_renderers)
         {
             const handle = render(custom_options_container, def_id);
@@ -119,24 +121,21 @@ export function create_device_creator
         const prev_id = dev_select.value.trim();
 
         current_ns_groups.clear();
-        const registry = get_registry();
-        if (registry)
+        const registry = target_world.registry;
+        for (const [pack_name, mod] of registry)
         {
-            for (const [pack_name, mod] of registry.packs)
+            if (mod.devices)
             {
-                if (mod.devices)
+                let list = current_ns_groups.get(pack_name);
+                if (!list)
                 {
-                    let list = current_ns_groups.get(pack_name);
-                    if (!list)
-                    {
-                        list = [];
-                        current_ns_groups.set(pack_name, list);
-                    }
+                    list = [];
+                    current_ns_groups.set(pack_name, list);
+                }
 
-                    for (const local_id of Object.keys(mod.devices))
-                    {
-                        list.push({ def_id: `${pack_name}:${local_id}`, local_id });
-                    }
+                for (const local_id of Object.keys(mod.devices))
+                {
+                    list.push({ def_id: `${pack_name}:${local_id}`, local_id });
                 }
             }
         }
@@ -193,15 +192,12 @@ export function create_device_creator
     refresh_definitions();
 
     // 2. Position Inputs & Steppers
-    const map = get_map();
-    const num_dims = map ? map.dimension : 3;
-    const cam_slices = basic_renderer.get_camera().slices;
+    const num_dims = target_world.space.dimension;
     const initial_coords: number[] = [];
 
     for (let i = 0; i < num_dims; i++)
     {
-        const initial_val = (i < cam_slices.length && i >= 2) ? (cam_slices[i] % 2 === 0 ? cam_slices[i] : 0) : 0;
-        initial_coords.push(initial_val);
+        initial_coords.push(0);
     }
 
     const coords_group = create_coordinate_stepper_group(initial_coords, undefined, false);
@@ -245,27 +241,18 @@ export function create_device_creator
 
         try
         {
-            const registry = get_registry();
-            if (!registry)
-            {
-                coords_group.show_error('Error: Global pack registry not found.');
-                return;
-            }
             const ns_id = parse_namespaced_id(def_id);
-            const dev_class = get_device_class(registry, ns_id);
-            const create_factory = get_command(registry, { namespace: 'core', id: 'create_device' });
-            const cmd = create_factory(dev_class, ns_id, parsed.position, merged_other_info);
-            execute_command(cmd);
+            const dev_class = get_device_class(target_world.registry, ns_id);
+            const operation = create_device_operation(dev_class, ns_id, parsed.position, merged_other_info);
+            const node = record_operation(target_world.history, target_world.space, [operation]);
+            target_world.trigger({ namespace: 'vanilla_alpha', id: 'create_device' }, target_world, operation.get_device());
+            target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, target_world, node);
             coords_group.hide_error();
 
-            const current_map = get_map();
-            if (current_map && on_device_created)
+            const created_device = operation.get_device();
+            if (created_device && on_device_created)
             {
-                const latest_dev = current_map.devices[current_map.devices.length - 1];
-                if (latest_dev)
-                {
-                    on_device_created(latest_dev.uid);
-                }
+                on_device_created(created_device.device_uid);
             }
         }
         catch (err: unknown)

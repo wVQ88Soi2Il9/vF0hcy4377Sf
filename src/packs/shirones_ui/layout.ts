@@ -96,7 +96,7 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
     cli_bar.element.style.flex = '0 0 36px';
     cli_bar.element.style.height = '36px';
 
-    const info_bar = create_info_bar((collapsed: boolean) =>
+    const info_bar = create_info_bar(target_world, (collapsed: boolean) =>
     {
         if (collapsed)
         {

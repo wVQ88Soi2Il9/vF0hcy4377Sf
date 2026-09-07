@@ -1,4 +1,4 @@
-import { get_map } from '@/world';
+import type * as world from '@/world';
 import { on_history_change } from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';
@@ -24,7 +24,11 @@ export interface info_bar_component
  * Creates the right-side Info Bar panel supporting interactive UID lookup via dropdown,
  * device info inspection card, downstream extension slots, and collapsible sidebar.
  */
-export function create_info_bar(on_collapse_change?: (collapsed: boolean) => void): info_bar_component
+export function create_info_bar
+(
+    target_world:        world.pure_world,
+    on_collapse_change?: (collapsed: boolean) => void
+): info_bar_component
 {
     const panel = basic_ui.create_floating_panel({
         id:          'info_bar',
@@ -121,7 +125,7 @@ export function create_info_bar(on_collapse_change?: (collapsed: boolean) => voi
     custom_sections_el.className = 'basic_ui_form_group';
 
     // Section 3: Device Creator Section
-    const creator = create_device_creator((uid) =>
+    const creator = create_device_creator(target_world, (uid) =>
     {
         display_device_info(uid);
     });

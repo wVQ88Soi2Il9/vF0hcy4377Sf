@@ -74,6 +74,14 @@ The focused build no longer reports a CLI execution signature error. Other `shir
 
 Inference: world binding can be migrated component-by-component; the remaining components should not regain a global singleton merely to match the CLI path.
 
+### O7 · 2026-09-08 12:00:00+08:00 — Device creation now records against the bound world
+
+`device_creator.ts` now receives `pure_world`, reads definitions from `target_world.registry`, reads dimensions from `target_world.space`, creates a `vanilla_alpha` operation, and records it through `core.record_operation`. It emits the current world hooks for device and history changes and reports the created device UID directly from the operation.
+
+The focused TypeScript check no longer reports errors from `device_creator.ts`, the updated `create_info_bar` call, or the updated CLI/layout parameter chain. Remaining build failures are in the not-yet-migrated device card, history, basic UI, and viewport surfaces.
+
+Inference: device creation can use the current operation/history contract without adding a command compatibility layer or duplicating history algorithms in the UI pack.
+
 ## Tasks
 
 ### 1 Audit legacy API dependencies
@@ -155,7 +163,8 @@ Components that operate on devices, history, commands, or space must derive thos
 Progress:
 
 - `cli_panel.ts` receives its target world explicitly through `create_cli_bar` and executes commands against that world.
-- Device, info, and history components remain to be migrated.
+- `device_creator.ts` receives its target world explicitly and records device creation through the current operation/history API.
+- Device inspection, info refresh, and history components remain to be migrated.
 
 Do not create a second authoritative world singleton inside `shirones_ui`.
 
@@ -163,6 +172,7 @@ Do not create a second authoritative world singleton inside `shirones_ui`.
 
 - H1 · 2026-09-07 decision —— World-dependent UI reads and operations must originate from the bound world (agent: gpt-5.6-sol)
 - H2 · 2026-09-08 landed —— CLI panel now receives and uses an explicit pure_world; remaining component migration is still in progress (agent: gpt-5.6-sol)
+- H3 · 2026-09-08 landed —— Device creation now uses the bound world registry, space, and operation history (agent: gpt-5.6-sol)
 
 ### 4 Migrate UI refresh hooks
 
