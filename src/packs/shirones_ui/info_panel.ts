@@ -1,5 +1,4 @@
 import type * as world from '@/world';
-import { on_history_change } from '@/core';
 import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';
 import { create_device_creator } from './device_creator';
@@ -109,16 +108,15 @@ export function create_info_bar
         }
     }
 
-    on_history_change(() =>
+    const refresh_from_world = (): void =>
     {
-        const map = get_map();
-        if (map)
-        {
-            const device_count = map.devices.length;
-            const map_dimensions = map.size.join(' × ');
-            update_stats({ device_count, map_dimensions });
-        }
-    });
+        const device_count = target_world.space.devices.length;
+        const map_dimensions = target_world.space.size.join(' × ');
+        update_stats({ device_count, map_dimensions });
+    };
+
+    target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'device_change' }, refresh_from_world);
+    target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'history_change' }, refresh_from_world);
 
     // Section 2: Downstream Custom Panel Sections Container
     const custom_sections_el = document.createElement('div');
@@ -144,20 +142,16 @@ export function create_info_bar
         const current_val = target_uid !== null ? String(target_uid) : '';
         uid_select.innerHTML = '<option value="">Select Device (#UID)</option>';
 
-        const map = get_map();
-        if (map)
+        for (const dev of target_world.space.devices)
         {
-            for (const dev of map.devices)
+            const opt = document.createElement('option');
+            opt.value = String(dev.device_uid);
+            opt.textContent = `#${dev.device_uid} · ${dev.definition_id.namespace}:${dev.definition_id.id} @ [${dev.position.join(', ')}]`;
+            if (String(dev.device_uid) === current_val)
             {
-                const opt = document.createElement('option');
-                opt.value = String(dev.uid);
-                opt.textContent = `#${dev.uid} · ${dev.definition_id} @ [${dev.position.join(', ')}]`;
-                if (String(dev.uid) === current_val)
-                {
-                    opt.selected = true;
-                }
-                uid_select.appendChild(opt);
+                opt.selected = true;
             }
+            uid_select.appendChild(opt);
         }
     }
 
@@ -181,17 +175,16 @@ export function create_info_bar
 
         if (currently_inspected_uid !== null)
         {
-            const map = get_map();
-            const dev = map ? map.devices.find(d => d.uid === currently_inspected_uid) : undefined;
+            const dev = target_world.space.devices.find(d => d.device_uid === currently_inspected_uid);
             if (dev)
             {
                 render_device_card(
                     content_container,
                     dev,
-                    () => display_device_info(dev.uid),
+                    () => display_device_info(dev.device_uid),
                     () => clear_device_info()
                 );
-                refresh_uid_options(dev.uid);
+                refresh_uid_options(dev.device_uid);
             }
             else
             {
@@ -206,27 +199,15 @@ export function create_info_bar
 
         // Render downstream custom sections
         custom_sections_el.innerHTML = '';
-        const map = get_map();
-        if (map)
+        for (const section of basic_ui.get_panel_sections())
         {
-            for (const section of basic_ui.get_panel_sections())
-            {
-                section.render(custom_sections_el, map);
-            }
+            section.render(custom_sections_el, target_world.space);
         }
     }
 
     function display_device_info(uid: number): boolean
     {
-        const map = get_map();
-        if (!map)
-        {
-            currently_inspected_uid = null;
-            content_container.innerHTML = '<div class="basic_ui_error_msg">Error: Map not found</div>';
-            return false;
-        }
-
-        const dev = map.devices.find(d => d.uid === uid);
+        const dev = target_world.space.devices.find(d => d.device_uid === uid);
         if (!dev)
         {
             currently_inspected_uid = null;
@@ -240,11 +221,11 @@ export function create_info_bar
             set_collapsed(false);
         }
 
-        currently_inspected_uid = dev.uid;
+        currently_inspected_uid = dev.device_uid;
         render_device_card(
             content_container,
             dev,
-            () => display_device_info(dev.uid),
+            () => display_device_info(dev.device_uid),
             () => clear_device_info()
         );
         refresh_uid_options(uid);

@@ -82,6 +82,14 @@ The focused TypeScript check no longer reports errors from `device_creator.ts`, 
 
 Inference: device creation can use the current operation/history contract without adding a command compatibility layer or duplicating history algorithms in the UI pack.
 
+### O8 · 2026-09-08 12:00:00+08:00 — Info panel follows the vanilla_alpha hook relay boundary
+
+`info_panel.ts` now subscribes to the bound world's `vanilla_alpha/device_change` and `vanilla_alpha/history_change` hooks through `inject_hook`. Its refreshes read `target_world.space` directly and use the current `device_uid` and namespaced definition fields.
+
+The focused TypeScript check reports no remaining legacy world/history symbols in `info_panel.ts`; its remaining error is the pre-existing `basic_ui` export mismatch shared by other UI files.
+
+Inference: UI refresh can consume the aggregate hooks installed by `vanilla_alpha/world_init`, while mutation components only need to emit the underlying operation/history events.
+
 ## Tasks
 
 ### 1 Audit legacy API dependencies
@@ -164,7 +172,8 @@ Progress:
 
 - `cli_panel.ts` receives its target world explicitly through `create_cli_bar` and executes commands against that world.
 - `device_creator.ts` receives its target world explicitly and records device creation through the current operation/history API.
-- Device inspection, info refresh, and history components remain to be migrated.
+- `info_panel.ts` subscribes to the bound world's aggregate device/history hooks and reads current space state.
+- Device inspection and history components remain to be migrated.
 
 Do not create a second authoritative world singleton inside `shirones_ui`.
 
@@ -173,6 +182,7 @@ Do not create a second authoritative world singleton inside `shirones_ui`.
 - H1 · 2026-09-07 decision —— World-dependent UI reads and operations must originate from the bound world (agent: gpt-5.6-sol)
 - H2 · 2026-09-08 landed —— CLI panel now receives and uses an explicit pure_world; remaining component migration is still in progress (agent: gpt-5.6-sol)
 - H3 · 2026-09-08 landed —— Device creation now uses the bound world registry, space, and operation history (agent: gpt-5.6-sol)
+- H4 · 2026-09-08 landed —— Info panel now consumes vanilla_alpha aggregate hooks and bound space state (agent: gpt-5.6-sol)
 
 ### 4 Migrate UI refresh hooks
 
