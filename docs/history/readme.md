@@ -12,7 +12,7 @@ description: Record and maintain this repo's plan history under your own plan ro
 All references to `<PLAN_ROOT>` in this document point to the repository's plan directory:
 
 ```
-<PLAN_ROOT> = docs/history
+<PLAN_ROOT> = docs/plan-history
 ```
 
 The three `.py` helper scripts treat their parent directory as the corpus root (when `PLAN_HISTORY_ROOT` is unset). `head.md` is an aggregated summary generated automatically by script and must **never** be manually edited.

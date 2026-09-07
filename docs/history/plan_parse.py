@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read and validate the plan corpus in `docs/history/`.
+"""Read and validate the plan corpus in `docs/plan-history/`.
 
 Stdlib only — no venv needed. This module is not a CLI; it is the **single**
 definition of how a plan file is parsed, imported by every tool in this directory
