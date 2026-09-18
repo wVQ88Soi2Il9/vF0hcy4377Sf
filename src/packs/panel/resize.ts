@@ -12,6 +12,20 @@ function get_size(target: HTMLElement, direction: panel_direction): number
     return direction === 'row' ? bounds.width : bounds.height;
 }
 
+function get_min_size(target: HTMLElement, direction: panel_direction): number
+{
+    const style = getComputedStyle(target);
+    const value = parseFloat(direction === 'row' ? style.minWidth : style.minHeight);
+    return Number.isFinite(value) ? value : 0;
+}
+
+function get_max_size(target: HTMLElement, direction: panel_direction): number
+{
+    const style = getComputedStyle(target);
+    const value = parseFloat(direction === 'row' ? style.maxWidth : style.maxHeight);
+    return Number.isFinite(value) ? value : Infinity;
+}
+
 function freeze_size(target: panel, size: number): void
 {
     target.element.classList.add('panel_pack_runtime_size');
@@ -48,6 +62,8 @@ export function create_resize_handle
     let start_coordinate = 0;
     let start_previous_size = 0;
     let start_next_size = 0;
+    let minimum_previous_size = 0;
+    let maximum_previous_size = 0;
 
     const previous = panels[index];
     const next = panels[index + 1];
@@ -59,6 +75,8 @@ export function create_resize_handle
             return;
         }
 
+        set_resizable_size(previous, get_size(previous.element, direction));
+        set_resizable_size(next, get_size(next.element, direction));
         pointer_id = null;
         handle.classList.remove('is_dragging');
     }
@@ -93,9 +111,24 @@ export function create_resize_handle
         start_coordinate = direction === 'row' ? event.clientX : event.clientY;
         start_previous_size = sizes[index];
         start_next_size = sizes[index + 1];
-
-        set_resizable_size(previous, start_previous_size);
-        set_resizable_size(next, start_next_size);
+        const available_size = start_previous_size + start_next_size;
+        minimum_previous_size = Math.max
+        (
+            0,
+            get_min_size(previous.element, direction),
+            available_size - get_max_size(next.element, direction)
+        );
+        maximum_previous_size = Math.min
+        (
+            available_size,
+            get_max_size(previous.element, direction),
+            available_size - get_min_size(next.element, direction)
+        );
+        if (minimum_previous_size > maximum_previous_size)
+        {
+            minimum_previous_size = start_previous_size;
+            maximum_previous_size = start_previous_size;
+        }
 
         handle.classList.add('is_dragging');
         handle.setPointerCapture(event.pointerId);
@@ -112,10 +145,10 @@ export function create_resize_handle
         const coordinate = direction === 'row' ? event.clientX : event.clientY;
         const available_size = start_previous_size + start_next_size;
         const desired_size = start_previous_size + coordinate - start_coordinate;
-        const previous_size = Math.max(0, Math.min(available_size, desired_size));
+        const previous_size = Math.max(minimum_previous_size, Math.min(maximum_previous_size, desired_size));
 
-        set_resizable_size(previous, previous_size);
-        set_resizable_size(next, available_size - previous_size);
+        freeze_size(previous, previous_size);
+        freeze_size(next, available_size - previous_size);
         event.preventDefault();
     });
 

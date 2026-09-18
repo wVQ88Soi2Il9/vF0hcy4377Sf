@@ -1,6 +1,6 @@
 import type * as world from '@/world';
 import { exe } from '@/packs/cli';
-import { basic_ui } from '@/packs/basic_ui';
+import { create_panel_view } from './panel_view';
 
 export interface cli_bar_component
 {
@@ -25,10 +25,9 @@ export function create_cli_bar
     on_collapse_change?: (collapsed: boolean) => void
 ): cli_bar_component
 {
-    const panel = basic_ui.create_floating_panel({
-        id:          'cli_bar',
-        tag:         'footer',
-        collapsible: false
+    const panel = create_panel_view({
+        id:  'cli_bar',
+        tag: 'footer'
     });
 
     const root_element = panel.element;

@@ -1,12 +1,5 @@
-import type { history_tree } from '@/core';
-import
-{
-    jump_to_history,
-    undo,
-    redo,
-    jump_to_prev_fork,
-    jump_to_leaf
-} from '@/world';
+import * as core from '@/core';
+import type * as world from '@/world';
 
 export interface navigation_button_spec
 {
@@ -14,15 +7,15 @@ export interface navigation_button_spec
     strip_title:   string;
     toolbar_title: string;
     svg_paths:     string;
-    action:        () => void;
-    can_execute:   (tree: history_tree) => boolean;
+    action:        (target_world: world.pure_world) => void;
+    can_execute:   (tree: core.tree) => boolean;
 }
 
 export interface navigation_button_group
 {
     container:    HTMLElement;
     buttons:      HTMLButtonElement[];
-    update_state: (tree: history_tree | null) => void;
+    update_state: (tree: core.tree | null) => void;
 }
 
 export const NAVIGATION_BUTTON_SPECS: readonly navigation_button_spec[] = [
@@ -31,35 +24,35 @@ export const NAVIGATION_BUTTON_SPECS: readonly navigation_button_spec[] = [
         strip_title:   'Jump to Root',
         toolbar_title: 'Jump to initial state (Root)',
         svg_paths:     '<rect x="3" y="4" width="2.5" height="16" rx="1"/><path d="M12.5 12l8.5 6.5V5.5z"/><path d="M5.5 12l8.5 6.5V5.5z"/>',
-        action:        () => { jump_to_history(0); },
-        can_execute:   (tree: history_tree) => tree.current_uid !== 0
+        action:        (target_world) => { core.jump_to_root(target_world.history, target_world.space); },
+        can_execute:   (tree) => tree.current_history_uid !== 0
     },
     {
         id:            'prev_fork',
         strip_title:   'Jump to Prev Fork',
         toolbar_title: 'Jump to previous fork',
         svg_paths:     '<path d="M11 12l9.5 7V5z"/><path d="M2 12l9.5 7V5z"/>',
-        action:        () => { jump_to_prev_fork(); },
-        can_execute:   (tree: history_tree) => tree.current_uid !== 0
+        action:        (target_world) => { core.jump_to_prev_fork(target_world.history, target_world.space); },
+        can_execute:   (tree) => tree.current_history_uid !== 0
     },
     {
         id:            'undo',
         strip_title:   'Undo (Ctrl+Z)',
         toolbar_title: 'Step back (Undo)',
         svg_paths:     '<path d="M18 4.5v15l-13-7.5z"/>',
-        action:        () => { undo(); },
-        can_execute:   (tree: history_tree) => tree.current_uid !== 0
+        action:        (target_world) => { core.jump_prev_node(target_world.history, target_world.space); },
+        can_execute:   (tree) => tree.current_history_uid !== 0
     },
     {
         id:            'redo',
         strip_title:   'Redo (Ctrl+Y)',
         toolbar_title: 'Step forward (Redo)',
         svg_paths:     '<path d="M6 4.5v15l13-7.5z"/>',
-        action:        () => { redo(); },
-        can_execute:   (tree: history_tree) =>
+        action:        (target_world) => { core.jump_next_node(target_world.history, target_world.space); },
+        can_execute:   (tree) =>
         {
-            const node = tree.nodes.get(tree.current_uid);
-            return node ? node.children_uids.length === 1 : false;
+            const node = tree.nodes.get(tree.current_history_uid);
+            return node ? node.children_history_uids.length === 1 : false;
         }
     },
     {
@@ -67,11 +60,11 @@ export const NAVIGATION_BUTTON_SPECS: readonly navigation_button_spec[] = [
         strip_title:   'Jump to Next Fork / End',
         toolbar_title: 'Jump to next fork or branch end (Fast Forward)',
         svg_paths:     '<path d="M13 12L3.5 5v14z"/><path d="M22 12l-9.5-7v14z"/>',
-        action:        () => { jump_to_leaf(); },
-        can_execute:   (tree: history_tree) =>
+        action:        (target_world) => { core.jump_to_next_fork(target_world.history, target_world.space); },
+        can_execute:   (tree) =>
         {
-            const node = tree.nodes.get(tree.current_uid);
-            return node ? node.children_uids.length === 1 : false;
+            const node = tree.nodes.get(tree.current_history_uid);
+            return node ? node.children_history_uids.length === 1 : false;
         }
     }
 ];
@@ -81,6 +74,7 @@ export const NAVIGATION_BUTTON_SPECS: readonly navigation_button_spec[] = [
  */
 export function create_navigation_button_group
 (
+    target_world:    world.pure_world,
     container_class: string,
     btn_class:       string,
     mode:            'strip' | 'toolbar'
@@ -103,14 +97,20 @@ export function create_navigation_button_group
         btn.addEventListener('click', (e) =>
         {
             e.stopPropagation();
-            spec.action();
+            const before = target_world.history.current_history_uid;
+            spec.action(target_world);
+            if (target_world.history.current_history_uid !== before)
+            {
+                const hook_id = target_world.history.current_history_uid < before ? 'history_undo' : 'history_redo';
+                target_world.trigger({ namespace: 'vanilla_alpha', id: hook_id }, target_world);
+            }
         });
 
         container.appendChild(btn);
         button_entries.push({ element: btn, spec });
     }
 
-    function update_state(tree: history_tree | null): void
+    function update_state(tree: core.tree | null): void
     {
         if (!tree)
         {

@@ -1,5 +1,5 @@
 import type * as world from '@/world';
-import { basic_ui } from '@/packs/basic_ui';
+import { create_panel_view } from './panel_view';
 import { render_device_card } from './device_card';
 import { create_device_creator } from './device_creator';
 import { get_panel_sections } from './extensions';
@@ -30,11 +30,10 @@ export function create_info_bar
     on_collapse_change?: (collapsed: boolean) => void
 ): info_bar_component
 {
-    const panel = basic_ui.create_floating_panel({
-        id:          'info_bar',
-        tag:         'aside',
-        title:       'Map Status',
-        collapsible: false
+    const panel = create_panel_view({
+        id:    'info_bar',
+        tag:   'aside',
+        title: 'Map Status'
     });
 
     const root_element = panel.element;
@@ -181,6 +180,7 @@ export function create_info_bar
             {
                 render_device_card(
                     content_container,
+                    target_world,
                     dev,
                     () => display_device_info(dev.device_uid),
                     () => clear_device_info()
@@ -225,6 +225,7 @@ export function create_info_bar
         currently_inspected_uid = dev.device_uid;
         render_device_card(
             content_container,
+            target_world,
             dev,
             () => display_device_info(dev.device_uid),
             () => clear_device_info()

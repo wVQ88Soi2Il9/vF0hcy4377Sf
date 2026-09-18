@@ -2,6 +2,7 @@
     position: relative;
     flex: 0 0 8px;
     align-self: stretch;
+    color: var(--panel-pack-resize-handle-color, #808080);
     touch-action: none;
     user-select: none;
 }
@@ -20,12 +21,12 @@
     inset: 25%;
     border-radius: 2px;
     background: currentColor;
-    opacity: 0.2;
+    opacity: 0.55;
 }
 
 .panel_pack_resize_handle:hover::after,
 .panel_pack_resize_handle.is_dragging::after {
-    opacity: 0.6;
+    opacity: 1;
 }
 
 .panel_pack_runtime_size {

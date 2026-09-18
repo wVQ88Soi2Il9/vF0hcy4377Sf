@@ -1,6 +1,7 @@
 /* ─── Splitter Layout (Resizable Panes) ──────────────────────────────────────── */
 
 .basic_ui_splitter_layout {
+    --panel-pack-resize-handle-color: var(--basic-ui-border-subtle);
     position: fixed;
     inset: 0;
     width: 100vw;

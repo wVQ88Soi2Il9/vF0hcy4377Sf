@@ -76,23 +76,6 @@
     overflow: hidden;
 }
 
-/* Collapsed State */
-.basic_ui_panel.is_collapsed {
-    width: auto !important;
-    min-width: unset !important;
-    max-width: unset !important;
-    height: auto !important;
-    min-height: unset !important;
-    max-height: unset !important;
-    padding: 8px 12px;
-    gap: 0;
-}
-
-.basic_ui_panel.is_collapsed .basic_ui_content,
-.basic_ui_panel.is_collapsed .basic_ui_resize_handle {
-    display: none !important;
-}
-
 /* Header & Title */
 .basic_ui_panel .basic_ui_header {
     display: flex;
@@ -136,78 +119,6 @@
     min-height: 0;
     overflow-y: auto;
     box-sizing: border-box;
-}
-
-/* Collapse / Expand Button */
-.basic_ui_panel .basic_ui_collapse_btn {
-    background: transparent;
-    border: 1px solid var(--basic-ui-surface1);
-    border-radius: 4px;
-    color: var(--basic-ui-subtext0);
-    font-size: 12px;
-    font-weight: bold;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    outline: none;
-    flex-shrink: 0;
-    transition: all 0.15s ease;
-}
-
-.basic_ui_panel .basic_ui_collapse_btn:hover {
-    background: var(--basic-ui-surface0);
-    color: var(--basic-ui-text);
-}
-
-.basic_ui_panel .basic_ui_collapse_btn:active {
-    transform: scale(0.92);
-}
-
-/* Resize Handles */
-.basic_ui_panel .basic_ui_resize_handle {
-    position: absolute;
-    user-select: none;
-    z-index: 20;
-    transition: background 0.15s;
-}
-
-.basic_ui_panel .basic_ui_resize_handle:hover {
-    background: rgba(137, 180, 250, 0.3);
-}
-
-.basic_ui_panel .basic_ui_resize_handle.left,
-.basic_ui_panel .basic_ui_resize_handle.right {
-    width: 6px;
-    top: 0;
-    bottom: 0;
-    cursor: ew-resize;
-}
-
-.basic_ui_panel .basic_ui_resize_handle.left {
-    left: 0;
-}
-
-.basic_ui_panel .basic_ui_resize_handle.right {
-    right: 0;
-}
-
-.basic_ui_panel .basic_ui_resize_handle.top,
-.basic_ui_panel .basic_ui_resize_handle.bottom {
-    height: 6px;
-    left: 0;
-    right: 0;
-    cursor: ns-resize;
-}
-
-.basic_ui_panel .basic_ui_resize_handle.top {
-    top: 0;
-}
-
-.basic_ui_panel .basic_ui_resize_handle.bottom {
-    bottom: 0;
 }
 
 /* Select Elements */
@@ -523,54 +434,4 @@
 .basic_ui_error_msg {
     color: var(--basic-ui-red);
     font-size: 11px;
-}
-
-/* Splitter Bar Styles */
-.basic_ui_splitter {
-    position: relative;
-    z-index: 1002;
-    pointer-events: auto;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.15s ease;
-}
-
-.basic_ui_splitter.vertical {
-    width: 8px;
-    height: 100%;
-    cursor: col-resize;
-    margin: 0 4px;
-}
-
-.basic_ui_splitter.horizontal {
-    width: 100%;
-    height: 8px;
-    cursor: row-resize;
-    margin: 4px 0;
-}
-
-.basic_ui_splitter::after {
-    content: '';
-    position: absolute;
-    background-color: var(--basic-ui-border);
-    border-radius: 2px;
-    transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.basic_ui_splitter.vertical::after {
-    width: 2px;
-    height: 24px;
-}
-
-.basic_ui_splitter.horizontal::after {
-    width: 24px;
-    height: 2px;
-}
-
-.basic_ui_splitter:hover::after,
-.basic_ui_splitter.is_dragging::after {
-    background-color: var(--basic-ui-sapphire);
-    transform: scale(1.4);
 }

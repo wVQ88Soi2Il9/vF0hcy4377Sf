@@ -1,39 +1,48 @@
-import { fill_panels } from '@/packs/panel';
-import './panel_mock.css';
+import * as core from '@/core';
+import { pure_world } from '@/world';
+import * as cli from '@/packs/cli';
+import * as panel from '@/packs/panel';
+import * as shirones_ui from '@/packs/shirones_ui';
+import * as vanilla_alpha from '@/packs/vanilla_alpha';
+import * as vanilla_beta from '@/packs/vanilla_beta';
 
-function create_panel(name: string, size: string): HTMLElement
+const registry: core.pack_registry = new Map();
+
+vanilla_alpha.global_init(registry);
+vanilla_beta.global_init(registry);
+cli.global_init(registry);
+panel.global_init(registry);
+shirones_ui.global_init(registry);
+
+const hook_template: core.hook_list = new Map();
+for (const [namespace, pack] of registry)
 {
-    const element = document.createElement('section');
-    element.className = `mock_panel panel_${name.toLowerCase()}`;
-    element.textContent = `${name} ${size}`;
-    return element;
+    if (!pack.hooks)
+    {
+        continue;
+    }
+
+    const hooks = new Map<string, core.hook_callback[]>();
+    for (const [id, callbacks] of pack.hooks)
+    {
+        hooks.set(id, [...callbacks]);
+    }
+    hook_template.set(namespace, hooks);
 }
 
-const root = document.querySelector<HTMLElement>('#app');
-if (!root)
+const app = document.getElementById('app');
+if (!app)
 {
     throw new Error('#app not found.');
 }
+app.replaceChildren();
 
-const panel_a = create_panel('A', '30%');
-const panel_b = create_panel('B', '50%');
-const panel_c = create_panel('C', '20%');
-const panel_d = create_panel('D', '20%');
-const panel_e = create_panel('E', '80%');
-
-const right = document.createElement('div');
-right.className = 'mock_group mock_right';
-
-const bottom = document.createElement('div');
-bottom.className = 'mock_group mock_bottom';
-
-fill_panels(bottom, [{ element: panel_d }, { element: panel_e }]);
-fill_panels
-(
-    right,
-    [{ element: panel_b }, { element: panel_c }, { element: bottom }],
-    { direction: 'column' }
+const target_world = new pure_world(
+    new core.space([64, 64, 4]),
+    registry,
+    hook_template,
+    'main'
 );
-fill_panels(root, [{ element: panel_a }, { element: right }]);
 
-document.title = 'Panel Mock';
+shirones_ui.create_ui_layout(target_world);
+document.title = 'Shirones UI';

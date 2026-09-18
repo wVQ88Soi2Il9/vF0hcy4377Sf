@@ -1,6 +1,13 @@
-import { type device, move_device_command, delete_device_command, select_recipe_command } from '@/core';
-import { get_registry, execute_command } from '@/world';
-import { format_namespaced_id, parse_namespaced_id } from '@/packs/vanilla';
+import { record_operation, type device, type rev_op } from '@/core';
+import type * as world from '@/world';
+import
+{
+    delete_device_operation,
+    format_namespaced_id,
+    move_device_operation,
+    parse_namespaced_id,
+    select_recipe_operation
+} from '@/packs/vanilla_alpha';
 import { get_device_actions, get_device_inspectors } from './extensions';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
@@ -9,8 +16,9 @@ import { create_coordinate_stepper_group } from './coordinate_stepper';
  */
 function format_ports_summary(dev: device): string
 {
-    const inputs = dev.get_port('input');
-    const outputs = dev.get_port('output');
+    const ports = dev.get_port();
+    const inputs = ports.filter(port => port.direction === 'input' || port.direction === 'bidirectional');
+    const outputs = ports.filter(port => port.direction === 'output' || port.direction === 'bidirectional');
     if (inputs.length === 0 && outputs.length === 0)
     {
         return 'None';
@@ -19,11 +27,11 @@ function format_ports_summary(dev: device): string
     const parts: string[] = [];
     if (inputs.length > 0)
     {
-        parts.push(`In: ${inputs.map(p => `(${p.join(', ')})`).join(', ')}`);
+        parts.push(`In: ${inputs.map(port => `#${port.port_uid} (${port.offset.join(', ')})`).join(', ')}`);
     }
     if (outputs.length > 0)
     {
-        parts.push(`Out: ${outputs.map(p => `(${p.join(', ')})`).join(', ')}`);
+        parts.push(`Out: ${outputs.map(port => `#${port.port_uid} (${port.offset.join(', ')})`).join(', ')}`);
     }
     return parts.join('; ');
 }
@@ -31,16 +39,10 @@ function format_ports_summary(dev: device): string
 /**
  * Extracts available recipes matching the device definition ID.
  */
-function get_available_recipes(_def_id: string): Array<{ id: string; label: string }>
+function get_available_recipes(registry: world.pure_world['registry']): Array<{ id: string; label: string }>
 {
-    const registry = get_registry();
-    if (!registry)
-    {
-        return [];
-    }
-
     const matched: Array<{ id: string; label: string }> = [];
-    for (const [pack_name, mod] of registry.packs)
+    for (const [pack_name, mod] of registry)
     {
         if (mod.recipes)
         {
@@ -63,11 +65,19 @@ function get_available_recipes(_def_id: string): Array<{ id: string; label: stri
 export function render_device_card
 (
     container:        HTMLElement,
+    target_world:     world.pure_world,
     dev:              device,
     refresh_callback: () => void,
     delete_callback:  () => void
 ): void
 {
+    function execute_operation(operation: rev_op): void
+    {
+        const node = record_operation(target_world.history, target_world.space, [operation]);
+        target_world.trigger({ namespace: 'vanilla_alpha', id: operation.id }, target_world, operation);
+        target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, target_world, node);
+    }
+
     container.innerHTML = '';
 
     const card = document.createElement('div');
@@ -79,7 +89,7 @@ export function render_device_card
 
     const uid_span = document.createElement('span');
     uid_span.style.whiteSpace = 'nowrap';
-    uid_span.textContent = `Device #${dev.uid}`;
+    uid_span.textContent = `Device #${dev.device_uid}`;
 
     const def_span = document.createElement('span');
     def_span.className = 'basic_ui_card_def_id';
@@ -95,7 +105,7 @@ export function render_device_card
     move_btn.type = 'button';
     move_btn.textContent = '🔄';
     move_btn.className = 'basic_ui_btn_primary';
-    move_btn.title = `Move Device #${dev.uid} to coordinates`;
+    move_btn.title = `Move Device #${dev.device_uid} to coordinates`;
 
     move_btn.addEventListener('click', () =>
     {
@@ -108,8 +118,7 @@ export function render_device_card
 
         try
         {
-            const cmd = move_device_command(dev.uid, parsed.position);
-            execute_command(cmd);
+            execute_operation(move_device_operation(dev.device_uid, parsed.position));
             coords_group.hide_error();
             refresh_callback();
         }
@@ -123,12 +132,11 @@ export function render_device_card
     delete_btn.type = 'button';
     delete_btn.textContent = '🗑️';
     delete_btn.className = 'basic_ui_btn_danger';
-    delete_btn.title = `Delete Device #${dev.uid}`;
+    delete_btn.title = `Delete Device #${dev.device_uid}`;
 
     delete_btn.addEventListener('click', () =>
     {
-        const cmd = delete_device_command(dev.uid);
-        execute_command(cmd);
+        execute_operation(delete_device_operation(dev.device_uid));
         delete_callback();
     });
 
@@ -147,7 +155,7 @@ export function render_device_card
     recipe_select.className = 'basic_ui_select';
 
     const current_recipe_id = dev.selected_recipe_id ? format_namespaced_id(dev.selected_recipe_id) : '';
-    const available_recipes = get_available_recipes(format_namespaced_id(dev.definition_id));
+    const available_recipes = get_available_recipes(target_world.registry);
 
     recipe_select.innerHTML = '<option value="">(None / Pass-through)</option>';
     for (const r of available_recipes)
@@ -168,8 +176,7 @@ export function render_device_card
         const new_rec_id = new_rec_str ? parse_namespaced_id(new_rec_str) : undefined;
         try
         {
-            const cmd = select_recipe_command(dev.uid, new_rec_id);
-            execute_command(cmd);
+            execute_operation(select_recipe_operation(dev.device_uid, new_rec_id));
             refresh_callback();
         }
         catch (err: unknown)

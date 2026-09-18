@@ -1,23 +1,13 @@
-import type { history_tree, history_node, map_command } from '@/core';
-import
-{
-    on_history_change,
-    compute_path_to_root
-} from '@/core';
-import
-{
-    get_history_tree,
-    jump_to_history,
-    delete_history_node
-} from '@/world';
-import { format_namespaced_id } from '@/packs/vanilla';
-import { basic_ui } from '@/packs/basic_ui';
+import * as core from '@/core';
+import type * as world from '@/world';
+import { format_namespaced_id } from '@/packs/vanilla_alpha';
+import { create_panel_view } from './panel_view';
 import
 {
     delete_branch,
     is_node_pinned,
     toggle_node_pin
-} from '@/packs/vanilla';
+} from '@/packs/vanilla_beta';
 import { create_navigation_button_group } from './history_navigation';
 
 const HIGHLIGHT_COLOR = '#f9e2af';
@@ -32,7 +22,7 @@ export interface history_tree_component
 
 interface git_node_layout
 {
-    node:              history_node;
+    node:              core.node;
     row:               number;
     lane:              number;
     is_current:        boolean;
@@ -73,12 +63,12 @@ function get_lane_color(lane: number): string
     return LANE_COLORS[lane % LANE_COLORS.length];
 }
 
-function parse_command_details(cmd: map_command | null): {
+function parse_command_details(operation: core.rev_op | null): {
     icon:   string;
     target: string;
 }
 {
-    if (!cmd)
+    if (!operation)
     {
         return {
             icon:   '🔷',
@@ -86,9 +76,9 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.namespace === 'core' && cmd.id === 'create_device')
+    if (operation.id === 'create_device')
     {
-        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const core_info = (operation.other_info?.vanilla_alpha as Record<string, unknown> | undefined) ?? operation.other_info;
         const def_val = core_info?.definition_id;
         const def = typeof def_val === 'object' && def_val !== null ? format_namespaced_id(def_val as any) : String(def_val ?? 'device');
         const pos = core_info?.position ? ` at [${(core_info.position as number[]).join(', ')}]` : '';
@@ -98,9 +88,9 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.namespace === 'core' && cmd.id === 'move_device')
+    if (operation.id === 'move_device')
     {
-        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const core_info = (operation.other_info?.vanilla_alpha as Record<string, unknown> | undefined) ?? operation.other_info;
         const uid = core_info?.device_uid ?? '';
         const pos = core_info?.position ? ` to [${(core_info.position as number[]).join(', ')}]` : '';
         return {
@@ -109,9 +99,9 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.namespace === 'core' && cmd.id === 'select_recipe')
+    if (operation.id === 'select_recipe')
     {
-        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const core_info = (operation.other_info?.vanilla_alpha as Record<string, unknown> | undefined) ?? operation.other_info;
         const uid = core_info?.device_uid ?? '';
         const rec_val = core_info?.new_recipe_id;
         const recipe = typeof rec_val === 'object' && rec_val !== null ? format_namespaced_id(rec_val as any) : String(rec_val ?? 'none');
@@ -121,9 +111,9 @@ function parse_command_details(cmd: map_command | null): {
         };
     }
 
-    if (cmd.namespace === 'core' && cmd.id === 'delete_device')
+    if (operation.id === 'delete_device')
     {
-        const core_info = (cmd.other_info?.core as Record<string, unknown> | undefined) ?? cmd.other_info;
+        const core_info = (operation.other_info?.vanilla_alpha as Record<string, unknown> | undefined) ?? operation.other_info;
         const uid = core_info?.device_uid ?? '';
         return {
             icon:   '🗑️',
@@ -133,7 +123,7 @@ function parse_command_details(cmd: map_command | null): {
 
     return {
         icon:   '🔹',
-        target: format_namespaced_id(cmd)
+        target: format_namespaced_id(operation)
     };
 }
 
@@ -141,7 +131,19 @@ function parse_command_details(cmd: map_command | null): {
  * Computes standard Git Graph topology layout (ordered by UID creation sequence).
  * Each node sits at its creation row, while branches curve out smoothly with Bézier elbows.
  */
-function compute_git_graph_layout(tree: history_tree): {
+function compute_path_to_root(tree: core.tree, start: core.uid): core.uid[]
+{
+    const path: core.uid[] = [];
+    let current: core.uid | null = start;
+    while (current !== null)
+    {
+        path.push(current);
+        current = tree.nodes.get(current)?.parent_history_uid ?? null;
+    }
+    return path;
+}
+
+function compute_git_graph_layout(tree: core.tree): {
     nodes:        git_node_layout[];
     edges:        git_edge_layout[];
     max_lane:     number;
@@ -154,10 +156,10 @@ function compute_git_graph_layout(tree: history_tree): {
         return { nodes: [], edges: [], max_lane: 0, total_height: 0 };
     }
 
-    const active_path_set = new Set(compute_path_to_root(tree, tree.current_uid));
+    const active_path_set = new Set(compute_path_to_root(tree, tree.current_history_uid));
 
     // Sort all nodes chronologically by UID (Topological order)
-    const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.uid - b.uid);
+    const sorted_nodes = Array.from(tree.nodes.values()).sort((a, b) => a.history_uid - b.history_uid);
 
     const node_lanes = new Map<number, number>();
     node_lanes.set(0, 0);
@@ -167,50 +169,50 @@ function compute_git_graph_layout(tree: history_tree): {
     // Allocate lanes along branch chains
     for (const node of sorted_nodes)
     {
-        const current_lane = node_lanes.get(node.uid) ?? 0;
-        const children = node.children_uids
+        const current_lane = node_lanes.get(node.history_uid) ?? 0;
+        const children = node.children_history_uids
             .map(id => tree.nodes.get(id))
-            .filter((c): c is history_node => c !== undefined);
+            .filter((c): c is core.node => c !== undefined);
 
         // Sort children: active branch child first, then latest created
         children.sort((a, b) =>
         {
-            const a_active = active_path_set.has(a.uid) ? 1 : 0;
-            const b_active = active_path_set.has(b.uid) ? 1 : 0;
+            const a_active = active_path_set.has(a.history_uid) ? 1 : 0;
+            const b_active = active_path_set.has(b.history_uid) ? 1 : 0;
             if (a_active !== b_active)
             {
                 return b_active - a_active;
             }
-            return a.uid - b.uid;
+            return a.history_uid - b.history_uid;
         });
 
         for (let i = 0; i < children.length; i++)
         {
             const child = children[i];
-            if (!node_lanes.has(child.uid))
+            if (!node_lanes.has(child.history_uid))
             {
                 if (i === 0)
                 {
                     // Primary child inherits parent lane
-                    node_lanes.set(child.uid, current_lane);
+                    node_lanes.set(child.history_uid, current_lane);
                 }
                 else
                 {
                     // Forking branch gets a new lane
                     const branch_lane = next_free_lane++;
-                    node_lanes.set(child.uid, branch_lane);
+                    node_lanes.set(child.history_uid, branch_lane);
 
                     // Propagate this branch lane down the primary chain of the new branch
                     let curr_branch = child;
                     while (curr_branch)
                     {
-                        node_lanes.set(curr_branch.uid, branch_lane);
-                        if (curr_branch.children_uids.length === 0)
+                        node_lanes.set(curr_branch.history_uid, branch_lane);
+                        if (curr_branch.children_history_uids.length === 0)
                         {
                             break;
                         }
-                        const next_child = tree.nodes.get(curr_branch.children_uids[0]);
-                        if (!next_child || node_lanes.has(next_child.uid))
+                        const next_child = tree.nodes.get(curr_branch.children_history_uids[0]);
+                        if (!next_child || node_lanes.has(next_child.history_uid))
                         {
                             break;
                         }
@@ -229,9 +231,9 @@ function compute_git_graph_layout(tree: history_tree): {
     {
         const node = sorted_nodes[i];
         const row = sorted_nodes.length - 1 - i;
-        const lane = node_lanes.get(node.uid) ?? 0;
-        const is_current = node.uid === tree.current_uid;
-        const is_on_active_path = active_path_set.has(node.uid);
+        const lane = node_lanes.get(node.history_uid) ?? 0;
+        const is_current = node.history_uid === tree.current_history_uid;
+        const is_on_active_path = active_path_set.has(node.history_uid);
 
         layout_nodes.push({
             node,
@@ -241,7 +243,7 @@ function compute_git_graph_layout(tree: history_tree): {
             is_on_active_path
         });
 
-        node_coords.set(node.uid, { row, lane });
+        node_coords.set(node.history_uid, { row, lane });
     }
 
     // Sort layout nodes by visual row (0 to N - 1) for DOM order
@@ -259,9 +261,9 @@ function compute_git_graph_layout(tree: history_tree): {
     const edges: git_edge_layout[] = [];
     for (const n of layout_nodes)
     {
-        if (n.node.parent_uid !== null)
+        if (n.node.parent_history_uid !== null)
         {
-            const parent_pos = node_coords.get(n.node.parent_uid);
+            const parent_pos = node_coords.get(n.node.parent_history_uid);
             if (parent_pos)
             {
                 const x1 = PAD_X + parent_pos.lane * LANE_WIDTH;
@@ -270,8 +272,8 @@ function compute_git_graph_layout(tree: history_tree): {
                 const y2 = PAD_Y + n.row * ROW_HEIGHT + ROW_HEIGHT / 2;
 
                 edges.push({
-                    parent_uid: n.node.parent_uid,
-                    child_uid:  n.node.uid,
+                    parent_uid: n.node.parent_history_uid,
+                    child_uid:  n.node.history_uid,
                     x1,
                     y1,
                     x2,
@@ -293,13 +295,16 @@ function compute_git_graph_layout(tree: history_tree): {
 /**
  * Creates the vertical Git Graph History Tree panel.
  */
-export function create_history_tree(on_collapse_change?: (collapsed: boolean) => void): history_tree_component
+export function create_history_tree
+(
+    target_world:        world.pure_world,
+    on_collapse_change?: (collapsed: boolean) => void
+): history_tree_component
 {
-    const panel = basic_ui.create_floating_panel({
-        id:          'history_tree_panel',
-        tag:         'aside',
-        title:       'History Tree',
-        collapsible: false
+    const panel = create_panel_view({
+        id:    'history_tree_panel',
+        tag:   'aside',
+        title: 'History Tree'
     });
 
     const root_element = panel.element;
@@ -318,7 +323,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     expand_btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13.5V9.75a3.75 3.75 0 0 0-3.75-3.75H12V3.75a.75.75 0 0 0-1.5 0V6H7.75A3.75 3.75 0 0 0 4 9.75v3.75a2.25 2.25 0 1 0 1.5 0V9.75c0-1.243 1.007-2.25 2.25-2.25H10.5V18a2.25 2.25 0 1 0 1.5 0V7.5h2.75c1.243 0 2.25 1.007 2.25 2.25v3.75a2.25 2.25 0 1 0 2 0z"/></svg>';
 
     // 6 Vertical Jump / Transport Buttons (Collapsed Strip)
-    const strip_nav = create_navigation_button_group('history_strip_btn_group', 'history_strip_btn', 'strip');
+    const strip_nav = create_navigation_button_group(target_world, 'history_strip_btn_group', 'history_strip_btn', 'strip');
 
     const strip_step_badge = document.createElement('span');
     strip_step_badge.className = 'history_strip_badge';
@@ -363,7 +368,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
     info_label.textContent = 'Git Graph';
 
     // 6 Jump / Transport Buttons (Expanded Toolbar)
-    const toolbar_nav = create_navigation_button_group('basic_ui_cad_btn_group', 'basic_ui_btn', 'toolbar');
+    const toolbar_nav = create_navigation_button_group(target_world, 'basic_ui_cad_btn_group', 'basic_ui_btn', 'toolbar');
 
     toolbar.appendChild(info_label);
     toolbar.appendChild(toolbar_nav.container);
@@ -403,20 +408,12 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         const prev_scroll_top = viewport.scrollTop;
         const prev_scroll_left = viewport.scrollLeft;
 
-        const tree = get_history_tree();
-        if (!tree)
-        {
-            strip_step_badge.textContent = '#0';
-            strip_nav.update_state(null);
-            toolbar_nav.update_state(null);
-            canvas_container.innerHTML = '<div class="basic_ui_label_sub" style="padding:16px;">History not initialized.</div>';
-            return;
-        }
+        const tree = target_world.history;
 
-        const current_changed = last_scrolled_uid !== tree.current_uid;
-        last_scrolled_uid = tree.current_uid;
+        const current_changed = last_scrolled_uid !== tree.current_history_uid;
+        last_scrolled_uid = tree.current_history_uid;
 
-        strip_step_badge.textContent = `#${tree.current_uid}`;
+        strip_step_badge.textContent = `#${tree.current_history_uid}`;
         strip_nav.update_state(tree);
         toolbar_nav.update_state(tree);
 
@@ -434,7 +431,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             return;
         }
 
-        info_label.textContent = `HEAD @ #${tree.current_uid} (${layout.nodes.length} nodes)`;
+        info_label.textContent = `HEAD @ #${tree.current_history_uid} (${layout.nodes.length} nodes)`;
 
         const graph_col_width = PAD_X + (layout.max_lane + 1) * LANE_WIDTH + 14;
         const total_height = layout.total_height;
@@ -507,7 +504,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             }
 
             // Golden / amber halo for pinned / highlighted nodes
-            const is_pinned = is_node_pinned(n.node.uid);
+            const is_pinned = is_node_pinned(tree, n.node.history_uid);
             if (is_pinned)
             {
                 const pin_halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -537,10 +534,10 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         for (const n of layout.nodes)
         {
             const row_y = PAD_Y + n.row * ROW_HEIGHT;
-            const details = parse_command_details(n.node.command);
+            const details = parse_command_details(n.node.operations[n.node.operations.length - 1] ?? null);
             const label_str = details.target;
             const color = get_lane_color(n.lane);
-            const is_pinned = is_node_pinned(n.node.uid);
+            const is_pinned = is_node_pinned(tree, n.node.history_uid);
 
             const row = document.createElement('div');
             row.className = 'history_git_row';
@@ -588,7 +585,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
 
             const uid_badge = document.createElement('span');
             uid_badge.className = 'history_git_uid_badge';
-            uid_badge.textContent = `#${n.node.uid}`;
+            uid_badge.textContent = `#${n.node.history_uid}`;
             main_line.appendChild(uid_badge);
 
             const actions_group = document.createElement('span');
@@ -598,12 +595,12 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             const pin_btn = document.createElement('button');
             pin_btn.type = 'button';
             pin_btn.className = `history_git_row_btn pin_btn${is_pinned ? ' is_active' : ''}`;
-            pin_btn.title = is_pinned ? `Unpin node #${n.node.uid}` : `Pin node #${n.node.uid} (highlight)`;
+            pin_btn.title = is_pinned ? `Unpin node #${n.node.history_uid}` : `Pin node #${n.node.history_uid} (highlight)`;
             pin_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>';
             pin_btn.addEventListener('click', (e) =>
             {
                 e.stopPropagation();
-                toggle_node_pin(n.node.uid);
+                toggle_node_pin(tree, n.node.history_uid);
                 refresh();
             });
             actions_group.appendChild(pin_btn);
@@ -612,12 +609,14 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             const delete_node_btn = document.createElement('button');
             delete_node_btn.type = 'button';
             delete_node_btn.className = 'history_git_row_btn delete_node_btn';
-            delete_node_btn.title = n.node.uid === 0
+            delete_node_btn.title = n.node.history_uid === 0
                 ? 'Root node cannot be deleted'
-                : (n.is_current ? 'Cannot delete current active node' : `Delete node #${n.node.uid} (re-parent children)`);
+                : (n.is_current || n.node.children_history_uids.length > 0
+                    ? 'Only inactive leaf nodes can be deleted'
+                    : `Delete leaf node #${n.node.history_uid}`);
             delete_node_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
 
-            if (n.node.uid === 0 || n.is_current)
+            if (n.node.history_uid === 0 || n.is_current || n.node.children_history_uids.length > 0)
             {
                 delete_node_btn.disabled = true;
             }
@@ -626,7 +625,10 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                 delete_node_btn.addEventListener('click', (e) =>
                 {
                     e.stopPropagation();
-                    delete_history_node(n.node.uid);
+                    if (core.delete_node(tree, n.node.history_uid))
+                    {
+                        target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_delete' }, target_world, n.node);
+                    }
                 });
             }
 
@@ -634,12 +636,12 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             const delete_branch_btn = document.createElement('button');
             delete_branch_btn.type = 'button';
             delete_branch_btn.className = 'history_git_row_btn delete_branch_btn';
-            delete_branch_btn.title = n.node.uid === 0
+            delete_branch_btn.title = n.node.history_uid === 0
                 ? 'Root node cannot be deleted'
-                : (n.is_on_active_path ? 'Cannot delete active branch (switch active branch first)' : `Delete branch rooted at #${n.node.uid} (prune subtree)`);
+                : (n.is_on_active_path ? 'Cannot delete active branch (switch active branch first)' : `Delete branch rooted at #${n.node.history_uid} (prune subtree)`);
             delete_branch_btn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M15 4V2H9v2H4v2h1v13c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6h1V4h-5zm2 15H7V6h10v13zM9 8h2v9H9zm4 0h2v9h-2z"/></svg>';
 
-            if (n.node.uid === 0 || n.is_on_active_path)
+            if (n.node.history_uid === 0 || n.is_on_active_path)
             {
                 delete_branch_btn.disabled = true;
             }
@@ -648,7 +650,10 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                 delete_branch_btn.addEventListener('click', (e) =>
                 {
                     e.stopPropagation();
-                    delete_branch(n.node.uid);
+                    if (delete_branch(tree, n.node.history_uid))
+                    {
+                        target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_delete' }, target_world, n.node);
+                    }
                 });
             }
 
@@ -668,7 +673,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
             row.appendChild(main_line);
             row.appendChild(sub_line);
 
-            if (n.node.uid === 0)
+            if (n.node.history_uid === 0)
             {
                 row.title = `${label_str} — Click to jump (Root node cannot be deleted)`;
             }
@@ -683,7 +688,12 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
 
             row.addEventListener('click', () =>
             {
-                jump_to_history(n.node.uid);
+                const before = tree.current_history_uid;
+                core.jump_to_node(tree, target_world.space, n.node.history_uid);
+                if (tree.current_history_uid !== before)
+                {
+                    target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_change' }, target_world);
+                }
             });
 
             row.addEventListener('contextmenu', (e) =>
@@ -691,12 +701,15 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (n.node.uid === 0 || n.is_current)
+                if (n.node.history_uid === 0 || n.is_current || n.node.children_history_uids.length > 0)
                 {
                     return;
                 }
 
-                delete_history_node(n.node.uid);
+                if (core.delete_node(tree, n.node.history_uid))
+                {
+                    target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_delete' }, target_world, n.node);
+                }
             });
 
             canvas_container.appendChild(row);
@@ -722,7 +735,7 @@ export function create_history_tree(on_collapse_change?: (collapsed: boolean) =>
         }
     }
 
-    on_history_change(() =>
+    target_world.inject_hook({ namespace: 'vanilla_alpha', id: 'history_change' }, () =>
     {
         refresh();
     });
