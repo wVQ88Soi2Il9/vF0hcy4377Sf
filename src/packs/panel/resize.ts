@@ -1,5 +1,11 @@
 import type { panel, panel_direction } from './definition';
 
+export interface resize_handle
+{
+    readonly element: HTMLElement;
+    cancel(): void;
+}
+
 function get_size(target: HTMLElement, direction: panel_direction): number
 {
     const bounds = target.getBoundingClientRect();
@@ -8,12 +14,22 @@ function get_size(target: HTMLElement, direction: panel_direction): number
 
 function freeze_size(target: panel, size: number): void
 {
-    target.element.style.flex = `0 0 ${size}px`;
+    target.element.classList.add('panel_pack_runtime_size');
+    target.element.classList.remove('panel_pack_resizable_size');
+    target.element.style.setProperty('--panel-pack-runtime-size', `${size}px`);
 }
 
 function set_resizable_size(target: panel, size: number): void
 {
-    target.element.style.flex = `0 1 ${size}px`;
+    freeze_size(target, size);
+    target.element.classList.add('panel_pack_resizable_size');
+}
+
+export function clear_resize_size(target: panel): void
+{
+    target.element.classList.remove('panel_pack_runtime_size');
+    target.element.classList.remove('panel_pack_resizable_size');
+    target.element.style.removeProperty('--panel-pack-runtime-size');
 }
 
 export function create_resize_handle
@@ -21,7 +37,7 @@ export function create_resize_handle
     panels:    readonly panel[],
     index:     number,
     direction: panel_direction
-): HTMLElement
+): resize_handle
 {
     const handle = document.createElement('div');
     handle.className = `panel_pack_resize_handle ${direction}`;
@@ -41,6 +57,22 @@ export function create_resize_handle
         if (event.pointerId !== pointer_id)
         {
             return;
+        }
+
+        pointer_id = null;
+        handle.classList.remove('is_dragging');
+    }
+
+    function cancel(): void
+    {
+        if (pointer_id === null)
+        {
+            return;
+        }
+
+        if (handle.hasPointerCapture(pointer_id))
+        {
+            handle.releasePointerCapture(pointer_id);
         }
 
         pointer_id = null;
@@ -90,5 +122,5 @@ export function create_resize_handle
     handle.addEventListener('pointerup', finish_drag);
     handle.addEventListener('pointercancel', finish_drag);
 
-    return handle;
+    return { element: handle, cancel };
 }

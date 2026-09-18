@@ -27,3 +27,11 @@
 .panel_pack_resize_handle.is_dragging::after {
     opacity: 0.6;
 }
+
+.panel_pack_runtime_size {
+    flex: 0 0 var(--panel-pack-runtime-size) !important;
+}
+
+.panel_pack_runtime_size.panel_pack_resizable_size {
+    flex-shrink: 1 !important;
+}
