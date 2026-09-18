@@ -14,6 +14,19 @@ export interface shirones_ui_layout_nodes
     cli_bar:        cli_bar_component;
 }
 
+function get_ui_root(): HTMLElement
+{
+    let root = document.getElementById('ui_root');
+    if (!root)
+    {
+        root = document.createElement('div');
+        root.id = 'ui_root';
+        (document.getElementById('app') ?? document.body).appendChild(root);
+    }
+    root.className = 'basic_ui_splitter_layout';
+    return root;
+}
+
 /**
  * Creates the primary UI DOM layout structure with draggable splitters.
  * History Tree is on the left side (vertical Git Graph, default collapsed to 38px, expands to 40vw).
@@ -22,8 +35,7 @@ export interface shirones_ui_layout_nodes
  */
 export function create_ui_layout(target_world: world.pure_world): shirones_ui_layout_nodes
 {
-    const root = basic_ui.get_ui_root();
-    root.innerHTML = '';
+    const root = get_ui_root();
 
     // 1. Column Containers
     const history_sidebar = document.createElement('div');
@@ -132,13 +144,15 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
     });
     h_splitter.element.style.display = 'none';
 
-    center_col.appendChild(viewport_panel.panel.element);
-    center_col.appendChild(h_splitter.element);
-    center_col.appendChild(cli_bar.element);
+    basic_ui.fill_panels(
+        center_col,
+        [viewport_panel.panel, h_splitter, cli_bar],
+        { direction: 'column' }
+    );
 
     // 4. Assemble Sidebars
-    history_sidebar.appendChild(cad_timeline.element);
-    right_col.appendChild(info_bar.element);
+    basic_ui.fill_panels(history_sidebar, [cad_timeline]);
+    basic_ui.fill_panels(right_col, [info_bar]);
 
     // 5. Create Vertical Splitters
     v_splitter_left = basic_ui.create_splitter({
@@ -160,11 +174,13 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
     v_splitter_right.element.style.display = 'none';
 
     // 6. Assemble Root Layout
-    root.appendChild(history_sidebar);
-    root.appendChild(v_splitter_left.element);
-    root.appendChild(center_col);
-    root.appendChild(v_splitter_right.element);
-    root.appendChild(right_col);
+    basic_ui.fill_panels(root, [
+        { element: history_sidebar },
+        v_splitter_left,
+        { element: center_col },
+        v_splitter_right,
+        { element: right_col }
+    ]);
 
     return { root, viewport_panel, info_bar, cad_timeline, cli_bar };
 }

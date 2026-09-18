@@ -42,3 +42,5 @@ avoid unnecessary global state
 13. Record important features, refactors, and architectural decisions in `docs/history/` when practical. Do not proactively read the entire history at the start of every task.
 
 14. Temporary compatibility layers, aliases, or bridges must state a cleanup target so they do not become permanent technical debt.
+
+15. Normalize Markdown-escaped identifiers and paths in Human messages before resolving them. In particular, interpret `\_` as `_` (for example, `basic\_ui` means `basic_ui`) while preserving backslashes that are actual Windows path separators.

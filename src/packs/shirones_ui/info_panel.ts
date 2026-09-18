@@ -2,6 +2,7 @@ import type * as world from '@/world';
 import { basic_ui } from '@/packs/basic_ui';
 import { render_device_card } from './device_card';
 import { create_device_creator } from './device_creator';
+import { get_panel_sections } from './extensions';
 
 export interface info_bar_stats
 {
@@ -199,7 +200,7 @@ export function create_info_bar
 
         // Render downstream custom sections
         custom_sections_el.innerHTML = '';
-        for (const section of basic_ui.get_panel_sections())
+        for (const section of get_panel_sections())
         {
             section.render(custom_sections_el, target_world.space);
         }

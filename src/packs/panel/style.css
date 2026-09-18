@@ -1,0 +1,29 @@
+.panel_pack_resize_handle {
+    position: relative;
+    flex: 0 0 8px;
+    align-self: stretch;
+    touch-action: none;
+    user-select: none;
+}
+
+.panel_pack_resize_handle.row {
+    cursor: col-resize;
+}
+
+.panel_pack_resize_handle.column {
+    cursor: row-resize;
+}
+
+.panel_pack_resize_handle::after {
+    position: absolute;
+    content: '';
+    inset: 25%;
+    border-radius: 2px;
+    background: currentColor;
+    opacity: 0.2;
+}
+
+.panel_pack_resize_handle:hover::after,
+.panel_pack_resize_handle.is_dragging::after {
+    opacity: 0.6;
+}

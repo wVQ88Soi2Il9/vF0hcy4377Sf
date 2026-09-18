@@ -1,0 +1,63 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.mock_group {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.mock_right {
+    flex: 1 1 0;
+    min-width: 320px;
+}
+
+.mock_bottom {
+    flex: 1 1 0;
+    min-height: 120px;
+}
+
+.mock_panel {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid;
+}
+
+.panel_a {
+    flex: 0 1 30%;
+    min-width: 180px;
+}
+
+.panel_b {
+    flex: 0 1 50%;
+    min-height: 100px;
+}
+
+.panel_c {
+    flex: 0 1 20%;
+    min-height: 72px;
+}
+
+.panel_d {
+    flex: 0 1 20%;
+    min-width: 96px;
+}
+
+.panel_e {
+    flex: 1 1 0;
+    min-width: 160px;
+}

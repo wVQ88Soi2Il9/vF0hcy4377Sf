@@ -23,6 +23,8 @@ export {
     create_viewport_panel
 };
 
+export * from './extensions';
+
 let bound_world: world.pure_world | null = null;
 
 export function global_init(registry: core.pack_registry): void

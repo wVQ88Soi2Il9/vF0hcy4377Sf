@@ -2,7 +2,7 @@ import type * as world from '@/world';
 import { record_operation } from '@/core';
 import { parse_namespaced_id, get_device_class } from '@/packs/vanilla_alpha';
 import { create_device_operation } from '@/packs/vanilla_alpha/operations';
-import { get_device_creation_options } from '@/packs/basic_ui/extensions';
+import { get_device_creation_options } from './extensions';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
 export interface device_creator_component

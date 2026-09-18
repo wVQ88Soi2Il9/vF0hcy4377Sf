@@ -1,7 +1,7 @@
 import { type device, move_device_command, delete_device_command, select_recipe_command } from '@/core';
 import { get_registry, execute_command } from '@/world';
 import { format_namespaced_id, parse_namespaced_id } from '@/packs/vanilla';
-import { basic_ui } from '@/packs/basic_ui';
+import { get_device_actions, get_device_inspectors } from './extensions';
 import { create_coordinate_stepper_group } from './coordinate_stepper';
 
 /**
@@ -265,7 +265,7 @@ export function render_device_card
     }
 
     // 6. Downstream Custom Inspectors Slot
-    const inspectors = basic_ui.get_device_inspectors(dev);
+    const inspectors = get_device_inspectors(dev);
     if (inspectors.length > 0)
     {
         const inspectors_slot = document.createElement('div');
@@ -278,7 +278,7 @@ export function render_device_card
     }
 
     // 7. Custom Actions Row (if any)
-    const custom_actions = basic_ui.get_device_actions();
+    const custom_actions = get_device_actions();
     if (custom_actions.length > 0)
     {
         const actions_container = document.createElement('div');

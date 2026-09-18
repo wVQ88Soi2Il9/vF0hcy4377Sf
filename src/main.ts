@@ -1,32 +1,39 @@
-import * as core from '@/core';
-import * as world from '@/world';
+import { fill_panels } from '@/packs/panel';
+import './panel_mock.css';
 
-import * as vanilla_alpha from '@/packs/vanilla_alpha';
-import * as cli from '@/packs/cli';
-
-// ── 1. Initialize, Load all packs in order ────────────────────────────────────
-const registry: core.pack_registry = new Map();
-
-const ENABLED_PACKS =
-[
-    vanilla_alpha,
-    cli
-];
-
-for (const pack of ENABLED_PACKS)
+function create_panel(name: string, size: string): HTMLElement
 {
-    pack.global_init(registry);
+    const element = document.createElement('section');
+    element.className = `mock_panel panel_${name.toLowerCase()}`;
+    element.textContent = `${name} ${size}`;
+    return element;
 }
 
-const empty_hook_list: core.hook_list = new Map();
-
-for (const [id, pack] of registry)
+const root = document.querySelector<HTMLElement>('#app');
+if (!root)
 {
-    if (pack.hooks)
-    {
-        empty_hook_list.set(id, new Map(pack.hooks));
-    }
+    throw new Error('#app not found.');
 }
-// ── 2. Create World ──────────────────────────────────────────────────────────
-const sp = new core.space([64, 64, 4]);
-new world.pure_world(sp, registry, empty_hook_list, 'wwworld');
+
+const panel_a = create_panel('A', '30%');
+const panel_b = create_panel('B', '50%');
+const panel_c = create_panel('C', '20%');
+const panel_d = create_panel('D', '20%');
+const panel_e = create_panel('E', '80%');
+
+const right = document.createElement('div');
+right.className = 'mock_group mock_right';
+
+const bottom = document.createElement('div');
+bottom.className = 'mock_group mock_bottom';
+
+fill_panels(bottom, [{ element: panel_d }, { element: panel_e }]);
+fill_panels
+(
+    right,
+    [{ element: panel_b }, { element: panel_c }, { element: bottom }],
+    { direction: 'column' }
+);
+fill_panels(root, [{ element: panel_a }, { element: right }]);
+
+document.title = 'Panel Mock';
