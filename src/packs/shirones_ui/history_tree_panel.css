@@ -1,24 +1,12 @@
 /* ─── Left Sidebar & Git Graph History Panel ────────────────────────────────── */
 
-.history_tree_panel_root {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    padding: 8px 10px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
 .history_tree_panel_root.is_sidebar_collapsed {
     padding: 6px 2px;
-    background: var(--basic-ui-bg-mantle);
     align-items: center;
 }
 
-.history_tree_panel_root.is_sidebar_collapsed .basic_ui_header,
-.history_tree_panel_root.is_sidebar_collapsed .basic_ui_content {
+.history_tree_panel_root.is_sidebar_collapsed .md3_panel_header,
+.history_tree_panel_root.is_sidebar_collapsed .md3_panel_content {
     display: none !important;
 }
 

@@ -1,24 +1,12 @@
 /* ─── Right Sidebar & Map Status Panel ───────────────────────────────────────── */
 
-.info_bar_root {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    padding: 8px 10px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
 .info_bar_root.is_sidebar_collapsed {
     padding: 6px 2px;
-    background: var(--basic-ui-bg-mantle);
     align-items: center;
 }
 
-.info_bar_root.is_sidebar_collapsed .basic_ui_header,
-.info_bar_root.is_sidebar_collapsed .basic_ui_content {
+.info_bar_root.is_sidebar_collapsed .md3_panel_header,
+.info_bar_root.is_sidebar_collapsed .md3_panel_content {
     display: none !important;
 }
 

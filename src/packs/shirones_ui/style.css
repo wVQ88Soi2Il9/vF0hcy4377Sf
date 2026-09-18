@@ -1,6 +1,8 @@
 /* ─── shirones_ui Modular Style Entrypoint ───────────────────────────────────── */
 
-@import './theme.css';
+@import './tokens.css';
+@import './panel.css';
+@import './controls.css';
 @import './layout.css';
 @import './coordinate_stepper.css';
 @import './device_card.css';

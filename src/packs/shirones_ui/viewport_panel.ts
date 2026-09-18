@@ -22,7 +22,7 @@ export function create_viewport_panel(): viewport_panel_component
     });
 
     const content = panel.content_element;
-    content.className = 'basic_ui_content viewport_panel_content';
+    content.className = 'md3_panel_content viewport_panel_content';
 
     // Header Zoom Controls
     const zoom_wrap = document.createElement('div');

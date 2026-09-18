@@ -1,0 +1,29 @@
+:root {
+    --md-sys-color-surface-container: #1e1e2e;
+    --md-sys-color-on-surface: #cdd6f4;
+    --md-sys-color-primary: #89b4fa;
+    --md-sys-color-outline-variant: #45475a;
+    --md-sys-shape-corner-large: 12px;
+
+    --basic-ui-bg-mantle: #181825;
+    --basic-ui-bg-crust: #11111b;
+    --basic-ui-border: #313244;
+    --basic-ui-border-subtle: var(--md-sys-color-outline-variant);
+    --basic-ui-text: var(--md-sys-color-on-surface);
+    --basic-ui-subtext0: #a6adc8;
+    --basic-ui-subtext1: #bac2de;
+    --basic-ui-overlay0: #6c7086;
+    --basic-ui-blue: var(--md-sys-color-primary);
+    --basic-ui-sapphire: #74c7ec;
+    --basic-ui-sky: #89dceb;
+    --basic-ui-teal: #94e2d5;
+    --basic-ui-green: #a6e3a1;
+    --basic-ui-yellow: #f9e2af;
+    --basic-ui-peach: #fab387;
+    --basic-ui-red: #f38ba8;
+    --basic-ui-mauve: #cba6f7;
+    --basic-ui-pink: #f5c2e7;
+    --basic-ui-surface0: #313244;
+    --basic-ui-surface1: #45475a;
+    --basic-ui-surface2: #585b70;
+}

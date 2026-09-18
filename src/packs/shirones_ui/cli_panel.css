@@ -47,7 +47,7 @@
     overflow: hidden;
 }
 
-.basic_ui_cli_panel_root.is_cli_collapsed .basic_ui_content {
+.basic_ui_cli_panel_root.is_cli_collapsed .md3_panel_content {
     display: none !important;
 }
 

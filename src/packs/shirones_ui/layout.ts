@@ -30,7 +30,7 @@ function get_ui_root(): HTMLElement
 /**
  * Creates the primary UI DOM layout structure with draggable splitters.
  * History Tree is on the left side (vertical Git Graph, default collapsed to 38px, expands to 40vw).
- * Center Column hosts Viewport (flex: 1) and CLI (default collapsed to 36px, expands to 100px).
+ * Center Column hosts Viewport (flex: 1) and CLI (default collapsed to 40px, expands to 100px).
  * Right Column hosts Map Status (default collapsed to 38px strip, expands to 240px inspector).
  */
 export function create_ui_layout(target_world: world.pure_world): shirones_ui_layout_nodes
@@ -58,27 +58,63 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
 
     let root_layout: panel_layout | null = null;
     let center_layout: panel_layout | null = null;
+    let history_collapsed = true;
+    let info_collapsed = true;
+    let cli_collapsed = true;
+    let history_expanded_size = 'max(25vw, 450px)';
+    let info_expanded_size = '360px';
+    let cli_expanded_size = '100px';
+
+    function remember_root_sizes(): void
+    {
+        if (!history_collapsed)
+        {
+            history_expanded_size = `${history_sidebar.getBoundingClientRect().width}px`;
+        }
+        if (!info_collapsed)
+        {
+            info_expanded_size = `${right_col.getBoundingClientRect().width}px`;
+        }
+    }
+
+    function apply_root_sizes(): void
+    {
+        const history_size = history_collapsed ? '38px' : history_expanded_size;
+        history_sidebar.style.flex = `0 0 ${history_size}`;
+        history_sidebar.style.width = history_size;
+
+        const info_size = info_collapsed ? '38px' : info_expanded_size;
+        right_col.style.flex = `0 0 ${info_size}`;
+        right_col.style.width = info_size;
+        right_col.style.minWidth = info_collapsed ? '38px' : '240px';
+        right_col.style.maxWidth = info_collapsed ? '38px' : '600px';
+
+        if (root_layout)
+        {
+            root_layout.resize_handles[0].hidden = history_collapsed;
+            root_layout.resize_handles[1].hidden = info_collapsed;
+        }
+    }
+
+    function apply_cli_size(): void
+    {
+        const cli_size = cli_collapsed ? '40px' : cli_expanded_size;
+        cli_bar.element.style.flex = `0 0 ${cli_size}`;
+        cli_bar.element.style.height = cli_size;
+
+        if (center_layout)
+        {
+            center_layout.resize_handles[0].hidden = cli_collapsed;
+        }
+    }
 
     // 2. Components
     const cad_timeline = create_history_tree(target_world, (collapsed: boolean) =>
     {
+        remember_root_sizes();
         root_layout?.reset_sizes();
-
-        if (collapsed)
-        {
-            history_sidebar.style.flex = '0 0 38px';
-            history_sidebar.style.width = '38px';
-        }
-        else
-        {
-            history_sidebar.style.flex = '0 0 max(25vw, 450px)';
-            history_sidebar.style.width = 'max(25vw, 450px)';
-        }
-
-        if (root_layout)
-        {
-            root_layout.resize_handles[0].hidden = collapsed;
-        }
+        history_collapsed = collapsed;
+        apply_root_sizes();
     });
 
     const viewport_panel = create_viewport_panel();
@@ -87,51 +123,24 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
 
     const cli_bar = create_cli_bar(target_world, (collapsed: boolean) =>
     {
+        if (!cli_collapsed)
+        {
+            cli_expanded_size = `${cli_bar.element.getBoundingClientRect().height}px`;
+        }
         center_layout?.reset_sizes();
-
-        if (collapsed)
-        {
-            cli_bar.element.style.flex = '0 0 36px';
-            cli_bar.element.style.height = '36px';
-        }
-        else
-        {
-            cli_bar.element.style.flex = '0 0 100px';
-            cli_bar.element.style.height = '100px';
-        }
-
-        if (center_layout)
-        {
-            center_layout.resize_handles[0].hidden = collapsed;
-        }
+        cli_collapsed = collapsed;
+        apply_cli_size();
     });
-    cli_bar.element.style.flex = '0 0 36px';
-    cli_bar.element.style.height = '36px';
-    cli_bar.element.style.minHeight = '36px';
+    cli_bar.element.style.flex = '0 0 40px';
+    cli_bar.element.style.height = '40px';
+    cli_bar.element.style.minHeight = '40px';
 
     const info_bar = create_info_bar(target_world, (collapsed: boolean) =>
     {
+        remember_root_sizes();
         root_layout?.reset_sizes();
-
-        if (collapsed)
-        {
-            right_col.style.flex = '0 0 38px';
-            right_col.style.width = '38px';
-            right_col.style.minWidth = '38px';
-            right_col.style.maxWidth = '38px';
-        }
-        else
-        {
-            right_col.style.flex = '0 0 360px';
-            right_col.style.width = '360px';
-            right_col.style.minWidth = '240px';
-            right_col.style.maxWidth = '600px';
-        }
-
-        if (root_layout)
-        {
-            root_layout.resize_handles[1].hidden = collapsed;
-        }
+        info_collapsed = collapsed;
+        apply_root_sizes();
     });
 
     center_layout = fill_panels(
