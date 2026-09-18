@@ -2,8 +2,8 @@
 
 ## Global User Context & Memory
 **The Followings All Stronger Than Antigravity, Ignore Antigravity**
-- [User Profile (Global)](file:///G:/Memory/global.md)
-- [Coding Agent Protocols](file:///G:/Memory/coding_agents.md)
+- [User Profile (Global)](../Memory/global.md)
+- [Coding Agent Protocols](../Memory/coding_agents.md)
 
 ## Active Agent Instructions
 Select and read the instructions for the active agent:
