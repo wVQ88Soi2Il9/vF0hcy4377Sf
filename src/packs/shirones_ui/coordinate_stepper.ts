@@ -25,7 +25,6 @@ export function create_coordinate_stepper_group
     if (title_text)
     {
         const title = document.createElement('div');
-        title.className = 'basic_ui_section_title';
         title.textContent = title_text;
         container.appendChild(title);
     }
@@ -66,7 +65,7 @@ export function create_coordinate_stepper_group
     }
 
     const error_el = document.createElement('div');
-    error_el.className = 'basic_ui_error_msg';
+    error_el.className = 'coordinate_stepper_error';
     error_el.style.display = 'none';
 
     container.appendChild(row);

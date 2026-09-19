@@ -9,7 +9,6 @@
     position: relative;
     padding: 0 !important;
     overflow: hidden;
-    background: #11111b;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -32,37 +31,15 @@
 }
 
 .viewport_zoom_btn {
-    background: var(--basic-ui-surface0);
-    border: 1px solid var(--basic-ui-surface1);
-    border-radius: 4px;
-    color: var(--basic-ui-text);
-    font-family: monospace;
-    font-size: 13px;
-    font-weight: bold;
     width: 22px;
     height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     padding: 0;
-    transition: all 0.15s ease;
-}
-
-.viewport_zoom_btn:hover {
-    background: var(--basic-ui-surface1);
-    border-color: var(--basic-ui-blue);
-}
-
-.viewport_zoom_btn.reset {
-    font-size: 14px;
 }
 
 .viewport_zoom_badge {
-    font-family: monospace;
-    font-size: 11px;
-    font-weight: bold;
-    color: var(--basic-ui-sky);
     min-width: 42px;
     text-align: center;
     user-select: none;

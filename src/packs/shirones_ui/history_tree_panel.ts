@@ -368,7 +368,7 @@ export function create_history_tree
     info_label.textContent = 'Git Graph';
 
     // 6 Jump / Transport Buttons (Expanded Toolbar)
-    const toolbar_nav = create_navigation_button_group(target_world, 'basic_ui_cad_btn_group', 'basic_ui_btn', 'toolbar');
+    const toolbar_nav = create_navigation_button_group(target_world, 'basic_ui_cad_btn_group', '', 'toolbar');
 
     toolbar.appendChild(info_label);
     toolbar.appendChild(toolbar_nav.container);
@@ -427,7 +427,7 @@ export function create_history_tree
         const layout = compute_git_graph_layout(tree);
         if (layout.nodes.length === 0)
         {
-            canvas_container.innerHTML = '<div class="basic_ui_label_sub" style="padding:16px;">No history records.</div>';
+            canvas_container.innerHTML = '<div style="padding:16px;">No history records.</div>';
             return;
         }
 

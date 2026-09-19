@@ -148,7 +148,6 @@ export function render_device_card
     recipe_container.className = 'basic_ui_form_group';
 
     const recipe_title = document.createElement('div');
-    recipe_title.className = 'basic_ui_section_title';
     recipe_title.textContent = 'Selected Recipe:';
 
     const recipe_select = document.createElement('select');
@@ -193,11 +192,9 @@ export function render_device_card
     ports_container.className = 'basic_ui_form_group';
 
     const ports_title = document.createElement('div');
-    ports_title.className = 'basic_ui_section_title';
     ports_title.textContent = 'Ports Specification:';
 
     const ports_text = document.createElement('div');
-    ports_text.className = 'basic_ui_label_sub';
     ports_text.style.wordBreak = 'break-word';
     ports_text.textContent = format_ports_summary(dev);
 
@@ -212,12 +209,10 @@ export function render_device_card
     status_row.className = 'basic_ui_eval_row';
 
     const status_label = document.createElement('span');
-    status_label.className = 'basic_ui_label_key';
     status_label.textContent = 'Evaluation Status:';
 
     const is_valid = typeof (dev as any).validate === 'function' ? (dev as any).validate() : true;
     const badge = document.createElement('span');
-    badge.className = is_valid ? 'basic_ui_badge basic_ui_badge_valid' : 'basic_ui_badge basic_ui_badge_invalid';
     badge.textContent = is_valid ? 'VALID' : 'INVALID';
 
     status_row.appendChild(status_label);
@@ -238,10 +233,8 @@ export function render_device_card
             const row = document.createElement('div');
             row.className = 'basic_ui_eval_row';
             const key_span = document.createElement('span');
-            key_span.className = 'basic_ui_label_key';
             key_span.textContent = `${k}:`;
             const val_span = document.createElement('span');
-            val_span.className = 'basic_ui_label_eval';
             val_span.textContent = JSON.stringify((dev as any)[k]);
             row.appendChild(key_span);
             row.appendChild(val_span);
@@ -264,7 +257,6 @@ export function render_device_card
     {
         const other_row = document.createElement('div');
         const other_label = document.createElement('span');
-        other_label.className = 'basic_ui_label_extra';
         other_label.textContent = 'Other Info: ';
         other_row.appendChild(other_label);
         other_row.appendChild(document.createTextNode(JSON.stringify(dev.other_info)));
@@ -295,7 +287,7 @@ export function render_device_card
         {
             const act_btn = document.createElement('button');
             act_btn.textContent = act.label;
-            act_btn.className = act.is_danger ? 'basic_ui_btn_danger' : 'basic_ui_btn';
+            act_btn.className = act.is_danger ? 'basic_ui_btn_danger' : '';
             act_btn.addEventListener('click', () =>
             {
                 act.on_click(dev);

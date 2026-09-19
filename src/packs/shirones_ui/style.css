@@ -12,3 +12,87 @@
 @import './viewport_panel.css';
 @import './cli_panel.css';
 @import './pipe_creator.css';
+
+#ui_root button,
+#ui_root input,
+#ui_root select {
+    box-sizing: border-box;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    font: inherit;
+}
+
+#ui_root button {
+    padding: 0 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#ui_root button:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-highest);
+}
+
+#ui_root button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+#ui_root input,
+#ui_root select {
+    min-height: 30px;
+    padding: 4px 8px;
+    outline: none;
+}
+
+#ui_root input:focus,
+#ui_root select:focus {
+    border-color: var(--md-sys-color-primary);
+}
+
+#ui_root .basic_ui_cli_input,
+#ui_root .basic_ui_stepper_input {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+#ui_root .basic_ui_stepper_input {
+    appearance: textfield;
+    text-align: center;
+}
+
+#ui_root .basic_ui_btn_primary,
+#ui_root .basic_ui_stepper_btn {
+    color: var(--md-sys-color-primary);
+}
+
+#ui_root .basic_ui_btn_danger,
+#ui_root .coordinate_stepper_error,
+#ui_root .basic_ui_cli_output.error {
+    color: var(--md-sys-color-error);
+}
+
+#ui_root .basic_ui_cli_output.success {
+    color: var(--md-sys-color-tertiary);
+}
+
+#ui_root .basic_ui_stepper_btn {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 8px;
+}
+
+#ui_root .basic_ui_stepper_input::-webkit-inner-spin-button,
+#ui_root .basic_ui_stepper_input::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+#ui_root button svg {
+    display: block;
+    fill: currentColor;
+}

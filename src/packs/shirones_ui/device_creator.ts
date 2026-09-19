@@ -26,7 +26,6 @@ export function create_device_creator
     card.className = 'basic_ui_card';
 
     const header = document.createElement('div');
-    header.className = 'basic_ui_section_title';
     header.textContent = 'Create Device:';
 
     // 1. Two-Tier Cascading Selector: Namespace (Pack) -> Device ID
