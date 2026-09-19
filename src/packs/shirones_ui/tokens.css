@@ -9,5 +9,6 @@
     --md-sys-color-tertiary: #a6e3a1;
     --md-sys-color-error: #f38ba8;
     --md-sys-color-outline-variant: #45475a;
-    --md-sys-shape-corner-large: 12px;
+    --md-sys-shape-corner-none: 0;
+    --md-sys-shape-corner-extra-small: 4px;
 }
