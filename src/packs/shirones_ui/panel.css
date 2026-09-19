@@ -59,3 +59,11 @@
     overflow-y: auto;
     box-sizing: border-box;
 }
+
+.md3_panel * {
+    scrollbar-width: none;
+}
+
+.md3_panel *::-webkit-scrollbar {
+    display: none;
+}

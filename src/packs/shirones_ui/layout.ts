@@ -82,11 +82,12 @@ export function create_ui_layout(target_world: world.pure_world): shirones_ui_la
         const history_size = history_collapsed ? '38px' : history_expanded_size;
         history_sidebar.style.flex = `0 0 ${history_size}`;
         history_sidebar.style.width = history_size;
+        history_sidebar.style.minWidth = history_collapsed ? '38px' : '150px';
 
         const info_size = info_collapsed ? '38px' : info_expanded_size;
         right_col.style.flex = `0 0 ${info_size}`;
         right_col.style.width = info_size;
-        right_col.style.minWidth = info_collapsed ? '38px' : '240px';
+        right_col.style.minWidth = info_collapsed ? '38px' : '200px';
         right_col.style.maxWidth = info_collapsed ? '38px' : '600px';
 
         if (root_layout)

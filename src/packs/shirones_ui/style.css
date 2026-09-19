@@ -13,9 +13,9 @@
 @import './cli_panel.css';
 @import './pipe_creator.css';
 
-#ui_root button,
-#ui_root input,
-#ui_root select {
+:where(#ui_root) button,
+:where(#ui_root) input,
+:where(#ui_root) select {
     box-sizing: border-box;
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--md-sys-shape-corner-extra-small);
@@ -24,30 +24,30 @@
     font: inherit;
 }
 
-#ui_root button {
+:where(#ui_root) button {
     padding: 0 10px;
     cursor: pointer;
     user-select: none;
 }
 
-#ui_root button:hover:not(:disabled) {
+:where(#ui_root) button:hover:not(:disabled) {
     background: var(--md-sys-color-surface-container-highest);
 }
 
-#ui_root button:disabled {
+:where(#ui_root) button:disabled {
     opacity: 0.35;
     cursor: not-allowed;
 }
 
-#ui_root input,
-#ui_root select {
+:where(#ui_root) input,
+:where(#ui_root) select {
     min-height: 30px;
     padding: 4px 8px;
     outline: none;
 }
 
-#ui_root input:focus,
-#ui_root select:focus {
+:where(#ui_root) input:focus,
+:where(#ui_root) select:focus {
     border-color: var(--md-sys-color-primary);
 }
 
@@ -92,7 +92,7 @@
     -webkit-appearance: none;
 }
 
-#ui_root button svg {
+:where(#ui_root) button svg {
     display: block;
     fill: currentColor;
 }
