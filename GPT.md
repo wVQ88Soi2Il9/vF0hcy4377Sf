@@ -21,9 +21,10 @@ current instruction
 
 ```text
 Allman braces
-snake_case
-semicolons
-no implicit zero-padding
+lowercase snake_case for variables, functions, types, files, and JSON keys
+statements end with semicolons
+never use implicit ?? 0 dimensional padding
+space UID allocation starts from 1
 avoid unnecessary global state
 ```
 
@@ -44,3 +45,52 @@ avoid unnecessary global state
 14. Temporary compatibility layers, aliases, or bridges must state a cleanup target so they do not become permanent technical debt.
 
 15. Normalize Markdown-escaped identifiers and paths in Human messages before resolving them. In particular, interpret `\_` as `_` (for example, `basic\_ui` means `basic_ui`) while preserving backslashes that are actual Windows path separators.
+
+## Architecture
+
+Dependency direction:
+
+```text
+packs → core
+```
+
+`src/core/` contains contracts and pure algorithms. It contains no Pack business logic and no global live runtime state.
+
+`src/world.ts` owns runtime state. Each `pure_world` independently owns its space, history, registry, and Hook callbacks.
+
+`src/packs/` contains concrete behavior and data.
+
+No singleton or global runtime store.
+
+Space mutations are represented by `reversible_operation`. History remains independent of Hooks and Pack business logic.
+
+## Module Boundaries
+
+Cross-module imports use only the target module's public `index.ts`.
+
+Use namespace imports across module/Pack boundaries:
+
+```ts
+import * as core from '@/core';
+import * as vanilla_alpha from '@/packs/vanilla_alpha';
+import * as world from '@/world';
+```
+
+Do not deep-import another module's internal files.
+
+Within the same Pack, named imports are allowed.
+
+## Hooks & Pack Lifecycle
+
+Hook definitions are global static slots. Hook callbacks belong to individual world instances.
+
+Packs expose:
+
+```ts
+global_init(registry: core.pack_registry): void;
+world_init(target_world?: world.pure_world): void;
+```
+
+`global_init` registers static declarations. `world_init` initializes world-specific state or callbacks.
+
+External code must not mutate a world's Hook list directly.

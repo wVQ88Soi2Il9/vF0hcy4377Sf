@@ -1,19 +1,19 @@
-import type { device, space } from '@/core';
+import * as core from '@/core';
 
 export interface device_action
 {
     label: string;
-    on_click: (dev: device) => void;
+    on_click: (dev: core.device) => void;
     is_danger?: boolean;
 }
 
-export type device_inspector_fn = (container: HTMLElement, dev: device) => void;
+export type device_inspector_fn = (container: HTMLElement, dev: core.device) => void;
 export type device_creation_option_fn = (container: HTMLElement, def_id: string) => { get_other_info: () => Record<string, unknown> };
-export type panel_section_fn = (container: HTMLElement, sp: space) => void;
+export type panel_section_fn = (container: HTMLElement, sp: core.space) => void;
 
 export function create_extensions()
 {
-    const inspectors: { predicate: (dev: device) => boolean; render: device_inspector_fn }[] = [];
+    const inspectors: { predicate: (dev: core.device) => boolean; render: device_inspector_fn }[] = [];
     const actions: device_action[] = [];
     const options: { predicate: (id: string) => boolean; render: device_creation_option_fn }[] = [];
     const sections = new Map<string, { id: string; priority: number; render: panel_section_fn }>();
@@ -24,7 +24,7 @@ export function create_extensions()
         if (index >= 0) { entries.splice(index, 1); }
     }
     return {
-        register_device_inspector(predicate: (dev: device) => boolean, render: device_inspector_fn)
+        register_device_inspector(predicate: (dev: core.device) => boolean, render: device_inspector_fn)
         {
             const entry = { predicate, render };
             inspectors.push(entry);
@@ -35,7 +35,7 @@ export function create_extensions()
             const entry = inspectors.find(entry => entry.render === render);
             if (entry) { remove(inspectors, entry); }
         },
-        get_device_inspectors: (dev: device) => inspectors.filter(entry => entry.predicate(dev)).map(entry => entry.render),
+        get_device_inspectors: (dev: core.device) => inspectors.filter(entry => entry.predicate(dev)).map(entry => entry.render),
         register_device_action(action: device_action)
         {
             actions.push(action);

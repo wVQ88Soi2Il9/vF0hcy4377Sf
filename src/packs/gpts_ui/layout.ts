@@ -1,17 +1,17 @@
-import type { pure_world } from '@/world';
-import { fill_panels, type panel_layout } from '@/packs/panel';
+import * as world from '@/world';
+import * as panel from '@/packs/panel';
 import { element } from './dom';
 import { create_cli_bar, create_viewport_panel } from './cli';
 import { create_info_bar } from './devices';
 import { create_history_tree } from './history';
 import { create_extensions } from './extensions';
 
-export function create_ui_layout(target_world: pure_world, host = document.getElementById('app') ?? document.body, extensions = create_extensions())
+export function create_ui_layout(target_world: world.pure_world, host = document.getElementById('app') ?? document.body, extensions = create_extensions())
 {
     const root = element('div', 'gpts_ui');
     const center = element('div', 'gpts_center');
-    let horizontal: panel_layout | undefined;
-    let vertical: panel_layout | undefined;
+    let horizontal: panel.panel_layout | undefined;
+    let vertical: panel.panel_layout | undefined;
     let history_size = 'max(25vw, 450px)';
     let info_size = '360px';
     let cli_size = '100px';
@@ -46,8 +46,8 @@ export function create_ui_layout(target_world: pure_world, host = document.getEl
     });
     cad_timeline.element.classList.add('gpts_sidebar', 'gpts_history');
     info_bar.element.classList.add('gpts_sidebar', 'gpts_info');
-    vertical = fill_panels(center, [viewport_panel.panel, cli_bar], { direction: 'column' });
-    horizontal = fill_panels(root, [cad_timeline, { element: center }, info_bar]);
+    vertical = panel.fill_panels(center, [viewport_panel.panel, cli_bar], { direction: 'column' });
+    horizontal = panel.fill_panels(root, [cad_timeline, { element: center }, info_bar]);
     [...horizontal.resize_handles, ...vertical.resize_handles].forEach(handle => { handle.hidden = true; });
     host.append(root);
     return {

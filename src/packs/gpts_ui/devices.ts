@@ -1,18 +1,18 @@
-import { record_operation, type device, type rev_op } from '@/core';
-import type { pure_world } from '@/world';
-import { create_device_operation, delete_device_operation, move_device_operation, select_recipe_operation, get_device_class, parse_namespaced_id, format_namespaced_id } from '@/packs/vanilla_alpha';
+import * as core from '@/core';
+import * as world from '@/world';
+import * as vanilla_alpha from '@/packs/vanilla_alpha';
 import { button, create_panel, element, option } from './dom';
 import { create_position_input } from './position_input';
 import { create_extensions, type ui_extensions } from './extensions';
 
-function record(target_world: pure_world, operation: rev_op, payload: unknown = operation): void
+function record(target_world: world.pure_world, operation: core.rev_op, payload: unknown = operation): void
 {
-    const node = record_operation(target_world.history, target_world.space, [operation]);
+    const node = core.record_operation(target_world.history, target_world.space, [operation]);
     target_world.trigger(operation, target_world, payload);
     target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, target_world, node);
 }
 
-export function create_device_creator(target_world: pure_world, extensions: ui_extensions, on_created: (uid: number) => void)
+export function create_device_creator(target_world: world.pure_world, extensions: ui_extensions, on_created: (uid: number) => void)
 {
     const root = element('section', 'gpts_card');
     const namespace = element('select');
@@ -57,11 +57,11 @@ export function create_device_creator(target_world: pure_world, extensions: ui_e
         button('Create', () => position.attempt(() =>
         {
             if (!full_id()) { throw new Error('Select a pack and device definition.'); }
-            const id = parse_namespaced_id(full_id());
+            const id = vanilla_alpha.parse_namespaced_id(full_id());
             const coords = position.read();
             const other_info = Object.assign({}, ...getters.map(get => get()));
-            const operation = create_device_operation(get_device_class(target_world.registry, id), id, coords, other_info);
-            const node = record_operation(target_world.history, target_world.space, [operation]);
+            const operation = vanilla_alpha.create_device_operation(vanilla_alpha.get_device_class(target_world.registry, id), id, coords, other_info);
+            const node = core.record_operation(target_world.history, target_world.space, [operation]);
             const dev = operation.get_device()!;
             target_world.trigger(operation, target_world, dev);
             target_world.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, target_world, node);
@@ -71,14 +71,14 @@ export function create_device_creator(target_world: pure_world, extensions: ui_e
     return { element: root, refresh_definitions };
 }
 
-function device_card(target_world: pure_world, dev: device, extensions: ui_extensions, refresh: () => void): HTMLElement
+function device_card(target_world: world.pure_world, dev: core.device, extensions: ui_extensions, refresh: () => void): HTMLElement
 {
     const card = element('section', 'gpts_card');
     const position = create_position_input(dev.position);
-    const execute = (operation: rev_op) => position.attempt(() => { record(target_world, operation); refresh(); });
-    card.append(element('h3', '', `Device #${dev.device_uid} · ${format_namespaced_id(dev.definition_id)}`), position.element,
-        button('Move', () => position.attempt(() => { record(target_world, move_device_operation(dev.device_uid, position.read())); refresh(); }), 'move'),
-        button('Delete device', () => execute(delete_device_operation(dev.device_uid)), 'trash'));
+    const execute = (operation: core.rev_op) => position.attempt(() => { record(target_world, operation); refresh(); });
+    card.append(element('h3', '', `Device #${dev.device_uid} · ${vanilla_alpha.format_namespaced_id(dev.definition_id)}`), position.element,
+        button('Move', () => position.attempt(() => { record(target_world, vanilla_alpha.move_device_operation(dev.device_uid, position.read())); refresh(); }), 'move'),
+        button('Delete device', () => execute(vanilla_alpha.delete_device_operation(dev.device_uid)), 'trash'));
     const recipes = element('select');
     recipes.setAttribute('aria-label', 'Selected recipe');
     recipes.append(option('', '(None / Pass-through)'));
@@ -86,8 +86,8 @@ function device_card(target_world: pure_world, dev: device, extensions: ui_exten
     {
         for (const id of Object.keys(pack.recipes ?? {})) { recipes.append(option(`${namespace}:${id}`)); }
     }
-    recipes.value = dev.selected_recipe_id ? format_namespaced_id(dev.selected_recipe_id) : '';
-    recipes.addEventListener('change', () => execute(select_recipe_operation(dev.device_uid, recipes.value ? parse_namespaced_id(recipes.value) : undefined)));
+    recipes.value = dev.selected_recipe_id ? vanilla_alpha.format_namespaced_id(dev.selected_recipe_id) : '';
+    recipes.addEventListener('change', () => execute(vanilla_alpha.select_recipe_operation(dev.device_uid, recipes.value ? vanilla_alpha.parse_namespaced_id(recipes.value) : undefined)));
     card.append(element('label', '', 'Recipe'), recipes);
     const ports = dev.get_port();
     card.append(element('h4', '', 'Ports'), element('pre', '', ports.length ? ports.map(port => `#${port.port_uid} ${port.direction} [${port.offset.join(', ')}]`).join('\n') : 'None'));
@@ -112,7 +112,7 @@ function device_card(target_world: pure_world, dev: device, extensions: ui_exten
     return card;
 }
 
-export function create_info_bar(target_world: pure_world, on_change?: (collapsed: boolean) => void, extensions = create_extensions())
+export function create_info_bar(target_world: world.pure_world, on_change?: (collapsed: boolean) => void, extensions = create_extensions())
 {
     const panel = create_panel('Status', on_change);
     const stats = element('p');
@@ -155,7 +155,7 @@ export function create_info_bar(target_world: pure_world, on_change?: (collapsed
         update_stats({ device_count: target_world.space.devices.length, map_dimensions: target_world.space.size.join(' × ') });
         creator.refresh_definitions();
         selection.replaceChildren(option('', 'Select device'), ...target_world.space.devices.map(dev =>
-            option(String(dev.device_uid), `#${dev.device_uid} · ${format_namespaced_id(dev.definition_id)} @ [${dev.position.join(', ')}]`)));
+            option(String(dev.device_uid), `#${dev.device_uid} · ${vanilla_alpha.format_namespaced_id(dev.definition_id)} @ [${dev.position.join(', ')}]`)));
         const dev = target_world.space.devices.find(dev => dev.device_uid === selected);
         if (dev)
         {

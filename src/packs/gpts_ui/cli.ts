@@ -1,8 +1,8 @@
-import type { pure_world } from '@/world';
-import { exe } from '@/packs/cli';
+import * as world from '@/world';
+import * as cli from '@/packs/cli';
 import { button, create_panel, element, error_message } from './dom';
 
-export function create_cli_bar(target_world: pure_world, on_change?: (collapsed: boolean) => void)
+export function create_cli_bar(target_world: world.pure_world, on_change?: (collapsed: boolean) => void)
 {
     const panel = create_panel('CLI', on_change);
     panel.element.classList.add('gpts_cli');
@@ -18,7 +18,7 @@ export function create_cli_bar(target_world: pure_world, on_change?: (collapsed:
         if (event.key !== 'Enter' || !input.value.trim()) { return; }
         try
         {
-            const result = exe(input.value, target_world);
+            const result = cli.exe(input.value, target_world);
             output.textContent = result === undefined ? '' : String(result);
             output.className = /^(Error|Unknown)/.test(output.textContent) ? 'gpts_error' : 'gpts_success';
         }

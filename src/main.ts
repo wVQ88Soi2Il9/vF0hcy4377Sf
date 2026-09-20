@@ -1,5 +1,5 @@
 import * as core from '@/core';
-import { pure_world } from '@/world';
+import * as world from '@/world';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
 import * as gpts_ui from '@/packs/gpts_ui';
@@ -39,7 +39,7 @@ if (!app)
 }
 app.replaceChildren();
 
-const target_world = new pure_world(
+const target_world = new world.pure_world(
     new core.space([64, 64, 4]),
     registry,
     hook_template,

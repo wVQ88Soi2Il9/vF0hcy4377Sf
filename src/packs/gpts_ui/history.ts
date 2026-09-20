@@ -1,9 +1,9 @@
 import * as core from '@/core';
-import type { pure_world } from '@/world';
-import { delete_branch, is_node_pinned, toggle_node_pin } from '@/packs/vanilla_beta';
+import * as world from '@/world';
+import * as vanilla_beta from '@/packs/vanilla_beta';
 import { button, create_panel, element, error_message } from './dom';
 
-export function create_history_tree(target_world: pure_world, on_change?: (collapsed: boolean) => void)
+export function create_history_tree(target_world: world.pure_world, on_change?: (collapsed: boolean) => void)
 {
     const panel = create_panel('History', collapsed => { on_change?.(collapsed); if (!collapsed) { refresh(); } });
     const navigation = element('nav', 'gpts_navigation');
@@ -90,14 +90,14 @@ export function create_history_tree(target_world: pure_world, on_change?: (colla
                 const py = rows.get(node.parent_history_uid)! * 64 + 32;
                 shape('path', { d: `M ${x} ${y} C ${x} ${py - 24}, ${px} ${py - 24}, ${px} ${py}`, stroke: color(lane), fill: 'none', 'stroke-width': '2' });
             }
-            const pinned = is_node_pinned(tree, node.history_uid);
+            const pinned = vanilla_beta.is_node_pinned(tree, node.history_uid);
             shape('circle', { cx: String(x), cy: String(y), r: node === current ? '7' : '5', fill: pinned ? '#ffd56a' : color(lane), stroke: node === current ? 'white' : color(lane), 'stroke-width': '2' });
             const row = element('div', 'gpts_history_row');
             row.style.paddingLeft = `${width}px`;
             row.classList.toggle('gpts_active_path', active.has(node.history_uid));
             row.classList.toggle('gpts_current', node === current);
             row.classList.toggle('gpts_pinned', pinned);
-            row.dataset.historyUid = String(node.history_uid);
+            row.setAttribute('data-history-uid', String(node.history_uid));
             const summary = node.operations.map(operation => `${operation.namespace}:${operation.id} ${JSON.stringify(operation.other_info?.vanilla_alpha ?? operation.other_info ?? {})}`).join('; ') || 'Initial state';
             const jump = button(`${node === current ? 'HEAD ' : ''}#${node.history_uid} · ${summary}`, () => act(() =>
             {
@@ -107,7 +107,7 @@ export function create_history_tree(target_world: pure_world, on_change?: (colla
             }));
             jump.className = 'gpts_history_label';
             const actions = element('div');
-            const pin = button(pinned ? 'Unpin' : 'Pin', () => act(() => { toggle_node_pin(tree, node.history_uid); notify('history_change'); }), pinned ? 'unpin' : 'pin');
+            const pin = button(pinned ? 'Unpin' : 'Pin', () => act(() => { vanilla_beta.toggle_node_pin(tree, node.history_uid); notify('history_change'); }), pinned ? 'unpin' : 'pin');
             pin.setAttribute('aria-pressed', String(pinned));
             function remove_leaf(): void
             {
@@ -115,7 +115,7 @@ export function create_history_tree(target_world: pure_world, on_change?: (colla
             }
             const leaf = button('Delete leaf', () => act(remove_leaf), 'cut');
             leaf.disabled = node.history_uid === 0 || node === current || node.children_history_uids.length > 0;
-            const branch = button('Delete branch', () => act(() => { if (delete_branch(tree, node.history_uid)) { notify('history_delete'); } }), 'trash');
+            const branch = button('Delete branch', () => act(() => { if (vanilla_beta.delete_branch(tree, node.history_uid)) { notify('history_delete'); } }), 'trash');
             branch.disabled = active.has(node.history_uid) || node.history_uid === 0;
             row.addEventListener('contextmenu', event => { event.preventDefault(); if (!leaf.disabled) { act(remove_leaf); } });
             actions.append(element('small', '', `branch ${lane} `), pin, leaf, branch);
