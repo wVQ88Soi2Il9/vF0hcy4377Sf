@@ -20,12 +20,9 @@ world 需先依專案契約初始化 `vanilla_alpha` hooks，UI 才能接收外�
 
 Viewport 只提供容器與縮放顯示；未整合相機或 renderer。CLI 依既有 `exe` 執行，不另行改寫命令／歷史契約。registry 若沒有 devices，建立選單為空。
 
-## 預覽與校驗
+## 校驗
 
 ```powershell
-npm run dev -- --host 127.0.0.1 --port 5179
-# 瀏覽 http://127.0.0.1:5179/gpts-ui.html
-
 node node_modules/typescript/bin/tsc -p checks/gpts_ui/tsconfig.json --pretty false
 node checks/gpts_ui/run.mjs
 npm run build
@@ -33,13 +30,4 @@ npm run build
 
 自動瀏覽器校驗使用本機 Edge、Node 內建 WebSocket 與 CDP，沒有新增套件。可透過 `EDGE_PATH` 指定瀏覽器執行檔；使用 port 9239。行為校驗也可直接開啟 `/checks/gpts_ui/index.html`。截圖與結果在 `node_modules/.tmp/gpts-ui/`。
 
-正式預覽 bundle 可於 PowerShell 執行：
-
-```powershell
-@'
-import { build } from 'vite';
-await build({ build: { outDir: 'node_modules/.tmp/gpts-build', rollupOptions: { input: 'gpts-ui.html' } } });
-'@ | node --input-type=module
-```
-
-`src/main.ts` 已使用 GPTs UI。獨立預覽入口沒有測試設備；行為校驗入口包含獨立測試 world 與設備。
+`src/main.ts` 已使用 GPTs UI；開發伺服器與正式 build 都由標準 `index.html` 進入。行為校驗入口包含獨立測試 world 與設備。

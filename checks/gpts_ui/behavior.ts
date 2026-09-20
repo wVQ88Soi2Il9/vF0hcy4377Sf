@@ -2,6 +2,7 @@ import * as core from '../../src/core';
 import { pure_world } from '../../src/world';
 import * as alpha from '../../src/packs/vanilla_alpha';
 import { create_ui_layout, create_extensions } from '../../src/packs/gpts_ui';
+import * as actual_test_pack from '../../src/packs/test';
 
 const results: string[] = [];
 function check(condition: unknown, label: string): void
@@ -43,6 +44,20 @@ function make_world(): pure_world
 }
 try
 {
+    const actual_registry: core.pack_registry = new Map();
+    actual_test_pack.global_init(actual_registry);
+    const registered_test = actual_registry.get('test')!;
+    check(Object.keys(registered_test.devices ?? {}).length === 6, 'test pack registers six devices');
+    check(Object.keys(registered_test.recipes ?? {}).join() === 'advanced_circuit,iron_gear', 'test pack registers two recipes');
+    const assembler = new actual_test_pack.assembler_device(1, { namespace: 'test', id: 'assembler' }, [0, 0, 0]);
+    check(assembler.get_shape().length === 4 && assembler.get_port().length === 3, 'test assembler preserves shape and ports');
+    check(assembler.draw().childElementCount === 5, 'test assembler uses current HTML renderer contract');
+    const pipe = new actual_test_pack.pipe_device(2, { namespace: 'test', id: 'pipe' }, [0, 0, 0], {
+        segments: [{ axis: 0, delta: 4 }, { axis: 1, delta: 2 }]
+    });
+    check(pipe.get_shape().length === 4 && pipe.get_port().length === 2, 'test pipe expands segments and exposes endpoints');
+    const recipe_result = registered_test.recipes!.iron_gear.evaluate(1);
+    check(typeof recipe_result !== 'string' && recipe_result[0].port_uid === 1, 'test recipe uses current output contract');
     const world = make_world();
     const extensions = create_extensions();
     let inspector_calls = 0;

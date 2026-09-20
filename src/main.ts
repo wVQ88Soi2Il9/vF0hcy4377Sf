@@ -3,6 +3,7 @@ import { pure_world } from '@/world';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
 import * as gpts_ui from '@/packs/gpts_ui';
+import * as test from '@/packs/test';
 import * as vanilla_alpha from '@/packs/vanilla_alpha';
 import * as vanilla_beta from '@/packs/vanilla_beta';
 
@@ -12,6 +13,7 @@ vanilla_alpha.global_init(registry);
 vanilla_beta.global_init(registry);
 cli.global_init(registry);
 panel.global_init(registry);
+test.global_init(registry);
 gpts_ui.global_init(registry);
 
 const hook_template: core.hook_list = new Map();
@@ -45,4 +47,4 @@ const target_world = new pure_world(
 );
 
 gpts_ui.create_ui_layout(target_world, app);
-document.title = 'GPTs UI';
+document.title = '';
