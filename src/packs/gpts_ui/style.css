@@ -1,0 +1,130 @@
+body { margin: 0; }
+
+.gpts_ui, .gpts_panel
+{
+    --surface: #191b20;
+    --control: #24272e;
+    --border: #363a44;
+    --muted: #9ca3af;
+    --accent: #9bbcff;
+    --panel-pack-resize-handle-color: var(--border);
+    color-scheme: dark;
+    font: 12px/1.5 system-ui, sans-serif;
+    color: #e2e4e9;
+    background: var(--surface);
+}
+
+:where(.gpts_ui, .gpts_panel, .gpts_ui *, .gpts_panel *) { box-sizing: border-box; }
+
+/* Shared controls. Component rules below only handle placement and state. */
+.gpts_panel :where(button, input, select)
+{
+    min-width: 0;
+    min-height: 26px;
+    max-width: 100%;
+    padding: 3px 7px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--control);
+    color: inherit;
+    font: inherit;
+}
+
+.gpts_panel :where(button) { cursor: pointer; }
+.gpts_panel :where(button:hover:not(:disabled)) { border-color: var(--muted); }
+.gpts_panel :where(:disabled) { opacity: .4; cursor: default; }
+.gpts_panel :where(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.gpts_panel :where(h3, h4, p, pre) { margin: 0 0 8px; }
+.gpts_panel :where(h3, h4) { font-size: inherit; font-weight: 600; }
+.gpts_panel :where(small) { color: var(--muted); }
+.gpts_panel :where(pre) { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.gpts_icon_button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 4px; flex-shrink: 0; writing-mode: horizontal-tb; vertical-align: middle; }
+.gpts_icon_button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.gpts_icon_button[aria-pressed="true"] { color: var(--accent); }
+
+/* Shared panel shell. */
+.gpts_panel
+{
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.gpts_panel > header
+{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    flex-shrink: 0;
+    padding: 5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.gpts_body { flex: 1; min-height: 0; padding: 12px; overflow: auto; }
+.gpts_collapsed > .gpts_body, .gpts_error:empty { display: none; }
+.gpts_card { border-top: 1px solid var(--border); padding: 12px 0; }
+
+/* Layout sizes remain separate from the panel pack's drag overrides. */
+.gpts_ui { width: 100%; height: 100dvh; padding: 8px; overflow: auto; }
+.gpts_center { flex: 1; min-width: 280px; min-height: 0; }
+.gpts_viewport { flex: 1; min-height: 120px; }
+.gpts_sidebar { flex: 0 0 38px; min-width: 150px; }
+.gpts_info { min-width: 200px; max-width: 600px; }
+.gpts_cli { flex: 0 0 40px; min-height: 40px; }
+.gpts_cli > header input { flex: 1; }
+
+.gpts_sidebar.gpts_collapsed { min-width: 38px; }
+.gpts_sidebar.gpts_collapsed :is(header, .gpts_navigation) { flex-direction: column; padding: 4px; }
+.gpts_sidebar.gpts_collapsed :is(header > *, .gpts_navigation) { writing-mode: vertical-rl; }
+.gpts_sidebar.gpts_collapsed .gpts_panel_title { display: none; }
+.gpts_panel.gpts_collapsed .gpts_panel_toggle svg, .gpts_info .gpts_panel_toggle svg { transform: rotate(180deg); }
+.gpts_info.gpts_collapsed .gpts_panel_toggle svg { transform: none; }
+.gpts_cli .gpts_panel_toggle svg { transform: rotate(-90deg); }
+.gpts_cli.gpts_collapsed .gpts_panel_toggle svg { transform: rotate(90deg); }
+
+.gpts_navigation, .gpts_position_input { display: flex; flex-wrap: wrap; gap: 6px; }
+.gpts_navigation { padding: 6px; }
+.gpts_position_input { margin: 8px 0; }
+.gpts_position_field { display: flex; height: 30px; }
+.gpts_position_field input
+{
+    width: 44px;
+    height: 30px;
+    padding: 2px 4px;
+    border-radius: 4px 0 0 4px;
+    text-align: center;
+    appearance: textfield;
+}
+.gpts_position_field input::-webkit-inner-spin-button { appearance: none; }
+.gpts_position_steps { display: flex; flex-direction: column; }
+.gpts_position_steps .gpts_icon_button
+{
+    width: 20px;
+    min-height: 0;
+    height: 15px;
+    padding: 0;
+    border-left: 0;
+    border-radius: 0 4px 0 0;
+}
+.gpts_position_steps .gpts_icon_button:last-child { border-top: 0; border-radius: 0 0 4px; }
+.gpts_position_steps svg { width: 10px; height: 10px; }
+.gpts_position_input > .gpts_error { flex-basis: 100%; margin: 0; }
+
+.gpts_error, .gpts_danger { color: #f2a0a8; }
+.gpts_success { color: #9bd0b0; }
+
+/* History geometry matches the 64px rows produced by history.ts. */
+.gpts_graph { position: relative; }
+.gpts_graph > svg { position: absolute; inset: 0 auto auto 0; pointer-events: none; }
+.gpts_history_row { height: 64px; opacity: .65; }
+.gpts_history_row > div { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.gpts_active_path { opacity: 1; }
+.gpts_current { background: #273247; }
+.gpts_pinned { box-shadow: inset -3px 0 #d9bc78; }
+.gpts_history_label { display: block; width: 100%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

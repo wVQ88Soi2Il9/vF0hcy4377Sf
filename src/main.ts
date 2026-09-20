@@ -2,7 +2,7 @@ import * as core from '@/core';
 import { pure_world } from '@/world';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
-import * as shirones_ui from '@/packs/shirones_ui';
+import * as gpts_ui from '@/packs/gpts_ui';
 import * as vanilla_alpha from '@/packs/vanilla_alpha';
 import * as vanilla_beta from '@/packs/vanilla_beta';
 
@@ -12,7 +12,7 @@ vanilla_alpha.global_init(registry);
 vanilla_beta.global_init(registry);
 cli.global_init(registry);
 panel.global_init(registry);
-shirones_ui.global_init(registry);
+gpts_ui.global_init(registry);
 
 const hook_template: core.hook_list = new Map();
 for (const [namespace, pack] of registry)
@@ -44,5 +44,5 @@ const target_world = new pure_world(
     'main'
 );
 
-shirones_ui.create_ui_layout(target_world);
-document.title = 'Shirones UI';
+gpts_ui.create_ui_layout(target_world, app);
+document.title = 'GPTs UI';
