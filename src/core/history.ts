@@ -10,6 +10,13 @@ import type { uid } from './definition_i';
 import type { space } from './definition_ii';
 import { rev_op } from './definition_iii';
 
+/**
+ * 回傳約定：
+ * - 自然邊界（根節點無法再 undo、分叉處無法自動 redo、目標不是子節點）回傳 false。
+ * - jump_* 回傳 boolean：true 表示 current 節點確實改變，false 表示未移動。
+ * - find_lca 收到不存在的節點 uid 時拋出例外。
+ */
+
 // ── 歷史樹資料結構 ───────────────────────────────────────────────────────────
 
 export interface node
@@ -159,29 +166,34 @@ export function find_prev_fork_node(tree: tree, start: uid = tree.current_histor
 /**
  * 沿直系祖先路徑向上跳轉（target 必須為 current 之直系祖先節點）。
  */
-export function jump_to_ancestor(tree: tree, sp: space, target: uid): void
+function jump_to_ancestor(tree: tree, sp: space, target: uid): boolean
 {
+    const moved = tree.current_history_uid !== target;
     while (tree.current_history_uid !== target)
     {
         jump_prev_node(tree, sp);
     }
+    return moved;
 }
 
-export function jump_to_prev_fork(tree: tree, sp: space): void
+export function jump_to_prev_fork(tree: tree, sp: space): boolean
 {
+    let moved = false;
     while (jump_prev_node(tree, sp))
     {
+        moved = true;
         const current = tree.nodes.get(tree.current_history_uid)!;
         if (current.children_history_uids.length > 1 || current.parent_history_uid === null)
         {
             break;
         }
     }
+    return moved;
 }
 
-export function jump_to_root(tree: tree, sp: space): void
+export function jump_to_root(tree: tree, sp: space): boolean
 {
-    jump_to_ancestor(tree, sp, 0);
+    return jump_to_ancestor(tree, sp, 0);
 }
 
 // ── 3. Downward / Forward Operators (正向向下時間流) ─────────────────────────
@@ -263,7 +275,7 @@ export function find_next_fork_node(tree: tree, start: uid = tree.current_histor
 /**
  * 沿直系子孫路徑向下跳轉（當 target 為 current 之子孫節點時）。
  */
-export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
+function jump_to_descendant(tree: tree, sp: space, descendant: uid): boolean
 {
     const forward_history_uids: uid[] = [];
     let curr: uid | null = descendant;
@@ -283,19 +295,33 @@ export function jump_to_descendant(tree: tree, sp: space, descendant: uid): void
     {
         jump_next_node(tree, sp, next_uid);
     }
+    return forward_history_uids.length > 0;
 }
 
 /**
  * 沿當前無歧義單一路徑前進至最深處（葉節點或下一個分岔點）。
  */
-export function jump_to_next_fork(tree: tree, sp: space): void
+export function jump_to_next_fork(tree: tree, sp: space): boolean
 {
+    let moved = false;
     while (jump_next_node(tree, sp))
     {
+        moved = true;
     }
+    return moved;
 }
 
 // ── 4. Core LCA & Target Jump (核心中樞：跨分支任意穿越) ─────────────────────
+
+function get_parent_uid(tree: tree, history_uid: uid): uid | null
+{
+    const found = tree.nodes.get(history_uid);
+    if (!found)
+    {
+        throw new Error(`History node ${history_uid} not found.`);
+    }
+    return found.parent_history_uid;
+}
 
 export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): uid
 {
@@ -307,7 +333,7 @@ export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): ui
     {
         ancestors.add(curr);
 
-        const parent_uid = tree.nodes.get(curr)!.parent_history_uid;
+        const parent_uid = get_parent_uid(tree, curr);
 
         if (parent_uid === null)
         {
@@ -325,21 +351,23 @@ export function find_lca(tree: tree, history_uid_a: uid, history_uid_b: uid): ui
             return curr;
         }
 
-        curr = tree.nodes.get(curr)!.parent_history_uid!;
+        curr = get_parent_uid(tree, curr)!;
     }
 }
+
 /**
  * 跨分支任意節點跳轉：由 LCA 拆解為「先回到 LCA，再跳至目標子孫」。
  */
-export function jump_to_node(tree: tree, sp: space, target: uid): void
+export function jump_to_node(tree: tree, sp: space, target: uid): boolean
 {
     if (tree.current_history_uid === target)
     {
-        return;
+        return false;
     }
 
     const lca_uid = find_lca(tree, tree.current_history_uid, target);
 
     jump_to_ancestor(tree, sp, lca_uid);
     jump_to_descendant(tree, sp, target);
+    return true;
 }
