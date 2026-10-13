@@ -16,9 +16,12 @@
 pnpm install     # 安裝依賴
 pnpm dev         # 啟動開發伺服器
 pnpm build       # tsc -b && vite build
+pnpm test        # vitest run，執行 tests/
 ```
 
-`tests/` 內有測試檔，目前尚未接上 `package.json` 的 script。
+本專案只使用 pnpm（`package.json` 的 `packageManager` 欄位已指定版本）。請勿使用 `npm install`，它會在 pnpm 的 `node_modules` 上失敗，並產生與 `pnpm-lock.yaml` 衝突的 `package-lock.json`。
+
+`tests/` 內目前有一個測試檔使用舊的 registry 形狀，會失敗，尚未修正。
 
 ### 1.2 CLI
 
