@@ -13,7 +13,7 @@ export function project(sp: core.space, args: camera_args): basic_renderer.proje
         return [Number(axis_str), slice_val] as const;
     });
 
-    for (const dev of sp.devices)
+    for (const dev of sp.devices.values())
     {
         const shapes = dev.get_shape();
         let touches = false;

@@ -85,16 +85,14 @@ export interface recipe extends namespaced_id
 
 export class space
 {
-    public readonly dimension:       number;
-    public          size:            vector;
-    public          next_device_uid: uid;
-    public          devices:         device[];
+    public readonly dimension: number;
+    public          size:      vector;
+    public          devices:   Map<uid, device>;
 
     constructor(size: vector)
     {
         this.dimension = size.length;
         this.size = size;
-        this.next_device_uid = 1;
-        this.devices = [];
+        this.devices = new Map();
     }
 }

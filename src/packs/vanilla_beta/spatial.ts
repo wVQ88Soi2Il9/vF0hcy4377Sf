@@ -126,7 +126,7 @@ export function check_map_overlap(map: core.space, _registry?: core.pack_registr
     const occupied_map = new spatial_map<core.uid[]>();
     const out_of_bounds: core.uid[] = [];
 
-    for (const dev of map.devices)
+    for (const dev of map.devices.values())
     {
         const cells = dev.get_shape().map(local_cell => add_vector(dev.position, local_cell));
 

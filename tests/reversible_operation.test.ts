@@ -107,6 +107,7 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         }
 
         const create_op = vanilla_alpha.create_device_operation(
+            1,
             mock_device,
             { namespace: 'vanilla_alpha', id: 'test_dev' },
             [0, 0]

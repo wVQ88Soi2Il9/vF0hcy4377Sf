@@ -4,6 +4,16 @@ import * as operations from './operations';
 
 export class std_world extends world.pure_world
 {
+    private next_uid: number = 1;
+
+    /**
+     * 產生 uid 的方法，可由子類別覆寫。唯一性由 space 與 create 的前置條件保證，不依賴此方法。
+     */
+    protected allocate_uid(): core.uid
+    {
+        return this.next_uid++;
+    }
+
     public create_device
     (
         device_class:  core.device_constructor,
@@ -12,7 +22,7 @@ export class std_world extends world.pure_world
         other_info:    Record<string, unknown> = {}
     ): core.device
     {
-        const op = operations.create_device_operation(device_class, definition_id, position, other_info);
+        const op = operations.create_device_operation(this.allocate_uid(), device_class, definition_id, position, other_info);
         this.submit([op]);
         return op.get_device()!;
     }

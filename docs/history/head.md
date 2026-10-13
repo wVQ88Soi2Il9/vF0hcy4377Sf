@@ -4,10 +4,13 @@
 
 ## 目前使用中
 
-[0061_202610140117_pack-manifest-and-commit-event](./0061_202610140117_pack-manifest-and-commit-event.md) — `in-progress`，待辦待決剩 4/4
+[0062_202610140230_space-uid-map-and-uniqueness](./0062_202610140230_space-uid-map-and-uniqueness.md) — `in-progress`，待辦待決剩 3/3
 
 ## 現在開著的（逐格）
 
+- `0062#1` · **等待確認** — space 改為 Map 並移除 next_device_uid
+- `0062#2` · **等待確認** — create 帶固定 uid，uid 產生方法分離
+- `0062#3` · **等待確認** — 新增 space 不變式測試
 - `0061#1` · **等待確認** — Core 契約：pack_manifest 與 catalog
 - `0061#2` · **等待確認** — Runtime：compose 與 pure_world 單一寫入路徑
 - `0061#3` · **等待確認** — Packs 與入口改用 manifest
@@ -53,11 +56,12 @@
 - `0042#3` · **待實作** — 實作側邊面板至畫布之拖曳建立 (Drag to Create)
 - `0042#4` · **待實作** — 整合測試與建構驗證
 
-> 要做某一格：`python3 docs/history/plan-item.py 0061#1`
+> 要做某一格：`python3 docs/history/plan-item.py 0062#1`
 > —— 只回那一格的正文與它的依據，不必讀整份計畫。
 
 ## draft / in-progress（流水號降序）
 
+- **0062** [0062_202610140230_space-uid-map-and-uniqueness](./0062_202610140230_space-uid-map-and-uniqueness.md) — `in-progress`，待辦待決剩 3/3
 - **0061** [0061_202610140117_pack-manifest-and-commit-event](./0061_202610140117_pack-manifest-and-commit-event.md) — `in-progress`，待辦待決剩 4/4
 - **0060** [0060_202609060315_vanilla-alpha-merge-init-to-index](./0060_202609060315_vanilla-alpha-merge-init-to-index.md) — `in-progress`，待辦待決剩 2/2
 - **0059** [0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace](./0059_202609060253_vanilla-alpha-operations-fail-fast-and-namespace.md) — `in-progress`，待辦待決剩 3/3

@@ -92,7 +92,7 @@ describe('world commit', () =>
             ['inverse:move_device', 'inverse:create_device'],
             ['execute:create_device', 'execute:move_device']
         ]);
-        expect(w.space.devices[0].position).toEqual([2, 2]);
+        expect(w.space.devices.get(dev.device_uid)!.position).toEqual([2, 2]);
     });
 
     it('跨分支 jump_to 的 change_set 先 inverse 至 LCA 再 execute', () =>
@@ -110,8 +110,8 @@ describe('world commit', () =>
         w.jump_to(branch_a);
 
         expect(log.map(e => e.change)).toEqual([['inverse:select_recipe', 'execute:move_device']]);
-        expect(w.space.devices[0].position).toEqual([2, 2]);
-        expect(w.space.devices[0].selected_recipe_id).toBeUndefined();
+        expect(w.space.devices.get(dev.device_uid)!.position).toEqual([2, 2]);
+        expect(w.space.devices.get(dev.device_uid)!.selected_recipe_id).toBeUndefined();
     });
 
     it('未移動時不發出事件；刪除歷史節點以空 change_set 發出', () =>
