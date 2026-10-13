@@ -1,79 +1,73 @@
 # Runtime Architecture
 
+設計推演見 [docs/QA/2610140017.md](../docs/QA/2610140017.md)。
+
 ## Core Idea
 
-Packs define **what the system can do**.  
-Worlds hold **what is currently running**.
+Packs 只描述，runtime 負責組裝。
+Catalog 是全域、組裝後不可變的定義；World 持有正在執行的狀態。
 
-Therefore, hook **definitions** are discovered once during initialization, but hook **callbacks** belong to each world independently.
-
-```mermaid id="96rj3k"
+```mermaid
 flowchart TD
-    Packs["Packs"]
+    M["pack manifests（依序）"]
 
-    subgraph Init["Initialization"]
-        Load["Load packs in order"]
-        Hooks["Collect all hook definitions"]
-        Template["Build empty hook template"]
+    subgraph Compose["compose（全域，一次）"]
+        Merge["合併 provides 與 on"]
+        Patch["依序執行 patch(draft)"]
+        Catalog["catalog"]
 
-        Load --> Hooks --> Template
+        Merge --> Patch --> Catalog
     end
 
-    Packs --> Load
+    M --> Merge
 
-    Template --> WA["World A<br/>own hook list"]
-    Template --> WB["World B<br/>own hook list"]
+    Catalog --> WA["World A<br/>space · history · pack_state"]
+    Catalog --> WB["World B<br/>space · history · pack_state"]
+```
 
-    Packs -. "inject callbacks" .-> WA
-    Packs -. "inject callbacks" .-> WB
+## Pack manifest
+
+```ts
+interface pack_manifest
+{
+    pack_id:       string;
+    provides?:     { items?, recipes?, devices?, operations?, commands? };
+    on?:           Record<string, hook_callback>;   // 'namespace:id' → handler(world, ...args)
+    create_state?: () => unknown;                   // 每個世界的 pack 私有狀態
+    patch?:        (draft: catalog) => void;        // 組裝期間修改尚未凍結的 catalog
+}
 ```
 
 ## Lifecycle
 
-### 1. Initialize
+### 1. Compose
 
-Load every pack in a deterministic order.
+`compose(manifests)` 依 `ENABLED_PACKS` 順序：
 
-Each pack registers its definitions, including the hooks it may use.
+1. 合併所有 `provides` 至 `catalog.registry`，合併所有 `on` 至 `catalog.handlers`。
+2. 依相同順序呼叫每個 pack 的 `patch(draft)`。
 
-After all packs are loaded, the system knows the complete set of possible hooks and builds an empty hook template.
-
-```text id="alxd7j"
-namespace
-└── hook
-    └── callbacks[]
-```
+列表順序即 handler 的執行順序。
 
 ### 2. Create World
 
-A new world receives a fresh hook list from that template.
-
-```text id="fl2y6k"
-World A → Hook List A
-World B → Hook List B
-```
-
-The structure is shared conceptually; the callback lists are not.
+`new pure_world(catalog, space, id?)` 建立 `history`，並以 `create_state` 產生 `pack_state`。
 
 ### 3. Run World
 
-While a world is running, packs may attach callbacks to that specific world.
+所有改變狀態的操作都經過唯一的寫入路徑：
 
-```mermaid id="n2r5vz"
-sequenceDiagram
-    participant P as Pack
-    participant W as World
-    participant H as World's Hook List
-
-    P->>H: inject callback
-    W->>H: trigger hook
-    H->>P: execute callback
+```text
+submit / undo / redo / jump_*
+  → commit：透過 history.ts 套用 op
+  → 由游標移動前後推導 change_set（先 inverse 至 LCA，再 execute）
+  → emit core:committed(world, change_set)
 ```
 
-This allows the same packs to participate in multiple worlds without sharing runtime state.
+`delete_history_node` 不改變 space，以空的 `change_set` 發出 `core:committed`。
 
 ## Invariant
 
-> **Hook definitions are global. Hook callbacks are per-world.**
+> **Handlers 是全域且不可變的；世界透過參數傳入。**
 
-A callback injected into World A must never affect World B.
+Handler 只操作它收到的 world，因此 World A 的事件不會影響 World B。

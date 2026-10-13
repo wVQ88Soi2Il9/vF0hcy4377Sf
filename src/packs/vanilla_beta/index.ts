@@ -4,14 +4,7 @@ export * from './axes';
 export * from './history';
 export * from './spatial';
 
-export function global_init(registry: core.pack_registry): void
+export const manifest: core.pack_manifest =
 {
-    registry.set('vanilla_beta', {
-        pack_id: 'vanilla_beta'
-    });
-}
-
-export function world_init(): void
-{
-
-}
+    pack_id: 'vanilla_beta'
+};

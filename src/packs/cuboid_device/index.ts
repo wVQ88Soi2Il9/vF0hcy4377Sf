@@ -54,14 +54,7 @@ export abstract class base_cuboid_device extends core.device
     }
 }
 
-export function global_init(registry: core.pack_registry): void
+export const manifest: core.pack_manifest =
 {
-    registry.set('cuboid_device', {
-        pack_id: 'cuboid_device'
-    });
-}
-
-export function world_init(): void
-{
-
-}
+    pack_id: 'cuboid_device'
+};

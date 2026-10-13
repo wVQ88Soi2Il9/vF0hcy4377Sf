@@ -1,3 +1,4 @@
+import * as core from '@/core';
 import * as layout from './layout';
 
 export * from './style.css'
@@ -12,12 +13,7 @@ export function init_pack(): void
     layout.get_ui_root();
 }
 
-export function global_init(): void
+export const manifest: core.pack_manifest =
 {
-
-}
-
-export function world_init(): void
-{
-
-}
+    pack_id: 'basic_ui'
+};

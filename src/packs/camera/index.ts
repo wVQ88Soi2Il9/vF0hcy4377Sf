@@ -4,14 +4,7 @@ export * from './types';
 export * from './projection';
 export * from './render';
 
-export function global_init(registry: core.pack_registry): void
+export const manifest: core.pack_manifest =
 {
-    registry.set('camera', {
-        pack_id: 'camera'
-    });
-}
-
-export function world_init(): void
-{
-
-}
+    pack_id: 'camera'
+};
