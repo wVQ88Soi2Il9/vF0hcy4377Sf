@@ -40,7 +40,7 @@ export abstract class device
     {
         this.device_uid = device_uid;
         this.definition_id = definition_id;
-        this.position = position;
+        this.position = [...position];
         this.other_info = other_info;
     }
 
