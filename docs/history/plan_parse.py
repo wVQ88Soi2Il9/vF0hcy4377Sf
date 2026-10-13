@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-"""Read and validate the plan corpus in `docs/history/`.
+"""讀取並檢查 `docs/history/` 下的計畫（plan-history v4）。
 
-Stdlib only — no venv needed. This module is not a CLI; it is the **single**
-definition of how a plan file is parsed, imported by every tool in this directory
-(`update-head.py`, and any reader added later).
+僅使用標準函式庫。本模組不是 CLI，而是「計畫檔怎麼讀」的唯一定義，
+由同目錄下所有工具匯入（`update-head.py`、`plan-item.py`）。
 
-The split is by responsibility, not by size:
-
-- **here** — what a plan file *is*: the header fields, the sections, the observation
-  and handoff grammar, and the corpus-wide consistency rules.
-- **the CLIs** — what to *do* with that: render `head.md`, answer a query, exit codes.
+- 這裡：計畫檔是什麼 —— 檔頭欄位、各節、觀察與待辦的文法、跨檔一致性規則。
+- 各 CLI：拿這些做什麼 —— 產生 head.md、回答查詢、決定結束碼。
 """
 
 from __future__ import annotations
@@ -18,82 +14,56 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 
 def force_utf8_stdio() -> None:
-    """Make both CLIs print their Chinese output verbatim on Windows.
-
-    Python picks the console codepage for stdout, which on a zh-TW Windows box is
-    cp950 — every plan title and every conflict message comes out as mojibake, and
-    the whole point of these tools is printing that text to a reader. Written files
-    already pin `encoding="utf-8"`; this is only the streams.
-    """
+    """讓中文輸出在 Windows 主控台也不亂碼（預設 codepage 是 cp950）。"""
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
 
-# The corpus root. `PLAN_HISTORY_ROOT` exists so the tests can point both CLIs at a
-# fixture directory and exercise the real entry points instead of a re-implementation
-# of them; in normal use it is unset and this is simply where the scripts live.
+
+# 計畫目錄。`PLAN_HISTORY_ROOT` 讓測試可以把工具指向 fixture 目錄；平常不設，就是腳本所在處。
 HERE = Path(os.environ.get("PLAN_HISTORY_ROOT") or Path(__file__).resolve().parent).resolve()
 
 
 def _display_root() -> str:
-    """How to spell the corpus root in text meant for a human to act on."""
     for parent in (HERE, *HERE.parents):
         if (parent / ".git").exists():
             return HERE.relative_to(parent).as_posix()
     return HERE.as_posix()
 
 
-# Spelled once, at import: every tool prints the same root, and it is only a filesystem
-# walk in the first place.
 ROOT_DISPLAY = _display_root()
 
-FILENAME_RE = re.compile(r"^(\d{4})_(\d{8,12})_([a-z0-9][a-z0-9-]*)\.md$")
+VERSION = 4
+
+FILENAME_RE = re.compile(r"^(\d{4})_(\d{12})_([a-z0-9][a-z0-9-]*)\.md$")
 PREV_RE = re.compile(r"^-\s*\*\*prev:\*\*\s*(.+?)\s*$")
 SKILL_RE = re.compile(r"^-\s*\*\*skill:\*\*\s*(.+?)\s*$")
-SKILL_VERSION_RE = re.compile(r"\bv(\d+)\b")
 STATUS_RE = re.compile(r"^-\s*\*\*status:\*\*\s*`?([A-Za-z-]+)`?\s*$")
-CHECKBOX_RE = re.compile(r"^\s*-\s*\[([ xX])\]")
 BACKTICK_RE = re.compile(r"`([^`]+)`")
 
-# `### O3 · 2026-08-07 15:04:12+08:00 — 短標題`. The offset is required from v3 on; the
-# plans written before it are all UTC, and `_instant` reads them that way.
+# `### O3 · 2026-08-07 15:04:12+08:00 — 短標題`
 OBS_HEADING_RE = re.compile(
-    r"^###\s+O(\d+)\s+·\s+"
-    r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2})?)\s+[—-]\s+\S"
+    r"^###\s+O(\d+)\s+·\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})\s+[—-]\s+\S"
 )
-OBS_OFFSET_RE = re.compile(r"[+-]\d{2}:\d{2}$")
 OBS_ID_RE = re.compile(r"\bO(\d+)\b")
 OBS_REF_RE = re.compile(r"→\s*O(\d+)\b")
-# `- **更正:** O30` / `- **推翻:** O30` / `- **更新:** O30`. One word did all three jobs
-# through v2, and they are not the same job: only 更正 says the earlier *fact* was wrong,
-# and only that one makes work already done on it wrong too.
-OBS_RELATION_RE = re.compile(r"^\s*-\s*\*\*(更正|推翻|更新):\*\*\s*(.+?)\s*$")
-CORRECTS = "更正"
-LIST_ITEM_RE = re.compile(r"^\s*-\s+\S")
 
-# --- v3 ---------------------------------------------------------------------
-# `### 14 讓消融說得出成因`
+# `### 14 標題`、`- **state:** 待實作`、`- H2 · 2026-08-09 15:04 落地 —— 一行 → O52`
 ITEM_HEADING_RE = re.compile(r"^###\s+(\d+)\s+(\S.*?)\s*$")
-# `- **state:** 待實作`
 FIELD_RE = re.compile(r"^\s*-\s*\*\*([^:*]+):\*\*\s*(.*?)\s*$")
-# `- H2 · 2026-08-09 15:04 落地 —— judge() 回 (verdicts, basis) → O52`
-HIST_RE = re.compile(r"^\s*-\s+H(\d+)\s+·\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?)\s+(\S+)\s+——\s*(\S.*)$")
+HIST_RE = re.compile(r"^\s*-\s+H(\d+)\s+·\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s+(\S+)\s+——\s*(\S.*)$")
 HIST_MARKER = "**沿革**"
-# `取代 H1` inside a 修正 entry. It marks an entry in `--history` and nothing more:
-# no view filters on it, so nothing breaks when an author does not write it.
-SUPERSEDE_RE = re.compile(r"取代\s*H(\d+)")
-# `0007#14` — the one address form, valid anywhere including prose.
+# `0007#14` —— 唯一的位址寫法，內文裡也一樣。
 ADDR_RE = re.compile(r"\b(\d{4})#(\d+)\b")
 
-ITEM_STATES = ("待決斷", "待實作", "實作中", "等待確認", "完成", "否決", "移交")
+ITEM_STATES = ("待實作", "等待確認", "完成", "否決", "移交")
 TERMINAL_STATES = ("完成", "否決", "移交")
-HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交", "提問", "回答")
-ACTOR_TAG_RE = re.compile(r"[（\(]([^（\(\)）]+)[）\)](?:\s*→\s*O\d+)?\s*$")
+HIST_KINDS = ("決斷", "落地", "修正", "否決", "拆格", "合併", "改題", "移交")
 
 BODY_MAX_LINES = 15
 BASIS_MAX_REFS = 3
@@ -104,19 +74,13 @@ SUMMARY_MAX_LINES = 20
 STATUSES = ("draft", "in-progress", "done", "superseded", "abandoned")
 CLOSED = ("superseded", "abandoned")
 LIVE_STATUSES = ("draft", "in-progress")
-OPEN_ITEMS_HEADING = "## 待決斷/待完成事項"
-TODO_HEADING = "## 待辦"
+
 SUMMARY_HEADING = "## 主題簡述"
 REASON_HEADING = "## 捨棄原因"
 OBSERVATION_HEADING = "## 觀察與推論"
-HANDOFF_HEADING = "## 已移交"
+TODO_HEADING = "## 待辦"
 
-CURRENT_VERSION = 3
-# A plan with no `- **skill:**` line predates versioning and is v1 — the v2 checks
-# below never apply to it, and it is never rewritten into the newer format.
-DEFAULT_VERSION = 1
-
-# Files in this directory that are not plans.
+# 這個目錄裡不是計畫的檔案。
 NON_PLAN_FILES = ("head.md", "readme.md", "README.md")
 
 
@@ -125,15 +89,7 @@ class Observation:
     num: int
     stamp: str
     heading: str
-    lines: list[str] = field(default_factory=list)  # body, without the heading
-    relations: dict[str, list[int]] = field(default_factory=dict)  # kind -> targets
-    inbound: dict[str, list[int]] = field(default_factory=dict)  # kind -> sources
-
-    @property
-    def corrected_by(self) -> list[int]:
-        """Observations that declared this one's *fact* wrong — the only relation with
-        a machine consequence, because everything still resting on it is now wrong."""
-        return self.inbound.get(CORRECTS, [])
+    lines: list[str] = field(default_factory=list)  # 內文，不含標題
 
 
 @dataclass
@@ -143,7 +99,6 @@ class HistoryEntry:
     kind: str
     text: str
     obs_refs: list[int] = field(default_factory=list)
-    supersedes: list[int] = field(default_factory=list)  # `取代 H<n>`, a reader's marker
 
     @property
     def line(self) -> str:
@@ -152,17 +107,16 @@ class HistoryEntry:
 
 @dataclass
 class Item:
-    """One `### <n> 標題` block in a v3 plan's `## 待辦`."""
+    """`## 待辦` 裡的一個 `### <n> 標題` 區塊。"""
 
-    seq: str  # the owning plan's seq, so `addr` is self-contained
+    seq: str  # 所屬計畫的 seq，讓 `addr` 自成一格
     num: int
     title: str
     state: str | None = None
-    needs: list[str] = field(default_factory=list)  # `<seq>#<n>` addresses
+    needs: list[str] = field(default_factory=list)  # `<seq>#<n>`
     handoff: list[str] = field(default_factory=list)  # `- **移交:**`
-    claims: list[str] = field(default_factory=list)  # `- **承接:**`
     basis: list[int] = field(default_factory=list)
-    body: list[str] = field(default_factory=list)  # 正文, verbatim
+    body: list[str] = field(default_factory=list)  # 正文，原樣保留
     history: list[HistoryEntry] = field(default_factory=list)
 
     @property
@@ -182,7 +136,6 @@ class Item:
         return sum(1 for h in self.history if h.kind == "改題")
 
     def overgrown_signals(self) -> list[str]:
-        """Which size signals this item trips. Two or more is a warning."""
         hits = []
         if self.body_lines > BODY_MAX_LINES:
             hits.append(f"正文 {self.body_lines} 行 > {BODY_MAX_LINES}")
@@ -203,24 +156,15 @@ class Plan:
     topic: str
     title: str | None = None
     status: str | None = None
-    prev: str | None = None  # target filename, or None for "no parent"
+    prev: str | None = None  # 目標檔名；None 表示沒有上一份
     prev_raw: str = ""
     skill_raw: str = ""
-    version: int = DEFAULT_VERSION
     has_reason: bool = False
-    total: int = 0
-    open_items: int = 0
-    obs_ids: set[int] = field(default_factory=set)
-    obs_refs: set[int] = field(default_factory=set)
-    handoffs: list[str] = field(default_factory=list)  # target filenames ("" = missing)
-    items: list[Item] = field(default_factory=list)  # v3 only
-    addr_refs: set[str] = field(default_factory=set)  # every `<seq>#<n>` in the file
-    summary: list[str] = field(default_factory=list)  # `## 主題簡述`, verbatim
+    summary: list[str] = field(default_factory=list)
     observations: dict[int, Observation] = field(default_factory=dict)
-
-    @property
-    def summary_lines(self) -> int:
-        return sum(1 for ln in self.summary if ln.strip())
+    obs_refs: set[int] = field(default_factory=set)
+    items: list[Item] = field(default_factory=list)
+    addr_refs: set[str] = field(default_factory=set)  # 檔內出現的所有 `<seq>#<n>`
 
     @property
     def name(self) -> str:
@@ -231,10 +175,20 @@ class Plan:
         return self.path.stem
 
     @property
+    def summary_lines(self) -> int:
+        return sum(1 for ln in self.summary if ln.strip())
+
+    @property
+    def total(self) -> int:
+        return len(self.items)
+
+    @property
+    def open_items(self) -> int:
+        return sum(1 for it in self.items if it.is_open)
+
+    @property
     def handoff_count(self) -> int:
-        if self.version >= 3:
-            return sum(1 for it in self.items if it.state == "移交")
-        return len(self.handoffs)
+        return sum(1 for it in self.items if it.state == "移交")
 
 
 @dataclass
@@ -242,7 +196,7 @@ class Conflict:
     code: str
     plan: str
     detail: str
-    severity: str = "conflict"  # or "warning" — warnings never fail the exit code
+    severity: str = "conflict"  # 或 "warning" —— 警告不影響結束碼
 
 
 @dataclass
@@ -259,18 +213,8 @@ class Report:
         return [c for c in self.conflicts if c.severity == "warning"]
 
 
-def _instant(stamp: str) -> datetime:
-    """A comparable moment, so a file may hold both stamp forms and still order right.
-
-    An observation written before the offset rule carries no zone; every one of those
-    was taken on a UTC machine, so that is what they are read as.
-    """
-    dt = datetime.fromisoformat(stamp)
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
-
-
 def section(lines: list[str], heading: str) -> list[str]:
-    """Lines under `heading`, up to the next `## ` heading."""
+    """`heading` 底下、到下一個 `## ` 之前的行。"""
     out: list[str] = []
     inside = False
     for line in lines:
@@ -284,17 +228,16 @@ def section(lines: list[str], heading: str) -> list[str]:
     return out
 
 
-def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
-    """Observation section and handoff section — v2 plans only.
+def _split_addrs(raw: str) -> list[str]:
+    return [f"{a}#{b}" for a, b in ADDR_RE.findall(raw)]
 
-    Observations are evidence stamped with the moment they were taken; the checklist
-    cites them with `→ O<n>`. They are append-only, so timestamps never go backwards,
-    and an observation that a later one overturns still stays exactly as written.
-    """
-    obs_lines = section(lines, OBSERVATION_HEADING)
-    last_ts = ""
+
+def parse_observations(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
+    """觀察是蓋了時間戳的事實，只增不改；時間戳必須由舊到新。"""
+    last: datetime | None = None
+    last_raw = ""
     current: Observation | None = None
-    for line in obs_lines:
+    for line in section(lines, OBSERVATION_HEADING):
         if not line.startswith("### "):
             if current is not None:
                 current.lines.append(line)
@@ -306,113 +249,57 @@ def parse_v2_sections(plan: Plan, lines: list[str], conflicts: list[Conflict]) -
                 Conflict(
                     "BAD_FORMAT",
                     plan.name,
-                    f"observation heading {line.strip()!r} is not "
-                    "`### O<n> · YYYY-MM-DD HH:MM:SS — 標題`",
+                    f"觀察標題 {line.strip()!r} 不是 `### O<n> · YYYY-MM-DD HH:MM:SS+08:00 — 標題`",
                 )
             )
             continue
-        num, ts = int(m.group(1)), m.group(2)
-        if plan.version >= 3 and not OBS_OFFSET_RE.search(ts):
-            conflicts.append(
-                Conflict(
-                    "BAD_FORMAT",
-                    plan.name,
-                    f"O{num} is stamped {ts!r} with no UTC offset — write "
-                    "`+08:00`, so the moment says which clock it was read from",
-                )
-            )
-        if num in plan.obs_ids:
-            conflicts.append(Conflict("BAD_FORMAT", plan.name, f"observation O{num} defined twice"))
-        plan.obs_ids.add(num)
-        current = Observation(num=num, stamp=ts, heading=line.rstrip())
+        num, stamp = int(m.group(1)), m.group(2)
+        if num in plan.observations:
+            conflicts.append(Conflict("BAD_FORMAT", plan.name, f"觀察 O{num} 定義了兩次"))
+        current = Observation(num=num, stamp=stamp, heading=line.rstrip())
         plan.observations.setdefault(num, current)
-        if last_ts and _instant(ts) < _instant(last_ts):
+        moment = datetime.fromisoformat(stamp)
+        if last is not None and moment < last:
             conflicts.append(
                 Conflict(
                     "OBS_OUT_OF_ORDER",
                     plan.name,
-                    f"O{num} is stamped {ts}, before the observation above it ({last_ts}) — "
-                    "observations are appended oldest to newest, and the later one wins",
+                    f"O{num} 的時間 {stamp} 早於上一條（{last_raw}）—— 觀察由舊到新追加",
                 )
             )
-        last_ts = ts if not last_ts or _instant(ts) > _instant(last_ts) else last_ts
+        if last is None or moment > last:
+            last, last_raw = moment, stamp
 
-    if not plan.obs_ids:
-        conflicts.append(
-            Conflict("BAD_FORMAT", plan.name, f"no observation under {OBSERVATION_HEADING!r}")
-        )
-
-    # `→ O<n>` in the checklist, and `- **推翻:** O<n>` inside the observations.
-    for line in section(lines, OPEN_ITEMS_HEADING):
-        plan.obs_refs.update(int(n) for n in OBS_REF_RE.findall(line))
-    current = None
-    for line in obs_lines:
-        if line.startswith("### ") and (m := OBS_HEADING_RE.match(line)):
-            current = plan.observations.get(int(m.group(1)))
-        elif om := OBS_RELATION_RE.match(line):
-            kind, hit = om.group(1), [int(n) for n in OBS_ID_RE.findall(om.group(2))]
-            plan.obs_refs.update(hit)
-            if current is not None:
-                current.relations.setdefault(kind, []).extend(hit)
-
-    for obs in plan.observations.values():
-        for kind, targets in obs.relations.items():
-            for num in targets:
-                if target := plan.observations.get(num):
-                    target.inbound.setdefault(kind, []).append(obs.num)
-
-    for line in section(lines, HANDOFF_HEADING):
-        if not LIST_ITEM_RE.match(line):
-            continue
-        bt = BACKTICK_RE.search(line)
-        plan.handoffs.append(bt.group(1).strip().lstrip("./") if bt else "")
-        if not bt:
-            conflicts.append(
-                Conflict(
-                    "BROKEN_HANDOFF",
-                    plan.name,
-                    f"handoff {line.strip()!r} names no target plan — a handed-off item "
-                    "must say which plan took it",
-                )
-            )
+    if not plan.observations:
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"{OBSERVATION_HEADING!r} 底下沒有任何觀察"))
 
 
-def _split_addrs(raw: str) -> list[str]:
-    return [f"{a}#{b}" for a, b in ADDR_RE.findall(raw)]
-
-
-def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
-    """`## 待辦` — one `### <n> 標題` block per item.
-
-    An item carries its present (rewritable 正文) and its past (append-only 沿革) in
-    separate containers, so the current state is readable without replaying history.
-    """
+def parse_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> None:
+    """`## 待辦`：每格把現在（可重寫的正文）與過去（只增的沿革）放在不同容器。"""
 
     def bad(detail: str) -> None:
         conflicts.append(Conflict("BAD_ITEM_FORMAT", plan.name, detail))
 
     todo_lines = section(lines, TODO_HEADING)
     if not todo_lines:
-        conflicts.append(
-            Conflict("BAD_FORMAT", plan.name, f"no item section under {TODO_HEADING!r}")
-        )
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"沒有 {TODO_HEADING!r} 這一節"))
         return
 
     item: Item | None = None
     in_history = False
-    seen_nums: set[int] = set()
+    seen: set[int] = set()
 
     for line in todo_lines:
         if line.startswith("### "):
             m = ITEM_HEADING_RE.match(line)
             if not m:
-                bad(f"item heading {line.strip()!r} is not `### <n> 標題`")
+                bad(f"待辦標題 {line.strip()!r} 不是 `### <n> 標題`")
                 item, in_history = None, False
                 continue
             num = int(m.group(1))
-            if num in seen_nums:
-                bad(f"item {num} defined twice")
-            seen_nums.add(num)
+            if num in seen:
+                bad(f"第 {num} 格定義了兩次")
+            seen.add(num)
             item = Item(seq=plan.seq, num=num, title=m.group(2))
             plan.items.append(item)
             in_history = False
@@ -430,40 +317,15 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
                 continue
             hm = HIST_RE.match(line)
             if not hm:
-                bad(f"{item.addr} 沿革 line {line.strip()[:40]!r} is not `- H<n> · YYYY-MM-DD <kind> —— …`")
+                bad(f"{item.addr} 的沿革 {line.strip()[:40]!r} 不是 `- H<n> · YYYY-MM-DD HH:MM <種類> —— …`")
                 continue
             hnum, kind, text = int(hm.group(1)), hm.group(3), hm.group(4)
             if kind not in HIST_KINDS:
-                bad(f"{item.addr} H{hnum} kind {kind!r} not one of {', '.join(HIST_KINDS)}")
-            if kind in ("提問", "回答"):
-                tag_m = ACTOR_TAG_RE.search(text)
-                if not tag_m:
-                    bad(f"{item.addr} H{hnum} {kind} 必須在結尾標明身分，例如 `（human）` 或 `（agent: <model>）`")
-                else:
-                    actor = tag_m.group(1).strip()
-                    if actor.lower() in ("human", "使用者") or actor.lower().startswith("human:") or actor.startswith("使用者:"):
-                        pass
-                    elif actor.lower().startswith("agent:"):
-                        model_part = actor.split(":", 1)[1].strip()
-                        if not model_part:
-                            bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
-                    elif actor.lower() == "agent":
-                        bad(f"{item.addr} H{hnum} {kind} agent 必須標明具體模型與強度，例如 `（agent: gemini-3.7-flash）`")
-                    else:
-                        bad(f"{item.addr} H{hnum} {kind} 身分標記 {actor!r} 不符規範，須為 `（human）`、`（使用者）` 或 `（agent: <model>）`")
+                bad(f"{item.addr} H{hnum} 的種類 {kind!r} 不在 {'、'.join(HIST_KINDS)}")
             if any(h.num == hnum for h in item.history):
-                bad(f"{item.addr} H{hnum} used twice")
+                bad(f"{item.addr} H{hnum} 重複使用")
             refs = [int(n) for n in OBS_REF_RE.findall(line)]
-            item.history.append(
-                HistoryEntry(
-                    num=hnum,
-                    date=hm.group(2),
-                    kind=kind,
-                    text=text,
-                    obs_refs=refs,
-                    supersedes=[int(n) for n in SUPERSEDE_RE.findall(text)],
-                )
-            )
+            item.history.append(HistoryEntry(hnum, hm.group(2), kind, text, refs))
             plan.obs_refs.update(refs)
             continue
 
@@ -475,12 +337,7 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
                 item.needs.extend(_split_addrs(value))
             elif key == "移交":
                 item.handoff.extend(_split_addrs(value))
-            elif key == "承接":
-                item.claims.extend(_split_addrs(value))
             elif key == "basis":
-                # The whole field is a list of observations behind one arrow
-                # (`→ O51、O30、O15`), so every `O<n>` in it counts — unlike a 沿革
-                # line, where only the arrow-anchored one is the citation.
                 item.basis.extend(int(n) for n in OBS_ID_RE.findall(value))
                 plan.obs_refs.update(item.basis)
             continue
@@ -490,25 +347,23 @@ def parse_v3_items(plan: Plan, lines: list[str], conflicts: list[Conflict]) -> N
 
     for it in plan.items:
         if it.state is None:
-            bad(f"{it.addr} has no `- **state:**` line")
+            bad(f"{it.addr} 沒有 `- **state:**`")
         elif it.state not in ITEM_STATES:
-            bad(f"{it.addr} state {it.state!r} not one of {', '.join(ITEM_STATES)}")
+            bad(f"{it.addr} 的 state {it.state!r} 不在 {'、'.join(ITEM_STATES)}")
         if it.state == "移交" and not it.handoff:
-            bad(f"{it.addr} is 移交 but names no target — write `- **移交:** <seq>#<n>`")
+            bad(f"{it.addr} 是 移交 卻沒有目標 —— 寫 `- **移交:** <seq>#<n>`")
         if it.handoff and it.state != "移交":
-            bad(f"{it.addr} names a 移交 target but its state is {it.state!r}")
+            bad(f"{it.addr} 寫了 移交 目標，但 state 是 {it.state!r}")
 
-    plan.total = len(plan.items)
-    plan.open_items = sum(1 for it in plan.items if it.is_open)
-    if plan.total == 0:
-        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"no item under {TODO_HEADING!r}"))
+    if not plan.items:
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"{TODO_HEADING!r} 底下沒有任何一格"))
 
 
 def parse_plan(path: Path, conflicts: list[Conflict]) -> Plan | None:
     m = FILENAME_RE.match(path.name)
     if not m:
         conflicts.append(
-            Conflict("BAD_FORMAT", path.name, "filename is not <seq>_<YYYYMMDDHHMM>_<topic>.md")
+            Conflict("BAD_FORMAT", path.name, "檔名不是 <seq>_<YYYYMMDDHHMM>_<topic>.md")
         )
         return None
 
@@ -526,153 +381,71 @@ def parse_plan(path: Path, conflicts: list[Conflict]) -> Plan | None:
                 plan.prev = bt.group(1).strip().lstrip("./")
         elif not plan.skill_raw and (km := SKILL_RE.match(line)):
             plan.skill_raw = km.group(1)
-            if vm := SKILL_VERSION_RE.search(plan.skill_raw):
-                plan.version = int(vm.group(1))
 
     plan.has_reason = bool("".join(section(lines, REASON_HEADING)).strip())
 
     if plan.title is None:
-        conflicts.append(Conflict("BAD_FORMAT", plan.name, "no `# ` title line"))
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, "沒有 `# ` 標題行"))
     elif plan.title != plan.stem:
-        conflicts.append(
-            Conflict("BAD_FORMAT", plan.name, f"title {plan.title!r} != filename stem")
-        )
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, f"標題 {plan.title!r} 與檔名不同"))
 
     if plan.status is None:
-        conflicts.append(Conflict("BAD_FORMAT", plan.name, "no `- **status:**` line"))
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, "沒有 `- **status:**`"))
     elif plan.status not in STATUSES:
         conflicts.append(
-            Conflict(
-                "BAD_FORMAT",
-                plan.name,
-                f"status {plan.status!r} not one of {', '.join(STATUSES)}",
-            )
+            Conflict("BAD_FORMAT", plan.name, f"status {plan.status!r} 不在 {'、'.join(STATUSES)}")
         )
 
     if not plan.prev_raw:
-        conflicts.append(Conflict("BAD_FORMAT", plan.name, "no `- **prev:**` line"))
+        conflicts.append(Conflict("BAD_FORMAT", plan.name, "沒有 `- **prev:**`"))
 
-    if plan.skill_raw and plan.version == DEFAULT_VERSION and "v1" not in plan.skill_raw:
+    if plan.skill_raw != f"plan-history v{VERSION}":
         conflicts.append(
             Conflict(
                 "BAD_FORMAT",
                 plan.name,
-                f"`- **skill:** {plan.skill_raw}` carries no `v<n>` version",
+                f"`- **skill:**` 必須是 `plan-history v{VERSION}`（現在是 {plan.skill_raw!r}）",
             )
         )
 
-    if plan.version >= 3:
-        plan.summary = section(lines, SUMMARY_HEADING)
-        plan.addr_refs.update(_split_addrs("\n".join(lines)))
-    else:
-        items = [CHECKBOX_RE.match(line) for line in section(lines, OPEN_ITEMS_HEADING)]
-        boxes = [m.group(1) for m in items if m]
-        plan.total = len(boxes)
-        plan.open_items = sum(1 for b in boxes if b == " ")
-        if plan.total == 0:
-            conflicts.append(
-                Conflict("BAD_FORMAT", plan.name, f"no checklist under {OPEN_ITEMS_HEADING!r}")
-            )
+    plan.summary = section(lines, SUMMARY_HEADING)
+    plan.addr_refs.update(_split_addrs("\n".join(lines)))
 
-    if plan.version >= 2:
-        parse_v2_sections(plan, lines, conflicts)
-    if plan.version >= 3:
-        parse_v3_items(plan, lines, conflicts)
+    parse_observations(plan, lines, conflicts)
+    parse_items(plan, lines, conflicts)
 
-    # After every section has contributed its references, so a v3 `basis` arrow is
-    # checked by the same rule as a v2 checklist arrow.
-    for num in sorted(plan.obs_refs - plan.obs_ids):
-        conflicts.append(
-            Conflict("BROKEN_OBS_REF", plan.name, f"O{num} is referenced but never defined")
-        )
+    for num in sorted(plan.obs_refs - set(plan.observations)):
+        conflicts.append(Conflict("BROKEN_OBS_REF", plan.name, f"O{num} 被引用但從未定義"))
 
     return plan
 
 
-def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
-    by_name = {p.name: p for p in plans}
-    successors: dict[str, list[str]] = {}
-    for p in plans:
-        if p.prev:
-            successors.setdefault(p.prev, []).append(p.name)
-
-    for p in plans:
-        if p.status == "done" and p.open_items:
-            conflicts.append(
-                Conflict(
-                    "DONE_WITH_OPEN_ITEMS",
-                    p.name,
-                    f"status is done but {p.open_items}/{p.total} checklist item(s) "
-                    "are still unchecked — finish them, or move the status back",
-                )
-            )
-        if p.status in CLOSED and not p.has_reason:
-            conflicts.append(
-                Conflict(
-                    "MISSING_REASON",
-                    p.name,
-                    f"status is {p.status} but there is no non-empty {REASON_HEADING!r} section",
-                )
-            )
-        if p.status == "superseded" and not successors.get(p.name):
-            conflicts.append(
-                Conflict(
-                    "SUPERSEDED_WITHOUT_SUCCESSOR",
-                    p.name,
-                    "no other plan's prev points here — a superseded plan must have a "
-                    "successor that took over its goal; otherwise it is abandoned",
-                )
-            )
-        if p.prev and p.prev not in by_name:
-            conflicts.append(
-                Conflict("BROKEN_PREV", p.name, f"prev points at {p.prev!r}, which does not exist")
-            )
-        if p.prev == p.name:
-            conflicts.append(Conflict("BROKEN_PREV", p.name, "prev points at itself"))
-        for target in p.handoffs:
-            if not target:
-                continue  # already reported at parse time
-            if target == p.name:
-                conflicts.append(
-                    Conflict("BROKEN_HANDOFF", p.name, "an item is handed off to this same plan")
-                )
-            elif target not in by_name:
-                conflicts.append(
-                    Conflict(
-                        "BROKEN_HANDOFF", p.name, f"handed off to {target!r}, which does not exist"
-                    )
-                )
-
-
 def item_index(plans: list[Plan]) -> dict[str, Item]:
-    """Every addressable item in the corpus, keyed by `<seq>#<n>`."""
-    return {it.addr: it for p in plans if p.version >= 3 for it in p.items}
+    """整個目錄裡所有可定址的格子，以 `<seq>#<n>` 為鍵。"""
+    return {it.addr: it for p in plans for it in p.items}
 
 
 def blockers(item: Item, index: dict[str, Item]) -> list[str]:
-    """Prerequisites of `item` that have not reached a terminal state.
-
-    Blockedness is computed, never stored — a stored copy would go stale the moment a
-    prerequisite lands. `STARVED` and `head.md` both read it from here, so they can
-    never disagree about who can start.
-    """
+    """尚未到達終態的前置項。阻塞是算出來的，不存 —— 存了就會在前置完成時過期。"""
     return [a for a in item.needs if (t := index.get(a)) and t.is_open]
 
 
-def startable(item: Item, index: dict[str, Item]) -> bool:
-    """The agent can act on this item without asking anyone."""
-    return item.is_open and item.state != "待決斷" and not blockers(item, index)
-
-
 def display_state(item: Item, index: dict[str, Item]) -> str:
-    """What to show a reader: the stored state, unless something is in the way."""
     if item.is_open and blockers(item, index):
         return "阻塞"
     return item.state or "?"
 
 
+def claimed_by(index: dict[str, Item]) -> dict[str, list[str]]:
+    """反向的移交關係（承接）。只存單向 `移交`，承接由此算出。"""
+    out: dict[str, list[str]] = {}
+    for it in index.values():
+        for target in it.handoff:
+            out.setdefault(target, []).append(it.addr)
+    return out
+
+
 def _cycles(edges: dict[str, list[str]]) -> list[list[str]]:
-    """Every cycle root reachable in the `needs` graph, as a path for the message."""
     WHITE, GREY, BLACK = 0, 1, 2
     colour: dict[str, int] = {}
     found: list[list[str]] = []
@@ -695,106 +468,85 @@ def _cycles(edges: dict[str, list[str]]) -> list[list[str]]:
     return found
 
 
-def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
-    """Cross-item and cross-plan rules. Only items in v3 plans take part."""
-    v3 = [p for p in plans if p.version >= 3]
-    if not v3:
-        return
+def check(plans: list[Plan], conflicts: list[Conflict]) -> None:
+    by_name = {p.name: p for p in plans}
+    successors: dict[str, list[str]] = {}
+    by_seq: dict[str, list[str]] = {}
+    for p in plans:
+        by_seq.setdefault(p.seq, []).append(p.name)
+        if p.prev:
+            successors.setdefault(p.prev, []).append(p.name)
 
-    by_addr = item_index(plans)
-    plan_of: dict[str, Plan] = {it.addr: p for p in v3 for it in p.items}
+    for seq, names in by_seq.items():
+        if len(names) > 1:
+            conflicts.append(
+                Conflict("DUPLICATE_SEQ", names[0], f"序號 {seq} 被 {'、'.join(names)} 同時使用 —— 序號不重用")
+            )
+
+    for p in plans:
+        if p.status == "done" and p.open_items:
+            conflicts.append(
+                Conflict(
+                    "DONE_WITH_OPEN_ITEMS",
+                    p.name,
+                    f"status 是 done，但 {p.open_items}/{p.total} 格還沒到終態 —— 做完，或把 status 改回去",
+                )
+            )
+        if p.status in CLOSED and not p.has_reason:
+            conflicts.append(
+                Conflict("MISSING_REASON", p.name, f"status 是 {p.status}，但沒有非空的 {REASON_HEADING!r}")
+            )
+        if p.status == "superseded" and not successors.get(p.name):
+            conflicts.append(
+                Conflict(
+                    "SUPERSEDED_WITHOUT_SUCCESSOR",
+                    p.name,
+                    "沒有任何計畫的 prev 指向這裡 —— superseded 必須有接手的後繼，否則是 abandoned",
+                )
+            )
+        if p.prev and p.prev not in by_name:
+            conflicts.append(Conflict("BROKEN_PREV", p.name, f"prev 指向不存在的 {p.prev!r}"))
+        if p.prev == p.name:
+            conflicts.append(Conflict("BROKEN_PREV", p.name, "prev 指向自己"))
+
+    index = item_index(plans)
     known_seqs = {p.seq for p in plans}
 
-    def resolve(src: Plan, addr: str, what: str) -> Item | None:
-        if addr in by_addr:
-            return by_addr[addr]
+    def resolve(src: Plan, addr: str, what: str) -> None:
+        if addr in index:
+            return
         seq = addr.split("#")[0]
-        why = (
-            f"plan {seq} does not exist"
-            if seq not in known_seqs
-            else f"plan {seq} is not v3, so it has no addressable items"
-            if not any(p.seq == seq for p in v3)
-            else "no such item in that plan"
-        )
-        conflicts.append(Conflict("DANGLING_REF", src.name, f"{what} names {addr} — {why}"))
-        return None
+        why = f"沒有序號 {seq} 的計畫" if seq not in known_seqs else "那份計畫裡沒有這一格"
+        conflicts.append(Conflict("DANGLING_REF", src.name, f"{what} 指向 {addr} —— {why}"))
 
-    for p in v3:
+    for p in plans:
         for it in p.items:
             for addr in it.needs:
                 resolve(p, addr, f"{it.addr} needs")
             for addr in it.handoff:
-                resolve(p, addr, f"{it.addr} 移交")
-            for addr in it.claims:
-                resolve(p, addr, f"{it.addr} 承接")
-        # Prose references get the same treatment — they are the ones nothing could
-        # check before, and they are how one plan silently invalidates another.
-        owned = {a for it in p.items for a in (*it.needs, *it.handoff, *it.claims)}
+                if addr == it.addr:
+                    conflicts.append(
+                        Conflict("BAD_ITEM_FORMAT", p.name, f"{it.addr} 移交給自己")
+                    )
+                else:
+                    resolve(p, addr, f"{it.addr} 移交")
+        owned = {a for it in p.items for a in (*it.needs, *it.handoff)}
         for addr in sorted(p.addr_refs - owned - {it.addr for it in p.items}):
-            resolve(p, addr, "a reference in the text")
+            resolve(p, addr, "內文的引用")
 
-    # Handoff is only real when both ends say so; one-sided handoff is how an
-    # obligation evaporates between two files.
-    for p in v3:
-        for it in p.items:
-            for addr in it.handoff:
-                if (target := by_addr.get(addr)) and it.addr not in target.claims:
-                    conflicts.append(
-                        Conflict(
-                            "UNCLAIMED_HANDOFF",
-                            p.name,
-                            f"{it.addr} hands off to {addr}, but {addr} carries no "
-                            f"`- **承接:** {it.addr}` — nothing is holding that obligation",
-                        )
-                    )
-            for addr in it.claims:
-                if (source := by_addr.get(addr)) and it.addr not in source.handoff:
-                    conflicts.append(
-                        Conflict(
-                            "ORPHAN_CLAIM",
-                            p.name,
-                            f"{it.addr} claims to have taken over {addr}, but {addr} "
-                            f"does not hand off to it",
-                        )
-                    )
-
-    edges = {it.addr: [a for a in it.needs if a in by_addr] for p in v3 for it in p.items}
+    edges = {a: [n for n in it.needs if n in index] for a, it in index.items()}
+    plan_of = {it.addr: p for p in plans for it in p.items}
     for cycle in _cycles(edges):
-        conflicts.append(
-            Conflict("CYCLIC_NEEDS", plan_of[cycle[0]].name, " → ".join(cycle))
-        )
+        conflicts.append(Conflict("CYCLIC_NEEDS", plan_of[cycle[0]].name, " → ".join(cycle)))
 
-    # An item's `basis` is its *current* justification. If an observation there has been
-    # 更正'd — declared factually wrong, not merely superseded — the item is arguing from
-    # a number we have disavowed, which is `0007` F8's "a false machine fact is worse than
-    # no check: it argues the right verdict into the wrong box".
-    #
-    # 沿革 is deliberately not checked: a past entry citing an observation that was later
-    # corrected is a true record of what we believed then, not a mistake to fix.
-    for p in v3:
-        for it in p.items:
-            for num in it.basis:
-                obs = p.observations.get(num)
-                if obs and obs.corrected_by:
-                    by = "、".join(f"O{n}" for n in obs.corrected_by)
-                    conflicts.append(
-                        Conflict(
-                            "STALE_BASIS",
-                            p.name,
-                            f"{it.addr} still rests on O{num}, whose fact {by} 更正 — "
-                            "re-point the basis, and re-examine what was already built on it",
-                        )
-                    )
-
-    for p in v3:
+    for p in plans:
         if p.summary_lines > SUMMARY_MAX_LINES:
             conflicts.append(
                 Conflict(
                     "HEADER_TOO_LONG",
                     p.name,
-                    f"{SUMMARY_HEADING} is {p.summary_lines} lines (cap {SUMMARY_MAX_LINES}) — "
-                    "it is the only section a per-item reader is shown, not a summary "
-                    "of the plan",
+                    f"{SUMMARY_HEADING} 有 {p.summary_lines} 行（上限 {SUMMARY_MAX_LINES}）—— "
+                    "它是讀單格時唯一會一起顯示的節，不是整份計畫的摘要",
                     severity="warning",
                 )
             )
@@ -804,29 +556,14 @@ def check_v3(plans: list[Plan], conflicts: list[Conflict]) -> None:
                     Conflict(
                         "OVERGROWN",
                         p.name,
-                        f"{it.addr} trips {len(hits)} size signals ({'; '.join(hits)}) — "
-                        "propose a 拆格 to the user",
+                        f"{it.addr} 觸發 {len(hits)} 個過大訊號（{'；'.join(hits)}）—— 向使用者提議拆格",
                         severity="warning",
                     )
                 )
 
-        open_items = [it for it in p.items if it.is_open]
-        if p.status == "in-progress" and open_items and not any(
-            startable(it, by_addr) for it in open_items
-        ):
-            conflicts.append(
-                Conflict(
-                    "STARVED",
-                    p.name,
-                    f"all {len(open_items)} open item(s) are 待決斷 or blocked by one — "
-                    "nobody can proceed until the user decides",
-                    severity="warning",
-                )
-            )
-
 
 def collect(directory: Path | None = None) -> Report:
-    """Parse and check every plan in `directory` (defaults to this one)."""
+    """解析並檢查 `directory`（預設是本目錄）裡的所有計畫。"""
     root = directory or HERE
     report = Report()
     for path in sorted(root.glob("*.md")):
@@ -835,12 +572,11 @@ def collect(directory: Path | None = None) -> Report:
         if plan := parse_plan(path, report.conflicts):
             report.plans.append(plan)
     check(report.plans, report.conflicts)
-    check_v3(report.plans, report.conflicts)
     return report
 
 
 def _block(conflicts: list[Conflict], noun: str) -> list[str]:
-    lines = [f"[plan-history] {len(conflicts)} {noun} found:"]
+    lines = [f"[plan-history] 發現 {len(conflicts)} 項{noun}："]
     width = max(len(c.code) for c in conflicts)
     for c in sorted(conflicts, key=lambda c: (c.plan, c.code)):
         lines.append(f"[plan-history]   {c.code:<{width}}  {c.plan}")
@@ -849,12 +585,12 @@ def _block(conflicts: list[Conflict], noun: str) -> list[str]:
 
 
 def format_conflicts(conflicts: list[Conflict]) -> str:
-    """Errors first, then warnings — warnings never change the exit code."""
+    """先列衝突，再列警告；警告不改變結束碼。"""
     errors = [c for c in conflicts if c.severity != "warning"]
     warnings = [c for c in conflicts if c.severity == "warning"]
     out: list[str] = []
     if errors:
-        out += _block(errors, "conflict(s)")
+        out += _block(errors, "衝突")
     if warnings:
-        out += _block(warnings, "warning(s)")
+        out += _block(warnings, "警告")
     return "\n".join(out)

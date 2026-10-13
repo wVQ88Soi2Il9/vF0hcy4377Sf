@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""Regenerate `head.md` and check `docs/history/` for internal conflicts.
+"""重新產生 `head.md`，並檢查 `docs/history/` 的內部一致性。
 
-Stdlib only — no venv needed. Parsing and the consistency rules live in
-`plan_parse.py`, which every tool in this directory shares; this file is only the
-`head.md` rendering and the CLI/hook around it.
+僅使用標準函式庫。解析與檢查規則在 `plan_parse.py`；本檔只負責 `head.md` 的呈現與 CLI。
 
-    python docs/history/update-head.py          # manual run, report on stdout
-    python docs/history/update-head.py --check  # check only, never write head.md
-    python docs/history/update-head.py --hook   # PostToolUse hook (reads hook JSON on stdin)
+    python docs/history/update-head.py          # 手動執行，結果印在 stdout
+    python docs/history/update-head.py --check  # 只檢查，不寫 head.md
+    python docs/history/update-head.py --hook   # PostToolUse hook（從 stdin 讀 hook JSON）
 
-`head.md` is a pure function of the plan files (no timestamp), so a no-op run
-produces a byte-identical file and never shows up as a spurious diff.
+`head.md` 是計畫檔的純函式（沒有時間戳），沒有變動時重跑不會產生差異。
 
-Exit codes: 0 clean · 1 conflicts (manual) · 2 conflicts (--hook, so the agent is
-shown stderr).
+結束碼：0 乾淨 · 1 有衝突（手動） · 2 有衝突（--hook，讓 agent 看到 stderr）。
 """
 
 from __future__ import annotations
@@ -24,11 +20,11 @@ from pathlib import Path
 
 from plan_parse import (
     HERE,
+    LIVE_STATUSES,
     NON_PLAN_FILES,
     ROOT_DISPLAY,
     Conflict,
     Plan,
-    LIVE_STATUSES,
     blockers,
     collect,
     display_state,
@@ -39,7 +35,7 @@ from plan_parse import (
 
 HEAD = HERE / "head.md"
 
-# HEAD is the highest-seq plan in the first non-empty bucket.
+# HEAD 是第一個非空分類裡序號最大的計畫。
 HEAD_PREFERENCE = ("in-progress", "draft", "done")
 
 
@@ -56,49 +52,31 @@ def _link(p: Plan) -> str:
 
 
 def _remaining(p: Plan) -> str:
-    line = f"待辦待決剩 {p.open_items}/{p.total}"
+    line = f"待辦剩 {p.open_items}/{p.total}"
     if p.handoff_count:
         line += f"，已移交 {p.handoff_count}"
-    if p.version < 3:
-        line += f"（v{p.version}）"
     return line
 
 
 def render_open_items(plans: list[Plan]) -> list[str]:
-    """One line per open item, across every live v3 plan.
-
-    A per-plan count cannot answer the question you actually arrive with — which plan,
-    and which item, owns the thing I was just asked to do. This section answers it
-    without opening a single plan file.
-    """
+    """每個開著的格子一行 —— 不開任何計畫檔就能回答「哪份計畫、哪一格管這件事」。"""
     index = item_index(plans)
     live = sorted((p for p in plans if p.status in LIVE_STATUSES), key=lambda p: p.seq, reverse=True)
-    rows = [it for p in live if p.version >= 3 for it in p.items if it.is_open]
-    legacy = [p for p in live if p.version < 3]
+    rows = [it for p in live for it in p.items if it.is_open]
 
     out = ["", "## 現在開著的（逐格）", ""]
-    if rows:
-        for it in rows:
-            line = f"- `{it.addr}` · **{display_state(it, index)}**"
-            if held := blockers(it, index):
-                line += "（等 " + "、".join(f"`{a}`" for a in held) + "）"
-            out.append(f"{line} — {it.title}")
-        out += [
-            "",
-            f"> 要做某一格：`python3 {ROOT_DISPLAY}/plan-item.py {rows[0].addr}`",
-            "> —— 只回那一格的正文與它的依據，不必讀整份計畫。",
-        ]
-    elif not legacy:
-        out.append("（沒有開著的項目）")
-
-    if legacy:
-        if rows:
-            out.append("")
-        seqs = "、".join(p.seq for p in legacy)
-        out.append(
-            f"> v1 / v2 的計畫（{seqs}）沒有可定址的格子，不在此列 —— 要知道它們欠什麼，"
-            "只能開檔。"
-        )
+    if not rows:
+        return out + ["（沒有開著的項目）"]
+    for it in rows:
+        line = f"- `{it.addr}` · **{display_state(it, index)}**"
+        if held := blockers(it, index):
+            line += "（等 " + "、".join(f"`{a}`" for a in held) + "）"
+        out.append(f"{line} — {it.title}")
+    out += [
+        "",
+        f"> 要做某一格：`python3 {ROOT_DISPLAY}/plan-item.py {rows[0].addr}`",
+        "> —— 只回那一格的正文與它的依據，不必讀整份計畫。",
+    ]
     return out
 
 
@@ -122,13 +100,9 @@ def render_head(plans: list[Plan], conflicts: list[Conflict]) -> str:
         out.append(line)
 
     out += render_open_items(plans)
-    out += ["", "## draft / in-progress（流水號降序）", ""]
+    out += ["", "## draft / in-progress（序號降序）", ""]
 
-    live = sorted(
-        (p for p in plans if p.status in LIVE_STATUSES),
-        key=lambda p: p.seq,
-        reverse=True,
-    )
+    live = sorted((p for p in plans if p.status in LIVE_STATUSES), key=lambda p: p.seq, reverse=True)
     if not live:
         out.append("（無）")
     for p in live:
@@ -148,7 +122,7 @@ def render_head(plans: list[Plan], conflicts: list[Conflict]) -> str:
 
 
 def hook_should_run() -> bool:
-    """True when the PostToolUse payload on stdin touched a plan file."""
+    """stdin 上的 PostToolUse payload 是否動到了計畫檔。"""
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
@@ -180,16 +154,14 @@ def main() -> int:
         if not HEAD.exists() or HEAD.read_text(encoding="utf-8") != rendered:
             HEAD.write_text(rendered, encoding="utf-8")
             if not hook:
-                print(f"[plan-history] head.md updated ({len(report.plans)} plan(s))")
+                print(f"[plan-history] head.md 已更新（{len(report.plans)} 份計畫）")
         elif not hook:
-            print(f"[plan-history] head.md already up to date ({len(report.plans)} plan(s))")
+            print(f"[plan-history] head.md 已是最新（{len(report.plans)} 份計畫）")
 
     if not report.conflicts:
         return 0
 
-    # Warnings are printed but never fail the run: they ask for a judgement call
-    # (split this item, trim this header), and forcing one would just teach the
-    # reader to silence them.
+    # 警告只印出，不讓執行失敗：它要的是判斷（拆格、縮短檔頭），強迫處理只會逼人把它靜音。
     text = format_conflicts(report.conflicts)
     if hook:
         print(text, file=sys.stderr)

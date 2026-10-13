@@ -1,620 +1,248 @@
----
-name: plan-history
-description: Record and maintain this repo's plan history under your own plan root (see 計畫根目錄 in the skill body). Use BEFORE starting any non-trivial development, refactor, bug fix, or content change — write the plan file first, then implement. Also use when the user asks for a plan / 規劃 / 計畫 / 方案 document, when continuing or forking from an earlier plan ("接續那份計畫", "基於 XXX 往下走", "回到前一個計畫", "換個方向"), and when updating a plan's status or checklist after work lands.
----
+# Plan history（v4）
 
-# Plan history
+這個目錄記錄**每一次有計畫的變更**：一個目錄、一份計畫一個 `.md`，用 `prev` 串成鏈。
+改方向就開新檔、指向被取代的那份，而不是改掉舊檔。
 
-**版本：v3**
+三種內容分開放，因為它們的時間性質不同：
 
-## 計畫根目錄
+- **觀察** —— 帶時間戳的事實，只追加。寫下的當下就開始過期，但這沒關係：它有日期，
+  根據它做的判斷永遠成立。
+- **待辦的正文** —— 現在欠什麼。可以重寫；重寫現在不是說謊。
+- **待辦的沿革** —— 這一格怎麼走到現在。只追加。
 
-本文所有 `<PLAN_ROOT>` 都指專案的計畫目錄：
+把其中兩種混在同一個容器，檔案就會無限長大。
 
-```
-<PLAN_ROOT> = docs/history
-```
+## 與其他文件的分工
 
-三支 `.py` 以自身所在目錄為 corpus root（`PLAN_HISTORY_ROOT` 未設時），因此它們與 `<PLAN_ROOT>` 位於同一目錄。`head.md` 是由腳本自動生成的單一匯總檔，嚴禁手動編輯。
-
-Every planned change to this repo leaves a trace in `<PLAN_ROOT>/`: one flat
-directory, one `.md` per plan, chained through a `prev` pointer so a direction change
-is a new file that names its ancestor rather than an edit that erases it.
-
-Three kinds of content live in a plan, and they are kept apart because their time
-semantics differ:
-
-- **觀察** — a fact, stamped with the moment it was taken. Append-only. It starts
-  rotting the moment it is written, and that is fine: it is dated, and the judgement
-  made on it stays true forever.
-- **待辦的正文** — what is owed *right now*. Rewritable; rewriting it is not lying.
-- **待辦的沿革** — how this item got to be the way it is. Append-only.
-
-Collapse any two of those into one container and the file grows without bound: facts
-start masquerading as unfinished work, or the current state has to be reconstructed by
-reading a stack of edits in chronological order.
-
-Four mechanical pieces live alongside the plans:
-
-- **`head.md`** — the entry point: which plan is current, and every open item.
-  **Generated. Never hand-edit it** — read it, and let the script write it.
-- **`update-head.py`** — regenerates `head.md` and reports conflicts.
-- **`plan-item.py`** — returns **one item** instead of a whole plan. See below.
-- **`plan_parse.py`** — the single definition of how a plan file is read, shared by both
-  CLIs so they cannot disagree about what a plan says.
-
-## 版本與不溯及既往
-
-The rules in this file are versioned, because how we work changes over time. **Every
-plan declares the version it was written under**, in a `- **skill:**` header line:
-
-```markdown
-- **skill:** plan-history v3
-```
-
-**A plan with no `skill:` line is v1.** Read and maintain each plan by the rules of the
-version it declares. **Never retrofit an older plan to a newer version's format** — a
-v1 plan that still reads correctly under v1 is not broken, and rewriting it destroys
-the record of how we worked then. Only a new plan file starts at the current version.
-
-| version | what it added |
+| 位置 | 記什麼 |
 | --- | --- |
-| v1 | flat directory, `prev` chain, `status`, checklist, `head.md` + `update-head.py`. No `skill:` line, no observation section, no handoff section. |
-| v2 | `- **skill:**` header line · `## 觀察與推論`（timestamped observations, cited by checklist items）· `## 已移交`（an item handed to another plan, naming the target）· the rule that mid-implementation findings go to the observation section rather than becoming new checklist items. |
-| v3 | observation timestamps carry `+08:00` (Taipei) · `推翻` splits into `更正` / `推翻` / `更新` · `## 待辦` replaces the checkbox list: every item is a numbered block with an enumerated `state`, a `needs` dependency graph, a `basis` citation, a rewritable 正文 and an append-only 沿革. `## 已移交` retires — handoff becomes a state plus a two-way pointer. Item ids are plain integers, addressed across plans as `<seq>#<n>`. |
+| `docs/history/` | 發生了什麼、還欠什麼（本目錄） |
+| `docs/QA/` | 為什麼這樣決定、思辨過程（見 `docs/QA/readme.md`） |
+| README 與程式碼 | 現行的真相 |
 
-Version-specific checks apply only to plans that declare that version. **The rules for
-reading v1 / v2 plans are preserved verbatim at the end of this file** — they are not
-history, they are still in force for those files.
+推理過程寫在 QA，不寫進沿革；本目錄只留結論與它的依據。
 
-## When to use
+## 檔名
 
-**Create a plan file before touching code** whenever the user asks for development,
-refactoring, a bug fix, a doc restructure, or any change that will take more than a
-couple of edits. Write the file, show the user the plan, then implement.
-
-**Create a plan file on request** when the user asks for a plan/規劃/計畫 document,
-even if no implementation follows immediately.
-
-**Update the existing plan file** when work lands, an open question gets decided, or
-the direction is dropped.
-
-Skip the plan file only for: answering questions, read-only investigation, and
-single-spot mechanical edits the user has already fully specified (typo, rename one
-symbol, bump one version). When in doubt, write the file — it is cheap.
-
-## Filename
- 
 ```
-<PLAN_ROOT>/<seq>_<YYYYMMDDHHMM>_<topic>.md
+docs/history/<seq>_<YYYYMMDDHHMM>_<topic>.md
 ```
 
-- `<seq>` — 4-digit zero-padded, globally increasing, never reused. Allocate the next
-  one by looking at what exists:
-  ```bash
-  ls <PLAN_ROOT>/[0-9]*.md 2>/dev/null | tail -1
-  ```
-- `<YYYYMMDDHHMM>` — 12-digit creation timestamp (to the minute). Get it from:
-  ```bash
-  TZ='Asia/Taipei' date +'%Y%m%d%H%M'
-  ```
-- `<topic>` — short lowercase ASCII kebab-case, 2–5 words (`dv-status-rollup`,
-  `ot-regmap-systemrdl`). Not a sentence.
+- `<seq>`：4 位數、全域遞增、永不重用。下一個序號：`ls docs/history/[0-9]*.md | tail -1`。
+- `<YYYYMMDDHHMM>`：建立時間（台北）：`TZ='Asia/Taipei' date +'%Y%m%d%H%M'`。
+- `<topic>`：小寫 ASCII kebab-case，2–5 個詞，不是一句話。
+- 序號是全域的，不是每個分支一套；兩份計畫可以有同一個 `prev`（分岔），序號仍然不同。
+  多個分支並行時可能撞號，`update-head.py` 會以 `DUPLICATE_SEQ` 報出，後合併的人改號。
 
-The sequence number is global, not per-branch: two plans may share the same `prev`
-(a fork), and their numbers still differ.
-
-## File template (v3)
+## 檔案範本
 
 ```markdown
 # <seq>_<YYYYMMDDHHMM>_<topic>
 
 - **status:** draft
 - **prev:** `./<seq>_<YYYYMMDDHHMM>_<topic>.md`
-- **skill:** plan-history v3
+- **skill:** plan-history v4
 
 ## 捨棄原因
 
-（只在 status 為 superseded / abandoned 時才有這段；其餘情況整段拿掉。）
-為什麼停下來，以及接手的是哪一份計畫。
+（只在 status 為 superseded / abandoned 時才有；其餘整段拿掉。）
 
 ## 主題簡述
 
-問題描述、目標描述、為什麼現在要做這件事。最後列出 plan 級約束（見下）。
-
-## 規劃描述
-
-要怎麼做 — 步驟、影響到的檔案/模組、取捨與理由。
+為什麼有這份計畫，以及綁住所有格子的約束。
 
 ## 觀察與推論
 
-### O1 · YYYY-MM-DD HH:MM:SS+08:00 — 短標題
+### O1 · 2026-10-14 04:12:48+08:00 — 短標題
 
-事實描述：量到什麼、在哪一份輸入上、指向哪些檔案行號。
+事實：量到什麼、在哪份輸入上、指向哪些檔案行號。
 
-接著是推論：這個事實意味著什麼、為什麼。
+推論：這個事實意味著什麼。
 
 ## 待辦
 
 ### 1 短標題
 
-- **state:** 待決斷
+- **state:** 待實作
 - **basis:** → O1
 
 正文：這一格現在的完整內容。
 
 **沿革**
 
-- H1 · YYYY-MM-DD HH:MM 決斷 —— 決定了什麼（使用者）
+- H1 · 2026-10-14 04:12 決斷 —— 決定了什麼
 ```
 
-The H1 must match the filename exactly (minus `.md`). Heading text is fixed — keep the
-section names verbatim, `plan_parse.py` parses them. Body language follows the
-conversation; the user writes Chinese, so default to Chinese prose unless the content
-is inherently English (code, paths, tool names).
+H1 必須與檔名（去掉 `.md`）完全相同。節名與欄位名是固定的，`plan_parse.py` 靠它們解析。
+`- **skill:**` 必須是 `plan-history v4`。內文用中文，除非內容本身是英文（程式碼、路徑、工具名）。
 
-## `## 主題簡述` — the header, and where plan-level constraints live
+## `status` 與 `prev`
 
-`## 主題簡述` is the **only** section a per-item reader is shown alongside the item it
-asked for. So it carries two things and nothing else: why this plan exists, and the
-constraints that bind every item in it.
+| status | 意義 |
+| --- | --- |
+| `draft` | 寫了，還沒同意或開始 |
+| `in-progress` | 實作中 |
+| `done` | 已落地，所有格子都到終態 |
+| `superseded` | 目標還在，別份計畫接手了 |
+| `abandoned` | 放棄，沒人接手 |
 
-```markdown
-**本計畫的約束**
+`superseded` 與 `abandoned` 只差一個問題：**之後有沒有計畫的 `prev` 指到這裡並繼續同一個目標？**
+有就是 `superseded`，沒有就是 `abandoned`。兩者都**必須**有非空的 `## 捨棄原因`。
 
-- 結論落地前不把 traceability loop 掃到其餘 34 個 IP。
-```
+`prev` 記的是「這份從哪份接續」，不是時間順序：全新的主題寫 `—`；直接接續就指向上一份；
+改方向時，新計畫的 `prev` 指向被取代的那份，那份改為 `superseded`。
+不確定上一份是誰時，**問使用者**，不要猜。
 
-- **A constraint that belongs to one item is not written here** — it is part of that
-  item's 正文, and it travels with the item when the item is handed off. A constraint
-  is never a 待辦 and never a `state`; it is prose attached to whatever it constrains.
-- **Hard cap ~20 lines**, over that is a warning. This section is the one place with
-  a standing incentive to accumulate, because everything is "important context". It is
-  not a summary of the plan — `## 規劃描述` is.
+## `## 主題簡述`
+
+只放兩件事：為什麼有這份計畫，以及綁住所有格子的約束。屬於單一格子的約束寫在那一格的正文，
+不寫在這裡。上限約 20 行，超過會警告；它不是整份計畫的摘要。
 
 ## `## 觀察與推論`
 
-**Changed in v3 only in the timestamp and the relation words below.** This is where
-everything you find while implementing goes. A
-finding is a fact about a moment in time; it is not a task. Writing it as a 待辦 is
-what makes plans grow without end — the work is finite, the digesting is not.
+實作時發現的事都記在這裡。發現是某個時刻的事實，不是任務；把它寫成待辦，計畫才會無限長大。
 
-```markdown
-### O3 · 2026-08-07 15:04:12+08:00 — repair 改寫後沒重驗
-
-- **推翻:** O1
-
-事實描述（量到什麼、在哪份輸入上、指向哪些檔案行號）。
-
-接著是推論：這個事實意味著什麼、為什麼。
-```
-
-- **`O<n>`** — increments within one plan file, never reused. The number exists so a
-  待辦 can point at the observation; a Chinese heading has no stable anchor.
-- **Timestamp** — Taipei time, with the offset written out. Never from memory:
-
-  ```bash
-  TZ='Asia/Taipei' date +'%Y-%m-%d %H:%M:%S+08:00'
-  ```
-
-  **The offset is required from v3 on**, and a v3 observation without one is reported.
-  A bare stamp does not say which clock it was read from, and this repo's machines run
-  UTC while its reader does not — eight hours of drift that the record cannot detect.
-  Observations are appended oldest to newest, so the moments only increase down the
-  file; ordering compares **instants**, so a file may hold both forms and still sort
-  correctly.
-- **When two observations in one plan contradict each other, the later timestamp
-  wins.** That is the whole reason for stamping them.
-- **A relation never edits the observation it points at.** O1 was true when it was
-  taken; the timestamps say so on their own. Never rewrite or delete an earlier
-  observation — one that later turned out to be wrong is still a real record of what
-  we believed.
-
-### 三種關係 — say which one
-
-Through v2 a single `推翻:` carried all three of these, and they ask the reader for
-opposite things. Name the right one:
-
-| relation | what it says | what the reader must do |
-| --- | --- | --- |
-| `- **更正:** O1` | **O1's fact is wrong** — mis-measured, wrong input, misread output | stop citing O1, and re-examine everything already built on it |
-| `- **推翻:** O1` | O1's fact stands; the **inference** drawn from it does not | re-check the conclusions, keep the number |
-| `- **更新:** O1` | O1 was true then and is not now — the tree moved, the run was redone | nothing; both are true, each for its own moment |
-
-- **`更新` is the common one.** Every re-run produces it. Calling that "推翻" is what
-  drains the word of force, and 推翻 has to keep its force for the day it matters.
-- **`更正` is the only one with a machine consequence.** Any 待辦 whose `basis` still
-  points at a 更正'd observation is reported (`STALE_BASIS`) — the item is arguing from
-  a number we have disavowed. 沿革 is **not** checked: a past entry citing an
-  observation that was later corrected is a true record of what we believed then.
-
-An observation may cite a report or a commit, but it is not a report: keep the
-inventories, tables and full audits in `docs/analysis/` or `docs/reports/` and
-reference them from here.
+- 編號 `O<n>` 在同一份計畫內遞增、不重用。
+- 時間戳是台北時間，**必須寫出 `+08:00`**，且不憑記憶：
+  `TZ='Asia/Taipei' date +'%Y-%m-%d %H:%M:%S+08:00'`。由舊到新追加。
+- 兩條觀察互相矛盾時，**時間較晚的為準**。
+- 不改寫、不刪除舊觀察，包括後來證明是錯的：它仍是「我們當時相信什麼」的真實紀錄。
+  要更正，就追加一條新觀察，在內文說明哪一條、錯在哪。
+- 觀察可以引用報告或 commit，但它不是報告；完整清單與表格放在別處，這裡只引用。
 
 ## `## 待辦`
 
-One item is one `### <n> 標題` block. **`<n>` is a plain integer**, increasing within
-the plan, never reused — no `I` / `B` / `C` prefixes, no `(a)(b)(c)` sub-items, no
-`14-I2`. Grouping by theme goes in prose, not in the id.
+一格是一個 `### <n> 標題`。`<n>` 是計畫內遞增的整數、不重用，不加前綴。
+跨計畫一律寫全位址 `<seq>#<n>`（例 `0007#14`），內文裡也一樣；單獨的 `#14` 不算引用。
 
 ```markdown
 ### 14 讓消融說得出成因
 
 - **state:** 待實作
 - **needs:** 0007#12
-- **basis:** → O51、O30、O15
+- **basis:** → O3、O1
 
-一次消融跑完之後,「有沒有產生 UVM report」「哪些行是 UVM_ERROR」「是哪個 step 失敗的」
-三件事在事後都查得出來。留存的是判決依據,不是現場。
+正文……
 
 **沿革**
 
-- H1 · 2026-08-09 決斷 —— 留存判決依據而不是完整 stdout（使用者）
-- H2 · 2026-08-09 落地 —— `judge()` 回 `(verdicts, basis)` → O52
-- H3 · 2026-08-09 修正 —— 成因假說在唯一實例上被排除，正文改寫 → O51（取代 H1）
+- H1 · 2026-10-14 04:12 決斷 —— 留存判決依據，而不是完整輸出
+- H2 · 2026-10-14 05:30 落地 —— `judge()` 改回 `(verdicts, basis)` → O4
 ```
 
-### 位址：一律寫全 `<seq>#<n>`
+### state
 
-Reference an item as `0007#14` **everywhere, including inside the same plan and inside
-prose**. One uniform form means a single regex validates every reference wherever it
-appears — and today's prose references (`0008 A5 (a)`, `0008 B8`) are exactly the ones
-nothing can check. Bare `#14` is not a reference; it will not be resolved.
-
-### `state` — a closed vocabulary
-
-| value | meaning |
+| 值 | 意義 |
 | --- | --- |
-| `待決斷` | a question is open and **the user owes the answer** |
-| `待實作` | decided, not started |
-| `實作中` | started, partially landed |
-| `等待確認` | landed, awaiting human verification — Agent 實作交付後設定，等待 Human 驗收 |
-| `完成` | done — **Human（使用者）專屬判定**，Agent 無權主動標記 |
-| `否決` | decided not to do it — **Human（使用者）專屬判定**，the reason is in 正文 and in a `否決` 沿革 entry |
-| `移交` | another item owns it now; `- **移交:**` names which |
+| `待實作` | 已決定，還沒開始或還沒完成 |
+| `等待確認` | Agent 已落地，等 Human 驗收 |
+| `完成` | **Human 專屬判定** |
+| `否決` | 決定不做；**Human 專屬判定**，理由寫在正文與沿革 |
+| `移交` | 由別格接手，`- **移交:**` 指名是哪一格 |
 
-- **There is no `owner` field.** It is derivable: `待決斷` is the user's move,
-  `待實作` / `實作中` is the agent's, `等待確認` is waiting for the user.
-- **`完成` 與 `否決` 是 Human 專屬權限**：Agent 嚴禁將待辦狀態改為 `完成` 或 `否決`。Agent 完成實作後，在該待辦追加 `落地` 沿革（附依據 `→ O<n>`），並將狀態更新為 `等待確認`，由 Human 檢視驗收後主動設定 `完成` 或 `否決`。
-- **There is no `阻塞` state.** It is computed from `needs`: an item whose prerequisite
-  is not in a terminal state is blocked. Storing it would drift the moment a
-  prerequisite lands.
-- **`實作中` is not optional politeness.** Without it, a half-landed item and an
-  untouched one look identical to whoever picks it up next.
-- Terminal states are `完成` / `否決` / `移交`.
+- **Agent 不得把任何一格改成 `完成` 或 `否決`。** Agent 落地後追加一條 `落地` 沿革（附 `→ O<n>`），
+  把 state 設為 `等待確認`，由 Human 驗收後自己設定終態。
+- 終態是 `完成`、`否決`、`移交`。
+- 沒有 `阻塞` 這個 state：它由 `needs` 算出（前置項未到終態即為阻塞），存起來會在前置完成時過期。
+- 沒有 `owner` 欄位：`待實作` 是 Agent 的事，`等待確認` 是 Human 的事。
+- 還沒決定的問題**不是一格待辦**，記在 `docs/QA/`（status: open）。
 
-### `needs` — dependencies, one direction only
+### 欄位
 
-```markdown
-- **needs:** 0007#12、0010#3
-```
+- `needs`：必須先到終態的格子，可跨計畫，**只存這一個方向**；「誰在等我」由工具算出，不手寫。
+  沒有自由文字的阻塞欄：擋住你的若是「還要再跑一次實驗」，那次實驗**就是一格**，把它寫成一格。
+- `basis`：這一格目前依據的觀察，**只列現在的**。依據改了就重新指向，舊觀察留在原處。
+  不寫鏈（`→ O2 → O34`），那是歷史，屬於沿革。
+- `移交`：只存單向（A 寫 `移交: B`）；B 的「承接自 A」由工具算出，不手寫。
 
-`needs` names the items that must reach a terminal state first. It is global — it may
-cross plans. `blocks` (who is waiting on me) is **computed and printed**, never
-written: one graph, one stored direction.
+### 正文與沿革
 
-**There is no free-text blocker field.** If the thing standing in your way is "we need
-one more EDA run", that run **is an item** — write it as one. A prose blocker field is
-how real work disappears from the denominator.
+- **正文**是這一格**完整的現在**：要到達什麼狀態、判斷標準、已決定的做法與理由、適用的約束。
+  它不是對舊版的 diff；沒看過舊版的人要能直接照著做。可以隨時重寫。
+  約 15 行為上限；超過有兩個出口：它其實是兩格，或細節該放進觀察。**不要在這裡重述觀察，引用它。**
+- **沿革**一行一條，`H<n>` 在該格內遞增、不重用，只追加、不改。
+  格式：`H<n> · <YYYY-MM-DD HH:MM> <種類> —— <一行> [→ O<n>]`。
 
-### `basis` — the current justification
-
-```markdown
-- **basis:** → O51、O30、O15
-```
-
-Every observation this item currently rests on, and **only** those. When the basis
-changes, re-point the arrow; the superseded observation stays where it is, in
-`## 觀察與推論`. **Do not write a chain** (`→ O2 → O34 → O35`) — that is history, and
-history belongs in 沿革. A tool prints these observations in full next to the item, so
-a stale arrow costs the next reader real tokens.
-
-### 正文 — the present, rewritable
-
-The item's **complete current content**: what state it must reach, the judgement
-criteria, the approach already decided and why, and any constraint it is subject to.
-
-- It is **not** a diff against what it used to say. A reader who never saw the old
-  version must be able to act on it.
-- **Rewrite it freely.** Rewriting the present is not lying — the history is in 沿革,
-  which is append-only, and the evidence is in the observations, which never change.
-- **Soft cap ~15 lines**, over that is a warning. The warning has two honest exits:
-  it is really two items, or the detail belongs in an observation.
-- **Never restate an observation here.** Cite it. A second copy of a finding is how
-  that finding starts drifting, and the copy that gets read is this one.
-
-### 沿革 — the past, append-only
-
-One line per entry, `H<n>` increasing within the item, never reused (`H<n>` is
-item-local; `取代 H1` always means this item's H1).
-
-```markdown
-- H2 · 2026-08-09 落地 —— `judge()` 回 `(verdicts, basis)` → O52
-```
-
-`H<n> · <YYYY-MM-DD> <kind> —— <一行> [→ O<n>] [（來源／取代 H<n>）]`
-
-| kind | when |
+| 種類 | 何時 |
 | --- | --- |
-| `決斷` | a question in this item got answered — name the source: the user, or an observation |
-| `落地` | implementation reached the tree → O |
-| `修正` | the basis changed and 正文 was rewritten → O; name what it 取代, if anything |
-| `否決` | this item, or a named alternative inside it, is rejected（Human 專屬） |
-| `拆格` / `合併` | structure changed; name the other item ids |
-| `改題` | records the previous title |
-| `移交` | names the target item |
-| `提問` | a question raised — Human 與 Agent 均有權使用，末尾必須標明身分（Agent 須附帶模型與強度） |
-| `回答` | an answer given — Human 與 Agent 均有權使用，末尾必須標明身分（Agent 須附帶模型與強度） |
+| `決斷` | 這一格的某個問題有了答案，並說明來源 |
+| `落地` | 實作進了程式碼，附 `→ O` |
+| `修正` | 依據改變、正文被重寫，附 `→ O` |
+| `否決` | 這一格，或其中的某個替代方案被否決（Human 專屬） |
+| `拆格` / `合併` | 結構改變，寫出其他格的位址 |
+| `改題` | 記下舊標題 |
+| `移交` | 寫出目標格 |
 
-- **`提問` 與 `回答` 身分標記格式**：
-  - Human 標記：優先讀取本地 `git config user.name`，標記為 `（human: <git_user_name>）`（例：`（human: alice）`、`（human: bob）`）；亦相容通用 `（human）` 或 `（使用者）`。
-  - Agent 標記：必須明確註明使用的模型與強度，例如 `（agent: gemini-3.7-flash）`、`（agent: sonnet-3.7）`。
-  - 例：`- H1 · 2026-08-25 01:30 提問 —— 端口驗證是否需擴充至 4 維？（agent: gemini-3.7-flash）`
-  - 例：`- H2 · 2026-08-25 01:35 回答 —— 是，需支援 4 維以上（human: wVQ88Soi2Il9）`
-- **Ordering is positional**, not by the date string: entries are appended, so the
-  bottom one is the newest. The date is for the reader; the order is the file's.
-- **`推翻` is not a 沿革 kind.** It is an observation-to-observation relation and it
-  already has a home. An overturned observation shows up here as a `修正` entry that
-  cites the new observation. One word, one meaning.
-- **A `落地` entry is one line plus `→ O`.** The measurements, the counts and the test
-  names live once, in the observation.
-- **`取代 H<n>` is a note to the reader, not an instruction to a tool.** It marks the
-  older entry in `--history` so nobody acts on it. No view filters on it, so forgetting
-  it costs nothing and no check has to pretend it can tell when it was needed.
+`落地` 只有一行加 `→ O`：量測、數字與測試名稱只在觀察裡寫一次。
 
-### 標題
+### 標題、改題與拆格
 
-The title is the line `head.md` prints for this item, so its only hard requirement is
-that it is **sufficient for routing**: reading it alone must answer "is the thing I am
-about to work on this item?". One line, and it must name the *object* (which
-mechanism / file / concept), not just the verb.
+標題是 `head.md` 為這一格印的那一行，唯一硬性要求是**足以判斷路由**：只讀它就能回答
+「我要做的事是不是這一格」。它要寫出**對象**（哪個機制、哪個檔案），不只是動詞。
 
-**Retitling is cheap on purpose.** It costs one `改題` 沿革 entry recording the old
-title, and nothing else. Never add friction here: if being honest is expensive, the
-record starts lying, and a title that has drifted away from its content breaks routing
-for everyone.
+改題很便宜：追加一條 `改題` 沿革記下舊標題即可。但改題是個訊號，問一句：**新標題還蓋得住舊標題嗎？**
+新標題更大或用「與」連接兩件事 → 該**拆格**；對象換了 → 不要改題，把這格結案（`否決` 或 `移交`）再開新的；
+比舊的小 → 可以，但沿革要寫被切出去的部分去了哪裡。
 
-**But a retitle is a signal, so ask one question:** 新標題還蓋得住舊標題嗎？
+拆格就是「移交給同一份計畫裡的新格」：舊格 `state: 移交`、`移交: 0007#28、0007#29`，新格從空沿革開始，
+不複製舊格的沿革。只切出一部分時，舊格不用移交，維持原狀並加上 `needs`。
+**拆格由 Agent 提議、使用者決定**：它會動編號、改變 `head.md` 的分母、讓既有引用失效，不可在實作途中悄悄做。
 
-- **蓋得住而且更大** — the new title is more abstract, or joins two things with
-  「與」/「以及」 → the item should be **拆格**.
-- **蓋不住，對象換了** — the framing was wrong and this is a different thing now →
-  **do not retitle**. Close the item (`否決`, or `移交` if someone takes it) and open a
-  new one. Retitling here would forge a continuous history for two different objects.
-- **比舊的小** — fine, but 沿革 must carry a `落地` or `否決` entry saying where the
-  part that left went. Silent shrinkage is how the denominator lies.
+## 工具
 
-### 拆格 = 移交給同一份 plan 的新格
-
-Splitting reuses the handoff machinery; it is not a separate mechanism.
-
-```markdown
-### 14 …
-- **state:** 移交
-- **移交:** 0007#28、0007#29、0007#30
-
-### 28 …
-- **承接:** 0007#14
-```
-
-- The two-way pointer is checked: a handoff whose target does not point back is
-  reported. That is the check that stops an obligation from evaporating between two
-  files.
-- **Do not copy the parent's 沿革 into the children.** The parent block stays exactly
-  where it is, with its full history; children carry `承接:` and start fresh.
-- If only part of the item is split out, the parent is **not** `移交` — it stays alive
-  and gains `needs: 0007#28`.
-- Handing off to another plan is the same thing with a different seq. It works whether
-  or not the target plan is the same file.
-- **拆格 is proposed by the agent and decided by the user.** It moves ids, changes the
-  denominator in `head.md`, and invalidates references. Never do it silently
-  mid-implementation.
-
-## `status`
-
-| value | meaning |
-| --- | --- |
-| `draft` | written, not agreed/started yet |
-| `in-progress` | actively being implemented |
-| `done` | landed; every item in a terminal state |
-| `superseded` | the goal still stands, another plan took it over |
-| `abandoned` | dropped; nothing picked the goal up |
-
-**`superseded` vs `abandoned` — one test: does a later plan's `prev` point here and
-carry on the same goal?**
-
-- Yes → `superseded`. There is a named successor; write it into `## 捨棄原因`.
-- No → `abandoned`. The goal was cancelled, the approach was rejected, or you rolled
-  back to an ancestor and this branch is a dead end.
-
-Both closed statuses **require a non-empty `## 捨棄原因`**.
-
-## `prev`
-
-`prev` records **which plan this one continues from**, not chronology.
-
-- First ever plan, or a genuinely unrelated new thread → `- **prev:** —`
-- Straight continuation of the most recent plan → point at it.
-- Direction change: the new plan's `prev` is the plan being replaced; that older plan
-  becomes `superseded` and gets a `## 捨棄原因` naming this file.
-- Reverting to an older plan: `prev` is the older plan being resumed, **not** the
-  dead-end in between. The dead-end becomes `abandoned` with its own `## 捨棄原因`.
-
-**If you are not certain who the parent is, ask.** Use AskUserQuestion listing the
-plausible candidates (the current HEAD from `head.md`, the plan the user last
-referenced, "none — new thread"). Do not guess a `prev` to avoid asking — a wrong
-chain is worse than a question.
-
-## `head.md` and the tools
-
-`head.md` is generated. For **v3** plans it lists **every open item, one line each**
-(`id · state · 標題`), because a per-plan count cannot answer the only question that
-matters on arrival: which plan, and which item, owns the thing I was just asked to do.
-v1 / v2 plans keep the old per-plan count line. HEAD is the highest-seq `in-progress`
-plan; failing that the highest-seq `draft`; failing that the highest-seq `done`.
-
-**Run the script after every create or update:**
+`head.md` 是**自動產生的，嚴禁手改**：它列出所有開著的格子（`位址 · state · 標題`）。
+HEAD 取序號最大的 `in-progress`，沒有則 `draft`，再沒有則 `done`。
 
 ```bash
-python <PLAN_ROOT>/update-head.py
+python3 docs/history/update-head.py      # 每次新增或更新計畫之後都要跑
+python3 docs/history/plan-item.py 0001#2             # 只讀一格：格子 + 檔頭 + 它的依據
+python3 docs/history/plan-item.py 0001#2 --history   # + 全部沿革與全部相關觀察
+python3 docs/history/plan-item.py --list             # 所有活著的計畫的開放項
 ```
 
-What it reports (lines prefixed `[plan-history]`). **Conflicts fail the exit code;
-warnings are printed and do not** — a warning asks for a judgement call, and forcing one
-would only teach you to silence it.
+**要動某一格時，只讀那一格，不要整份 `Read`。** 一份計畫可達數萬 token，那一格只有幾百；
+其餘是別的格子，以及刻意保留的「已不再成立」的舊決定。只有在**撰寫**、**稽核**整份計畫，
+或回答關於整份計畫的問題時才讀全文。
 
-| code | meaning | versions |
-| --- | --- | --- |
-| `DONE_WITH_OPEN_ITEMS` | `done` with items not in a terminal state — finish them or move the status back | all |
-| `MISSING_REASON` | `superseded`/`abandoned` without a `## 捨棄原因` | all |
-| `SUPERSEDED_WITHOUT_SUCCESSOR` | marked `superseded` but nothing points here — it is `abandoned` | all |
-| `BROKEN_PREV` | `prev` names a file that does not exist | all |
-| `BAD_FORMAT` | filename, title, status vocabulary, or the item section missing/malformed; on v2+ also a missing `## 觀察與推論` or a malformed observation heading | all |
-| `BROKEN_OBS_REF` | a `→ O<n>` or a `更正`/`推翻`/`更新` relation names an observation that does not exist | v2+ |
-| `OBS_OUT_OF_ORDER` | observation timestamps do not increase down the file | v2+ |
-| `BROKEN_HANDOFF` | a handoff names no target, or names one that does not exist | v2+ |
-| `STALE_BASIS` | a 待辦's `basis` still points at an observation whose fact was 更正'd | v3 |
-| `BAD_ITEM_FORMAT` | an item has no `state:`, a `state` outside the vocabulary, a malformed `H<n>` line, or a 沿革 kind outside the table | v3 |
-| `DANGLING_REF` | a `needs:` / `移交:` / `承接:` / prose `<seq>#<n>` names an item that does not exist | v3 |
-| `UNCLAIMED_HANDOFF` | A hands off to B, but B carries no `承接:` pointing back at A | v3 |
-| `ORPHAN_CLAIM` | B claims `承接: A`, but A does not hand off to B | v3 |
-| `CYCLIC_NEEDS` | the `needs` graph has a cycle | v3 |
-| `STARVED` (warning) | plan is `in-progress` but every open item is `待決斷` or blocked by one — nobody can proceed without the user | v3 |
-| `OVERGROWN` (warning) | an item trips ≥2 of: 正文 > 15 lines · basis > 3 observations · 沿革 ≥ 8 entries · ≥2 `改題` | v3 |
-| `HEADER_TOO_LONG` (warning) | `## 主題簡述` is over 20 lines | v3 |
+`update-head.py` 回報的項目（衝突會讓結束碼失敗；警告只印出）：
 
-**Never fix a conflict by weakening the record** — do not move an item to a terminal
-state it has not reached, do not delete an item to make `done` pass, and do not edit or
-drop an observation to silence `OBS_OUT_OF_ORDER`. Fix the underlying state, or tell
-the user about the conflict and let them decide.
+| 代碼 | 意義 |
+| --- | --- |
+| `DONE_WITH_OPEN_ITEMS` | `done` 但還有格子沒到終態 |
+| `MISSING_REASON` | `superseded` / `abandoned` 沒有 `## 捨棄原因` |
+| `SUPERSEDED_WITHOUT_SUCCESSOR` | 標為 `superseded` 但沒有任何計畫指向它 |
+| `BROKEN_PREV` | `prev` 指向不存在的檔 |
+| `DUPLICATE_SEQ` | 兩份計畫用了同一個序號 |
+| `BAD_FORMAT` | 檔名、標題、status、`skill`、各節或觀察標題不合規 |
+| `BAD_ITEM_FORMAT` | 格子缺 `state`、state 或沿革種類不在詞彙內、沿革行格式錯誤、移交欄位不一致 |
+| `BROKEN_OBS_REF` | `→ O<n>` 或 `basis` 指向不存在的觀察 |
+| `OBS_OUT_OF_ORDER` | 觀察的時間戳沒有由舊到新 |
+| `DANGLING_REF` | `needs`、`移交` 或內文的 `<seq>#<n>` 指向不存在的格子 |
+| `CYCLIC_NEEDS` | `needs` 圖有環 |
+| `OVERGROWN`（警告） | 一格同時觸發 ≥2 項：正文 > 15 行、basis > 3 條、沿革 ≥ 8 條、改題 ≥ 2 次 |
+| `HEADER_TOO_LONG`（警告） | `## 主題簡述` 超過 20 行 |
 
-## 讀一格，不要讀整份
+**不要用削弱紀錄的方式修衝突**：不要把格子推進它沒到達的終態，不要為了讓 `done` 通過而刪格子，
+不要改動或刪掉觀察來消掉 `OBS_OUT_OF_ORDER`。修根本的狀態，或把衝突告訴使用者由他決定。
 
-```bash
-python <PLAN_ROOT>/plan-item.py 0011#5             # 這一格 + 檔頭 + 它的依據
-python <PLAN_ROOT>/plan-item.py 0011#5 --history   # + 全部沿革與全部相關觀察
-python <PLAN_ROOT>/plan-item.py --list             # 所有活著的 v3 計畫的開放項
-```
+## 建立與更新
 
-**When you are about to work on an item, ask for that item. Do not `Read` the plan file.**
-A live plan runs to tens of thousands of tokens; the item you need is a few hundred. The
-rest is other items, the design document, and text that is deliberately preserved
-*because it is no longer true* — superseded decisions and overturned observations, which
-read exactly as authoritative as the current ones.
+建立：
 
-The default view is built to be sufficient on its own: the plan header (so you see the
-constraints that bind every item), the item's fields, its 正文, and every observation in
-its `basis` **in full**, with any that a later observation overturned marked as such —
-something reading the raw file cannot do for you.
+1. 取時間戳、讀 `head.md` 決定下一個 `<seq>`，決定 `prev`（不確定就問）。
+2. 依範本寫檔，`skill` 寫 `plan-history v4`。已知的證據寫成帶時間戳的觀察，由格子的 `basis` 引用。
+3. 跑 `update-head.py`，處理它回報的事項。
+4. 用聊天告訴使用者路徑與計畫摘要，不要讓他開檔才知道你要做什麼。然後才實作。
 
-- **`--history`** when you are auditing, or when you need to know why 正文 says what it
-  says — everything, with superseded entries and overturned observations marked.
-  **There is nothing in between**: a healthy item's 沿革 is at most eight lines, so a
-  filtered middle view would be optimising something that is not scarce.
-- **v1 / v2 plans have no addressable items.** The tool says so and stops, rather than
-  answering partially — a partial answer about a plan is worse than none, because you
-  cannot tell which part is missing. Those plans you read whole.
+更新：
 
-Read a plan in full when you are **writing** one, **auditing** one, or answering a
-question about the plan as a whole — not when you are executing one of its items.
-
-## Creating a plan
-
-1. `TZ='Asia/Taipei' date +'%Y%m%d%H%M'`; read `head.md` to see the current HEAD and allocate the next `<seq>`.
-2. Determine `prev` (ask if unsure — see above).
-3. Write the file from the template, with `- **skill:** plan-history v3`. The 待辦
-   section is the real deliverable: every open decision the user still owes an answer
-   on goes in as an item with `state: 待決斷`. Evidence you already have goes to
-   `## 觀察與推論` with a real timestamp, and the items it justifies cite it in `basis`.
-4. Run `update-head.py` and act on anything it reports.
-5. Tell the user the path and summarise the plan in chat — do not make them open the
-   file to learn what you intend to do.
-6. Then implement.
-
-## Updating a plan
-
-- **What you find while implementing goes to `## 觀察與推論`, and you keep going.**
-  Do not add it to 待辦, do not open a new plan for it, and do not stop to report it —
-  unless it falsifies a premise of the step you are on, in which case the work is wrong
-  until it is resolved, so stop and say so. Surface the rest of the observations to the
-  user when the batch of work is done, and let them decide which become items.
-- **Only the user turns a finding into an item**, and only the user approves a 拆格.
-- Move `state` forward as reality moves, and append a 沿革 entry saying why. Never
-  delete an item; a terminal state is how an item ends.
-- Rewrite 正文 whenever the present changes. Append to 沿革; never edit it.
-- Move `status` forward as reality moves. A plan left at `draft` after the code
-  shipped is a bug in the history.
-- Closing a plan (`superseded`/`abandoned`) means adding `## 捨棄原因` in the same edit.
-- New work that changes the *approach* is a new file with `prev` pointing here, not
-  a rewrite of this one. Only corrections and outcomes get edited in place.
-- **Do not upgrade an older plan's format.** A v1 plan stays v1 forever.
-- Run `update-head.py` afterwards.
-
----
-
-# 讀舊 plan：v1 / v2 的規則
-
-**Their observation timestamps carry no UTC offset, and every one of them was taken on
-a UTC machine** — read them as UTC, and never rewrite them into the newer form.
-**Their `- **推翻:**` is the broad one**: it may mean the fact was wrong, the inference
-was wrong, or simply that time moved. Read it for which, from the text; do not assume
-the narrow v3 sense.
-
-These rules are **still in force** for plans that declare v1 or v2. They are here, at
-the end, because you only need them when reading or maintaining an older file — never
-when writing a new one. Do not apply them to a v3 plan, and do not rewrite an old plan
-into the v3 shape.
-
-## v2 的 `## 待決斷/待完成事項`
-
-The checklist describes the present and the future — what is still owed. Each item
-that grew out of an observation names it:
-
-```markdown
-- [ ] 把 repair 後的 sequence 重跑一次驗證 → O3
-```
-
-- **When the basis changes, re-point the arrow** (`→ O3` becomes `→ O7`). The arrow is
-  the item's *current* justification, not its history — the history is in the
-  observation section, where both O3 and O7 remain.
-- **A mid-implementation finding does not become a checklist item on its own.** It goes
-  to `## 觀察與推論`. Only the user turns a finding into work.
-- Tick boxes as work lands and append the outcome after the item text
-  (`- [x] 改用 X — 因為 Y，實測 Z`). Never delete a resolved item.
-
-## v2 的 `## 已移交`
-
-When an item stops being this plan's responsibility and becomes another plan's, move
-it out of the checklist and into `## 已移交`, **naming the plan that took it**:
-
-```markdown
-- **A2 計數器汙染對照基準** → `0008_20260807_measurement-trust-audit.md` —— 原文與移交理由
-```
-
-This is the **only** case where an item legitimately leaves the checklist: it really is
-settled here, and the way it was settled is that someone else owns it now — in writing.
-
-**Do not tick the box and add a note saying it is not actually done.** `update-head.py`
-counts boxes, so that reading inflates the completion count in `head.md` while the
-prose denies it. A plan may reach `done` with items in `## 已移交`; from this plan's
-point of view they are closed.
-
-## v1 / v2 的檔案樣板
-
-v1 has no `skill:` line, no `## 觀察與推論` and no `## 已移交`. v2 adds all three and
-keeps the checkbox list:
-
-```markdown
-# <seq>_<YYYYMMDD>_<topic>
-
-- **prev:** `./<seq>_<YYYYMMDD>_<topic>.md`
-- **skill:** plan-history v2
-- **status:** draft
-
-## 主題簡述
-## 規劃描述
-## 觀察與推論
-## 待決斷/待完成事項
-## 已移交
-```
+- **實作時發現的事寫進觀察，然後繼續做。** 不要加進待辦、不要為它另開計畫、不要中途停下來回報 ——
+  除非它推翻了你正在做的這一步的前提；那時工作在解決之前都是錯的，停下來說。
+  其餘觀察等這一批做完再告訴使用者，由他決定哪些變成格子。
+- **只有使用者能把發現變成一格，也只有使用者能批准拆格。**
+- state 隨現實推進並追加沿革說明原因；**不刪格子**，終態就是格子結束的方式。
+- 現在變了就重寫正文；沿革只追加、不改。
+- status 隨現實推進；程式碼已出貨而計畫還停在 `draft`，是歷史紀錄的 bug。
+- 結案（`superseded` / `abandoned`）要在同一次編輯加上 `## 捨棄原因`。
+- 改變**做法**的新工作是新檔、`prev` 指回這份；只有更正與結果才在原檔就地編輯。
+- 更新後跑 `update-head.py`。
