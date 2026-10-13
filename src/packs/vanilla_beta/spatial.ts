@@ -1,5 +1,5 @@
 /**
- * src/packs/vanilla_alpha/spatial.ts — 2× 網格幾何、向量算術、空間映射與碰撞檢驗
+ * src/packs/vanilla_beta/spatial.ts — 2× 網格幾何、向量算術、空間映射與碰撞檢驗
  */
 
 import * as core from '@/core';
