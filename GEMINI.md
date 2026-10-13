@@ -43,38 +43,7 @@ python docs/history/update-head.py
 
 Plan History is a record of work and decisions. Its existence does not justify expanding implementation scope.
 
-## 3. QA Records
-
-`docs/QA/` preserves architectural discussions, technical questions, requirement clarification, alternatives, and decision rationale.
-
-Prefer preserving useful information over discarding it.
-
-Record:
-
-- questions and answers;
-- settled decisions;
-- unresolved questions;
-- rejected alternatives when the reason may matter later;
-- contradictions discovered between specification and implementation;
-- rationale needed to reconstruct architectural intent.
-
-Clearly distinguish observations, assumptions, recommendations, unresolved questions, and Human decisions.
-
-QA may be detailed. Documentation volume is not itself a problem.
-
-Recording an idea or alternative does not make it an implementation requirement.
-
-Naming:
-
-```text
-docs/QA/<number>-<yymmddhhmm>_<topic>.md
-```
-
-Include Human/Agent identity according to the established QA convention.
-
-When the user requests an architectural evaluation with genuinely competing alternatives, present meaningful reasons for and against them. Do not manufacture artificial symmetry when one option is already determined by an invariant or settled requirement.
-
-## 4. Code Conventions
+## 3. Code Conventions
 
 - Allman braces.
 - Lowercase `snake_case` for variables, functions, types, files, and JSON keys.
@@ -82,9 +51,9 @@ When the user requests an architectural evaluation with genuinely competing alte
 - Never use implicit `?? 0` dimensional padding.
 - `space.uid` starts from `1`.
 
-## 5. Architecture
+## 4. Architecture
 
-### 5.1 Dependency and Ownership
+### 4.1 Dependency and Ownership
 
 Dependency direction:
 
@@ -153,7 +122,7 @@ Responsibilities:
 - `camera`: camera state, viewport control, projection, and camera CLI;
 - `basic_renderer`: 2D projection and device/port rendering.
 
-## 6. Module Boundaries & Imports
+## 5. Module Boundaries & Imports
 
 Cross-module imports use only the target module's public `index.ts`.
 
@@ -177,7 +146,7 @@ export * from './...';
 
 Do not introduce redundant wrapper namespace objects.
 
-## 7. Hooks
+## 6. Hooks
 
 Hook definitions are global static slots declared by Packs during `global_init`.
 
@@ -197,7 +166,7 @@ target_world.trigger(...);
 
 External code must not mutate `current_hook` directly.
 
-## 8. Pack Lifecycle
+## 7. Pack Lifecycle
 
 Each Pack exposes:
 
@@ -212,9 +181,9 @@ world_init(target_world?: world.pure_world): void;
 
 Packs without world-specific behavior retain an empty `world_init`.
 
-## 9. Domain Rules
+## 8. Domain Rules
 
-### 9.1 2× Grid
+### 8.1 2× Grid
 
 Device anchors contain only even coordinates.
 
@@ -224,7 +193,7 @@ A valid face port has exactly one even coordinate and all remaining coordinates 
 
 Use the project's position validation utilities rather than implicit coordinate repair.
 
-### 9.2 Object Model
+### 8.2 Object Model
 
 Vertical inheritance represents **is-a** relationships:
 
@@ -238,7 +207,7 @@ Capability interfaces represent independent **can-do** properties such as drawin
 
 Device-specific drawing behavior remains on the device capability; renderers invoke it polymorphically.
 
-## 10. History
+## 9. History
 
 Space mutations are represented by `reversible_operation`.
 
@@ -250,7 +219,7 @@ Undo followed by a new operation creates a new branch.
 
 History remains independent of Hooks and Pack business logic.
 
-## 11. CLI
+## 10. CLI
 
 CLI uses space-separated positional arguments.
 
@@ -268,7 +237,7 @@ d<n>=<val>
 
 Aliases belong to individual Packs. Core/history navigation does not define aliases.
 
-## 12. Tooling
+## 11. Tooling
 
 When explicitly asked to perform a Git commit:
 

@@ -1,6 +1,6 @@
 # Runtime Architecture
 
-設計推演見 [docs/QA/2610140017.md](../docs/QA/2610140017.md)。
+設計推演見 [docs/archive/QA/2610140017.md](../docs/archive/QA/2610140017.md)。
 
 ## Core Idea
 
