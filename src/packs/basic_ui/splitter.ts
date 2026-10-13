@@ -1,9 +1,3 @@
-/**
- * Splitter Component & Controller
- *
- * 建立可拖曳調整相鄰容器尺寸的分割線元件。
- */
-
 export interface splitter_options
 {
     direction:  'vertical' | 'horizontal';

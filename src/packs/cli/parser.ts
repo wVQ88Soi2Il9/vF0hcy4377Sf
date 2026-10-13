@@ -1,7 +1,3 @@
-/**
- * src/packs/cli/parser.ts — CLI 字串分詞與座標向量解析工具
- */
-
 import * as core from '@/core';
 
 /**
@@ -43,7 +39,6 @@ export function tokenize_input(input: string): string[]
 }
 
 /**
- * 解析連續字串 tokens 為數值座標向量。
  * 嚴格校驗每個分量皆為合法數字，並比對預期維度。
  */
 export function parse_vector(tokens: string[], expected_dim?: number): core.vector

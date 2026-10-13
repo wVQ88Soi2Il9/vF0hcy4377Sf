@@ -1,22 +1,12 @@
-/**
- * src/packs/vanilla_beta/spatial.ts — 2× 網格幾何、向量算術、空間映射與碰撞檢驗
- */
-
 import * as core from '@/core';
 
 // ── 基礎向量算術 ─────────────────────────────────────────────────────────────
 
-/**
- * 依分量將兩向量相加。
- */
 export function add_vector(a: core.vector, b: core.vector): core.vector
 {
     return a.map((v, i) => v + b[i]);
 }
 
-/**
- * 比較兩向量長度與各分量數值是否完全相等。
- */
 export function vectors_equal(a: core.vector, b: core.vector): boolean
 {
     return a.length === b.length && a.every((v, i) => v === b[i]);
@@ -75,9 +65,6 @@ export function get_port_axis(port_pos: core.vector): number | null
 
 // ── N 維稀疏空間映射表 ───────────────────────────────────────────────────────
 
-/**
- * N 維空間雜湊表，以格點座標字串映射至泛型數值 T。
- */
 export class spatial_map<T>
 {
     private map = new Map<string, T>();
@@ -126,9 +113,6 @@ export interface map_validation_result
     overlapped:    core.uid[];
 }
 
-/**
- * 檢查座標是否超出指定空間邊界。
- */
 export function is_out_of_bounds(pos: core.vector, map_size: core.vector): boolean
 {
     return pos.some((v, i) => v < 0 || v >= map_size[i]);

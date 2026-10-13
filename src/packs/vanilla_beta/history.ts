@@ -1,7 +1,3 @@
-/**
- * src/packs/vanilla_beta/history.ts — 歷史樹中繼資料與分支工具
- */
-
 import * as core from '@/core';
 
 export interface vanilla_history_node_info
@@ -10,18 +6,12 @@ export interface vanilla_history_node_info
     merged_from?: core.uid;
 }
 
-/**
- * 取得節點上 $vanilla 的中繼資料。
- */
 export function get_vanilla_node_info(tree: core.tree, uid: core.uid): vanilla_history_node_info | undefined
 {
     const node = tree.nodes.get(uid);
     return node?.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
 }
 
-/**
- * 更新節點上 $vanilla 的中繼資料。
- */
 export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Partial<vanilla_history_node_info>): boolean
 {
     const node = tree.nodes.get(uid);
@@ -40,25 +30,16 @@ export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Part
     return true;
 }
 
-/**
- * 檢查節點是否處於釘選狀態。
- */
 export function is_node_pinned(tree: core.tree, uid: core.uid): boolean
 {
     return get_vanilla_node_info(tree, uid)?.pinned ?? false;
 }
 
-/**
- * 設定節點的釘選狀態。
- */
 export function set_node_pin(tree: core.tree, uid: core.uid, pinned: boolean): boolean
 {
     return set_vanilla_node_info(tree, uid, { pinned });
 }
 
-/**
- * 切換節點的釘選狀態。
- */
 export function toggle_node_pin(tree: core.tree, uid: core.uid): boolean | null
 {
     if (!tree.nodes.has(uid))
@@ -72,9 +53,6 @@ export function toggle_node_pin(tree: core.tree, uid: core.uid): boolean | null
     return next;
 }
 
-/**
- * 取得所有釘選節點的 UID 清單。
- */
 export function get_pinned_nodes(tree: core.tree): core.uid[]
 {
     const pinned: core.uid[] = [];
@@ -89,9 +67,6 @@ export function get_pinned_nodes(tree: core.tree): core.uid[]
     return pinned;
 }
 
-/**
- * 清除所有釘選節點。
- */
 export function clear_all_pinned_nodes(tree: core.tree): void
 {
     for (const [_, node] of tree.nodes)
@@ -104,25 +79,16 @@ export function clear_all_pinned_nodes(tree: core.tree): void
     }
 }
 
-/**
- * 取得合併來源節點 UID。
- */
 export function get_node_merged_from(tree: core.tree, uid: core.uid): core.uid | undefined
 {
     return get_vanilla_node_info(tree, uid)?.merged_from;
 }
 
-/**
- * 設定合併來源節點 UID。
- */
 export function set_node_merged_from(tree: core.tree, uid: core.uid, source_uid: core.uid): boolean
 {
     return set_vanilla_node_info(tree, uid, { merged_from: source_uid });
 }
 
-/**
- * 刪除目標節點及其所有子孫分支（Subtree）。
- */
 export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
 {
     if (target_uid === 0)
@@ -147,7 +113,6 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
         curr_check = tree.nodes.get(curr_check)?.parent_history_uid ?? null;
     }
 
-    // 後序走訪收集子樹節點
     const subtree_uids: core.uid[] = [];
     function collect_post_order(uid: core.uid): void
     {

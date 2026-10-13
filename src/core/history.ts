@@ -1,5 +1,5 @@
 /**
- * src/core/history.ts — 分支歷史樹純演算法與操作
+ * 分支歷史樹純演算法與操作
  *
  * 遵循極致鏡像對稱與無歧義路徑原則：
  * - 向上時間流：undo / jump_to_prev_fork / jump_to_root / jump_to_ancestor

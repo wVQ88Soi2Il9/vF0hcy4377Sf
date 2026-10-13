@@ -1,4 +1,3 @@
-/* basic_ui Core System & Theme Variables */
 :root {
     --basic-ui-bg: rgba(24, 24, 37, 0.92);
     --basic-ui-bg-mantle: #181825;
@@ -25,7 +24,6 @@
     --basic-ui-surface2: #585b70;
 }
 
-/* Custom Sleek Dark Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -71,7 +69,6 @@
     pointer-events: none;
 }
 
-/* Base Panel */
 .basic_ui_panel {
     position: relative;
     box-sizing: border-box;
@@ -97,7 +94,6 @@
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Panel Header */
 .basic_ui_header {
     display: flex;
     align-items: center;
@@ -127,7 +123,6 @@
     text-overflow: ellipsis;
 }
 
-/* Collapse button */
 .basic_ui_collapse_btn {
     background: transparent;
     border: none;
@@ -150,7 +145,6 @@
     background-color: var(--basic-ui-surface0);
 }
 
-/* Panel Content */
 .basic_ui_content {
     display: flex;
     flex-direction: column;
@@ -170,7 +164,6 @@
     padding-bottom: 6px;
 }
 
-/* Resize Handles */
 .basic_ui_resize_handle {
     position: absolute;
     z-index: 1001;

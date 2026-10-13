@@ -1,7 +1,3 @@
-/**
- * src/packs/vanilla_alpha/query.ts — 命名空間標識解析與註冊表安全查詢工具
- */
-
 import * as core from '@/core';
 
 // ── 命名空間標識工具 ─────────────────────────────────────────────────────────
@@ -26,9 +22,6 @@ export function parse_namespaced_id(identifier: string, default_pack: string = '
     };
 }
 
-/**
- * 將 namespaced_id 格式化為標準 "namespace:id" 字串。
- */
 export function format_namespaced_id(identifier: core.namespaced_id): string
 {
     return `${identifier.namespace}:${identifier.id}`;
@@ -36,17 +29,11 @@ export function format_namespaced_id(identifier: core.namespaced_id): string
 
 // ── 註冊表查詢工具 (Fail-Fast) ────────────────────────────────────────────────
 
-/**
- * 檢查物品定義是否存在於指定 registry
- */
 export function has_item(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.get(identifier.namespace)?.items?.[identifier.id]);
 }
 
-/**
- * 取得物品定義，若不存在則拋出例外 (Fail-Fast)
- */
 export function get_item(registry: core.pack_registry, identifier: core.namespaced_id): core.item_definition
 {
     const item = registry.get(identifier.namespace)?.items?.[identifier.id];
@@ -57,17 +44,11 @@ export function get_item(registry: core.pack_registry, identifier: core.namespac
     return item;
 }
 
-/**
- * 檢查配方定義是否存在於指定 registry
- */
 export function has_recipe(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.get(identifier.namespace)?.recipes?.[identifier.id]);
 }
 
-/**
- * 取得配方定義，若不存在則拋出例外 (Fail-Fast)
- */
 export function get_recipe(registry: core.pack_registry, identifier: core.namespaced_id): core.recipe
 {
     const rec = registry.get(identifier.namespace)?.recipes?.[identifier.id];
@@ -78,17 +59,11 @@ export function get_recipe(registry: core.pack_registry, identifier: core.namesp
     return rec;
 }
 
-/**
- * 檢查裝置類別是否存在於指定 registry
- */
 export function has_device_class(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.get(identifier.namespace)?.devices?.[identifier.id]);
 }
 
-/**
- * 取得裝置類別建構子，若不存在則拋出例外 (Fail-Fast)
- */
 export function get_device_class(registry: core.pack_registry, identifier: core.namespaced_id): core.device_constructor
 {
     const cls = registry.get(identifier.namespace)?.devices?.[identifier.id];
@@ -99,17 +74,11 @@ export function get_device_class(registry: core.pack_registry, identifier: core.
     return cls;
 }
 
-/**
- * 檢查操作工廠是否存在於指定 registry
- */
 export function has_operation(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.get(identifier.namespace)?.operations?.[identifier.id]);
 }
 
-/**
- * 取得可逆操作，若不存在則拋出例外 (Fail-Fast)
- */
 export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.rev_op
 {
     const op = registry.get(identifier.namespace)?.operations?.[identifier.id];

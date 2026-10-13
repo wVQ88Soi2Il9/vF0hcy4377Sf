@@ -1,7 +1,3 @@
-/**
- * Base UI Root / Layout Container Management
- */
-
 let root_element: HTMLElement | null = null;
 
 /**
@@ -24,9 +20,6 @@ export function get_ui_root(host?: HTMLElement): HTMLElement
     return root_element;
 }
 
-/**
- * Creates a generic container element with a specific class name.
- */
 export function create_ui_container(id?: string, class_name?: string): HTMLElement
 {
     const container = document.createElement('div');

@@ -1,7 +1,3 @@
-/**
- * src/packs/camera/index.ts — camera Pack 公開進入點
- */
-
 import * as core from '@/core';
 
 export * from './types';

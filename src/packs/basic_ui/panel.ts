@@ -91,9 +91,6 @@ function attach_resize_handle
     return handle;
 }
 
-/**
- * Creates a floating panel component styled with style.css and interactive resize/collapse capabilities.
- */
 export function create_floating_panel(options: panel_options): panel_component
 {
     const element = document.createElement(options.tag ?? 'aside');

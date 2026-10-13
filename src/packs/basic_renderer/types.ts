@@ -1,7 +1,3 @@
-/**
- * src/packs/basic_renderer/types.ts — basic_renderer 型別與資料契約
- */
-
 import * as core from '@/core';
 
 export interface render_options

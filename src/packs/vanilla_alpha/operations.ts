@@ -1,13 +1,3 @@
-/**
- * src/packs/vanilla_alpha/operations.ts — Vanilla 基礎空間可逆操作工廠
- *
- * 提供針對 space 裝置集合的 4 個標準原子可逆操作：
- * 1. create_device_operation
- * 2. delete_device_operation
- * 3. move_device_operation
- * 4. select_recipe_operation
- */
-
 import * as core from '@/core';
 
 export interface create_device_op extends core.rev_op

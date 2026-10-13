@@ -37,10 +37,6 @@ const registered_actions:           device_action[]                 = [];
 const registered_sections:          panel_section_entry[]           = [];
 const registered_creation_options:  device_creation_option_entry[]  = [];
 
-/**
- * Registers a custom inspector slot for devices matching the predicate.
- * Returns an unsubscribe function to remove the inspector.
- */
 export function register_device_inspector
 (
     predicate: (dev: core.device) => boolean,
@@ -55,9 +51,6 @@ export function register_device_inspector
     };
 }
 
-/**
- * Unregisters a previously registered device inspector entry.
- */
 export function unregister_device_inspector(entry: device_inspector_entry | device_inspector_fn): void
 {
     const index = registered_inspectors.findIndex(e => e === entry || e.render === entry);
@@ -67,10 +60,6 @@ export function unregister_device_inspector(entry: device_inspector_entry | devi
     }
 }
 
-/**
- * Registers a custom action button to be displayed in the device card actions row.
- * Returns an unsubscribe function to remove the action.
- */
 export function register_device_action(action: device_action): () => void
 {
     registered_actions.push(action);
@@ -80,9 +69,6 @@ export function register_device_action(action: device_action): () => void
     };
 }
 
-/**
- * Unregisters a previously registered device action.
- */
 export function unregister_device_action(action: device_action): void
 {
     const index = registered_actions.indexOf(action);
@@ -93,9 +79,7 @@ export function unregister_device_action(action: device_action): void
 }
 
 /**
- * Registers an independent custom section inside the Info Bar panel.
  * If a section with the same ID already exists, it is replaced.
- * Returns an unsubscribe function to remove the section.
  */
 export function register_panel_section
 (
@@ -119,9 +103,6 @@ export function register_panel_section
     };
 }
 
-/**
- * Unregisters a custom section by ID.
- */
 export function unregister_panel_section(id: string): void
 {
     const index = registered_sections.findIndex(s => s.id === id);
@@ -131,9 +112,6 @@ export function unregister_panel_section(id: string): void
     }
 }
 
-/**
- * Retrieves all inspectors applicable to the specified device.
- */
 export function get_device_inspectors(dev: core.device): device_inspector_fn[]
 {
     return registered_inspectors
@@ -141,9 +119,6 @@ export function get_device_inspectors(dev: core.device): device_inspector_fn[]
         .map(entry => entry.render);
 }
 
-/**
- * Retrieves all registered device actions.
- */
 export function get_device_actions(): device_action[]
 {
     return registered_actions;
@@ -157,10 +132,6 @@ export function get_panel_sections(): panel_section_entry[]
     return registered_sections;
 }
 
-/**
- * Registers a custom creation options renderer for device definitions matching the predicate.
- * Returns an unsubscribe function.
- */
 export function register_device_creation_option
 (
     predicate: (def_id: string) => boolean,
@@ -175,9 +146,6 @@ export function register_device_creation_option
     };
 }
 
-/**
- * Unregisters a previously registered device creation option entry.
- */
 export function unregister_device_creation_option(entry: device_creation_option_entry | device_creation_option_fn): void
 {
     const index = registered_creation_options.findIndex(e => e === entry || e.render === entry);
@@ -187,9 +155,6 @@ export function unregister_device_creation_option(entry: device_creation_option_
     }
 }
 
-/**
- * Retrieves all creation option renderers applicable to the specified definition ID.
- */
 export function get_device_creation_options(def_id: string): device_creation_option_fn[]
 {
     return registered_creation_options
@@ -197,9 +162,6 @@ export function get_device_creation_options(def_id: string): device_creation_opt
         .map(entry => entry.render);
 }
 
-/**
- * Clears all registered extensions (useful for teardown or resets).
- */
 export function clear_all_extensions(): void
 {
     registered_inspectors.length = 0;

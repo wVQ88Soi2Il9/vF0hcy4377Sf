@@ -1,7 +1,3 @@
-/**
- * src/packs/basic_renderer/index.ts — basic_renderer Pack 公開進入點
- */
-
 import * as core from '@/core';
 
 export * from './fallback';

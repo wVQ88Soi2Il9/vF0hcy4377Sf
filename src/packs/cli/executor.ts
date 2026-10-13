@@ -41,10 +41,6 @@ function find_command(registry: core.pack_registry, cmd: string): core.cmd | ((.
     return null;
 }
 
-/**
- * 需求 2:
- * 接收 string, 用 parser.ts 拆成 cmd(...any: any[]), 查 registry 執行。
- */
 export function execute_command(input: string, registry: core.pack_registry): any
 {
     const tokens = tokenize_input(input);
@@ -81,21 +77,13 @@ export function execute_command(input: string, registry: core.pack_registry): an
     return target.execute(...args);
 }
 
-// ── 需求 3: 在 console 也能用 (單獨做) ──────────────────────────────────────────
-
 let console_registry: core.pack_registry | null = null;
 
-/**
- * 設定供 Console 使用的目標 registry
- */
 export function set_console_registry(registry: core.pack_registry): void
 {
     console_registry = registry;
 }
 
-/**
- * Console 專用執行函式：直接傳入指令字串，自動以綁定的 registry 執行
- */
 export function execute_in_console(input: string): any
 {
     if (!console_registry)

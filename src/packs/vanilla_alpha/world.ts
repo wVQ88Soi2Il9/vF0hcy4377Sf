@@ -1,9 +1,3 @@
-/**
- * src/packs/vanilla_alpha/world.ts — Vanilla 標準世界實體
- *
- * 繼承 pure_world，並提供包含 4 個基本可逆地圖操作與歷程快捷控制的高階 API。
- */
-
 import * as core from '@/core';
 import * as world from '@/world';
 import * as operations from './operations';
@@ -80,7 +74,7 @@ export class std_world extends world.pure_world
     }
 
     /**
-     * 在該世界上執行可逆指令序列。
+     * 執行並記錄為一個歷史節點。
      */
     public execute
     (
@@ -92,9 +86,6 @@ export class std_world extends world.pure_world
         this.trigger({ namespace: 'vanilla_alpha', id: 'history_record' }, this, new_node);
     }
 
-    /**
-     * 在該世界上撤銷上一步。
-     */
     public undo(): boolean
     {
         const success = core.jump_prev_node(this.history, this.space);
@@ -105,9 +96,6 @@ export class std_world extends world.pure_world
         return success;
     }
 
-    /**
-     * 在該世界上重做下一步。
-     */
     public redo(target?: core.uid): boolean
     {
         const success = core.jump_next_node(this.history, this.space, target);
@@ -118,9 +106,6 @@ export class std_world extends world.pure_world
         return success;
     }
 
-    /**
-     * 跳轉至指定歷史節點。
-     */
     public jump_to(target: core.uid): void
     {
         if (this.history.current_history_uid !== target)
@@ -129,17 +114,11 @@ export class std_world extends world.pure_world
         }
     }
 
-    /**
-     * 跳轉至上一個分支點。
-     */
     public jump_to_prev_fork(): void
     {
         core.jump_to_prev_fork(this.history, this.space);
     }
 
-    /**
-     * 跳轉至歷史樹根節點（UID 0）。
-     */
     public jump_to_root(): void
     {
         if (this.history.current_history_uid !== 0)
@@ -156,9 +135,6 @@ export class std_world extends world.pure_world
         core.jump_to_next_fork(this.history, this.space);
     }
 
-    /**
-     * 刪除指定歷史節點。
-     */
     public delete_history_node(target: core.uid): boolean
     {
         const success = core.delete_node(this.history, target);
