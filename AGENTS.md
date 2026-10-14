@@ -172,7 +172,7 @@ Undo followed by a new operation creates a new branch.
 
 `jump_to_node` uses the LCA path to transition between history nodes.
 
-History remains independent of Hooks and Pack business logic.
+`src/core/history.ts` remains independent of Hooks, Pack business logic, and high-level orchestration.
 
 ## 7. CLI
 
