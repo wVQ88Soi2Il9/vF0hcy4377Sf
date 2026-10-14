@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Claude and are aligned with [GPT.md](GPT.md); on conflict this file wins for Claude.
+Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Claude.
 
 ## Working style
 
