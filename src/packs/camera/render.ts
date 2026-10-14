@@ -7,7 +7,7 @@ export function render
 (
     sp:       core.space,
     args:     camera_args,
-    options?: basic_renderer.render_options
+    options:  basic_renderer.render_options
 ): HTMLElement
 {
     const proj = project(sp, args);

@@ -1,12 +1,12 @@
 import * as core from '@/core';
 import type { render_options } from './types';
 
-export function render_fallback_device(dev: core.device, options?: render_options): HTMLElement
+export function render_fallback_device(dev: core.device, options: render_options): HTMLElement
 {
-    const cell_size = options?.cell_size ?? 32;
+    const cell_size = options.cell_size;
     const unit_px = cell_size / 2;
-    const show_ports = options?.show_ports ?? true;
-    const show_labels = options?.show_labels ?? true;
+    const show_ports = options.show_ports;
+    const show_labels = options.show_labels;
 
     const container = document.createElement('div');
     container.className = 'device_fallback';

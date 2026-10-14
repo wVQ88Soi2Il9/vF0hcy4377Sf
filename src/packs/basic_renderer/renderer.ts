@@ -1,11 +1,11 @@
 import type { projection, render_options } from './types';
 import { render_fallback_device } from './fallback';
 
-export function render(proj: projection, options?: render_options): HTMLElement
+export function render(proj: projection, options: render_options): HTMLElement
 {
-    const cell_size = options?.cell_size ?? 32;
+    const cell_size = options.cell_size;
     const unit_px = cell_size / 2;
-    const show_grid = options?.show_grid ?? true;
+    const show_grid = options.show_grid;
 
     const width_px = proj.size[0] * unit_px;
     const height_px = proj.size[1] * unit_px;
