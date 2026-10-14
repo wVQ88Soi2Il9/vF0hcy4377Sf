@@ -1,6 +1,7 @@
 import * as core from '@/core';
 import { tokenize_input } from './parser';
 import { generate_help } from './help';
+import { find_cmd_op } from './lookup';
 
 /**
  * 將 token 字串轉型為基礎型別 (number, boolean, null) 或保留原字串。
@@ -12,33 +13,6 @@ function parse_argument(token: string): any
     if (token === 'null'){ return null; }
     if (token.trim() !== '' && !isNaN(Number(token))){ return Number(token); }    
     return token;
-}
-
-/**
- * 在 registry 中查找指定指令名稱/ID 的執行目標 (core.cmd 或函式)。
- * 支援:
- * 1. 帶 namespace 查找: "namespace:cmd" -> pack.commands / pack.operations
- * 2. 不帶 namespace 查找: 遍歷所有 pack 查找 commands 或 operations
- */
-function find_command(registry: core.pack_registry, cmd: string): core.cmd | ((...args: any[]) => any) | null
-{
-    if (cmd.includes(':'))
-    {
-        const [namespace, id] = cmd.split(':');
-        const pack = registry.get(namespace);
-        return pack?.commands?.[id] ?? pack?.operations?.[id] ?? null;
-    }
-
-    for (const pack of registry.values())
-    {
-        const target = pack.commands?.[cmd] ?? pack.operations?.[cmd];
-        if (target)
-        {
-            return target;
-        }
-    }
-
-    return null;
 }
 
 export function execute_command(input: string, registry: core.pack_registry): any
@@ -64,17 +38,7 @@ export function execute_command(input: string, registry: core.pack_registry): an
     const [cmd, ...raw_args] = tokens;
     const args = raw_args.map(parse_argument);
 
-    const target = find_command(registry, cmd);
-    if (!target)
-    {
-        throw new Error(`Command "${cmd}" not found in registry.`);
-    }
-
-    if (typeof target === 'function')
-    {
-        return target(...args);
-    }
-    return target.execute(...args);
+    return find_cmd_op(registry, cmd).execute(...args);
 }
 
 let console_registry: core.pack_registry | null = null;
