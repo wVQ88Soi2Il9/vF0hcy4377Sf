@@ -1,6 +1,6 @@
 # Agent Instructions
 
-Shared project rules for every agent. Claude-specific rules: [CLAUDE.md](CLAUDE.md).
+Shared project rules for every agent.
 
 ## 1. Architecture
 

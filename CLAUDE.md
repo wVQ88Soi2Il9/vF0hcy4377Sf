@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Claude.
+Shared project rules: [AGENTS.md](AGENTS.md). The rules below are Claude-only.
 
 ## Interaction
 
@@ -12,7 +12,7 @@ Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Cl
 - **S2** After each completed change, commit and push to the designated branch. Do not switch or reset branches, force-push, or open a PR unless asked.
 - **S3** When reverting, say exactly what was reverted and keep a copy of the diff so individual items can be re-applied.
 - **S4** Report implementation as awaiting Human acceptance (Human = the user in this conversation). Do not independently mark work as completed or rejected anywhere (docket, docs, or by saying in the reply that tests pass). Exception: `docket.py verify PLAN` closes a plan when its verify command passes; report plan id, command, result in the same reply.
-- **S5** Verify code changes with `pnpm test`. Do not run `npx tsc -b` or `pnpm build` (it runs `tsc -b`) unless explicitly asked.
+- **S5** Verify code changes with `pnpm test`. Skip build/check (`pnpm build`, `npx tsc -b`) unless asked.
 
 ## Authority and design
 
