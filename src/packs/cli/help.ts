@@ -1,5 +1,4 @@
 import * as core from '@/core';
-import { find_cmd_op } from './lookup';
 
 export function get_command_describe(command?: core.cmd | core.rev_op): string
 {
@@ -19,6 +18,11 @@ function format_entry(label: string, target: core.cmd | core.rev_op): string
         return `${label} - ${desc}`;
     }
     return label;
+}
+
+function find_target(pack: core.pack_module, id: string): core.cmd | core.rev_op | undefined
+{
+    return pack.commands?.[id] ?? pack.operations?.[id];
 }
 
 function list_all(registry: core.pack_registry): string
@@ -76,13 +80,32 @@ export function generate_help(registry: core.pack_registry, target_cmd?: string)
     {
         return list_all(registry);
     }
+    else if (target_cmd.includes(':'))
+    {
+        const [namespace, id] = target_cmd.split(':');
+        const pack = registry.get(namespace);
+        const target = pack ? find_target(pack, id) : undefined;
+        if (!target)
+        {
+            throw new Error(`Command "${target_cmd}" not found in registry.`);
+        }
+        return format_entry(`${namespace}:${id}`, target);
+    }
     else
     {
-        const target = find_cmd_op(registry, target_cmd);
-        if (!target.namespace || !target.id)
+        for (const pack of registry.values())
         {
-            throw new Error(`Command "${target_cmd}" is missing namespace or id.`);
+            const target = find_target(pack, target_cmd);
+            if (!target)
+            {
+                continue;
+            }
+            if (!target.namespace || !target.id)
+            {
+                throw new Error(`Command "${target_cmd}" in pack "${pack.pack_id}" is missing namespace or id.`);
+            }
+            return format_entry(`${target.namespace}:${target.id}`, target);
         }
-        return format_entry(`${target.namespace}:${target.id}`, target);
+        throw new Error(`Command "${target_cmd}" not found in registry.`);
     }
 }
