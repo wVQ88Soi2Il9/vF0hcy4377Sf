@@ -41,7 +41,6 @@ Applies to TypeScript in `src/` and `tests/`. `docs/docket/` is exempt.
 Allman braces
 snake_case (lowercase; variables, functions, types, files, JSON keys)
 semicolons
-avoid unnecessary global state
 ```
 
 ## Refactoring and records
