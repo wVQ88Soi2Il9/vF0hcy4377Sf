@@ -286,6 +286,13 @@ class TestPlans(Base):
         self.r.run("verify", p, by=None)
         self.assertEqual(self.r.label(p), "solved · logic")
 
+    def test_verify_announces_the_close(self):
+        p = self.r.new("plan", "x", "--verify", "true")
+        out = self.r.run("verify", p, by=None).stdout
+        self.assertIn("CLOSED BY LOGIC", out)
+        self.assertIn(p, out)
+        self.assertIn("tell the human", out)
+
     def test_failed_verify_keeps_open(self):
         p = self.r.new("plan", "x", "--verify", "false")
         self.r.run("verify", p, by=None, ok=False)

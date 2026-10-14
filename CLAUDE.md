@@ -7,9 +7,10 @@ Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Cl
 1. If a request is not clear, ask before acting. State the most likely reading and let the user confirm.
 2. For anything beyond a small, clearly requested edit, list the proposed changes first and wait for approval.
 3. Keep changes within task scope. Do not refactor unrelated code. Findings and cleanups are reported, not applied.
-4. Never commit, push, or switch/reset branches unless asked.
+4. After each completed change, commit and push to the designated branch. Do not switch or reset branches, force-push, or open a PR unless asked.
 5. When reverting, say exactly what was reverted and keep a copy of the diff so individual items can be re-applied.
-6. Report implementation as awaiting Human acceptance. Do not independently mark work as completed or rejected.
+6. Report implementation as awaiting Human acceptance. Do not independently mark work as completed or rejected. Exception: `docket.py verify PLAN` closes a plan when its verify command passes (logic, not your judgment). Tell the user in the same reply: plan id, command, result.
+7. Do not run `npx tsc -b` or `pnpm build` (it runs `tsc -b`) unless explicitly asked; it is too slow.
 
 ## Authority and design
 
@@ -17,7 +18,7 @@ Project instructions live in [AGENTS.md](AGENTS.md). The rules below apply to Cl
 
 ```text
 current instruction
-> resolved QA
+> resolved docket plan (human-closed; its why is the decision)
 > current implementation
 > old implementation
 ```
@@ -46,4 +47,4 @@ avoid unnecessary global state
 ## Refactoring and records
 
 - For large cross-file symbol, type, variable, function, or file renames, prefer Human-managed IDE semantic refactoring. Do not initiate broad text replacement.
-- Record important features, refactors, and architectural decisions in `docs/history/` when practical. Do not proactively read the entire history at the start of every task.
+- Record important features, refactors, and architectural decisions in docket (`docs/docket/`, see `.claude/skills/docket/SKILL.md`) when practical. Read it with `docket.py brief`, not in full.

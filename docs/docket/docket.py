@@ -486,6 +486,7 @@ def cmd_verify(st, a):
     if not ok:
         raise DocketError(f"verify failed (exit {extra['exit']}); plan stays open")
     write(st, "logic", "fact", {"on": i, "is": "solved", **extra}, "verify passed", i)
+    print(f"CLOSED BY LOGIC: {i} solved · verify: {cmd} · commit {extra['commit']} — tell the human")
 
 
 def cmd_recheck(st, a):

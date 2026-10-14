@@ -27,7 +27,8 @@ Axioms, file format and flags: `docs/docket/README.md`.
    - outdated: `fact "new text" --replaces ID`, or `is ID replaced`
    - a check you disagree with: fix the code or the check, do not argue with it.
 5. **Before relying on checked facts**: `recheck`.
-6. **Done**: if the plan has `verify`, `verify PLAN` closes it when the command passes. Otherwise stop and report.
+6. **Done**: if the plan has `verify`, `verify PLAN` closes it when the command passes. Tell the user in the same reply
+   (plan id, command, result); the tool prints a `CLOSED BY LOGIC` line for this. Otherwise stop and report.
 7. **Before committing**: `lint`.
 
 ## Commands
