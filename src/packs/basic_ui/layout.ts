@@ -3,7 +3,7 @@ let root_element: HTMLElement | null = null;
 /**
  * Gets or creates the primary UI root container.
  */
-export function get_ui_root(host?: HTMLElement): HTMLElement
+export function get_ui_root(host: HTMLElement): HTMLElement
 {
     if (!root_element)
     {
@@ -13,8 +13,7 @@ export function get_ui_root(host?: HTMLElement): HTMLElement
             root_element = document.createElement('div');
             root_element.id = 'ui_root';
             root_element.className = 'basic_ui_splitter_layout';
-            const parent = host ?? document.getElementById('app') ?? document.body;
-            parent.appendChild(root_element);
+            host.appendChild(root_element);
         }
     }
     return root_element;
