@@ -26,6 +26,10 @@ export function compose(manifests: core.pack_manifest[]): core.catalog
         for (const [key, handler] of Object.entries(manifest.on))
         {
             const idx = key.indexOf(':');
+            if (idx === -1)
+            {
+                throw new Error(`Invalid hook key "${key}" in pack "${manifest.pack_id}": expected "namespace:id".`);
+            }
             const namespace = key.slice(0, idx);
             const id = key.slice(idx + 1);
 
