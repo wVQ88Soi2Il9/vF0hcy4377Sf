@@ -137,5 +137,5 @@ src/
 |---|---|
 | `AGENTS.md` / `CLAUDE.md` | 協作與 agent 規則 |
 | `docs/archive/QA/` | 設計問答與決策紀錄（已封存），規範見 [docs/archive/QA/readme.md](docs/archive/QA/readme.md) |
-| `docs/history/` | 計畫歷史，規範見 [docs/history/readme.md](docs/history/readme.md) |
+| `docs/docket/` | 事實與計畫紀錄（append-only），規範見 [docs/docket/README.md](docs/docket/README.md) |
 | `src/README.md` | Hook 與 world 的執行期架構 |
