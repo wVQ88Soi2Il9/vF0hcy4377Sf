@@ -26,7 +26,7 @@ current instruction
 2. Do not invent architecture. If a design is unresolved, keep it unresolved unless the task explicitly asks you to decide it.
 3. Existing code is not automatically correct. Follow resolved architectural intent over legacy structure.
 4. Do not silently repair invalid state. Preserve and enforce explicit invariants.
-5. `history.ts` must remain independent of hooks and high-level orchestration.
+5. `src/core/history.ts` must remain independent of hooks and high-level orchestration.
 6. Temporary compatibility layers, aliases, or bridges must state a cleanup target so they do not become permanent technical debt.
 
 ## Reviewing
