@@ -35,12 +35,6 @@ During implementation:
 - after implementation, set the item to `等待確認`;
 - Human decides `完成` or `否決`.
 
-After modifying Plan files, run:
-
-```text
-python docs/history/update-head.py
-```
-
 Plan History is a record of work and decisions. Its existence does not justify expanding implementation scope.
 
 ## 3. Code Conventions
