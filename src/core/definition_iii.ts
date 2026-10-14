@@ -50,7 +50,7 @@ export interface pack_manifest
 {
     pack_id:       string;
     provides?:     Omit<pack_module, 'pack_id'>;
-    on?:           Record<string, hook_callback>;
+    on:            Record<string, hook_callback>;
     create_state?: () => unknown;
     patch?:        (draft: catalog) => void;
 }

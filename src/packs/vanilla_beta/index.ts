@@ -6,5 +6,6 @@ export * from './spatial';
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'vanilla_beta'
+    pack_id: 'vanilla_beta',
+    on:      {}
 };

@@ -6,5 +6,6 @@ export * from './help';
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'cli'
+    pack_id: 'cli',
+    on:      {}
 };

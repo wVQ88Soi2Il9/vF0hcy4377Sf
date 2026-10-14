@@ -6,5 +6,6 @@ export * from './types';
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'basic_renderer'
+    pack_id: 'basic_renderer',
+    on:      {}
 };

@@ -15,5 +15,6 @@ export function init_pack(): void
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'basic_ui'
+    pack_id: 'basic_ui',
+    on:      {}
 };

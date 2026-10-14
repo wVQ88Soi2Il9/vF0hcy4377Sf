@@ -6,5 +6,6 @@ export * from './render';
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'camera'
+    pack_id: 'camera',
+    on:      {}
 };

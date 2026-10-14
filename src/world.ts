@@ -23,7 +23,7 @@ export function compose(manifests: core.pack_manifest[]): core.catalog
             draft.create_states.set(manifest.pack_id, manifest.create_state);
         }
 
-        for (const [key, handler] of Object.entries(manifest.on ?? {}))
+        for (const [key, handler] of Object.entries(manifest.on))
         {
             const idx = key.indexOf(':');
             const namespace = key.slice(0, idx);
