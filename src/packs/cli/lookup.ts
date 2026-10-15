@@ -1,11 +1,11 @@
 import * as core from '@/core';
 
-export interface command_entry
-{
-    pack_id: string;
-    name:    string;
-    command: core.cmd;
-}
+/**
+ * commands 與 op_templates 都是 CLI 可呼叫的項目，以 kind 區分。
+ */
+export type command_entry =
+    | { kind: 'cmd';         pack_id: string; name: string; command: core.cmd }
+    | { kind: 'op_template'; pack_id: string; name: string; command: core.op_template };
 
 export function list_commands(registry: core.pack_registry): command_entry[]
 {
@@ -14,7 +14,11 @@ export function list_commands(registry: core.pack_registry): command_entry[]
     {
         for (const [name, command] of Object.entries(pack.commands ?? {}))
         {
-            entries.push({ pack_id, name, command });
+            entries.push({ kind: 'cmd', pack_id, name, command });
+        }
+        for (const [name, command] of Object.entries(pack.op_templates ?? {}))
+        {
+            entries.push({ kind: 'op_template', pack_id, name, command });
         }
     }
     return entries;
@@ -36,11 +40,16 @@ export function find_command(registry: core.pack_registry, identifier: string): 
             throw new Error(`Pack "${pack_id}" not found.`);
         }
         const command = pack.commands?.[name];
-        if (!command)
+        if (command)
         {
-            throw new Error(`Command "${identifier}" not found.`);
+            return { kind: 'cmd', pack_id, name, command };
         }
-        return { pack_id, name, command };
+        const template = pack.op_templates?.[name];
+        if (template)
+        {
+            return { kind: 'op_template', pack_id, name, command: template };
+        }
+        throw new Error(`Command "${identifier}" not found.`);
     }
 
     const matches = list_commands(registry).filter(entry => entry.name === identifier);

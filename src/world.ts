@@ -4,8 +4,23 @@ export const committed_event: core.namespaced_id = { namespace: 'core', id: 'com
 
 export interface applied_op
 {
-    op:        core.op_template;
+    op:        core.rev_op;
     direction: 'execute' | 'inverse';
+}
+
+/**
+ * 同一個 pack 的 commands 與 op_templates 共用 CLI 名稱空間，不可同名。
+ */
+function check_cli_names(manifest: core.pack_manifest): void
+{
+    const commands = manifest.provides?.commands ?? {};
+    for (const name of Object.keys(manifest.provides?.op_templates ?? {}))
+    {
+        if (name in commands)
+        {
+            throw new Error(`Pack "${manifest.pack_id}" provides both command and op_template "${name}".`);
+        }
+    }
 }
 
 /**
@@ -17,6 +32,7 @@ export function compose(manifests: core.pack_manifest[]): core.catalog
 
     for (const manifest of manifests)
     {
+        check_cli_names(manifest);
         draft.registry.set(manifest.pack_id, { pack_id: manifest.pack_id, ...manifest.provides });
         if (manifest.create_state)
         {
@@ -128,7 +144,7 @@ export class pure_world
         return moved;
     }
 
-    public submit(ops: core.op_template[], other_info?: Record<string, unknown>): void
+    public submit(ops: core.rev_op[], other_info?: Record<string, unknown>): void
     {
         this.commit(() =>
         {

@@ -1,10 +1,20 @@
 import type { namespaced_id, hook_callback, hook_list } from './definition_i';
 import type { space, item_definition, recipe, device_constructor } from './definition_ii';
 
-export interface op_template extends namespaced_id 
+export interface rev_op extends namespaced_id 
 {
     execute(sp: space,...args: any[]): void;
     inverse(sp: space,...args: any[]): void;
+    other_info?: Record<string, unknown>;
+}
+
+/**
+ * 操作模板：registry 存模板，create 以目標 world 與參數產生一次實際的 rev_op，交由 world.submit 寫入歷史。
+ * 說明文字放在 other_info.cli.description。
+ */
+export interface op_template extends namespaced_id
+{
+    create(target_world: any, ...args: any[]): rev_op;
     other_info?: Record<string, unknown>;
 }
 
@@ -27,7 +37,7 @@ export interface pack_module
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
-    op_templates?:   Record<string, op_template>;
+    op_templates?: Record<string, op_template>;
     commands?:     Record<string, cmd>;
     other_info?:   Record<string, unknown>;
 }

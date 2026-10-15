@@ -81,10 +81,10 @@ export function has_operation(registry: core.pack_registry, identifier: core.nam
 
 export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.op_template
 {
-    const op = registry.get(identifier.namespace)?.op_templates?.[identifier.id];
-    if (!op)
+    const template = registry.get(identifier.namespace)?.op_templates?.[identifier.id];
+    if (!template)
     {
         throw new Error(`Operation "${format_namespaced_id(identifier)}" not found in registry.`);
     }
-    return op;
+    return template;
 }

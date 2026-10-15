@@ -31,7 +31,7 @@ flowchart TD
 interface pack_manifest
 {
     pack_id:       string;
-    provides?:     { items?, recipes?, devices?, operations?, commands? };
+    provides?:     { items?, recipes?, devices?, op_templates?, commands? };
     on?:           Record<string, hook_callback>;   // 'namespace:id' → handler(world, ...args)
     create_state?: () => unknown;                   // 每個世界的 pack 私有狀態
     patch?:        (draft: catalog) => void;        // 組裝期間修改尚未凍結的 catalog

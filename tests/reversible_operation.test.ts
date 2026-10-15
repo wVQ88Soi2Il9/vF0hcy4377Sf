@@ -74,21 +74,20 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         expect(execution_history).toEqual(['exec(no-args)', 'inv(no-args)', 'exec(no-args)']);
     });
 
-    it('能於 pack_module.operations 註冊並透過 get_operation 查詢取得', () =>
+    it('能於 pack_module.op_templates 註冊並透過 get_operation 查詢取得', () =>
     {
         const registry: core.pack_registry = new Map();
 
-        const op_instance: core.reversible_operation =
+        const op_instance: core.op_template =
         {
             namespace: 'custom_pack',
             id:        'echo_op',
-            execute(_sp: core.space) {},
-            inverse(_sp: core.space) {}
+            create: () => ({ namespace: 'custom_pack', id: 'echo_op', execute() {}, inverse() {} })
         };
 
         registry.set('custom_pack', {
             pack_id: 'custom_pack',
-            operations: {
+            op_templates: {
                 echo_op: op_instance
             }
         });

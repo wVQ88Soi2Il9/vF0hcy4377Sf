@@ -36,7 +36,7 @@ CLI 位於 `src/packs/cli/`，以空白分詞，雙引號內視為同一個 toke
 
 - 參數轉型：`true` / `false` / `null`、數字會被轉型，其餘保留為字串。
 - 指令名稱可帶命名空間（`namespace:command`）；不帶時依 pack 載入順序查找。
-- CLI 會在 registry 的 `commands` 與 `operations` 中查找，兩者在 CLI 看來沒有區別。
+- CLI 會在 registry 的 `commands` 與 `op_templates` 中查找，兩者在 CLI 看來沒有區別；`op_template` 產生的 `rev_op` 會經 `submit` 寫入歷史。
 - 指令本身由各 pack 在 registry 條目的 `commands` 中註冊，CLI pack 不內建業務指令。
 
 ### 1.3 Pack 開發基礎
@@ -46,7 +46,7 @@ Pack 放在 `src/packs/<pack_name>/`，由 `index.ts` 匯出生命週期函式�
 ```ts
 export function global_init(registry: core.pack_registry): void
 {
-    registry.set('my_pack', { pack_id: 'my_pack' /* hooks, operations, commands, ... */ });
+    registry.set('my_pack', { pack_id: 'my_pack' /* hooks, op_templates, commands, ... */ });
 }
 
 export function world_init(target_world: world.pure_world): void
@@ -56,7 +56,7 @@ export function world_init(target_world: world.pure_world): void
 ```
 
 - 載入順序由 `src/main.ts` 的 `ENABLED_PACKS` 決定。
-- 每個 pack 在 registry 中以 `pack_module` 描述自己（`items`、`recipes`、`devices`、`operations`、`commands`、`hooks`、`other_info`）。
+- 每個 pack 在 registry 中以 `pack_module` 描述自己（`items`、`recipes`、`devices`、`op_templates`、`commands`、`hooks`、`other_info`）。
 - 各 Pack 目錄下的 `README.md`：**待補（todo）**。
 
 ---

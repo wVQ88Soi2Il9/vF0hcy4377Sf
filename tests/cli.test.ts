@@ -115,6 +115,57 @@ describe('help', () =>
     });
 });
 
+describe('op_template', () =>
+{
+    function make_template(log: string[]): core.op_template
+    {
+        return {
+            namespace: 'pack_t',
+            id:        'mark',
+            create(_target_world: world.pure_world, value: unknown): core.rev_op
+            {
+                return {
+                    namespace: 'pack_t',
+                    id:        'mark',
+                    execute: () => { log.push(`exec ${value}`); },
+                    inverse: () => { log.push(`inv ${value}`); }
+                };
+            },
+            other_info: { cli: { description: 'mark a value' } }
+        };
+    }
+
+    it('以參數產生 rev_op 並寫入歷史，undo / redo 重播同一個 rev_op', () =>
+    {
+        const log: string[] = [];
+        const w = make_world([{ pack_id: 'pack_t', provides: { op_templates: { mark: make_template(log) } } }]);
+
+        cli.run(w, 'mark 1');
+        cli.run(w, 'pack_t:mark 2');
+        expect(w.history.nodes.size).toBe(3);
+
+        w.undo();
+        w.redo();
+        expect(log).toEqual(['exec 1', 'exec 2', 'inv 2', 'exec 2']);
+    });
+
+    it('help 列出 op_template 的描述', () =>
+    {
+        const w = make_world([{ pack_id: 'pack_t', provides: { op_templates: { mark: make_template([]) } } }]);
+        expect(cli.run(w, 'help mark')).toBe('pack_t:mark — mark a value');
+    });
+
+    it('同一個 pack 的 command 與 op_template 同名時 compose 報錯', () =>
+    {
+        const manifest: core.pack_manifest =
+        {
+            pack_id:  'pack_t',
+            provides: { commands: { mark: make_cmd('pack_t', 'mark', 'cmd') }, op_templates: { mark: make_template([]) } }
+        };
+        expect(() => world.compose([manifest])).toThrow(/both command and op_template "mark"/);
+    });
+});
+
 describe('parse', () =>
 {
     it('parse_int 接受整數，其他報錯', () =>
