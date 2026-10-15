@@ -96,7 +96,11 @@ export function record_operation
 export function delete_node(tree: tree, target_uid: uid): boolean
 {
     const target = tree.nodes.get(target_uid);
-    if (!target || target_uid === tree.current_history_uid || target.children_history_uids.length > 0 || target.parent_history_uid === null)
+    if (!target)
+    {
+        throw new Error(`target ${target_uid} doesn't exist`);
+    }
+    if (target_uid === tree.current_history_uid || target.children_history_uids.length > 0 || target.parent_history_uid === null)
     {
         return false;
     }
@@ -134,29 +138,34 @@ export function jump_prev_node(tree: tree, sp: space): boolean
     return true;
 }
 
-export function find_prev_fork_node(tree: tree, start: uid = tree.current_history_uid): uid | null
+/**
+ * 自 start 往上找第一個分岔點;碰到根節點則回傳根節點。
+ */
+export function find_prev_fork_node(tree: tree, start: uid = tree.current_history_uid): uid
 {
     const start_node = tree.nodes.get(start);
-    if (!start_node || start_node.parent_history_uid === null)
+    if (!start_node)
     {
-        return null;
+        throw new Error(`start ${start} doesn't exist`);
+    }
+    if (start_node.parent_history_uid === null)
+    {
+        return start;
     }
 
-    let curr: uid | null = start_node.parent_history_uid;
-    while (curr !== null)
+    let curr: uid = start_node.parent_history_uid;
+    while (true)
     {
         // 父鏈完整
         const node = tree.nodes.get(curr)!;
 
-        if (node.children_history_uids.length > 1)
+        if (node.children_history_uids.length > 1 || node.parent_history_uid === null)
         {
             return node.history_uid;
         }
 
         curr = node.parent_history_uid;
     }
-
-    return null;
 }
 
 /**
@@ -229,34 +238,25 @@ export function jump_next_node(tree: tree, sp: space, target_child?: uid): boole
     return true;
 }
 
-export function find_next_fork_node(tree: tree, start: uid = tree.current_history_uid): uid | null
+/**
+ * 自 start 沿唯一路徑往下找第一個分岔點;碰到葉節點則回傳葉節點。start 本身是分岔點或葉節點時回傳 start。
+ */
+export function find_next_fork_node(tree: tree, start: uid = tree.current_history_uid): uid
 {
     const start_node = tree.nodes.get(start);
-    if (!start_node || start_node.children_history_uids.length !== 1)
+    if (!start_node)
     {
-        return null;
+        throw new Error(`start ${start} doesn't exist`);
     }
 
-    let curr: uid = start_node.children_history_uids[0];
-    while (true)
+    let node = start_node;
+    while (node.children_history_uids.length === 1)
     {
         // uid 取自 children_history_uids,必定存在
-        const node = tree.nodes.get(curr)!;
-
-        if (node.children_history_uids.length > 1)
-        {
-            return node.history_uid;
-        }
-
-        if (node.children_history_uids.length === 0)
-        {
-            break;
-        }
-
-        curr = node.children_history_uids[0];
+        node = tree.nodes.get(node.children_history_uids[0])!;
     }
 
-    return null;
+    return node.history_uid;
 }
 
 /**
