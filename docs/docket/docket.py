@@ -186,8 +186,6 @@ class State:
                     raise DocketError(f"{i}: on a plan use is={'|'.join(CLOSE_IS)}")
                 if not (is_logic(by) or is_human(by)):
                     raise DocketError(f"{i}: only logic (verify) or human may close a plan")
-                if not x["body"]:
-                    raise DocketError(f"{i}: close needs why")
                 closed.add(t)
             elif op in ("needs+", "needs-") and t in self.need_list(x, v):
                 raise DocketError(f"{i}: plan cannot need itself")
@@ -623,7 +621,7 @@ def main():
     p = sp.add_parser("close", help="human closes a plan")
     p.add_argument("id")
     p.add_argument("reason", choices=CLOSE_IS)
-    p.add_argument("--why", required=True)
+    p.add_argument("--why")
     p.set_defaults(fn=cmd_close)
 
     p = sp.add_parser("verify", help="run a plan's verify; exit 0 closes it as solved (logic)")

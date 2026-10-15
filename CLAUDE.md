@@ -14,7 +14,7 @@ Shared project rules: [AGENTS.md](AGENTS.md). The rules below are Claude-only.
 
 ```text
 current instruction
-> resolved docket plan (human-closed; its why is the decision)
+> resolved docket plan (human-closed; its why, when given, is the decision)
 > current implementation
 > old implementation
 ```

@@ -23,7 +23,7 @@ Independent system; no repo coding rules apply to `docket.py`. Spec v0.4.
    A rule binds its plan and every plan that plan needs, while the rule is `true` and its plan is open.
 9. A plan closes as `solved` | `unable` | `invalid`, only by **logic** (`verify` exits 0) or a **human**. Agents cannot close.
 10. A close is final: it cannot be refuted or reopened. To change it, open a new plan with `--from`.
-    A **decision** is a human close; its `why` is the decision.
+    A **decision** is a human close; its `why`, when given, is the decision.
 11. A `logic` result records the git commit, and `dirty: 1` if the work tree had other changes. Commands time out after 60 s.
 
 ## Usage
@@ -35,7 +35,7 @@ docket.py --by WHO is ID true|false|replaced [--why W]   # claim about a fact
 docket.py --by WHO need PLAN ID,ID
 docket.py --by WHO unneed PLAN ID,ID
 docket.py --by WHO rule PLAN "text" [--why W]
-docket.py --by human close PLAN solved|unable|invalid --why W
+docket.py --by human close PLAN solved|unable|invalid [--why W]
 docket.py verify PLAN       # run verify; exit 0 closes it as solved (logic)
 docket.py recheck [ID]      # rerun checks; writes a logic fact only when the result changes
 docket.py ready             # open plans whose needs all hold
@@ -88,7 +88,7 @@ body (may span lines; no line may start with `## `). The first entry of a file i
 | plan | `need?`, `verify?`, `from?` | text (required) |
 | fact | `src?`, `check?`, `replaces?` | text (required) |
 | fact about a fact | `on`, `is: true\|false\|replaced` (+ `commit`, `dirty?`, `exit?` if logic) | why |
-| fact about a plan | `on`, and one of `is: solved\|unable\|invalid`, `needs+`, `needs-`, `rule` | why (required for a close) |
+| fact about a plan | `on`, and one of `is: solved\|unable\|invalid`, `needs+`, `needs-`, `rule` | why |
 
 ## Known limits
 
