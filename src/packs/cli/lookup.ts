@@ -1,4 +1,5 @@
 import * as core from '@/core';
+import { upstream_descriptions } from './descriptions';
 
 /**
  * commands 與 op_templates 都是 CLI 可呼叫的項目，以 kind 區分。
@@ -66,15 +67,26 @@ export function find_command(registry: core.pack_registry, identifier: string): 
 }
 
 /**
- * 指令描述放在 other_info.cli.description；缺少或不是文字時報錯。
+ * 上游項目查 upstream_descriptions，下游項目讀 other_info.cli.description；兩者皆有或皆無時報錯。
  */
 export function get_description(entry: command_entry): string
 {
+    const key = `${entry.pack_id}:${entry.name}`;
+    const upstream = upstream_descriptions[key];
     const cli_info = entry.command.other_info?.cli as Record<string, unknown> | undefined;
-    const description = cli_info?.description;
-    if (typeof description !== 'string')
+    const downstream = cli_info?.description;
+
+    if (upstream !== undefined && downstream !== undefined)
     {
-        throw new Error(`Command "${entry.pack_id}:${entry.name}" has no other_info.cli.description.`);
+        throw new Error(`Command "${key}" has a description both in cli and in other_info.cli.description.`);
     }
-    return description;
+    if (upstream !== undefined)
+    {
+        return upstream;
+    }
+    if (typeof downstream !== 'string')
+    {
+        throw new Error(`Command "${key}" has no description.`);
+    }
+    return downstream;
 }

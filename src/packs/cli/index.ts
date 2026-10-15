@@ -4,9 +4,9 @@ import { help_command } from './help';
 export * from './tokenize';
 export * from './coerce';
 export * from './lookup';
-export * from './parse';
 export * from './run';
 export * from './help';
+export * from './descriptions';
 
 export const manifest: core.pack_manifest =
 {

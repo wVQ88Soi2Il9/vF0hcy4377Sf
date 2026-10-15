@@ -60,6 +60,12 @@ describe('coerce', () =>
     {
         expect(cli.tokenize('"4" "true"').map(cli.coerce)).toEqual(['4', 'true']);
     });
+
+    it('16 位 hex（uid）保留為文字，即使全為數字', () =>
+    {
+        expect(cli.tokenize('1234567890123456 0a1b2c3d4e5f6789 12345678901234567').map(cli.coerce))
+            .toEqual(['1234567890123456', '0a1b2c3d4e5f6789', 12345678901234567]);
+    });
 });
 
 describe('run', () =>
@@ -108,10 +114,16 @@ describe('help', () =>
         expect(cli.run(w, 'help pack_b:echo')).toBe('pack_b:echo — echo from b');
     });
 
+    it('上游常數表與 other_info.cli.description 同時存在時報錯', () =>
+    {
+        const w = make_world([{ pack_id: 'vanilla_beta', provides: { commands: { delete_device: make_cmd('vanilla_beta', 'x', 'dup') } } }]);
+        expect(() => cli.run(w, 'help vanilla_beta:delete_device')).toThrow(/both in cli and in other_info/);
+    });
+
     it('指令缺少描述時報錯', () =>
     {
         const w = make_world([{ pack_id: 'pack_c', provides: { commands: { bare: make_cmd('pack_c', 'bare') } } }]);
-        expect(() => cli.run(w, 'help bare')).toThrow(/no other_info\.cli\.description/);
+        expect(() => cli.run(w, 'help bare')).toThrow(/has no description/);
     });
 });
 
@@ -163,22 +175,5 @@ describe('op_template', () =>
             provides: { commands: { mark: make_cmd('pack_t', 'mark', 'cmd') }, op_templates: { mark: make_template([]) } }
         };
         expect(() => world.compose([manifest])).toThrow(/both command and op_template "mark"/);
-    });
-});
-
-describe('parse', () =>
-{
-    it('parse_int 接受整數，其他報錯', () =>
-    {
-        expect(cli.parse_int(4, 'x')).toBe(4);
-        expect(() => cli.parse_int(4.5, 'x')).toThrow(/integer/);
-        expect(() => cli.parse_int('4', 'x')).toThrow(/integer/);
-    });
-
-    it('parse_vector 取出指定數量的整數座標', () =>
-    {
-        expect(cli.parse_vector(['conveyor', 4, 4, 0], 1, 3, 'pos')).toEqual([4, 4, 0]);
-        expect(() => cli.parse_vector(['conveyor', 4, 4], 1, 3, 'pos')).toThrow(/needs 3 integers, got 2/);
-        expect(() => cli.parse_vector([4, 'a'], 0, 2, 'pos')).toThrow(/pos\[1\]/);
     });
 });

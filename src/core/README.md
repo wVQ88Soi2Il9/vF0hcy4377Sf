@@ -113,7 +113,7 @@ Handlers for one event run in manifest order. After compose, the catalog is trea
 
 ### 5.3 `other_info`
 
-`other_info` is namespaced: $\mathrm{other\_info} : \mathcal{N} \rightharpoonup \mathrm{Record}$. A module reads and writes only its own key. For example, the description of a command or template is `other_info.cli.description`.
+`other_info` is namespaced: $\mathrm{other\_info} : \mathcal{N} \rightharpoonup \mathrm{Record}$. A module reads and writes only its own key, and a pack never refers to a module it does not depend on. So a command's description is supplied in one of two ways: a pack downstream of the CLI writes `other_info.cli.description`, while for packs upstream of the CLI (closer to core) the CLI keeps a constant table of descriptions itself.
 
 ## 6. History: words in a free group
 

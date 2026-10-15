@@ -24,6 +24,5 @@ export const help_command: core.cmd =
         }
         const entry = find_command(registry, name);
         return `${entry.pack_id}:${entry.name} — ${get_description(entry)}`;
-    },
-    other_info: { cli: { description: 'help [command]: list all commands, or describe one.' } }
+    }
 };
