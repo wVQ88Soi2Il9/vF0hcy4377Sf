@@ -9,15 +9,19 @@ export interface vanilla_history_node_info
 export function get_vanilla_node_info(tree: core.tree, uid: core.uid): vanilla_history_node_info | undefined
 {
     const node = tree.nodes.get(uid);
-    return node?.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
+    if (!node)
+    {
+        throw new Error(`node ${uid} doesn't exist`);
+    }
+    return node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
 }
 
-export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Partial<vanilla_history_node_info>): boolean
+export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Partial<vanilla_history_node_info>): void
 {
     const node = tree.nodes.get(uid);
     if (!node)
     {
-        return false;
+        throw new Error(`node ${uid} doesn't exist`);
     }
 
     if (!node.other_info)
@@ -27,7 +31,6 @@ export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Part
 
     const current_info = (node.other_info['vanilla'] as vanilla_history_node_info | undefined) ?? {};
     node.other_info['vanilla'] = { ...current_info, ...info };
-    return true;
 }
 
 export function is_node_pinned(tree: core.tree, uid: core.uid): boolean
@@ -35,16 +38,16 @@ export function is_node_pinned(tree: core.tree, uid: core.uid): boolean
     return get_vanilla_node_info(tree, uid)?.pinned ?? false;
 }
 
-export function set_node_pin(tree: core.tree, uid: core.uid, pinned: boolean): boolean
+export function set_node_pin(tree: core.tree, uid: core.uid, pinned: boolean): void
 {
-    return set_vanilla_node_info(tree, uid, { pinned });
+    set_vanilla_node_info(tree, uid, { pinned });
 }
 
-export function toggle_node_pin(tree: core.tree, uid: core.uid): boolean | null
+export function toggle_node_pin(tree: core.tree, uid: core.uid): boolean
 {
     if (!tree.nodes.has(uid))
     {
-        return null;
+        throw new Error(`node ${uid} doesn't exist`);
     }
 
     const current = is_node_pinned(tree, uid);
@@ -84,9 +87,9 @@ export function get_node_merged_from(tree: core.tree, uid: core.uid): core.uid |
     return get_vanilla_node_info(tree, uid)?.merged_from;
 }
 
-export function set_node_merged_from(tree: core.tree, uid: core.uid, source_uid: core.uid): boolean
+export function set_node_merged_from(tree: core.tree, uid: core.uid, source_uid: core.uid): void
 {
-    return set_vanilla_node_info(tree, uid, { merged_from: source_uid });
+    set_vanilla_node_info(tree, uid, { merged_from: source_uid });
 }
 
 export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
@@ -96,10 +99,9 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
         return false;
     }
 
-    const target_node = tree.nodes.get(target_uid);
-    if (!target_node)
+    if (!tree.nodes.has(target_uid))
     {
-        return false;
+        throw new Error(`node ${target_uid} doesn't exist`);
     }
 
     // 若 target_uid 位於當前活躍路徑（祖先線）上，拒絕刪除
@@ -117,11 +119,8 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
     const subtree_uids: core.uid[] = [];
     function collect_post_order(uid: core.uid): void
     {
-        const node = tree.nodes.get(uid);
-        if (!node)
-        {
-            return;
-        }
+        // uid 取自 children_history_uids,必定存在
+        const node = tree.nodes.get(uid)!;
         for (const child_uid of node.children_history_uids)
         {
             collect_post_order(child_uid);
