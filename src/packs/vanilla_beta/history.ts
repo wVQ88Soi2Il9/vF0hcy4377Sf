@@ -141,25 +141,18 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
 
 /**
  * 擷取自 LCA 至 target_uid 之節點順序路徑（不包含 LCA 本身）。
+ * 前提:lca_uid 是 target_uid 的祖先(或相同),兩者皆存在。
  */
 export function extract_branch_path(tree: core.tree, lca_uid: core.uid, target_uid: core.uid): core.node[]
 {
-    if (lca_uid === target_uid)
-    {
-        return [];
-    }
-
     const path: core.node[] = [];
-    let curr: core.uid | null = target_uid;
+    let curr: core.uid = target_uid;
 
-    while (curr !== null && curr !== lca_uid)
+    while (curr !== lca_uid)
     {
-        const node = tree.nodes.get(curr);
-        if (node)
-        {
-            path.push(node);
-        }
-        curr = node?.parent_history_uid ?? null;
+        const node = tree.nodes.get(curr)!;
+        path.push(node);
+        curr = node.parent_history_uid!;
     }
 
     return path.reverse();
