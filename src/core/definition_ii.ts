@@ -1,7 +1,5 @@
 import type { vector, namespaced_id, uid } from './definition_i';
 
-// ── Items ────────────────────────────────────────────────────────────────────
-
 export interface item_definition extends namespaced_id 
 {
     other_info?: Record<string, unknown>;
@@ -13,20 +11,15 @@ export interface item_stack
     quantity: number;
 }
 
-// ── Ports ────────────────────────────────────────────────────────────────────
-
 export type port_direction = 'input' | 'output' | 'bidirectional';
 
 export interface port 
 {
-    /** Local UID */
     port_uid:    uid;
     offset:      vector;
     direction:   port_direction;
     other_info?: Record<string, unknown>;
 }
-
-// ── Devices ──────────────────────────────────────────────────────────────────
 
 export abstract class device 
 {
@@ -44,10 +37,8 @@ export abstract class device
         this.other_info = other_info;
     }
 
-    /** 取得局部形狀格點 (Local Coordinates) */
     public abstract get_shape(): vector[];
 
-    /** 取得局部連接埠清單 (Local Ports) */
     public abstract get_port(): port[];
 }
 
@@ -59,29 +50,17 @@ export type device_constructor = new
     other_info?:   Record<string, unknown>
 ) => device;
 
-// ── Recipes ──────────────────────────────────────────────────────────────────
-
-/**
- * 單一 port 上的輸出物品堆疊。
- * recipe 只描述輸出——input 是 context 的一部分（device 目前收到什麼），
- * 不由 recipe 宣告或計算，即便 device 被迫持有 input 庫存也一樣。
- */
 export interface recipe_output
 {
     port_uid:   uid;
     item_stack: item_stack;
 }
 
-/**
- * // TODO: unknown — 錯誤訊息格式與 context/device_uid 求值機制待決策
- */
 export interface recipe extends namespaced_id
 {
     evaluate:    (device_uid: uid) => recipe_output[] | string;
     other_info?: Record<string, unknown>;
 }
-
-// ── Space ────────────────────────────────────────────────────────────────────
 
 export class space
 {

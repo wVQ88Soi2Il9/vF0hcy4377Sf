@@ -17,7 +17,7 @@
 
 ## 指令約定
 
-- `core.cmd.execute(world, ...args)`：第一個參數為目標 world。
+- `core.cmd.execute(context, ...args)`：第一個參數為呼叫端的 context，不限於 world（未來可能承擔 UI 變更）。目前 `run` 傳入的是 world。
 - `core.op_template.create(world, ...args)`：模板，每次產生新的 `rev_op`；參數封在 `rev_op` 內，undo / redo 不再需要參數。
 - 同一個 pack 的 `commands` 與 `op_templates` 不可同名，`compose` 時報錯。
 - 描述放在 `other_info.cli.description`（文字）；`other_info` 依命名空間分層，cli 只讀自己的 `cli` 鍵。缺少時 `help` 報錯。
