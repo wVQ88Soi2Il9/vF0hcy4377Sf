@@ -101,11 +101,9 @@ export function delete_node(tree: tree, target_uid: uid): boolean
         return false;
     }
 
-    const parent = tree.nodes.get(target.parent_history_uid);
-    if (parent)
-    {
-        parent.children_history_uids = parent.children_history_uids.filter(id => id !== target_uid);
-    }
+    // 已排除根節點;delete_node 只刪葉節點,父節點必定存在
+    const parent = tree.nodes.get(target.parent_history_uid)!;
+    parent.children_history_uids = parent.children_history_uids.filter(id => id !== target_uid);
 
     tree.nodes.delete(target_uid);
     return true;
@@ -120,8 +118,9 @@ export function jump_prev_node(tree: tree, sp: space): boolean
         return false;
     }
 
-    const current_node = tree.nodes.get(tree.current_history_uid);
-    if (!current_node || current_node.parent_history_uid === null)
+    // current 永遠存在
+    const current_node = tree.nodes.get(tree.current_history_uid)!;
+    if (current_node.parent_history_uid === null)
     {
         return false;
     }
@@ -146,11 +145,8 @@ export function find_prev_fork_node(tree: tree, start: uid = tree.current_histor
     let curr: uid | null = start_node.parent_history_uid;
     while (curr !== null)
     {
-        const node = tree.nodes.get(curr);
-        if (!node)
-        {
-            break;
-        }
+        // 父鏈完整
+        const node = tree.nodes.get(curr)!;
 
         if (node.children_history_uids.length > 1)
         {
@@ -200,11 +196,8 @@ export function jump_to_root(tree: tree, sp: space): boolean
 
 export function jump_next_node(tree: tree, sp: space, target_child?: uid): boolean
 {
-    const current_node = tree.nodes.get(tree.current_history_uid);
-    if (!current_node)
-    {
-        return false;
-    }
+    // current 永遠存在
+    const current_node = tree.nodes.get(tree.current_history_uid)!;
 
     let next_history_uid: uid;
     if (target_child !== undefined)
@@ -224,11 +217,8 @@ export function jump_next_node(tree: tree, sp: space, target_child?: uid): boole
         next_history_uid = current_node.children_history_uids[0];
     }
 
-    const next_node = tree.nodes.get(next_history_uid);
-    if (!next_node)
-    {
-        return false;
-    }
+    // uid 取自 children_history_uids,必定存在
+    const next_node = tree.nodes.get(next_history_uid)!;
 
     for (const op of next_node.operations)
     {
@@ -250,11 +240,8 @@ export function find_next_fork_node(tree: tree, start: uid = tree.current_histor
     let curr: uid = start_node.children_history_uids[0];
     while (true)
     {
-        const node = tree.nodes.get(curr);
-        if (!node)
-        {
-            break;
-        }
+        // uid 取自 children_history_uids,必定存在
+        const node = tree.nodes.get(curr)!;
 
         if (node.children_history_uids.length > 1)
         {
