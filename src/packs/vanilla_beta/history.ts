@@ -94,7 +94,7 @@ export function set_node_merged_from(tree: core.tree, uid: core.uid, source_uid:
 
 export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
 {
-    if (target_uid === 0)
+    if (target_uid === tree.root_history_uid)
     {
         return false;
     }

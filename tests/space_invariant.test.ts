@@ -16,7 +16,7 @@ function snapshot(sp: core.space): string
 {
     const entries = [...sp.devices.values()]
         .map(d => ({ uid: d.device_uid, pos: d.position, recipe: d.selected_recipe_id ?? null }))
-        .sort((a, b) => a.uid - b.uid);
+        .sort((a, b) => a.uid.localeCompare(b.uid));
     return JSON.stringify(entries);
 }
 
@@ -35,9 +35,9 @@ describe('uid 唯一性（目標）', () =>
     it('create 遇到已存在的 uid 時 Fail-Fast', () =>
     {
         const sp = new core.space([8, 8]);
-        vanilla_alpha.create_device_operation(7, mock_device, def_id, [0, 0]).execute(sp);
+        vanilla_alpha.create_device_operation('7', mock_device, def_id, [0, 0]).execute(sp);
 
-        const duplicate = vanilla_alpha.create_device_operation(7, mock_device, def_id, [2, 2]);
+        const duplicate = vanilla_alpha.create_device_operation('7', mock_device, def_id, [2, 2]);
         expect(() => duplicate.execute(sp)).toThrowError('Device with UID 7 already exists in space.');
         expect(sp.devices.size).toBe(1);
     });
@@ -45,11 +45,11 @@ describe('uid 唯一性（目標）', () =>
     it('delete 的 inverse 遇到 uid 已被佔用時 Fail-Fast', () =>
     {
         const sp = new core.space([8, 8]);
-        vanilla_alpha.create_device_operation(7, mock_device, def_id, [0, 0]).execute(sp);
+        vanilla_alpha.create_device_operation('7', mock_device, def_id, [0, 0]).execute(sp);
 
-        const del = vanilla_alpha.delete_device_operation(7);
+        const del = vanilla_alpha.delete_device_operation('7');
         del.execute(sp);
-        vanilla_alpha.create_device_operation(7, mock_device, def_id, [2, 2]).execute(sp);
+        vanilla_alpha.create_device_operation('7', mock_device, def_id, [2, 2]).execute(sp);
 
         expect(() => del.inverse(sp)).toThrowError('Device with UID 7 already exists in space.');
     });
@@ -59,14 +59,14 @@ describe('uid 唯一性（目標）', () =>
         class countdown_world extends vanilla_alpha.std_world
         {
             private next = 100;
-            protected override allocate_uid(): core.uid { return this.next--; }
+            protected override allocate_uid(): core.uid { return String(this.next--); }
         }
 
         const w = new countdown_world(world.compose([vanilla_alpha.manifest]), new core.space([8, 8]), 'w');
         const a = w.create_device(mock_device, def_id, [0, 0]);
         const b = w.create_device(mock_device, def_id, [2, 0]);
 
-        expect([a.device_uid, b.device_uid]).toEqual([100, 99]);
+        expect([a.device_uid, b.device_uid]).toEqual(['100', '99']);
     });
 });
 

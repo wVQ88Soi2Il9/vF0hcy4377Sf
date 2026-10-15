@@ -10,7 +10,7 @@ This document states the contracts as mathematics. Code names are given in `mono
 |---|---|---|
 | $\mathcal{N}$ | namespaces (pack ids) | `string` |
 | $\mathcal{I} = \mathcal{N} \times \mathrm{Id}$ | namespaced identifiers, written `ns:id` | `namespaced_id` |
-| $U = \mathbb{N}$ | unique ids | `uid` |
+| $U = \{0, \ldots, 9, \mathrm{a}, \ldots, \mathrm{f}\}^{16}$ | unique ids: 16-digit hex strings (64 random bits) | `uid` |
 | $\mathbb{Z}^d$ | $d$-dimensional vectors | `vector` |
 | $S$ | space states | `space` |
 | $W$ | worlds (runtime state; defined in `src/world.ts`) | `pure_world` |
@@ -24,6 +24,8 @@ This document states the contracts as mathematics. Code names are given in `mono
 $$s = (d,\ \mathrm{size},\ \mathrm{devices}),\qquad \mathrm{size} \in \mathbb{Z}^d,\quad \mathrm{devices} : U \rightharpoonup \mathrm{Device}$$
 
 `devices` is a finite partial map, so every uid appears at most once in a space.
+
+Device uids and history-node uids are drawn by `generate_uid` uniformly from $U$, with $|U| = 2^{64}$. A `port_uid` is also a string, but it is chosen by the device class and is only unique within its device. Uniqueness is not assumed from randomness: a collision is caught where the uid is inserted (`create_device` and `record_operation` throw).
 
 ### 1.2 Devices `device`
 
@@ -132,10 +134,10 @@ The law $i_o \circ e_o = \mathrm{id}$ says exactly that $s \cdot (o\,o^{-1}) = s
 A history is
 $$T = (V,\ \mathrm{parent},\ \mathrm{ops},\ c),\qquad \mathrm{ops} : V \to \mathrm{Op}^{*},\quad c \in V$$
 
-Here $0 \in V$ is the root, which has no operations, and $c$ is the current node (`current_history_uid`). Node uids are allocated in order from $1$ (`next_history_uid`).
+Here $r \in V$ is the root (`root_history_uid`), which has no operations, and $c$ is the current node (`current_history_uid`). Every node uid, the root's included, comes from `generate_uid`; uids carry no order.
 
-Each node $v$ with root path $0 = v_0, v_1, \ldots, v_m = v$ names a word:
-$$w_v = \mathrm{ops}(v_1)\,\mathrm{ops}(v_2) \cdots \mathrm{ops}(v_m) \in F,\qquad w_0 = 1$$
+Each node $v$ with root path $r = v_0, v_1, \ldots, v_m = v$ names a word:
+$$w_v = \mathrm{ops}(v_1)\,\mathrm{ops}(v_2) \cdots \mathrm{ops}(v_m) \in F,\qquad w_r = 1$$
 
 Every operation occurs in exactly one node (§3), so $w_v$ uses only positive letters that are all distinct. That makes $w_v$ reduced, and the map $v \mapsto w_v$ injective. The tree is therefore a finite, prefix-closed set of words: a subtree of the Cayley graph of $F$, where the operations of one node are drawn as one edge.
 
@@ -159,7 +161,7 @@ The `change_set` emitted with `core:committed` (`applied_op[]` in `src/world.ts`
 |---|---|---|
 | `jump_prev_node` (undo) | $\mathrm{parent}(c)$ | $\mathrm{ops}(c)^{-1}$ |
 | `jump_next_node` (redo) | a child $v$ of $c$ | $\mathrm{ops}(v)$ |
-| `jump_to_root` | $0$ | $w_c^{-1}$ |
+| `jump_to_root` | $r$ | $w_c^{-1}$ |
 | `jump_to_prev_fork` | $\mathrm{prev\_fork}(c)$ | $x^{-1}$ only |
 | `jump_to_next_fork` | $\mathrm{next\_fork}(c)$ | $y$ only |
 | `jump_to_node` | any $v$ | $x^{-1} y$ |
@@ -180,7 +182,7 @@ When `jump_next_node` is given a child, that node must be a child of $c$. When i
 ### 6.5 Changing the tree
 
 - **Record** (`record_operation`): given new operations $g = o_1 \cdots o_k$, act by $s \leftarrow s \cdot g$ and add a node $v$ under $c$ with $w_v = w_c\, g$, then set $c \leftarrow v$. The letters of $g$ are new generators, so $w_v$ differs from every existing word. Undoing and then recording therefore creates a **new branch** and never overwrites an old one.
-- **Delete** (`delete_node`): removes only a leaf $v$ with $v \ne c$ and $v \ne 0$ from the set of words, so causal history stays continuous. The current word $w_c$ is unchanged, so $s$ is unchanged. Violating these limits returns `false`.
+- **Delete** (`delete_node`): removes only a leaf $v$ with $v \ne c$ and $v \ne r$ from the set of words, so causal history stays continuous. The current word $w_c$ is unchanged, so $s$ is unchanged. Violating these limits returns `false`.
 
 ## 7. Hooks
 
@@ -189,6 +191,5 @@ When `jump_next_node` is given a child, that node must be a child of $c$. When i
 ## Open
 
 - The type of $W$ in `op_template.create` is `any`, because core cannot import `src/world.ts` (docket 20261015182143).
-- Who allocates uids when a template creates a device (docket 20261015182144).
 - The type of the command context $X$, and how the CLI obtains a context that is not a world, such as UI (docket 20261015183354).
 - The error-message format of `recipe.evaluate`, and how context / device_uid are evaluated.

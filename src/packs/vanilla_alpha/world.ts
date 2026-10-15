@@ -4,14 +4,12 @@ import * as operations from './operations';
 
 export class std_world extends world.pure_world
 {
-    private next_uid: number = 1;
-
     /**
-     * 產生 uid 的方法，可由子類別覆寫。唯一性由 space 與 create 的前置條件保證，不依賴此方法。
+     * 產生 uid 的方法，預設為 core.generate_uid，可由子類別覆寫。唯一性由 space 與 create 的前置條件保證，不依賴此方法。
      */
     protected allocate_uid(): core.uid
     {
-        return this.next_uid++;
+        return core.generate_uid();
     }
 
     public create_device

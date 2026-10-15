@@ -160,7 +160,7 @@ Device-specific drawing behavior remains on the device capability; renderers inv
 
 ### 5.3 UID
 
-`space.uid` starts from `1`.
+`uid` is a string. Device and history-node uids are 16-digit random hex strings from `core.generate_uid`; collisions are caught where the uid is inserted. `port_uid` is chosen by the device class and is unique only within its device.
 
 ### 5.4 other_info
 

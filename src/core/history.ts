@@ -1,4 +1,4 @@
-import type { uid } from './definition_i';
+import { type uid, generate_uid } from './definition_i';
 import type { space } from './definition_ii';
 import { rev_op } from './definition_iii';
 
@@ -14,24 +14,25 @@ export interface node
 export interface tree
 {
     nodes:               Map<uid, node>;
+    root_history_uid:    uid;
     current_history_uid: uid;
-    next_history_uid:    uid;
 }
 
 export function create_tree(): tree
 {
+    const root_uid = generate_uid();
     const root_node: node =
     {
-        history_uid:           0,
+        history_uid:           root_uid,
         parent_history_uid:    null,
         children_history_uids: [],
         operations:            []
     };
 
     return {
-        nodes:               new Map([[0, root_node]]),
-        current_history_uid: 0,
-        next_history_uid:    1
+        nodes:               new Map([[root_uid, root_node]]),
+        root_history_uid:    root_uid,
+        current_history_uid: root_uid
     };
 }
 
@@ -43,6 +44,12 @@ export function record_operation
     other_info?: Record<string, unknown>
 ): node
 {
+    const history_uid = generate_uid();
+    if (tree.nodes.has(history_uid))
+    {
+        throw new Error(`history uid ${history_uid} already exists`);
+    }
+
     for (const op of operations)
     {
         op.execute(sp);
@@ -50,7 +57,7 @@ export function record_operation
 
     const new_node: node =
     {
-        history_uid:           tree.next_history_uid,
+        history_uid:           history_uid,
         parent_history_uid:    tree.current_history_uid,
         children_history_uids: [],
         operations:            operations,
@@ -65,7 +72,6 @@ export function record_operation
 
     tree.nodes.set(new_node.history_uid, new_node);
     tree.current_history_uid = new_node.history_uid;
-    tree.next_history_uid += 1;
 
     return new_node;
 }
@@ -91,7 +97,7 @@ export function delete_node(tree: tree, target_uid: uid): boolean
 
 export function jump_prev_node(tree: tree, sp: space): boolean
 {
-    if (tree.current_history_uid === 0)
+    if (tree.current_history_uid === tree.root_history_uid)
     {
         return false;
     }
@@ -164,7 +170,7 @@ export function jump_to_prev_fork(tree: tree, sp: space): boolean
 
 export function jump_to_root(tree: tree, sp: space): boolean
 {
-    return jump_to_ancestor(tree, sp, 0);
+    return jump_to_ancestor(tree, sp, tree.root_history_uid);
 }
 
 export function jump_next_node(tree: tree, sp: space, target_child?: uid): boolean

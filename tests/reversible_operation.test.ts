@@ -106,7 +106,7 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         }
 
         const create_op = vanilla_alpha.create_device_operation(
-            1,
+            '1',
             mock_device,
             { namespace: 'vanilla_alpha', id: 'test_dev' },
             [0, 0]
@@ -114,16 +114,16 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         expect(create_op.other_info?.['vanilla_alpha']).toBeDefined();
         expect(create_op.other_info?.['core']).toBeUndefined();
 
-        const delete_op = vanilla_alpha.delete_device_operation(1);
-        expect(delete_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: 1 });
+        const delete_op = vanilla_alpha.delete_device_operation('1');
+        expect(delete_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: '1' });
         expect(delete_op.other_info?.['core']).toBeUndefined();
 
-        const move_op = vanilla_alpha.move_device_operation(1, [2, 2]);
-        expect(move_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: 1, position: [2, 2] });
+        const move_op = vanilla_alpha.move_device_operation('1', [2, 2]);
+        expect(move_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: '1', position: [2, 2] });
 
-        const select_op = vanilla_alpha.select_recipe_operation(1, { namespace: 'vanilla_alpha', id: 'rec_1' });
+        const select_op = vanilla_alpha.select_recipe_operation('1', { namespace: 'vanilla_alpha', id: 'rec_1' });
         expect(select_op.other_info?.['vanilla_alpha']).toEqual({
-            device_uid: 1,
+            device_uid: '1',
             new_recipe_id: { namespace: 'vanilla_alpha', id: 'rec_1' }
         });
     });

@@ -25,4 +25,5 @@
 
 ## Todo
 
-- **Console 使用未決**：原功能「在 DevTools Console 直接輸入指令，結果與錯誤印在 Console」尚未實作；如何暴露到 Console、綁定哪個 world 未決（docket plan 20261015175159）。
+- **使用介面由 `basic_ui` 控制**：輸入一行指令、顯示結果與錯誤屬於 `basic_ui`；cli 只提供 `run`，不自行掛到 DevTools Console。等 `basic_ui` 完成後接上（docket plan 20261015175737，需要 20261015175206）。
+- **目前沒有可執行的 operation**：機制已就緒，但還沒有 pack 註冊 `op_templates`；`vanilla_alpha` 的 4 個操作要包成模板；uid 已可由 `core.generate_uid` 產生，尚需決定 CLI 參數如何對應到裝置類別。

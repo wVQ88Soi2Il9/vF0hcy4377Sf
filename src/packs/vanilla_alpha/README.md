@@ -36,5 +36,5 @@
 - **undo / redo 的通知粒度未決**：`undo` / `redo` 只觸發 `history_undo` / `history_redo`，operation 的 `inverse` 不觸發 `create_device` 等 hook。是否採用逐 operation 的反向 hook 尚未決定。
 - **`jump_to`、`jump_to_prev_fork`、`jump_to_root`、`jump_to_leaf` 不觸發任何 hook**，也沒有宣告對應的 hook。
 - **std_world 與 operation 的職責劃分未決**：現在 `std_world` 的 `create_device` 等方法在內部建立 operation 並執行。是否改為 std_world 只提供不可逆 primitive、由 `operations.ts` 組合成可逆 operation，尚未決定。
-- **registry 條目沒有 `op_templates`**：這 4 個操作只存在於 `std_world` 內部，`has_operation` / `get_operation` 查不到。registry 已改存 `core.op_template`（`create(world, ...args) → rev_op`），`get_operation` 回傳模板；但這 4 個工廠的參數是型別化的（`device_class`、`uid` 等），要包成接受 CLI 參數的模板，需要先決定 uid 由誰配發（`allocate_uid` 目前在 `std_world`）。
+- **registry 條目沒有 `op_templates`**：這 4 個操作只存在於 `std_world` 內部，`has_operation` / `get_operation` 查不到。registry 已改存 `core.op_template`（`create(world, ...args) → rev_op`），`get_operation` 回傳模板；但這 4 個工廠的參數是型別化的（`device_class`、`uid` 等），要包成接受 CLI 參數的模板，uid 可直接由 `core.generate_uid` 產生（`std_world.allocate_uid` 預設也是它）；尚需決定 CLI 參數如何對應到裝置類別。
 - `src/main.ts` 的 `ENABLED_PACKS` 目前只有 `vanilla_alpha`。
