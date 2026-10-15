@@ -26,6 +26,7 @@ export interface layout_panel
 /**
  * group 的一個子區塊。size、min、max 為沿父 group 軸的 px 長度；max 可為 Infinity。
  * collapsible 為 true 時必須給 collapsed_size（0 ≤ collapsed_size ≤ min）；為 false 時不可給。
+ * 只有 panel 子區塊可以收合（收合透過 panel 的 handle）。
  */
 export type layout_child = layout_child_fixed | layout_child_collapsible;
 
@@ -91,6 +92,10 @@ function check_child(value: unknown, path: string, used: placement, declarations
         throw new Error(`${path}.collapsed_size must be a number in [0, min] when collapsible, got ${show(collapsed_size)}.`);
     }
     const node = check_node(child.node, `${path}.node`, used, declarations);
+    if (node.kind !== 'panel')
+    {
+        throw new Error(`${path}: only panel children can be collapsible.`);
+    }
     return Object.freeze({ node, size, min, max, collapsible: true, collapsed_size });
 }
 
