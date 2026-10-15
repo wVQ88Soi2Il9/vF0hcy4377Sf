@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach } from 'vitest';
+import * as core from '@/core';
+import * as world from '@/world';
 import * as basic_ui from '@/packs/basic_ui';
 
 const min_size = { width: 100, height: 50 };
@@ -130,5 +132,82 @@ describe('basic_ui splitter', () =>
         expect(() => basic_ui.create_splitter(a, b, { axis: 'x', min_a: 0, min_b: 0 })).toThrow(/adjacent/);
         document.body.append(b, a);
         expect(() => basic_ui.create_splitter(a, b, { axis: 'x', min_a: 0, min_b: 0 })).toThrow(/adjacent/);
+    });
+});
+
+function make_world(manifests: core.pack_manifest[]): world.pure_world
+{
+    return new world.pure_world(world.compose([basic_ui.manifest, ...manifests]), new core.space([4, 4]));
+}
+
+function panel_pack(pack_id: string, panels: Record<string, unknown>): core.pack_manifest
+{
+    return { pack_id, provides: { other_info: { basic_ui: { panels } } } };
+}
+
+function declaration(label: string): basic_ui.panel_declaration
+{
+    return {
+        render: () =>
+        {
+            const el = document.createElement('section');
+            el.textContent = label;
+            return el;
+        },
+        edges: ['right'],
+        min_size,
+        max_size
+    };
+}
+
+describe('basic_ui extensions', () =>
+{
+    it('lists panels in registry order and skips packs without basic_ui info', () =>
+    {
+        const w = make_world([panel_pack('a', { left: declaration('a') }), { pack_id: 'plain' }, panel_pack('b', { log: declaration('b') })]);
+        expect(basic_ui.list_panels(w.catalog.registry).map(e => `${e.pack_id}:${e.name}`)).toEqual(['a:left', 'b:log']);
+    });
+
+    it('rejects malformed declarations', () =>
+    {
+        const list = (m: core.pack_manifest) => () => basic_ui.list_panels(make_world([m]).catalog.registry);
+        expect(list({ pack_id: 'x', provides: { other_info: { basic_ui: { panels: {}, other: 1 } } } })).toThrow(/unknown key "other"/);
+        expect(list({ pack_id: 'x', provides: { other_info: { basic_ui: {} } } })).toThrow(/panels must be an object/);
+        expect(list(panel_pack('x', { p: { edges: [], min_size, max_size } }))).toThrow(/render/);
+        expect(list(panel_pack('x', { p: { render: () => null, edges: [] } }))).toThrow(/min_size/);
+        expect(list(panel_pack('x', { p: { ...declaration('p'), edges: ['up'] } }))).toThrow(/x:p.*Unknown edge/);
+    });
+});
+
+describe('basic_ui root', () =>
+{
+    it('mounts registered panels into the given container', () =>
+    {
+        const container = document.createElement('main');
+        document.body.appendChild(container);
+        const w = make_world([panel_pack('a', { left: declaration('hello') })]);
+        const root = basic_ui.mount_ui_root(container, w);
+
+        expect(container.firstElementChild).toBe(root.element);
+        const p = root.panels.get('a')!.get('left')!;
+        expect(p.element.parentElement).toBe(root.element);
+        expect(p.element.dataset.basic_ui_pack).toBe('a');
+        expect(p.element.dataset.basic_ui_name).toBe('left');
+        expect(p.content.textContent).toBe('hello');
+    });
+
+    it('is unique per document', () =>
+    {
+        const w = make_world([]);
+        basic_ui.mount_ui_root(document.body, w);
+        expect(() => basic_ui.mount_ui_root(document.body, w)).toThrow(/already mounted/);
+    });
+
+    it('leaves the container untouched when a panel fails to render', () =>
+    {
+        const bad = { ...declaration('bad'), render: () => 'text' as unknown as HTMLElement };
+        const w = make_world([panel_pack('a', { ok: declaration('ok'), bad })]);
+        expect(() => basic_ui.mount_ui_root(document.body, w)).toThrow(/a:bad.*HTMLElement/);
+        expect(document.body.children.length).toBe(0);
     });
 });
