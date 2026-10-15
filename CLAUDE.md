@@ -6,7 +6,7 @@ Shared project rules: [AGENTS.md](AGENTS.md). The rules below are Claude-only.
 
 - Unclear request: ask. Beyond a small, clearly requested edit: list changes and wait for approval. Unattended: take the smallest safe reading and record the assumption in docket.
 - Keep changes within task scope. Do not refactor unrelated code.
-- After each completed change, commit and push to the designated branch. Do not switch or reset branches, force-push, or open a PR unless asked. When reverting, keep a copy of the diff.
+- Auto commit and push only in a remote-control or cloud session: after each completed change, commit and push to the designated branch. In a local session, commit only when asked. Do not switch or reset branches, force-push, or open a PR unless asked. When reverting, keep a copy of the diff.
 - Report work as awaiting Human acceptance; never mark it completed or rejected (docket, docs, or "tests pass"). Exception: `docket.py verify PLAN` closes a plan when its verify command passes.
 - Verify code changes with `pnpm test`. Skip build/check (`pnpm build`, `npx tsc -b`) unless asked.
 
