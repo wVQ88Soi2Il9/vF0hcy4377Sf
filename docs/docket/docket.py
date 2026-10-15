@@ -387,14 +387,14 @@ def claim_author(a):
 # ---------- logic ----------
 
 def git(root, *args):
-    r = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", root, *args], capture_output=True, text=True, encoding="utf-8")
     return r.stdout.strip() if r.returncode == 0 else None
 
 
 def run_logic(cmd):
     root = git(HERE, "rev-parse", "--show-toplevel") or HERE
     try:
-        r = subprocess.run(cmd, shell=True, cwd=root, capture_output=True, text=True, timeout=TIMEOUT)
+        r = subprocess.run(cmd, shell=True, cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=TIMEOUT)
     except subprocess.TimeoutExpired:
         raise DocketError(f"timeout after {TIMEOUT}s: {cmd}")
     fields = {"commit": git(root, "rev-parse", "--short", "HEAD") or "none"}
@@ -565,11 +565,11 @@ def cmd_lint(st, a):
         if read_text(name) != want:
             raise DocketError(f"log/{name}: not in canonical form (hand-edited?)")
     r = subprocess.run(["git", "-C", HERE, "ls-tree", "-r", "--name-only", "HEAD", "--", "log"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
         print("note: no git HEAD here; append-only check skipped")
     for path in r.stdout.split() if r.returncode == 0 else []:
-        old = subprocess.run(["git", "-C", HERE, "show", f"HEAD:./{path}"], capture_output=True, text=True).stdout
+        old = subprocess.run(["git", "-C", HERE, "show", f"HEAD:./{path}"], capture_output=True, text=True, encoding="utf-8").stdout
         if not os.path.exists(os.path.join(HERE, path)):
             raise DocketError(f"{path}: committed file was deleted")
         with open(os.path.join(HERE, path), encoding="utf-8") as fh:
