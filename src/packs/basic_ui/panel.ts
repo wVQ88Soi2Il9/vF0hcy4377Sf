@@ -6,16 +6,16 @@ export interface resize_config
     right?:      boolean;
     top?:        boolean;
     bottom?:     boolean;
-    min_width:   number;
+    min_width?:  number;
     max_width?:  number | (() => number);
-    min_height:  number;
+    min_height?: number;
     max_height?: number | (() => number);
 }
 
 export interface panel_options
 {
     id:                 string;
-    tag:                string;
+    tag?:               string;
     position_css?:      string;
     default_width?:     string;
     default_height?:    string;
@@ -93,7 +93,7 @@ function attach_resize_handle
 
 export function create_floating_panel(options: panel_options): panel_component
 {
-    const element = document.createElement(options.tag);
+    const element = document.createElement(options.tag ?? 'aside');
     element.id = options.id;
     element.className = 'basic_ui_panel';
 
@@ -188,9 +188,9 @@ export function create_floating_panel(options: panel_options): panel_component
         const resolve = (val: number | (() => number) | undefined, fallback: number) =>
             typeof val === 'function' ? val() : typeof val === 'number' ? val : fallback;
 
-        const get_min_w = () => r.min_width;
+        const get_min_w = () => r.min_width ?? 200;
         const get_max_w = () => resolve(r.max_width, window.innerWidth - 32);
-        const get_min_h = () => r.min_height;
+        const get_min_h = () => r.min_height ?? 60;
         const get_max_h = () => resolve(r.max_height, window.innerHeight - 32);
 
         if (r.left)

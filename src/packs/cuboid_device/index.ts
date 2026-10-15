@@ -56,6 +56,5 @@ export abstract class base_cuboid_device extends core.device
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'cuboid_device',
-    on:      {}
+    pack_id: 'cuboid_device'
 };

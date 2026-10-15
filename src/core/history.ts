@@ -283,12 +283,7 @@ function jump_to_descendant(tree: tree, sp: space, descendant: uid): boolean
     while (curr !== null && curr !== tree.current_history_uid)
     {
         forward_history_uids.unshift(curr);
-        const node = tree.nodes.get(curr);
-        if (!node)
-        {
-            throw new Error(`history node ${curr} not found`);
-        }
-        curr = node.parent_history_uid;
+        curr = tree.nodes.get(curr)?.parent_history_uid ?? null;
     }
 
     if (curr !== tree.current_history_uid)

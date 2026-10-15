@@ -27,16 +27,11 @@ export class std_world extends world.pure_world
         return op.get_device()!;
     }
 
-    public delete_device(device_uid: core.uid): core.device
+    public delete_device(device_uid: core.uid): core.device | undefined
     {
         const op = operations.delete_device_operation(device_uid);
         this.submit([op]);
-        const deleted = op.get_deleted_device();
-        if (deleted === null)
-        {
-            throw new Error(`Device with UID ${device_uid} was not deleted.`);
-        }
-        return deleted;
+        return op.get_deleted_device() ?? undefined;
     }
 
     public move_device(device_uid: core.uid, new_position: core.vector): void

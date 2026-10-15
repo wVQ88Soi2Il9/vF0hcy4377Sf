@@ -10,34 +10,60 @@ export function get_command_describe(command?: core.cmd | core.rev_op): string
     return '';
 }
 
-function format_entry(label: string, target: core.cmd | core.rev_op): string
+export function generate_help(registry: core.pack_registry, target_cmd?: string): string
 {
-    const desc = get_command_describe(target);
-    if (desc)
+    if (target_cmd)
     {
-        return `${label} - ${desc}`;
+        if (target_cmd.includes(':'))
+        {
+            const [namespace, id] = target_cmd.split(':');
+            const pack = registry.get(namespace);
+            const target = pack?.commands?.[id] ?? pack?.operations?.[id];
+            if (!pack || !target)
+            {
+                throw new Error(`Command "${target_cmd}" not found in registry.`);
+            }
+
+            const desc = get_command_describe(target);
+            if (desc)
+            {
+                return `${namespace}:${id} - ${desc}`;
+            }
+            return `${namespace}:${id}`;
+        }
+
+        for (const [pack_name, pack] of registry.entries())
+        {
+            const target = pack.commands?.[target_cmd] ?? pack.operations?.[target_cmd];
+            if (target)
+            {
+                const namespace = target.namespace ?? pack.pack_id ?? pack_name;
+                const id = target.id ?? target_cmd;
+                const desc = get_command_describe(target);
+                if (desc)
+                {
+                    return `${namespace}:${id} - ${desc}`;
+                }
+                return `${namespace}:${id}`;
+            }
+        }
+
+        throw new Error(`Command "${target_cmd}" not found in registry.`);
     }
-    return label;
-}
 
-function find_target(pack: core.pack_module, id: string): core.cmd | core.rev_op | undefined
-{
-    return pack.commands?.[id] ?? pack.operations?.[id];
-}
-
-function list_all(registry: core.pack_registry): string
-{
     const lines: string[] = [];
 
-    for (const pack of registry.values())
+    for (const [pack_name, pack] of registry.entries())
     {
+        const pack_id = pack.pack_id || pack_name;
         const items: { id: string; desc: string }[] = [];
 
         if (pack.commands)
         {
             for (const [id, cmd] of Object.entries(pack.commands))
             {
-                items.push({ id, desc: get_command_describe(cmd) });
+                const desc = get_command_describe(cmd);
+                items.push({ id, desc });
             }
         }
 
@@ -47,7 +73,8 @@ function list_all(registry: core.pack_registry): string
             {
                 if (!items.some(it => it.id === id))
                 {
-                    items.push({ id, desc: get_command_describe(op) });
+                    const desc = get_command_describe(op);
+                    items.push({ id, desc });
                 }
             }
         }
@@ -57,7 +84,7 @@ function list_all(registry: core.pack_registry): string
             continue;
         }
 
-        lines.push(`[${pack.pack_id}]`);
+        lines.push(`[${pack_id}]`);
         for (const item of items)
         {
             if (item.desc)
@@ -72,40 +99,4 @@ function list_all(registry: core.pack_registry): string
     }
 
     return lines.join('\n');
-}
-
-export function generate_help(registry: core.pack_registry, target_cmd?: string): string
-{
-    if (!target_cmd)
-    {
-        return list_all(registry);
-    }
-    else if (target_cmd.includes(':'))
-    {
-        const [namespace, id] = target_cmd.split(':');
-        const pack = registry.get(namespace);
-        const target = pack ? find_target(pack, id) : undefined;
-        if (!target)
-        {
-            throw new Error(`Command "${target_cmd}" not found in registry.`);
-        }
-        return format_entry(`${namespace}:${id}`, target);
-    }
-    else
-    {
-        for (const pack of registry.values())
-        {
-            const target = find_target(pack, target_cmd);
-            if (!target)
-            {
-                continue;
-            }
-            if (!target.namespace || !target.id)
-            {
-                throw new Error(`Command "${target_cmd}" in pack "${pack.pack_id}" is missing namespace or id.`);
-            }
-            return format_entry(`${target.namespace}:${target.id}`, target);
-        }
-        throw new Error(`Command "${target_cmd}" not found in registry.`);
-    }
 }

@@ -3,8 +3,8 @@ export interface splitter_options
     direction:  'vertical' | 'horizontal';
     prev_el:    HTMLElement;
     next_el:    HTMLElement;
-    min_prev:   number;
-    min_next:   number;
+    min_prev?:  number;
+    min_next?:  number;
     on_resize?: () => void;
 }
 
@@ -35,8 +35,8 @@ export function create_splitter(options: splitter_options): splitter_component
         const current_coord = is_vertical ? e.clientX : e.clientY;
         const delta = current_coord - start_coord;
 
-        const min_prev = options.min_prev;
-        const min_next = options.min_next;
+        const min_prev = options.min_prev ?? (is_vertical ? 200 : 40);
+        const min_next = options.min_next ?? (is_vertical ? 200 : 40);
 
         const total_size = start_prev_size + start_next_size;
         let new_prev_size = start_prev_size + delta;

@@ -8,13 +8,12 @@ export * from './splitter';
 export * from './ui_state';
 export * from './extensions';
 
-export function init_pack(host: HTMLElement): void
+export function init_pack(): void
 {
-    layout.get_ui_root(host);
+    layout.get_ui_root();
 }
 
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'basic_ui',
-    on:      {}
+    pack_id: 'basic_ui'
 };

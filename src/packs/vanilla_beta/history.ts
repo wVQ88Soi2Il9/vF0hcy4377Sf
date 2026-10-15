@@ -110,12 +110,7 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
         {
             return false;
         }
-        const check_node = tree.nodes.get(curr_check);
-        if (!check_node)
-        {
-            throw new Error(`history node ${curr_check} not found`);
-        }
-        curr_check = check_node.parent_history_uid;
+        curr_check = tree.nodes.get(curr_check)?.parent_history_uid ?? null;
     }
 
     const subtree_uids: core.uid[] = [];
@@ -159,12 +154,11 @@ export function extract_branch_path(tree: core.tree, lca_uid: core.uid, target_u
     while (curr !== null && curr !== lca_uid)
     {
         const node = tree.nodes.get(curr);
-        if (!node)
+        if (node)
         {
-            throw new Error(`history node ${curr} not found`);
+            path.push(node);
         }
-        path.push(node);
-        curr = node.parent_history_uid;
+        curr = node?.parent_history_uid ?? null;
     }
 
     return path.reverse();
