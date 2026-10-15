@@ -110,7 +110,8 @@ export function delete_branch(tree: core.tree, target_uid: core.uid): boolean
         {
             return false;
         }
-        curr_check = tree.nodes.get(curr_check)?.parent_history_uid ?? null;
+        // 起點是 current,delete_node 只刪葉節點,父鏈必定完整
+        curr_check = tree.nodes.get(curr_check)!.parent_history_uid;
     }
 
     const subtree_uids: core.uid[] = [];

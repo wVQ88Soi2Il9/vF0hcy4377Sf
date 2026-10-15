@@ -283,7 +283,8 @@ function jump_to_descendant(tree: tree, sp: space, descendant: uid): boolean
     while (curr !== null && curr !== tree.current_history_uid)
     {
         forward_history_uids.unshift(curr);
-        curr = tree.nodes.get(curr)?.parent_history_uid ?? null;
+        // descendant 已由 find_lca 驗證存在,delete_node 只刪葉節點,父鏈必定完整
+        curr = tree.nodes.get(curr)!.parent_history_uid;
     }
 
     if (curr !== tree.current_history_uid)
