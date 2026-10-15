@@ -8,6 +8,10 @@ export interface rev_op extends namespaced_id
     other_info?: Record<string, unknown>;
 }
 
+/**
+ * 指令：execute 的第一個參數為目標 world，其後為 CLI 解析後的參數。
+ * 說明文字放在 other_info.cli.description。
+ */
 export interface cmd extends namespaced_id
 {
     execute(...args: any[]): any;

@@ -162,6 +162,12 @@ Device-specific drawing behavior remains on the device capability; renderers inv
 
 `space.uid` starts from `1`.
 
+### 5.4 other_info
+
+`other_info` is namespaced: `{ <namespace>: { ... } }`.
+
+Each module reads and writes only its own namespace key, e.g. `other_info.cli.description`.
+
 ## 6. History
 
 Space mutations are represented by `reversible_operation`.

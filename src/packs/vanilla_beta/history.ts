@@ -13,7 +13,7 @@ export function get_vanilla_node_info(tree: core.tree, uid: core.uid): vanilla_h
     {
         throw new Error(`node ${uid} doesn't exist`);
     }
-    return node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
+    return node.other_info?.['vanilla_beta'] as vanilla_history_node_info | undefined;
 }
 
 export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Partial<vanilla_history_node_info>): void
@@ -29,8 +29,8 @@ export function set_vanilla_node_info(tree: core.tree, uid: core.uid, info: Part
         node.other_info = {};
     }
 
-    const current_info = (node.other_info['vanilla'] as vanilla_history_node_info | undefined) ?? {};
-    node.other_info['vanilla'] = { ...current_info, ...info };
+    const current_info = (node.other_info['vanilla_beta'] as vanilla_history_node_info | undefined) ?? {};
+    node.other_info['vanilla_beta'] = { ...current_info, ...info };
 }
 
 export function is_node_pinned(tree: core.tree, uid: core.uid): boolean
@@ -61,7 +61,7 @@ export function get_pinned_nodes(tree: core.tree): core.uid[]
     const pinned: core.uid[] = [];
     for (const [uid, node] of tree.nodes)
     {
-        const info = node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
+        const info = node.other_info?.['vanilla_beta'] as vanilla_history_node_info | undefined;
         if (info?.pinned)
         {
             pinned.push(uid);
@@ -74,7 +74,7 @@ export function clear_all_pinned_nodes(tree: core.tree): void
 {
     for (const [_, node] of tree.nodes)
     {
-        const info = node.other_info?.['vanilla'] as vanilla_history_node_info | undefined;
+        const info = node.other_info?.['vanilla_beta'] as vanilla_history_node_info | undefined;
         if (info && info.pinned)
         {
             info.pinned = false;
