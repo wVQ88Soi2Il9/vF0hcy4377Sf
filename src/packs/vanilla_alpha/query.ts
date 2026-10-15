@@ -76,12 +76,12 @@ export function get_device_class(registry: core.pack_registry, identifier: core.
 
 export function has_operation(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
-    return Boolean(registry.get(identifier.namespace)?.operations?.[identifier.id]);
+    return Boolean(registry.get(identifier.namespace)?.op_templates?.[identifier.id]);
 }
 
-export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.rev_op
+export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.op_template
 {
-    const op = registry.get(identifier.namespace)?.operations?.[identifier.id];
+    const op = registry.get(identifier.namespace)?.op_templates?.[identifier.id];
     if (!op)
     {
         throw new Error(`Operation "${format_namespaced_id(identifier)}" not found in registry.`);

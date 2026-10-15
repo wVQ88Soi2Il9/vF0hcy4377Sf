@@ -8,7 +8,7 @@
  */
 import type { uid } from './definition_i';
 import type { space } from './definition_ii';
-import { rev_op } from './definition_iii';
+import { op_template } from './definition_iii';
 
 /**
  * 回傳約定：
@@ -24,7 +24,7 @@ export interface node
     history_uid:           uid;
     parent_history_uid:    uid | null;
     children_history_uids: uid[];
-    operations:            rev_op[];
+    operations:            op_template[];
     other_info?:           Record<string, unknown>;
 }
 
@@ -58,7 +58,7 @@ export function record_operation
 (
     tree:        tree,
     sp:          space,
-    operations:  rev_op[],
+    operations:  op_template[],
     other_info?: Record<string, unknown>
 ): node
 {

@@ -4,7 +4,7 @@ export const committed_event: core.namespaced_id = { namespace: 'core', id: 'com
 
 export interface applied_op
 {
-    op:        core.rev_op;
+    op:        core.op_template;
     direction: 'execute' | 'inverse';
 }
 
@@ -128,7 +128,7 @@ export class pure_world
         return moved;
     }
 
-    public submit(ops: core.rev_op[], other_info?: Record<string, unknown>): void
+    public submit(ops: core.op_template[], other_info?: Record<string, unknown>): void
     {
         this.commit(() =>
         {

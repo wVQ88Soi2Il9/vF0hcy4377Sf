@@ -1,7 +1,7 @@
 import type { namespaced_id, hook_callback, hook_list } from './definition_i';
 import type { space, item_definition, recipe, device_constructor } from './definition_ii';
 
-export interface rev_op extends namespaced_id 
+export interface op_template extends namespaced_id 
 {
     execute(sp: space,...args: any[]): void;
     inverse(sp: space,...args: any[]): void;
@@ -27,7 +27,7 @@ export interface pack_module
     items?:        Record<string, item_definition>;
     recipes?:      Record<string, recipe>;
     devices?:      Record<string, device_constructor>;
-    operations?:   Record<string, rev_op>;
+    op_templates?:   Record<string, op_template>;
     commands?:     Record<string, cmd>;
     other_info?:   Record<string, unknown>;
 }
