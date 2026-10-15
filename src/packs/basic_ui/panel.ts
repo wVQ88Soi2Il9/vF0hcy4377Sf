@@ -15,7 +15,7 @@ export interface resize_config
 export interface panel_options
 {
     id:                 string;
-    tag?:               string;
+    tag:                string;
     position_css?:      string;
     default_width?:     string;
     default_height?:    string;
@@ -93,7 +93,7 @@ function attach_resize_handle
 
 export function create_floating_panel(options: panel_options): panel_component
 {
-    const element = document.createElement(options.tag ?? 'aside');
+    const element = document.createElement(options.tag);
     element.id = options.id;
     element.className = 'basic_ui_panel';
 
