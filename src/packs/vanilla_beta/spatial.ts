@@ -48,9 +48,9 @@ export function is_valid_port_position(port_pos: core.vector): boolean
 
 /**
  * 解析端口所落於的交界面法線軸向（0 代表 X、1 代表 Y、2 代表 Z...）。
- * 若座標不符規範則回傳 null。
+ * 座標不符規範時 throw;需要先判斷時用 is_valid_port_position。
  */
-export function get_port_axis(port_pos: core.vector): number | null
+export function get_port_axis(port_pos: core.vector): number
 {
     const even_indices: number[] = [];
     for (let i = 0; i < port_pos.length; i++)
@@ -60,7 +60,11 @@ export function get_port_axis(port_pos: core.vector): number | null
             even_indices.push(i);
         }
     }
-    return even_indices.length === 1 ? even_indices[0] : null;
+    if (even_indices.length !== 1)
+    {
+        throw new Error(`port position ${port_pos.join(',')} is invalid`);
+    }
+    return even_indices[0];
 }
 
 // ── N 維稀疏空間映射表 ───────────────────────────────────────────────────────
