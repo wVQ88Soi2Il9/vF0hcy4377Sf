@@ -40,9 +40,12 @@ A device class $\mathrm{Class}$ is a `device_constructor` $(\mathrm{uid}, \mathr
 ### 1.3 Items and recipes
 
 - An item stack (`item_stack`) is $(\mathrm{item\_id}, q) \in \mathcal{I} \times \mathbb{N}$.
-- A recipe (`recipe`) describes **outputs only**:
-  $$\mathrm{evaluate} : U \to (\mathrm{port\_uid} \times \mathrm{item\_stack})^{*} \ \sqcup\ \mathrm{Error}$$
-  Inputs are part of the context, meaning what the device currently receives. A recipe does not declare or compute them, even when the device has to hold an input stock.
+- The null item $\varnothing$ (`null_item_id`, `core:null`) is the identity item. A stack $(\varnothing, 0)$ fills a port that carries nothing, so every port slot is a valid `item_stack`.
+- A recipe (`recipe`) maps a context to outputs:
+  $$\mathrm{evaluate} : C \rightharpoonup \mathrm{item\_stack}^{k}$$
+  The $j$-th entry goes to the device's $j$-th output port. Each port carries at most one kind of item. Invalid input throws.
+
+  The context $C$ is not fixed by core (`any`). Its largest possible content is a space: a recipe never sees the world or its history. Conceptually a recipe is a function $\mathrm{item\_stack}^{m} \to \mathrm{item\_stack}^{k}$ from input ports to output ports; building the context and gathering the inputs (the evaluate behaviour) belongs to packs.
 
 ## 2. Operations: `rev_op`
 
@@ -192,4 +195,4 @@ When `jump_next_node` is given a child, that node must be a child of $c$. When i
 
 - The type of $W$ in `op_template.create` is `any`, because core cannot import `src/world.ts` (docket 20261015182143).
 - The type of the command context $X$, and how the CLI obtains a context that is not a world, such as UI (docket 20261015183354).
-- The error-message format of `recipe.evaluate`, and how context / device_uid are evaluated.
+- The type of the recipe context $C$ (docket 20261016072425).

@@ -50,15 +50,11 @@ export type device_constructor = new
     other_info?:   Record<string, unknown>
 ) => device;
 
-export interface recipe_output
-{
-    port_uid:   uid;
-    item_stack: item_stack;
-}
+export const null_item_id: namespaced_id = { namespace: 'core', id: 'null' };
 
 export interface recipe extends namespaced_id
 {
-    evaluate:    (device_uid: uid) => recipe_output[] | string;
+    evaluate:    (context: any) => item_stack[];
     other_info?: Record<string, unknown>;
 }
 

@@ -23,10 +23,10 @@
 | `segments_to_shape(dimension, segments)` | 起點格 `[0, ...]`，沿每段每步 ±2，回傳路徑所有格子的局部座標；`delta` 為奇數時報錯 |
 | `pipe_device` | `core.device` 子類別；constructor 為 `(device_uid, definition_id, start, segments, other_info?)`，不符合 `device_constructor`，不放進 `provides.devices` |
 | `get_port()` | `in`（input）：起點格沿第一段反方向退 1；`out`（output）：終點格沿最後一段方向進 1 |
-| `manifest` | `{ pack_id: 'pipe' }` |
+| `pass_through_recipe` | `pipe:pass_through`，in = out：`context.inputs` 原樣作為輸出 |
+| `manifest` | `{ pack_id: 'pipe' }`，`provides.recipes.pass_through` |
 
 ## Todo
 
-- in = out 配方未實作：`recipe.evaluate(device_uid)` 取不到輸入內容，輸入來源待決（見 core README Open）。
 - 路徑自我交疊、空 segments 暫不處理。
 - `src/main.ts` 的 `ENABLED_PACKS` 沒有啟用此 pack；CLI / `create_device` template 無法建立 pipe。

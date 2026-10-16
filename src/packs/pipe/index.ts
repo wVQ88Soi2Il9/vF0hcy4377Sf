@@ -1,4 +1,5 @@
 import * as core from '@/core';
+import * as vanilla_beta from '@/packs/vanilla_beta';
 
 /**
  * 一段路徑：沿 axis 位移 delta 座標單位（偶數，正負表方向；每格 2 單位）。
@@ -97,7 +98,27 @@ export class pipe_device extends core.device
     }
 }
 
+/**
+ * in = out：每個 input 埠的 item 原樣送到對應的 output 埠。
+ */
+export const pass_through_recipe: core.recipe =
+{
+    namespace: 'pipe',
+    id:        'pass_through',
+    evaluate(context: vanilla_beta.recipe_context): core.item_stack[]
+    {
+        return context.inputs.map(s => ({ ...s }));
+    }
+};
+
 export const manifest: core.pack_manifest =
 {
-    pack_id: 'pipe'
+    pack_id:  'pipe',
+    provides:
+    {
+        recipes:
+        {
+            pass_through: pass_through_recipe
+        }
+    }
 };
