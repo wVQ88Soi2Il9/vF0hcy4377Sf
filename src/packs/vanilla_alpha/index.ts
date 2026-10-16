@@ -1,5 +1,4 @@
 export * from './templates';
-export * from './world';
 export * from './query';
 
 import * as core from '@/core';

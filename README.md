@@ -108,7 +108,7 @@ src/
 
 | pack | 用途 |
 |---|---|
-| `vanilla_alpha` | 四個基礎可逆操作的 `op_template`（建立、刪除、移動、選定配方；不登記）、`std_world`、registry 查詢工具 |
+| `vanilla_alpha` | 四個基礎可逆操作的 `op_template`（建立、刪除、移動、選定配方；不登記）、registry 查詢工具 |
 | `vanilla_beta` | 把四個操作包成 `op_templates`、軸名稱、歷史節點中繼資料、2× 網格校驗與重疊檢查、`build_graph` |
 | `vanilla_gamma` | `evaluate_world`：依 `vanilla_beta` 的圖計算每個 device 的輸出（未啟用） |
 | `cuboid_device` | 長方體裝置基底類別與形狀產生 |

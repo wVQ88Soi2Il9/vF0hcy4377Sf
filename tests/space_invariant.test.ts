@@ -55,21 +55,6 @@ describe('uid 唯一性（目標）', () =>
 
         expect(() => del.inverse(sp)).toThrowError('Device with UID 7 already exists in space.');
     });
-
-    it('uid 的產生方法可被覆寫，與唯一性的保證無關', () =>
-    {
-        class countdown_world extends vanilla_alpha.std_world
-        {
-            private next = 100;
-            protected override allocate_uid(): core.uid { return String(this.next--); }
-        }
-
-        const w = new countdown_world(world.compose([vanilla_alpha.manifest]), new core.space([8, 8]), 'w');
-        const a = w.create_device(mock_device, def_id, [0, 0]);
-        const b = w.create_device(mock_device, def_id, [2, 0]);
-
-        expect([a.device_uid, b.device_uid]).toEqual(['100', '99']);
-    });
 });
 
 describe('space 只取決於游標所在節點，與走法無關', () =>
@@ -79,7 +64,8 @@ describe('space 只取決於游標所在節點，與走法無關', () =>
         const rng = make_rng(seed);
         const pick = <T>(items: T[]): T => items[Math.floor(rng() * items.length)];
 
-        const w = new vanilla_alpha.std_world(world.compose([vanilla_alpha.manifest]), new core.space([32, 32]), 'w');
+        const w = new world.pure_world(world.compose([vanilla_alpha.manifest]), new core.space([32, 32]), 'w');
+        let next_uid = 0;
         const seen = new Map<core.uid, string>();
         let revisits = 0;
 
@@ -90,19 +76,19 @@ describe('space 只取決於游標所在節點，與走法無關', () =>
 
             if (uids.length === 0 || r < 0.25)
             {
-                w.create_device(mock_device, def_id, [Math.floor(rng() * 16) * 2, Math.floor(rng() * 16) * 2]);
+                w.submit([vanilla_alpha.create_device_template.create(w, String(next_uid++), mock_device, def_id, [Math.floor(rng() * 16) * 2, Math.floor(rng() * 16) * 2])]);
             }
             else if (r < 0.45)
             {
-                w.move_device(pick(uids), [Math.floor(rng() * 16) * 2, Math.floor(rng() * 16) * 2]);
+                w.submit([vanilla_alpha.move_device_template.create(w, pick(uids), [Math.floor(rng() * 16) * 2, Math.floor(rng() * 16) * 2])]);
             }
             else if (r < 0.55)
             {
-                w.select_recipe(pick(uids), rng() < 0.2 ? undefined : { namespace: 'test', id: `r${Math.floor(rng() * 3)}` });
+                w.submit([vanilla_alpha.select_recipe_template.create(w, pick(uids), rng() < 0.2 ? undefined : { namespace: 'test', id: `r${Math.floor(rng() * 3)}` })]);
             }
             else if (r < 0.62)
             {
-                w.delete_device(pick(uids));
+                w.submit([vanilla_alpha.delete_device_template.create(w, pick(uids))]);
             }
             else
             {

@@ -75,10 +75,10 @@ describe('world commit', () =>
     it('submit / undo / redo / jump 都經由 commit 發出 change_set', () =>
     {
         const { catalog, log } = setup();
-        const w = new vanilla_alpha.std_world(catalog, new core.space([8, 8]), 'w');
+        const w = new world.pure_world(catalog, new core.space([8, 8]), 'w');
 
-        const dev = w.create_device(mock_device, def_id, [0, 0]);
-        w.move_device(dev.device_uid, [2, 2]);
+        w.submit([vanilla_alpha.create_device_template.create(w, 'a', mock_device, def_id, [0, 0])]);
+        w.submit([vanilla_alpha.move_device_template.create(w, 'a', [2, 2])]);
         w.undo();
         w.redo();
         w.jump_to_root();
@@ -92,37 +92,37 @@ describe('world commit', () =>
             ['inverse:move_device', 'inverse:create_device'],
             ['execute:create_device', 'execute:move_device']
         ]);
-        expect(w.space.devices.get(dev.device_uid)!.position).toEqual([2, 2]);
+        expect(w.space.devices.get('a')!.position).toEqual([2, 2]);
     });
 
     it('跨分支 jump_to 的 change_set 先 inverse 至 LCA 再 execute', () =>
     {
         const { catalog, log } = setup();
-        const w = new vanilla_alpha.std_world(catalog, new core.space([8, 8]), 'w');
+        const w = new world.pure_world(catalog, new core.space([8, 8]), 'w');
 
-        const dev = w.create_device(mock_device, def_id, [0, 0]);
-        w.move_device(dev.device_uid, [2, 2]);
+        w.submit([vanilla_alpha.create_device_template.create(w, 'a', mock_device, def_id, [0, 0])]);
+        w.submit([vanilla_alpha.move_device_template.create(w, 'a', [2, 2])]);
         const branch_a = w.history.current_history_uid;
         w.undo();
-        w.select_recipe(dev.device_uid, { namespace: 'test', id: 'r' });
+        w.submit([vanilla_alpha.select_recipe_template.create(w, 'a', { namespace: 'test', id: 'r' })]);
         log.length = 0;
 
         w.jump_to(branch_a);
 
         expect(log.map(e => e.change)).toEqual([['inverse:select_recipe', 'execute:move_device']]);
-        expect(w.space.devices.get(dev.device_uid)!.position).toEqual([2, 2]);
-        expect(w.space.devices.get(dev.device_uid)!.selected_recipe_id).toBeUndefined();
+        expect(w.space.devices.get('a')!.position).toEqual([2, 2]);
+        expect(w.space.devices.get('a')!.selected_recipe_id).toBeUndefined();
     });
 
     it('未移動時不發出事件；刪除歷史節點以空 change_set 發出', () =>
     {
         const { catalog, log } = setup();
-        const w = new vanilla_alpha.std_world(catalog, new core.space([8, 8]), 'w');
+        const w = new world.pure_world(catalog, new core.space([8, 8]), 'w');
 
         expect(w.undo()).toBe(false);
         expect(log).toEqual([]);
 
-        w.create_device(mock_device, def_id, [0, 0]);
+        w.submit([vanilla_alpha.create_device_template.create(w, 'a', mock_device, def_id, [0, 0])]);
         const leaf = w.history.current_history_uid;
         w.undo();
         log.length = 0;
@@ -134,12 +134,12 @@ describe('world commit', () =>
     it('handler 全域共用，但 pack_state 與事件只作用於傳入的 world', () =>
     {
         const { catalog, log } = setup();
-        const w1 = new vanilla_alpha.std_world(catalog, new core.space([8, 8]), 'w1');
-        const w2 = new vanilla_alpha.std_world(catalog, new core.space([8, 8]), 'w2');
+        const w1 = new world.pure_world(catalog, new core.space([8, 8]), 'w1');
+        const w2 = new world.pure_world(catalog, new core.space([8, 8]), 'w2');
 
-        w1.create_device(mock_device, def_id, [0, 0]);
-        w1.create_device(mock_device, def_id, [2, 0]);
-        w2.create_device(mock_device, def_id, [0, 0]);
+        w1.submit([vanilla_alpha.create_device_template.create(w1, 'a', mock_device, def_id, [0, 0])]);
+        w1.submit([vanilla_alpha.create_device_template.create(w1, 'b', mock_device, def_id, [2, 0])]);
+        w2.submit([vanilla_alpha.create_device_template.create(w2, 'a', mock_device, def_id, [0, 0])]);
 
         expect(w1.pack_state.get('observer')).toEqual({ count: 2 });
         expect(w2.pack_state.get('observer')).toEqual({ count: 1 });
