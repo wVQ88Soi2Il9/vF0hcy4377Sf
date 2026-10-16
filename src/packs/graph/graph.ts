@@ -1,5 +1,5 @@
 import * as core from '@/core';
-import { add_vector, vector_to_string, check_map_overlap } from './spatial';
+import { add_vector, vector_to_string, check_map_overlap } from '@/packs/vanilla_beta';
 
 /**
  * 一條邊：from 的第 from_index 個 output 埠接到 to 的第 to_index 個 input 埠。
