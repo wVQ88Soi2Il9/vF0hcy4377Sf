@@ -28,9 +28,9 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     {
         throw new Error('container must be attached to the document.');
     }
-    if (doc.querySelector('[data-basic_ui_root]') !== null)
+    if (doc.querySelector('[data-panel_root]') !== null)
     {
-        throw new Error('A basic_ui root is already mounted in this document.');
+        throw new Error('A panel root is already mounted in this document.');
     }
     const declarations = list_panels(target_world.catalog.registry);
     check_layout(layout, declarations);
@@ -49,8 +49,8 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
             throw new Error(`${label}: render must return a new element that is not placed anywhere.`);
         }
         seen.add(content);
-        content.dataset.basic_ui_pack = namespace;
-        content.dataset.basic_ui_name = id;
+        content.dataset.panel_pack = namespace;
+        content.dataset.panel_name = id;
         const refuse = (): never =>
         {
             throw new Error(`${label} is not collapsible.`);
@@ -88,7 +88,7 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     }
 
     const element = doc.createElement('div');
-    element.dataset.basic_ui_root = '';
+    element.dataset.panel_root = '';
     element.style.width = '100%';
     element.style.height = '100%';
     element.style.overflow = 'hidden';

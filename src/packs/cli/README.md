@@ -25,5 +25,5 @@
 
 ## Todo
 
-- **使用介面由 `basic_ui` 控制**：輸入一行指令、顯示結果與錯誤屬於 `basic_ui`；cli 只提供 `run`，不自行掛到 DevTools Console。等 `basic_ui` 完成後接上（docket plan 20261015175737，需要 20261015175206）。
+- **使用介面由 `panel` 控制**：輸入一行指令、顯示結果與錯誤屬於 `panel`；cli 只提供 `run`，不自行掛到 DevTools Console。等 `panel` 完成後接上（docket plan 20261015175737，需要 20261015175206）。
 - **`create_device` 目前在 app 內沒有可建立的類別**：`vanilla_beta` 已註冊 4 個 `op_templates`，但 `ENABLED_PACKS` 內沒有 pack 在 `devices` 註冊具體裝置類別。

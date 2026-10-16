@@ -1,4 +1,4 @@
-# basic_ui — 功能草稿
+# panel — 功能草稿
 
 為 cleanroom design 而留:只列原實作提供的功能,不描述做法。原始碼見 git 歷史(刪除前最後一版:`7d4889b`)。
 

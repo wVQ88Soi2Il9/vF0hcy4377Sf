@@ -1,5 +1,5 @@
 import * as world from '@/world';
-import * as basic_ui from '@/packs/basic_ui';
+import * as panel from '@/packs/panel';
 
 const collapsible_names = ['explorer', 'log', 'inspector'];
 
@@ -30,7 +30,7 @@ function render_world(target_world: world.pure_world): HTMLElement
     for (const name of collapsible_names)
     {
         const button = document.createElement('button');
-        button.dataset.basic_ui_demo_toggle = name;
+        button.dataset.panel_demo_toggle = name;
         button.textContent = `toggle ${name}`;
         button.style.marginRight = '6px';
         bar.appendChild(button);
@@ -51,7 +51,7 @@ function render_log(): HTMLElement
     return el;
 }
 
-export const panels: Record<string, basic_ui.panel_declaration> =
+export const panels: Record<string, panel.panel_declaration> =
 {
     explorer:  { render: () => block('explorer', '#252526') },
     world:     { render: render_world },
@@ -63,13 +63,13 @@ export const panels: Record<string, basic_ui.panel_declaration> =
  * 示範版面：左 explorer、中間上下切成 world / log、右 inspector；三個側邊區塊可收合。
  * explorer 與 inspector 的上限示範 CSS 長度（vw、max()）。
  */
-export const layout: basic_ui.layout_node =
+export const layout: panel.layout_node =
 {
     kind: 'group',
     axis: 'x',
     children:
     [
-        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'explorer' } }, size: 220, min: 120, max: '40vw', collapsible: true, collapsed_size: 0 },
+        { node: { kind: 'panel', panel: { namespace: 'panel_demo', id: 'explorer' } }, size: 220, min: 120, max: '40vw', collapsible: true, collapsed_size: 0 },
         {
             node:
             {
@@ -77,27 +77,27 @@ export const layout: basic_ui.layout_node =
                 axis: 'y',
                 children:
                 [
-                    { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'world' } }, size: 500, min: 200, max: Infinity, collapsible: false },
-                    { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'log' } }, size: 180, min: 80, max: 400, collapsible: true, collapsed_size: 0 }
+                    { node: { kind: 'panel', panel: { namespace: 'panel_demo', id: 'world' } }, size: 500, min: 200, max: Infinity, collapsible: false },
+                    { node: { kind: 'panel', panel: { namespace: 'panel_demo', id: 'log' } }, size: 180, min: 80, max: 400, collapsible: true, collapsed_size: 0 }
                 ]
             },
             size: 800, min: 300, max: Infinity, collapsible: false
         },
-        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'inspector' } }, size: 240, min: 150, max: 'max(25vw, 300px)', collapsible: true, collapsed_size: 0 }
+        { node: { kind: 'panel', panel: { namespace: 'panel_demo', id: 'inspector' } }, size: 240, min: 150, max: 'max(25vw, 300px)', collapsible: true, collapsed_size: 0 }
     ]
 };
 
 /**
  * 把 world 區塊裡的按鈕接到對應 panel 的 collapse / expand。
  */
-export function wire_controls(root: basic_ui.ui_root): void
+export function wire_controls(root: panel.ui_root): void
 {
-    const mine = root.panels.get('basic_ui_demo')!;
+    const mine = root.panels.get('panel_demo')!;
     const world_content = mine.get('world')!.content;
     for (const name of collapsible_names)
     {
         const handle = mine.get(name)!;
-        const button = world_content.querySelector(`[data-basic_ui_demo_toggle="${name}"]`)!;
+        const button = world_content.querySelector(`[data-panel_demo_toggle="${name}"]`)!;
         button.addEventListener('click', () => (handle.is_collapsed() ? handle.expand() : handle.collapse()));
     }
 }

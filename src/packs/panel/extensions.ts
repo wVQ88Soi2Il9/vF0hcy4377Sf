@@ -20,7 +20,7 @@ export function list_panels(registry: core.pack_registry): panel_declarations
     const result = new Map<string, Map<string, panel_declaration>>();
     for (const [pack_id, pack] of registry)
     {
-        const info = pack.other_info?.['basic_ui'] as { panels: Record<string, panel_declaration> } | undefined;
+        const info = pack.other_info?.['panel'] as { panels: Record<string, panel_declaration> } | undefined;
         if (info === undefined)
         {
             continue;

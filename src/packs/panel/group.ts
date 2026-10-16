@@ -41,7 +41,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
     let drag: drag_state | null = null;
 
     const element = doc.createElement('div');
-    element.dataset.basic_ui_group = group_axis;
+    element.dataset.panel_group = group_axis;
     element.style.display = 'flex';
     element.style.flexDirection = group_axis === 'x' ? 'row' : 'column';
     element.style.overflow = 'auto';
@@ -92,7 +92,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
                 slot.style[min_length] = to_css(child.min);
                 slot.style[max_length] = to_css(child.max);
             }
-            slot.dataset.basic_ui_collapsed = String(collapsed[i]);
+            slot.dataset.panel_collapsed = String(collapsed[i]);
         });
         separators.forEach((separator, i) =>
         {
@@ -127,7 +127,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
         // 先清除狀態：releasePointerCapture 可能同步觸發 lostpointercapture
         const { index, pointer_id } = drag;
         drag = null;
-        delete separators[index].dataset.basic_ui_dragging;
+        delete separators[index].dataset.panel_dragging;
         if (separators[index].hasPointerCapture(pointer_id))
         {
             separators[index].releasePointerCapture(pointer_id);
@@ -173,7 +173,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
     function create_separator(index: number): HTMLElement
     {
         const separator = doc.createElement('div');
-        separator.dataset.basic_ui_separator = String(index);
+        separator.dataset.panel_separator = String(index);
         separator.setAttribute('role', 'separator');
         separator.setAttribute('aria-orientation', group_axis === 'x' ? 'vertical' : 'horizontal');
         separator.style.flex = `0 0 ${separator_size}px`;
@@ -194,7 +194,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
             });
             event.preventDefault();
             separator.setPointerCapture(event.pointerId);
-            separator.dataset.basic_ui_dragging = '';
+            separator.dataset.panel_dragging = '';
             // 次像素誤差可能略超出上下限
             const start = slots.map(slot => slot.getBoundingClientRect()[length]);
             start[index] = Math.min(limits[0][1], Math.max(limits[0][0], start[index]));
@@ -224,7 +224,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
             element.appendChild(separator);
         }
         const slot = doc.createElement('div');
-        slot.dataset.basic_ui_slot = String(i);
+        slot.dataset.panel_slot = String(i);
         slot.style.overflow = 'hidden';
         slot.appendChild(child_element);
         slots.push(slot);
