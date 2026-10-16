@@ -25,7 +25,7 @@ const section = (text: string) => () =>
     return el;
 };
 
-function leaf(namespace: string, id: string, size: number, min = 0, max = Infinity): basic_ui.layout_child
+function leaf(namespace: string, id: string, size: number, min = 0, max = Infinity): { node: basic_ui.layout_panel; size: number; min: number; max: number; collapsible: false }
 {
     return { node: { kind: 'panel', panel: { namespace, id } }, size, min, max, collapsible: false };
 }
@@ -101,7 +101,6 @@ describe('basic_ui mount_ui_root checks', () =>
         const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [leaf('a', 'p', 10), leaf('a', 'q', 10)] };
         const mount = (p: () => HTMLElement, q: () => HTMLElement = section('q')) => () =>
             basic_ui.mount_ui_root(container(), make_world({ a: { p, q } }), layout);
-        expect(mount(() => 'text' as unknown as HTMLElement)).toThrow(/must return an HTMLElement/);
         const placed = document.createElement('div');
         document.body.appendChild(placed);
         expect(mount(() => placed)).toThrow(/new element/);
@@ -111,7 +110,7 @@ describe('basic_ui mount_ui_root checks', () =>
 
         let calls = 0;
         const counting = make_world({ a: { p: () => { calls++; return document.createElement('div'); } } });
-        expect(() => basic_ui.mount_ui_root(container(), counting, { kind: 'group', axis: 'x', children: [] })).toThrow(/non-empty/);
+        expect(() => basic_ui.mount_ui_root(container(), counting, { kind: 'group', axis: 'x', children: [] })).toThrow(/no children/);
         expect(calls).toBe(0);
     });
 });
@@ -303,15 +302,5 @@ describe('basic_ui collapse', () =>
         expect(separator.hasPointerCapture(1)).toBe(false);
         left.expand();
         expect(grow(left.content)).toBeCloseTo(250);
-    });
-
-    it('rejects a collapsible group child', () =>
-    {
-        const layout =
-        {
-            kind: 'group', axis: 'x',
-            children: [{ node: { kind: 'group', axis: 'y', children: [leaf('a', 'p', 10)] }, size: 10, min: 0, max: 100, collapsible: true, collapsed_size: 0 }]
-        };
-        expect(() => basic_ui.mount_ui_root(container(), make_world({ a: { p: section('p') } }), layout)).toThrow(/only panel children can be collapsible/);
     });
 });

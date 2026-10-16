@@ -14,7 +14,7 @@ function panels_pack(pack_id: string, names: string[]): core.pack_module
     return { pack_id, other_info: { basic_ui: { panels: Object.fromEntries(names.map(n => [n, { render }])) } } };
 }
 
-function leaf(namespace: string, id: string, size = 100): basic_ui.layout_child
+function leaf(namespace: string, id: string, size = 100): { node: basic_ui.layout_panel; size: number; min: number; max: number; collapsible: false }
 {
     return { node: { kind: 'panel', panel: { namespace, id } }, size, min: 0, max: Infinity, collapsible: false };
 }
@@ -29,15 +29,10 @@ describe('basic_ui list_panels', () =>
         expect(result.get('b')!.get('log')!.render).toBe(render);
     });
 
-    it('rejects malformed other_info.basic_ui', () =>
+    it('requires render to be a function', () =>
     {
-        const list = (other_info: Record<string, unknown>) => () => basic_ui.list_panels(registry({ pack_id: 'x', other_info }));
-        expect(list({ basic_ui: 5 })).toThrow(/other_info.basic_ui must be an object/);
-        expect(list({ basic_ui: { panels: {}, other: 1 } })).toThrow(/unknown key "other"/);
-        expect(list({ basic_ui: {} })).toThrow(/panels must be an object/);
-        expect(list({ basic_ui: { panels: { p: 'text' } } })).toThrow(/panel "p" of pack "x" must be an object/);
-        expect(list({ basic_ui: { panels: { p: {} } } })).toThrow(/render/);
-        expect(list({ basic_ui: { panels: { p: { render, edges: [] } } } })).toThrow(/unknown key "edges"/);
+        const pack = { pack_id: 'x', other_info: { basic_ui: { panels: { p: {} } } } };
+        expect(() => basic_ui.list_panels(registry(pack))).toThrow(/panel "p" of pack "x" must provide render/);
     });
 });
 
@@ -52,7 +47,7 @@ describe('basic_ui check_layout', () =>
             axis: 'x',
             children:
             [
-                { ...leaf('a', 'left', 200), min: 100, max: 400, collapsible: true, collapsed_size: 20 },
+                { node: { kind: 'panel', panel: { namespace: 'a', id: 'left' } }, size: 200, min: 100, max: 400, collapsible: true, collapsed_size: 20 },
                 {
                     node: { kind: 'group', axis: 'y', children: [leaf('a', 'main'), leaf('b', 'log')] },
                     size: 600, min: 0, max: Infinity, collapsible: false
@@ -71,63 +66,39 @@ describe('basic_ui check_layout', () =>
     it('requires every declared panel to be placed exactly once', () =>
     {
         const missing = full();
-        (missing.children as basic_ui.layout_child[]).pop();
+        missing.children.pop();
         expect(() => basic_ui.check_layout(missing, declarations)).toThrow(/panel "main" of pack "a" is declared but not placed/);
 
         const twice = full();
-        (twice.children as basic_ui.layout_child[]).push(leaf('a', 'left'));
+        twice.children.push(leaf('a', 'left'));
         expect(() => basic_ui.check_layout(twice, declarations)).toThrow(/places panel "left" of pack "a" more than once/);
 
         const unknown = full();
-        (unknown.children as basic_ui.layout_child[]).push(leaf('a', 'nope'));
+        unknown.children.push(leaf('a', 'nope'));
         expect(() => basic_ui.check_layout(unknown, declarations)).toThrow(/unknown panel "nope" of pack "a"/);
     });
 
     it('does not confuse namespaces that contain a colon', () =>
     {
         const tricky = basic_ui.list_panels(registry(panels_pack('a:b', ['c']), panels_pack('a', ['b:c'])));
-        const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [leaf('a:b', 'c'), leaf('a', 'b:c')] };
-        expect(() => basic_ui.check_layout(layout, tricky)).not.toThrow();
+        expect(() => basic_ui.check_layout({ kind: 'group', axis: 'x', children: [leaf('a:b', 'c'), leaf('a', 'b:c')] }, tricky)).not.toThrow();
     });
 
-    it('rejects bad structure', () =>
+    it('rejects an empty group and bad numbers', () =>
     {
-        const check = (layout: unknown) => () => basic_ui.check_layout(layout, declarations);
-        expect(check(null)).toThrow(/layout must be an object/);
-        expect(check({ kind: 'row' })).toThrow(/kind must be/);
-        expect(check({ kind: 'group', axis: 'z', children: [] })).toThrow(/axis/);
-        expect(check({ kind: 'group', axis: 'x', children: [] })).toThrow(/non-empty array/);
-        expect(check({ kind: 'group', axis: 'x', children: [], panel: {} })).toThrow(/unknown key "panel"/);
-        expect(check({ kind: 'panel', panel: { namespace: 'a', id: 'left' }, axis: 'x' })).toThrow(/unknown key "axis"/);
-        expect(check({ kind: 'panel', panel: { namespace: 'a', id: 1 } })).toThrow(/string namespace and id/);
-    });
-
-    it('rejects bad child values', () =>
-    {
-        const with_child = (patch: Record<string, unknown>) =>
+        expect(() => basic_ui.check_layout({ kind: 'group', axis: 'x', children: [] }, declarations)).toThrow(/no children/);
+        const with_child = (patch: Partial<{ size: number; min: number; max: number; collapsed_size: number }>) =>
         {
             const layout = full();
             Object.assign(layout.children[0], patch);
             return () => basic_ui.check_layout(layout, declarations);
         };
-        expect(with_child({ size: 50 })).toThrow(/outside/);
-        expect(with_child({ size: 500 })).toThrow(/outside/);
-        expect(with_child({ size: NaN })).toThrow(/outside/);
-        expect(with_child({ size: '200' })).toThrow(/numeric/);
-        expect(with_child({ min: -1 })).toThrow(/min/);
-        expect(with_child({ max: 50 })).toThrow(/max/);
-        expect(with_child({ collapsible: 'yes' })).toThrow(/collapsible/);
-        expect(with_child({ collapsed_size: undefined })).toThrow(/collapsed_size/);
+        expect(with_child({ size: 50 })).toThrow(/min ≤ size ≤ max/);
+        expect(with_child({ size: 500 })).toThrow(/min ≤ size ≤ max/);
+        expect(with_child({ size: NaN })).toThrow(/min ≤ size ≤ max/);
+        expect(with_child({ min: -1, collapsed_size: 0 })).toThrow(/min ≤ size ≤ max/);
+        expect(with_child({ max: 50 })).toThrow(/min ≤ size ≤ max/);
         expect(with_child({ collapsed_size: 150 })).toThrow(/collapsed_size/);
-        expect(with_child({ collapsible: false })).toThrow(/only allowed when collapsible/);
-        expect(with_child({ weight: 1 })).toThrow(/unknown key "weight"/);
         expect(with_child({ max: Infinity, size: 300 })).not.toThrow();
-    });
-
-    it('only panel children can be collapsible', () =>
-    {
-        const layout = full();
-        Object.assign(layout.children[1], { collapsible: true, collapsed_size: 0 });
-        expect(() => basic_ui.check_layout(layout, declarations)).toThrow(/only panel children can be collapsible/);
     });
 });

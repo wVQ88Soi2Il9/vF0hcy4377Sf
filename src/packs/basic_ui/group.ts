@@ -1,5 +1,3 @@
-import { resize_pair } from './layout_math';
-import type { limit } from './layout_math';
 import type { axis, layout_child } from './layout_tree';
 
 /**
@@ -11,14 +9,13 @@ export const separator_size = 4;
  * 一個 group 的 DOM 與狀態。尺寸交給瀏覽器的 flexbox：
  * 每個 slot 為 flex: <weight> 1 0px，並以 min/max-width（或 height）設上下限；
  * 容器縮放時由瀏覽器依 weights 等比分配、夾在上下限內，放不下所有 min 時溢出捲動。
- * 拖曳時把展開中子區塊的 weights 設為目前的 px（兩側為拖曳後的新 px）；收合把該 slot 固定為 collapsed_size。
+ * 收合把 slot 固定為 collapsed_size，展開恢復原 weight。
  */
 export interface group_view
 {
     readonly element: HTMLElement;
     is_collapsed(index: number): boolean;
-    collapse(index: number): void;
-    expand(index: number): void;
+    set_collapsed(index: number, collapsed: boolean): void;
 }
 
 interface drag_state
@@ -30,14 +27,21 @@ interface drag_state
     changed:    boolean;
 }
 
-export function create_group(doc: Document, group_axis: axis, children: readonly layout_child[], children_elements: HTMLElement[]): group_view
+function clamp(value: number, child: layout_child): number
+{
+    return Math.min(child.max, Math.max(child.min, value));
+}
+
+export function create_group(doc: Document, group_axis: axis, children: layout_child[], children_elements: HTMLElement[]): group_view
 {
     const main = group_axis === 'x' ? 'clientX' : 'clientY';
     const length = group_axis === 'x' ? 'width' : 'height';
     const min_length = group_axis === 'x' ? 'minWidth' : 'minHeight';
     const max_length = group_axis === 'x' ? 'maxWidth' : 'maxHeight';
     const weights = children.map(c => c.size);
-    const collapsed: boolean[] = children.map(() => false);
+    const collapsed = children.map(() => false);
+    const slots: HTMLElement[] = [];
+    const separators: HTMLElement[] = [];
     let drag: drag_state | null = null;
 
     const element = doc.createElement('div');
@@ -48,40 +52,17 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
     element.style.width = '100%';
     element.style.height = '100%';
 
-    function limits(): limit[]
-    {
-        return children.map((c, i) =>
-        {
-            if (collapsed[i] && c.collapsible)
-            {
-                return { min: c.collapsed_size, max: c.collapsed_size };
-            }
-            return { min: c.min, max: c.max };
-        });
-    }
-
-    const slots: HTMLElement[] = [];
-    const separators: HTMLElement[] = [];
-
     function apply(): void
     {
-        const current = limits();
-        slots.forEach((slot, i) =>
+        children.forEach((child, i) =>
         {
-            slot.style.flex = collapsed[i] ? `0 0 ${current[i].min}px` : `${weights[i]} 1 0px`;
-            slot.style[min_length] = `${current[i].min}px`;
-            slot.style[max_length] = current[i].max === Infinity ? 'none' : `${current[i].max}px`;
+            const slot = slots[i];
+            const pinned = collapsed[i] && child.collapsible ? child.collapsed_size : null;
+            slot.style.flex = pinned === null ? `${weights[i]} 1 0px` : `0 0 ${pinned}px`;
+            slot.style[min_length] = `${pinned ?? child.min}px`;
+            slot.style[max_length] = pinned !== null ? `${pinned}px` : child.max === Infinity ? 'none' : `${child.max}px`;
             slot.dataset.basic_ui_collapsed = String(collapsed[i]);
         });
-    }
-
-    /**
-     * 量目前各 slot 的 px；次像素誤差可能略超出上下限，夾回去。
-     */
-    function measure(): number[]
-    {
-        const current = limits();
-        return slots.map((slot, i) => Math.min(current[i].max, Math.max(current[i].min, slot.getBoundingClientRect()[length])));
     }
 
     function end_drag(): void
@@ -96,6 +77,45 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         if (separators[index].hasPointerCapture(pointer_id))
         {
             separators[index].releasePointerCapture(pointer_id);
+        }
+    }
+
+    /**
+     * 拖曳第 index 條分割線：只動兩側，各自夾在上下限內；其餘子區塊的 weights 改為與目前 px 成比例
+     * （維持原 weight 總和），flexbox 依此分配會剛好重現畫面，不會跳動。
+     */
+    function on_move(event: PointerEvent): void
+    {
+        if (drag === null || event.pointerId !== drag.pointer_id)
+        {
+            return;
+        }
+        const a = drag.index;
+        const b = a + 1;
+        const start = drag.start;
+        const lo = Math.max(children[a].min - start[a], start[b] - children[b].max);
+        const hi = Math.min(children[a].max - start[a], start[b] - children[b].min);
+        const d = Math.min(hi, Math.max(lo, event[main] - drag.start_at));
+        // 還沒真正改變尺寸（原地按下、溢出時兩側都卡在上下限）就不動 weights，保留原比例
+        if (!drag.changed && d === 0)
+        {
+            return;
+        }
+        drag.changed = true;
+        const next = [...start];
+        next[a] = clamp(start[a] + d, children[a]);
+        next[b] = clamp(start[b] - d, children[b]);
+
+        const open = children.map((_, i) => i).filter(i => !collapsed[i]);
+        const old_sum = open.reduce((total, i) => total + weights[i], 0);
+        const new_sum = open.reduce((total, i) => total + next[i], 0);
+        if (new_sum > 0)
+        {
+            for (const i of open)
+            {
+                weights[i] = next[i] * old_sum / new_sum;
+            }
+            apply();
         }
     }
 
@@ -116,35 +136,11 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
             }
             event.preventDefault();
             separator.setPointerCapture(event.pointerId);
-            drag = { pointer_id: event.pointerId, index, start_at: event[main], start: measure(), changed: false };
+            // 次像素誤差可能讓量到的 px 略超出上下限，夾回去
+            const start = slots.map((slot, i) => (collapsed[i] ? 0 : clamp(slot.getBoundingClientRect()[length], children[i])));
+            drag = { pointer_id: event.pointerId, index, start_at: event[main], start, changed: false };
         });
-        separator.addEventListener('pointermove', event =>
-        {
-            if (drag === null || event.pointerId !== drag.pointer_id)
-            {
-                return;
-            }
-            const next = resize_pair(drag.start, limits(), drag.index, event[main] - drag.start_at);
-            // 還沒真正改變尺寸（原地按下、溢出時兩側都卡在上下限）就不動 weights，保留原比例
-            if (!drag.changed && next[drag.index] === drag.start[drag.index])
-            {
-                return;
-            }
-            drag.changed = true;
-            // 展開中的子區塊 weights 改為與目前 px 成比例：flexbox 依此分配會剛好重現畫面，其他子區塊不會跳動。
-            // 縮放成原本的 weight 總和，讓收合中子區塊的 weight 仍在同一個尺度，展開時大小不變
-            const open = next.map((_, i) => i).filter(i => !collapsed[i]);
-            const old_sum = open.reduce((total, i) => total + weights[i], 0);
-            const new_sum = open.reduce((total, i) => total + next[i], 0);
-            if (new_sum > 0)
-            {
-                for (const i of open)
-                {
-                    weights[i] = next[i] * old_sum / new_sum;
-                }
-                apply();
-            }
-        });
+        separator.addEventListener('pointermove', on_move);
         for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
         {
             separator.addEventListener(type, event =>
@@ -174,32 +170,15 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         element.appendChild(slot);
     });
 
-    function collapsible_child(index: number): void
-    {
-        const child = children[index];
-        if (child === undefined || !child.collapsible)
-        {
-            throw new Error(`Child ${index} is not collapsible.`);
-        }
-    }
-
     apply();
 
     return {
         element,
         is_collapsed: (index: number) => collapsed[index],
-        collapse(index: number): void
+        set_collapsed(index: number, value: boolean): void
         {
-            collapsible_child(index);
             end_drag();
-            collapsed[index] = true;
-            apply();
-        },
-        expand(index: number): void
-        {
-            collapsible_child(index);
-            end_drag();
-            collapsed[index] = false;
+            collapsed[index] = value;
             apply();
         }
     };

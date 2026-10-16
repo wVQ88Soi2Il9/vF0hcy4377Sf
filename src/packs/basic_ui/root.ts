@@ -1,10 +1,9 @@
 import * as world from '@/world';
-import { list_panels } from './extensions';
+import { list_panels, panel_label } from './extensions';
 import { check_layout } from './layout_tree';
-import type { layout_node } from './layout_tree';
+import type { layout_node, layout_panel } from './layout_tree';
 import { create_group } from './group';
 import type { group_view } from './group';
-import { panel_label } from './validate';
 
 /**
  * 掛上的一個 panel。收合、展開作用在它所在 group 的那個子區塊上。
@@ -27,10 +26,10 @@ export interface ui_root
 
 /**
  * 在 container 內建立全頁唯一的根容器，依版面樹（layout）放置各 pack 宣告的 panel。
- * 先驗證 container、宣告與版面樹，再呼叫所有 render 並檢查結果，最後才建立 DOM 並放進 container。
+ * DOM 先在 container 外建好，全部成功才放進 container；中途報錯時 container 不變。
  * container 需已接上 document，且有確定的寬高（根容器為 100% × 100%）。
  */
-export function mount_ui_root(container: HTMLElement, target_world: world.pure_world, layout: unknown): ui_root
+export function mount_ui_root(container: HTMLElement, target_world: world.pure_world, layout: layout_node): ui_root
 {
     const doc = container.ownerDocument;
     if (!container.isConnected)
@@ -42,74 +41,59 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
         throw new Error('A basic_ui root is already mounted in this document.');
     }
     const declarations = list_panels(target_world.catalog.registry);
-    const tree = check_layout(layout, declarations);
-
-    // 先呼叫所有 render：結果必須是全新、未放置、彼此不同的 HTMLElement
-    const contents = new Map<string, Map<string, HTMLElement>>();
-    const seen = new Set<HTMLElement>();
-    for (const [pack_id, by_name] of declarations)
-    {
-        const rendered = new Map<string, HTMLElement>();
-        for (const [name, declaration] of by_name)
-        {
-            const label = panel_label(pack_id, name);
-            const content = declaration.render(target_world);
-            if (!(content instanceof HTMLElement))
-            {
-                throw new Error(`${label}: render must return an HTMLElement.`);
-            }
-            if (content.parentNode !== null || seen.has(content))
-            {
-                throw new Error(`${label}: render must return a new element that is not placed anywhere.`);
-            }
-            seen.add(content);
-            rendered.set(name, content);
-        }
-        contents.set(pack_id, rendered);
-    }
+    check_layout(layout, declarations);
 
     const panels = new Map<string, Map<string, panel_handle>>();
+    const seen = new Set<HTMLElement>();
 
-    function register(pack_id: string, name: string, content: HTMLElement, group: group_view | null, index: number, collapsible: boolean): void
+    /**
+     * 呼叫 render 並登記 handle。render 必須回傳全新、未放置的元素（同一元素被兩個 panel 共用時會被搬走）。
+     */
+    function mount_panel(node: layout_panel, group: (() => group_view) | null, index: number, collapsible: boolean): HTMLElement
     {
-        content.dataset.basic_ui_pack = pack_id;
-        content.dataset.basic_ui_name = name;
+        const { namespace, id } = node.panel;
+        const label = panel_label(namespace, id);
+        const content = declarations.get(namespace)!.get(id)!.render(target_world);
+        if (content.parentNode !== null || seen.has(content))
+        {
+            throw new Error(`${label}: render must return a new element that is not placed anywhere.`);
+        }
+        seen.add(content);
+        content.dataset.basic_ui_pack = namespace;
+        content.dataset.basic_ui_name = id;
         const refuse = (): never =>
         {
-            throw new Error(`${panel_label(pack_id, name)} is not collapsible.`);
+            throw new Error(`${label} is not collapsible.`);
         };
         const handle: panel_handle = group !== null && collapsible
             ? {
                 content,
                 collapsible: true,
-                is_collapsed: () => group.is_collapsed(index),
-                collapse: () => group.collapse(index),
-                expand: () => group.expand(index)
+                is_collapsed: () => group().is_collapsed(index),
+                collapse: () => group().set_collapsed(index, true),
+                expand: () => group().set_collapsed(index, false)
             }
             : { content, collapsible: false, is_collapsed: () => false, collapse: refuse, expand: refuse };
-        if (!panels.has(pack_id))
+        if (!panels.has(namespace))
         {
-            panels.set(pack_id, new Map());
+            panels.set(namespace, new Map());
         }
-        panels.get(pack_id)!.set(name, handle);
+        panels.get(namespace)!.set(id, handle);
+        return content;
     }
 
-    function content_of(node: layout_node & { kind: 'panel' }): HTMLElement
+    function build(node: layout_node): HTMLElement
     {
-        return contents.get(node.panel.namespace)!.get(node.panel.id)!;
-    }
-
-    function build(node: layout_node & { kind: 'group' }): HTMLElement
-    {
-        const elements = node.children.map(child => (child.node.kind === 'panel' ? content_of(child.node) : build(child.node)));
-        const group = create_group(doc, node.axis, node.children, elements);
-        node.children.forEach((child, i) =>
+        if (node.kind === 'panel')
         {
-            if (child.node.kind === 'panel')
-            {
-                register(child.node.panel.namespace, child.node.panel.id, elements[i], group, i, child.collapsible);
-            }
-        });
+            return mount_panel(node, null, 0, false);
+        }
+        // handle 在 group 建好後才會被呼叫，所以以函式延後取得 group
+        let group: group_view | null = null;
+        const elements = node.children.map((child, i) => (child.node.kind === 'group'
+            ? build(child.node)
+            : mount_panel(child.node, () => group!, i, child.collapsible)));
+        group = create_group(doc, node.axis, node.children, elements);
         return group.element;
     }
 
@@ -118,17 +102,7 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     element.style.width = '100%';
     element.style.height = '100%';
     element.style.overflow = 'hidden';
-    if (tree.kind === 'panel')
-    {
-        const content = content_of(tree);
-        register(tree.panel.namespace, tree.panel.id, content, null, 0, false);
-        element.appendChild(content);
-    }
-    else
-    {
-        element.appendChild(build(tree));
-    }
-
+    element.appendChild(build(layout));
     container.appendChild(element);
     return { element, panels };
 }
