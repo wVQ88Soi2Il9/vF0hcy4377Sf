@@ -42,21 +42,16 @@ export function project_ports(dev: core.device, view: basic_renderer.projection_
     return result;
 }
 
-// 示範用：每個軸一格的方塊；顏色取自 view 設在 <svg> 上的 --test_ui_device_fill
-// 埠：第 1 軸兩面為雙向，其餘各軸負面為輸入、正面為輸出
-export class demo_box extends basic_renderer.drawable(cuboid_device.base_cuboid_device)
+// 示範用長方體裝置；顏色取自 view 設在 <svg> 上的 --test_ui_device_fill
+// 埠：每軸兩端各一個（位於第一格的那一列）；第 1 軸兩面為雙向，其餘各軸負面為輸入、正面為輸出
+abstract class demo_cuboid extends basic_renderer.drawable(cuboid_device.base_cuboid_device)
 {
-    public get device_size(): core.vector
-    {
-        return this.position.map(() => 2);
-    }
-
     public get_port(): core.port[]
     {
         const ports: core.port[] = [];
         for (let axis = 0; axis < this.position.length; axis++)
         {
-            for (const side of [0, 2])
+            for (const side of [0, this.device_size[axis]])
             {
                 const offset = this.position.map(() => 1);
                 offset[axis] = side;
@@ -122,5 +117,32 @@ export class demo_box extends basic_renderer.drawable(cuboid_device.base_cuboid_
             g.appendChild(el);
         }
         return g;
+    }
+}
+
+// 每軸一格
+export class demo_box extends demo_cuboid
+{
+    public get device_size(): core.vector
+    {
+        return this.position.map(() => 2);
+    }
+}
+
+// 第 0 軸兩格，其餘一格
+export class demo_bar extends demo_cuboid
+{
+    public get device_size(): core.vector
+    {
+        return this.position.map((_, axis) => axis === 0 ? 4 : 2);
+    }
+}
+
+// 第 0、1 軸各兩格，其餘一格
+export class demo_slab extends demo_cuboid
+{
+    public get device_size(): core.vector
+    {
+        return this.position.map((_, axis) => axis < 2 ? 4 : 2);
     }
 }

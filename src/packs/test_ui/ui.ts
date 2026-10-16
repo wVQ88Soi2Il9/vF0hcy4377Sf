@@ -42,9 +42,39 @@ export const mark_template: core.op_template =
     }
 };
 
+// 所有 test_ui panel 共用的控制項樣式；第一次 render 時掛進 <head>
+const STYLE = `
+.test_ui_panel select, .test_ui_panel input, .test_ui_panel button
+{
+    font: inherit; color: #ddd; background: #2d2d2d;
+    border: 1px solid #444; border-radius: 3px; padding: 2px 6px;
+}
+.test_ui_panel input { width: 100%; box-sizing: border-box; }
+.test_ui_panel input[type=number] { width: 4em; }
+.test_ui_panel button { cursor: pointer; }
+.test_ui_panel button:hover, .test_ui_panel select:hover { background: #383838; }
+.test_ui_panel :focus { outline: 1px solid #4af; border-color: #4af; }
+.test_ui_panel input:disabled { opacity: 0.4; }
+.test_ui_panel [data-test_ui_history_node]:hover { background: #2a2d2e; }
+`;
+
+function ensure_style(): void
+{
+    if (document.head.querySelector('style[data-test_ui_style]'))
+    {
+        return;
+    }
+    const style = document.createElement('style');
+    style.dataset.test_ui_style = '';
+    style.textContent = STYLE;
+    document.head.appendChild(style);
+}
+
 function box(): HTMLElement
 {
+    ensure_style();
     const el = document.createElement('div');
+    el.className = 'test_ui_panel';
     el.style.height = '100%';
     el.style.boxSizing = 'border-box';
     el.style.padding = '8px';
@@ -420,6 +450,111 @@ function render_cli(target_world: world.pure_world): HTMLElement
     return el;
 }
 
+type edit_op = 'create' | 'move' | 'delete';
+
+// 快速編輯裝置：選操作，再選裝置類別（create）或既有裝置（move/delete），輸入座標後送 cli
+function render_edit(target_world: world.pure_world): HTMLElement
+{
+    const el = box();
+    el.style.background = '#1e1e1e';
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.gap = '4px';
+
+    const op = document.createElement('select');
+    op.dataset.test_ui_edit_op = '';
+    for (const value of ['create', 'move', 'delete'])
+    {
+        const option = document.createElement('option');
+        option.value = option.textContent = value;
+        op.appendChild(option);
+    }
+
+    const target = document.createElement('select');
+    target.dataset.test_ui_edit_target = '';
+
+    const pos = document.createElement('input');
+    pos.dataset.test_ui_edit_pos = '';
+    pos.placeholder = '座標，例如 0 0 0';
+
+    const status = document.createElement('div');
+    status.dataset.test_ui_edit_status = '';
+
+    function options(): [string, string][]
+    {
+        if (op.value === 'create')
+        {
+            return [...target_world.catalog.registry].flatMap(([pack_id, pack]) =>
+                Object.keys(pack.devices ?? {}).map((id): [string, string] => [`${pack_id}:${id}`, `${pack_id}:${id}`]));
+        }
+        return [...target_world.space.devices.values()].map((dev): [string, string] =>
+            [dev.device_uid, `${dev.definition_id.namespace}:${dev.definition_id.id} [${dev.position.join(', ')}] ${dev.device_uid.slice(0, 6)}`]);
+    }
+
+    function refresh(): void
+    {
+        const keep = target.value;
+        target.replaceChildren(...options().map(([value, label]) =>
+        {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            return option;
+        }));
+        if ([...target.options].some(option => option.value === keep))
+        {
+            target.value = keep;
+        }
+        pos.disabled = op.value === 'delete';
+    }
+
+    function run(): void
+    {
+        const command: Record<edit_op, string> =
+        {
+            create: `create_device ${target.value} ${pos.value}`,
+            move:   `move_device ${target.value} ${pos.value}`,
+            delete: `delete_device ${target.value}`
+        };
+        try
+        {
+            if (target.value === '')
+            {
+                throw new Error(`no ${op.value === 'create' ? 'device class' : 'device'} to ${op.value}`);
+            }
+            status.textContent = format_result(cli.run(target_world, command[op.value as edit_op]));
+            status.style.color = '#ddd';
+        }
+        catch (error)
+        {
+            status.textContent = error instanceof Error ? error.message : String(error);
+            status.style.color = '#f66';
+        }
+    }
+
+    op.addEventListener('change', refresh);
+    pos.addEventListener('keydown', event =>
+    {
+        if (event.key === 'Enter')
+        {
+            run();
+        }
+    });
+    state_of(target_world).listeners.push(refresh);
+    refresh();
+
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.gap = '4px';
+    target.style.flex = '1';
+    target.style.minWidth = '0';
+    row.append(op, target);
+    const run_button = button('run', run);
+    run_button.dataset.test_ui_edit_run = '';
+    el.append(row, pos, run_button, status);
+    return el;
+}
+
 function node_label(node: core.node): string
 {
     if (node.operations.length === 0)
@@ -480,7 +615,8 @@ export const panels: Record<string, panel.panel_declaration> =
 {
     history: { render: render_history },
     view:    { render: render_view },
-    cli:     { render: render_cli }
+    cli:     { render: render_cli },
+    edit:    { render: render_edit }
 };
 
 export const layout: panel.layout_node =
@@ -491,6 +627,18 @@ export const layout: panel.layout_node =
     [
         { node: { kind: 'panel', panel: { namespace: 'test_ui', id: 'history' } }, size: 260, min: 150, max: 600, collapsible: false },
         { node: { kind: 'panel', panel: { namespace: 'test_ui', id: 'view' } }, size: 800, min: 300, max: Infinity, collapsible: false },
-        { node: { kind: 'panel', panel: { namespace: 'test_ui', id: 'cli' } }, size: 360, min: 200, max: 800, collapsible: false }
+        {
+            node:
+            {
+                kind: 'group',
+                axis: 'y',
+                children:
+                [
+                    { node: { kind: 'panel', panel: { namespace: 'test_ui', id: 'edit' } }, size: 130, min: 100, max: 300, collapsible: false },
+                    { node: { kind: 'panel', panel: { namespace: 'test_ui', id: 'cli' } }, size: 600, min: 200, max: Infinity, collapsible: false }
+                ]
+            },
+            size: 360, min: 200, max: 800, collapsible: false
+        }
     ]
 };

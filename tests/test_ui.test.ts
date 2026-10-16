@@ -108,6 +108,42 @@ describe('test_ui view camera controls', () =>
         el.dispatchEvent(new Event('change'));
     }
 
+    it('edit panel creates, moves and deletes devices from the menus', () =>
+    {
+        const w = mount([8, 8, 4]);
+        const op = document.querySelector<HTMLSelectElement>('[data-test_ui_edit_op]')!;
+        const target = document.querySelector<HTMLSelectElement>('[data-test_ui_edit_target]')!;
+        const pos = document.querySelector<HTMLInputElement>('[data-test_ui_edit_pos]')!;
+        const status = document.querySelector<HTMLElement>('[data-test_ui_edit_status]')!;
+        const positions = () => [...w.space.devices.values()].map(d => d.position);
+
+        expect([...target.options].map(o => o.value)).toEqual(expect.arrayContaining(['test_ui:box', 'test_ui:bar', 'test_ui:slab']));
+        target.value = 'test_ui:bar';
+        enter(pos, '2 0 0');
+        expect(status.textContent).toMatch(/submitted/);
+        expect(positions()).toEqual([[2, 0, 0]]);
+        expect(shown()).toHaveLength(1);
+        enter(pos, '1 0 0');
+        expect(status.textContent).toMatch(/even/);
+        expect(w.space.devices.size).toBe(1);
+
+        change(op, 'move');
+        const uid = [...w.space.devices.keys()][0];
+        expect([...target.options].map(o => o.value)).toEqual([uid]);
+        expect(target.options[0].textContent).toContain('test_ui:bar [2, 0, 0]');
+        enter(pos, '4 2 0');
+        expect(positions()).toEqual([[4, 2, 0]]);
+        expect(target.options[0].textContent).toContain('[4, 2, 0]');
+
+        change(op, 'delete');
+        expect(pos.disabled).toBe(true);
+        document.querySelector<HTMLButtonElement>('[data-test_ui_edit_run]')!.click();
+        expect(w.space.devices.size).toBe(0);
+        expect(target.options).toHaveLength(0);
+        document.querySelector<HTMLButtonElement>('[data-test_ui_edit_run]')!.click();
+        expect(status.textContent).toBe('no device to delete');
+    });
+
     it('creates demo boxes from the cli and moves the slice through layers', () =>
     {
         const w = mount([8, 8, 4]);

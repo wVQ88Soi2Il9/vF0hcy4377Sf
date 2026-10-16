@@ -67,3 +67,18 @@ describe('test_ui demo_box ports', () =>
         expect(marks[4].getAttribute('fill')).toBe('none');
     });
 });
+
+describe('test_ui demo bar and slab', () =>
+{
+    it('span more cells and put the positive ports at the far face', () =>
+    {
+        const bar = new test_ui.demo_bar('a'.repeat(16), def, [0, 0, 0]);
+        const slab = new test_ui.demo_slab('b'.repeat(16), def, [0, 0, 0]);
+        expect(bar.get_shape()).toEqual([[0, 0, 0], [2, 0, 0]]);
+        expect(slab.get_shape()).toHaveLength(4);
+        const offset = (dev: core.device, uid: string) => dev.get_port().find(p => p.port_uid === uid)!.offset;
+        expect(offset(bar, 'd0+')).toEqual([4, 1, 1]);
+        expect(offset(bar, 'd1+')).toEqual([1, 2, 1]);
+        expect(offset(slab, 'd1+')).toEqual([1, 4, 1]);
+    });
+});
