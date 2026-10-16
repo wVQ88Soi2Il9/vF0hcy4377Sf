@@ -304,7 +304,7 @@ class State:
         if f.get("src"):
             s += f"  (src: {f['src']})"
         c = self.plans.get(i, {}).get("close")
-        if c:
+        if c and self.e[c]["body"]:
             s += f"  — {self.e[c]['body'].splitlines()[0]}"
         return s
 
@@ -577,6 +577,9 @@ def cmd_lint(st, a):
 
 
 def main():
+    # log is UTF-8; console default (e.g. cp1252 on Windows) cannot print it
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(prog="docket.py", description="Append-only facts and plans. See README.md.")
     ap.add_argument("--by", default=os.environ.get("DOCKET_BY"), help="author: human[:name] or agent name (env DOCKET_BY)")
     sp = ap.add_subparsers(dest="cmd", required=True)
