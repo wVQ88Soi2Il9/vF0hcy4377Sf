@@ -174,14 +174,6 @@ describe('basic_ui layout_math distribute', () =>
         expect(out[1]).toBeCloseTo(140);
     });
 
-    it('is not broken by extremely small or large weights', () =>
-    {
-        const open = [lim(0, Infinity), lim(0, Infinity)];
-        expect(basic_ui.distribute([5e-324], [lim(0, Infinity)], 100)).toEqual([100]);
-        expect(basic_ui.distribute([1e-310, 1e-310], open, 100)).toEqual([50, 50]);
-        expect(basic_ui.distribute([1e308, 1e308], open, 100)).toEqual([50, 50]);
-    });
-
     it('keeps sizes strictly within limits on random inputs', () =>
     {
         let seed = 7;

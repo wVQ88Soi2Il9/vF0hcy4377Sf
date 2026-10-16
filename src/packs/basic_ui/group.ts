@@ -10,19 +10,16 @@ export const separator_size = 4;
 /**
  * 一個 group 的 DOM 與尺寸狀態。group 掌管所有子區塊的尺寸；分割線不存尺寸。
  * - sizes：目前各子區塊的 px 長度；
- * - weights：比例，只在使用者拖曳（有實際移動）之後、以及展開結果與現有比例不同時由 sizes 更新；收合不更新。
- *   sizes 受整體上下限強制（溢出、剛好等於 min 總和、容器為 0、全部到 max）時不更新；收合中的子區塊保留原 weight。
+ * - weights：比例，拖曳結束與展開後由 sizes 更新；收合不更新；
+ *   容器放不下所有 min（溢出或容器為 0）時不更新，因為此時 sizes 是 min 的退路而非比例。
  */
 export interface group_view
 {
     readonly element: HTMLElement;
-    readonly slots:   readonly HTMLElement[];
     layout(total: number): void;
     is_collapsed(index: number): boolean;
     collapse(index: number): void;
     expand(index: number): void;
-    get_sizes(): number[];
-    stop(): void;
 }
 
 interface drag_state
@@ -48,13 +45,7 @@ function sum(values: number[]): number
  */
 export function create_group(doc: Document, group_axis: axis, children: readonly layout_child[], children_elements: HTMLElement[]): group_view
 {
-    if (children.length !== children_elements.length || children.length === 0)
-    {
-        throw new Error('create_group needs one element per child.');
-    }
-
     const main = group_axis === 'x' ? 'clientX' : 'clientY';
-    const n = children.length;
     const collapsed: boolean[] = children.map(() => false);
     const remembered: number[] = children.map(c => c.size);
     let sizes = children.map(c => c.size);
@@ -70,7 +61,6 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
     element.style.overflow = 'auto';
     element.style.width = '100%';
     element.style.height = '100%';
-    element.style.boxSizing = 'border-box';
 
     function limits(): limit[]
     {
@@ -84,22 +74,17 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         });
     }
 
-    /**
-     * sizes 是否由整體上下限強制決定，而非反映比例。
-     */
-    function forced(): boolean
+    function overflowing(): boolean
     {
-        const current = limits();
-        return available <= sum(current.map(l => l.min)) + epsilon || available >= sum(current.map(l => l.max)) - epsilon;
+        return available <= sum(limits().map(l => l.min)) + epsilon;
     }
 
     function save_weights(): void
     {
-        if (forced())
+        if (!overflowing())
         {
-            return;
+            weights = weights.map((w, i) => (collapsed[i] ? w : sizes[i]));
         }
-        weights = weights.map((w, i) => (collapsed[i] ? w : sizes[i]));
     }
 
     const slots: HTMLElement[] = [];
@@ -114,9 +99,6 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         });
     }
 
-    /**
-     * 結束拖曳；有實際移動時才以 sizes 更新 weights（只點一下不改比例）。
-     */
     function end_drag(): void
     {
         if (drag === null)
@@ -130,10 +112,9 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         {
             save_weights();
         }
-        const separator = separators[index];
-        if (separator.hasPointerCapture(pointer_id))
+        if (separators[index].hasPointerCapture(pointer_id))
         {
-            separator.releasePointerCapture(pointer_id);
+            separators[index].releasePointerCapture(pointer_id);
         }
     }
 
@@ -147,16 +128,7 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
 
         separator.addEventListener('pointerdown', event =>
         {
-            if (!event.isPrimary || event.button !== 0)
-            {
-                return;
-            }
-            // 拖曳狀態殘留（例如分割線曾被移出 DOM，lostpointercapture 送到 document）時先清掉
-            if (drag !== null && !separators[drag.index].hasPointerCapture(drag.pointer_id))
-            {
-                end_drag();
-            }
-            if (drag !== null)
+            if (!event.isPrimary || event.button !== 0 || drag !== null)
             {
                 return;
             }
@@ -200,7 +172,6 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         slot.dataset.basic_ui_slot = String(i);
         slot.style.flex = '0 0 auto';
         slot.style.overflow = 'hidden';
-        slot.style.boxSizing = 'border-box';
         slot.style.minWidth = '0';
         slot.style.minHeight = '0';
         slot.appendChild(child_element);
@@ -208,19 +179,10 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         element.appendChild(slot);
     });
 
-    function check_index(index: number): void
+    function collapsible_child(index: number): layout_child & { collapsible: true }
     {
-        if (!Number.isInteger(index) || index < 0 || index >= n)
-        {
-            throw new Error(`Child index ${index} is out of range for ${n} children.`);
-        }
-    }
-
-    function check_collapsible(index: number): layout_child & { collapsible: true }
-    {
-        check_index(index);
         const child = children[index];
-        if (!child.collapsible)
+        if (child === undefined || !child.collapsible)
         {
             throw new Error(`Child ${index} is not collapsible.`);
         }
@@ -231,27 +193,18 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
 
     return {
         element,
-        slots,
         /**
-         * 容器沿軸的長度改變：扣掉分割線後依 weights 分配；長度沒變（例如只有交叉軸變化）時不動。
-         * 拖曳中先把目前的 sizes 存成 weights（保留使用者正在拖的結果），再以新尺寸為拖曳起點。
+         * 容器沿軸的長度改變時，扣掉分割線後依 weights 分配；長度沒變（只有交叉軸變化）時不動。
+         * 拖曳中以新尺寸為拖曳起點，避免跳動。
          */
         layout(total: number): void
         {
-            if (!Number.isFinite(total) || total < 0)
-            {
-                throw new Error(`Group length must be a non-negative finite number, got ${total}.`);
-            }
             if (total === last_total)
             {
                 return;
             }
             last_total = total;
-            if (drag !== null && drag.moved)
-            {
-                save_weights();
-            }
-            available = Math.max(0, total - separator_size * (n - 1));
+            available = Math.max(0, total - separator_size * (children.length - 1));
             sizes = distribute(weights, limits(), available);
             if (drag !== null)
             {
@@ -260,29 +213,24 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
             }
             apply();
         },
-        is_collapsed(index: number): boolean
-        {
-            check_index(index);
-            return collapsed[index];
-        },
+        is_collapsed: (index: number) => collapsed[index],
         collapse(index: number): void
         {
-            const child = check_collapsible(index);
+            const child = collapsible_child(index);
             if (collapsed[index])
             {
                 return;
             }
             end_drag();
-            // 強制狀態下 sizes 不代表比例，改記 weight（上次使用者動作時的 px）
-            remembered[index] = forced() ? weights[index] : sizes[index];
+            // 溢出時 sizes 是 min 的退路，改記 weight
+            remembered[index] = overflowing() ? weights[index] : sizes[index];
             collapsed[index] = true;
-            // 收合騰出的空間只是暫時分給其他子區塊：不更新 weights，避免把部分夾限存成比例
             sizes = set_child_size(weights, limits(), index, child.collapsed_size, available);
             apply();
         },
         expand(index: number): void
         {
-            check_collapsible(index);
+            collapsible_child(index);
             if (!collapsed[index])
             {
                 return;
@@ -290,30 +238,8 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
             end_drag();
             collapsed[index] = false;
             sizes = set_child_size(weights, limits(), index, remembered[index], available);
-            // 展開結果與現有比例的分配不同時才更新 weights（否則下一次縮放會依舊比例重排而跳動）；
-            // 相同時保留 weights，避免把鄰居的夾限存成比例
-            const proportional = distribute(weights, limits(), available);
-            if (sizes.some((size, i) => Math.abs(size - proportional[i]) > epsilon))
-            {
-                save_weights();
-            }
+            save_weights();
             apply();
-        },
-        get_sizes: () => [...sizes],
-        /**
-         * 卸載時呼叫：結束拖曳且不更新 weights。
-         */
-        stop(): void
-        {
-            if (drag !== null)
-            {
-                const { index, pointer_id } = drag;
-                drag = null;
-                if (separators[index].hasPointerCapture(pointer_id))
-                {
-                    separators[index].releasePointerCapture(pointer_id);
-                }
-            }
         }
     };
 }

@@ -133,14 +133,10 @@ export function check_weights(weights: number[], limits: limit[]): void
  * - 全部到 max 仍有剩餘：留白。
  * 一般情況下回傳值總和為 total（誤差在浮點精度內）。
  */
-export function distribute(raw_weights: number[], limits: limit[], total: number): number[]
+export function distribute(weights: number[], limits: limit[], total: number): number[]
 {
-    check_weights(raw_weights, limits);
+    check_weights(weights, limits);
     check_finite(total, 'total');
-
-    // 以最大權重正規化到 (0, 1]，避免極小或極大的權重使 weight_sum 下溢或溢位
-    const largest = Math.max(0, ...raw_weights);
-    const weights = largest > 0 ? raw_weights.map(w => w / largest) : raw_weights;
 
     const n = weights.length;
     if (total <= sum(limits.map(l => l.min)))

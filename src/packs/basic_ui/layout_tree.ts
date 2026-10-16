@@ -1,7 +1,7 @@
 import * as core from '@/core';
 import { check_limit } from './layout_math';
 import type { panel_declarations } from './extensions';
-import { own_fields, dense_array, panel_label, show } from './validate';
+import { check_keys, panel_label } from './validate';
 
 export type axis = 'x' | 'y';
 
@@ -49,18 +49,11 @@ export interface layout_child_collapsible extends layout_child_base
     readonly collapsed_size: number;
 }
 
-/**
- * 驗證時的狀態：已放置的 panel（pack_id → 名稱）與已走過的節點物件（防止同一節點被重複引用或成環）。
- */
-interface placement
-{
-    panels: Map<string, Set<string>>;
-    nodes:  Set<object>;
-}
+type placed = Map<string, Set<string>>;
 
-function check_child(value: unknown, path: string, used: placement, declarations: panel_declarations): layout_child
+function check_child(value: unknown, path: string, used: placed, declarations: panel_declarations): void
 {
-    const child = own_fields(value, ['node', 'size', 'min', 'max', 'collapsible', 'collapsed_size'], path);
+    const child = check_keys(value, ['node', 'size', 'min', 'max', 'collapsible', 'collapsed_size'], path);
     const { size, min, max, collapsible } = child;
     if (typeof size !== 'number' || typeof min !== 'number' || typeof max !== 'number')
     {
@@ -75,73 +68,49 @@ function check_child(value: unknown, path: string, used: placement, declarations
     {
         throw new Error(`${path}.collapsible must be a boolean.`);
     }
-
-    if (!collapsible)
+    if (collapsible)
     {
-        if ('collapsed_size' in child)
+        const c = child.collapsed_size;
+        if (typeof c !== 'number' || !Number.isFinite(c) || c < 0 || c > min)
         {
-            throw new Error(`${path}.collapsed_size is only allowed when collapsible.`);
+            throw new Error(`${path}.collapsed_size must be a number in [0, min] when collapsible.`);
         }
-        const node = check_node(child.node, `${path}.node`, used, declarations);
-        return Object.freeze({ node, size, min, max, collapsible: false });
+        if (check_keys(child.node, null, `${path}.node`).kind !== 'panel')
+        {
+            throw new Error(`${path}: only panel children can be collapsible.`);
+        }
     }
-
-    const collapsed_size = child.collapsed_size;
-    if (typeof collapsed_size !== 'number' || !Number.isFinite(collapsed_size) || collapsed_size < 0 || collapsed_size > min)
+    else if ('collapsed_size' in child)
     {
-        throw new Error(`${path}.collapsed_size must be a number in [0, min] when collapsible, got ${show(collapsed_size)}.`);
+        throw new Error(`${path}.collapsed_size is only allowed when collapsible.`);
     }
-    const node = check_node(child.node, `${path}.node`, used, declarations);
-    if (node.kind !== 'panel')
-    {
-        throw new Error(`${path}: only panel children can be collapsible.`);
-    }
-    return Object.freeze({ node, size, min, max, collapsible: true, collapsed_size });
+    check_node(child.node, `${path}.node`, used, declarations);
 }
 
-function check_node(value: unknown, path: string, used: placement, declarations: panel_declarations): layout_node
+function check_node(value: unknown, path: string, used: placed, declarations: panel_declarations): void
 {
-    if (typeof value === 'object' && value !== null)
+    const kind = check_keys(value, null, path).kind;
+    if (kind === 'group')
     {
-        if (used.nodes.has(value))
+        const group = check_keys(value, ['kind', 'axis', 'children'], path);
+        if (group.axis !== 'x' && group.axis !== 'y')
         {
-            throw new Error(`${path} reuses a node object that already appears in the layout.`);
+            throw new Error(`${path}.axis must be "x" or "y".`);
         }
-        used.nodes.add(value);
-    }
-    const node = own_fields(value, ['kind', 'axis', 'children', 'panel'], path);
-
-    if (node.kind === 'group')
-    {
-        if ('panel' in node)
-        {
-            throw new Error(`${path} has unknown key "panel".`);
-        }
-        const axis = node.axis;
-        if (axis !== 'x' && axis !== 'y')
-        {
-            throw new Error(`${path}.axis must be "x" or "y", got ${show(axis)}.`);
-        }
-        const raw_children = dense_array(node.children, `${path}.children`);
-        if (raw_children.length === 0)
+        if (!Array.isArray(group.children) || group.children.length === 0)
         {
             throw new Error(`${path}.children must be a non-empty array.`);
         }
-        const children = raw_children.map((child, i) => check_child(child, `${path}.children[${i}]`, used, declarations));
-        return Object.freeze({ kind: 'group', axis, children: Object.freeze(children) });
-    }
-
-    if (node.kind === 'panel')
-    {
-        for (const key of ['axis', 'children'])
+        for (let i = 0; i < group.children.length; i++)
         {
-            if (key in node)
-            {
-                throw new Error(`${path} has unknown key "${key}".`);
-            }
+            check_child(group.children[i], `${path}.children[${i}]`, used, declarations);
         }
-        const ref = own_fields(node.panel, ['namespace', 'id'], `${path}.panel`);
-        const { namespace, id } = ref;
+        return;
+    }
+    if (kind === 'panel')
+    {
+        const panel = check_keys(value, ['kind', 'panel'], path);
+        const { namespace, id } = check_keys(panel.panel, ['namespace', 'id'], `${path}.panel`);
         if (typeof namespace !== 'string' || typeof id !== 'string')
         {
             throw new Error(`${path}.panel must have string namespace and id.`);
@@ -150,39 +119,36 @@ function check_node(value: unknown, path: string, used: placement, declarations:
         {
             throw new Error(`${path} refers to unknown ${panel_label(namespace, id)}.`);
         }
-        if (!used.panels.has(namespace))
+        if (!used.has(namespace))
         {
-            used.panels.set(namespace, new Set());
+            used.set(namespace, new Set());
         }
-        const placed = used.panels.get(namespace)!;
-        if (placed.has(id))
+        if (used.get(namespace)!.has(id))
         {
             throw new Error(`${path} places ${panel_label(namespace, id)} more than once.`);
         }
-        placed.add(id);
-        return Object.freeze({ kind: 'panel', panel: Object.freeze({ namespace, id }) });
+        used.get(namespace)!.add(id);
+        return;
     }
-
-    throw new Error(`${path}.kind must be "group" or "panel", got ${show(node.kind)}.`);
+    throw new Error(`${path}.kind must be "group" or "panel".`);
 }
 
 /**
  * 驗證版面樹：結構與數值、引用的 panel 都存在、每個宣告的 panel 恰好出現一次。
- * 只讀自身資料屬性，回傳凍結的副本；之後修改傳入的物件不影響結果。
  */
 export function check_layout(layout: unknown, declarations: panel_declarations): layout_node
 {
-    const used: placement = { panels: new Map(), nodes: new Set() };
-    const result = check_node(layout, 'layout', used, declarations);
+    const used: placed = new Map();
+    check_node(layout, 'layout', used, declarations);
     for (const [pack_id, by_name] of declarations)
     {
         for (const name of by_name.keys())
         {
-            if (!used.panels.get(pack_id)?.has(name))
+            if (!used.get(pack_id)?.has(name))
             {
                 throw new Error(`${panel_label(pack_id, name)} is declared but not placed in the layout.`);
             }
         }
     }
-    return result;
+    return layout as layout_node;
 }
