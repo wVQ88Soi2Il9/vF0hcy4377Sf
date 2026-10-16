@@ -30,7 +30,7 @@ export function on_committed(target_world: world.pure_world): void
 }
 
 // 不改 space 的操作，只為了在 history 產生節點
-export const mark_template: core.op_template =
+export const mark_template: core.op_template<world.pure_world> =
 {
     namespace:  'test_ui',
     id:         'mark',
@@ -465,7 +465,7 @@ function render_cli(target_world: world.pure_world): HTMLElement
         print(`> ${line}`, '#888');
         try
         {
-            print(format_result(cli.run(target_world, line)), '#ddd');
+            print(format_result(cli.run(target_world, target_world, line)), '#ddd');
             // 指令可能改了 camera 等不進 history 的狀態；刷新是 UI 的事
             refresh_ui(target_world);
         }
@@ -551,7 +551,7 @@ function render_edit(target_world: world.pure_world): HTMLElement
             {
                 throw new Error(`no ${op.value === 'create' ? 'device class' : 'device'} to ${op.value}`);
             }
-            status.textContent = format_result(cli.run(target_world, command[op.value as edit_op]));
+            status.textContent = format_result(cli.run(target_world, target_world, command[op.value as edit_op]));
             status.style.color = '#ddd';
         }
         catch (error)

@@ -3,7 +3,7 @@
 基於 TypeScript 的模組化 $N$ 維網格工廠模擬引擎。
 
 - **core** 只定義型別與純演算法：空間、裝置、可逆操作、歷史樹。
-- **world** 持有一次執行中的狀態：空間、歷史樹、各世界獨立的 Hook 清單。
+- **world** 持有一次執行中的狀態：空間、歷史樹、各 pack 的私有狀態；Hook 定義在全域 catalog，world 以參數傳入。
 - **pack** 擴充一切具體行為：操作、指令、渲染、UI、CLI、裝置與資料。
 
 ---
@@ -21,43 +21,39 @@ pnpm test        # vitest run，執行 tests/
 
 本專案只使用 pnpm（`package.json` 的 `packageManager` 欄位已指定版本）。請勿使用 `npm install`，它會在 pnpm 的 `node_modules` 上失敗，並產生與 `pnpm-lock.yaml` 衝突的 `package-lock.json`。
 
-`tests/` 內目前有一個測試檔使用舊的 registry 形狀，會失敗，尚未修正。
-
 ### 1.2 CLI
 
-CLI 位於 `src/packs/cli/`，以空白分詞，雙引號內視為同一個 token。
+CLI 位於 `src/packs/cli/`，以空白分詞，引號（`'` 或 `"`）內視為同一個 token。
 
 ```text
 <command> [args...]
---help
---help <command>
---help <namespace>:<command>
+help
+help <command>
+help <namespace>:<command>
 ```
 
-- 參數轉型：`true` / `false` / `null`、數字會被轉型，其餘保留為字串。
-- 指令名稱可帶命名空間（`namespace:command`）；不帶時依 pack 載入順序查找。
+- 參數轉型：`true` / `false` / `null`、數字會被轉型，其餘保留為字串；引號內與 16 位 hex（uid）一律為字串。
+- 指令名稱可帶命名空間（`namespace:command`）；不帶時必須只有一個 pack 有這個名稱，否則報錯並列出候選。
 - CLI 會在 registry 的 `commands` 與 `op_templates` 中查找，兩者在 CLI 看來沒有區別；`op_template` 產生的 `rev_op` 會經 `submit` 寫入歷史。
-- 指令本身由各 pack 在 registry 條目的 `commands` 中註冊，CLI pack 不內建業務指令。
+- `cli.run(world, context, line)`：`context` 由呼叫端決定，原樣傳給 `cmd.execute`。
+- 指令本身由各 pack 在 manifest 的 `provides.commands` / `provides.op_templates` 註冊，CLI pack 只內建 `help`。
 
 ### 1.3 Pack 開發基礎
 
-Pack 放在 `src/packs/<pack_name>/`，由 `index.ts` 匯出生命週期函式：
+Pack 放在 `src/packs/<pack_name>/`，由 `index.ts` 匯出 `manifest`：
 
 ```ts
-export function global_init(registry: core.pack_registry): void
+export const manifest: core.pack_manifest =
 {
-    registry.set('my_pack', { pack_id: 'my_pack' /* hooks, op_templates, commands, ... */ });
-}
-
-export function world_init(target_world: world.pure_world): void
-{
-    // 對這個 world 注入 hook callback
-}
+    pack_id:      'my_pack',
+    provides:     { devices, op_templates, commands, other_info /* ... */ },
+    on:           { 'core:committed': (target_world, change_set) => { /* ... */ } },
+    create_state: () => ({ /* 每個 world 一份的私有狀態 */ })
+};
 ```
 
-- 載入順序由 `src/main.ts` 的 `ENABLED_PACKS` 決定。
-- 每個 pack 在 registry 中以 `pack_module` 描述自己（`items`、`recipes`、`devices`、`op_templates`、`commands`、`hooks`、`other_info`）。
-- 各 Pack 目錄下的 `README.md`：**待補（todo）**。
+- 載入順序由 `src/main.ts` 的 `ENABLED_PACKS` 決定，`world.compose` 依序組裝成 catalog。
+- 各 pack 目錄下有自己的 `README.md`。
 
 ---
 
@@ -66,7 +62,7 @@ export function world_init(target_world: world.pure_world): void
 ```text
 src/
 ├── core/        型別與純演算法（definition_i/ii/iii、history）
-├── world.ts     pure_world：space + history + hook list
+├── world.ts     compose 與 pure_world：space + history + pack_state
 ├── main.ts      載入 pack、建立 world
 └── packs/       所有擴充
 ```
@@ -82,8 +78,9 @@ src/
 
 ### 2.2 world 與 Hook
 
-- **Hook 定義是全域的，Hook callback 是各 world 獨立的。** 初始化時各 pack 宣告自己的 hook，彙整成空模板；每個 world 由模板複製出自己的 hook 清單。
-- 建立 `pure_world` 時，會對 registry 中每個 pack 呼叫其 `world_init(world)`。
+- **Hook 定義是全域的，world 透過參數傳入。** `compose` 把各 pack 的 `on` 合併進 catalog；handler 只操作它收到的 world，所以不同 world 之間互不影響。
+- 建立 `pure_world` 時，以各 pack 的 `create_state` 產生該 world 的 `pack_state`。
+- `submit` / `undo` / `redo` / `jump_*` 是唯一的寫入路徑，游標移動後發出 `core:committed`。
 - 詳見 [src/README.md](src/README.md)。
 
 ### 2.3 Operation 與 Command
@@ -111,13 +108,17 @@ src/
 
 | pack | 用途 |
 |---|---|
-| `vanilla_alpha` | 四個基礎可逆操作（建立、刪除、移動、選定配方）、`std_world`、registry 查詢工具與 hook 定義 |
-| `vanilla_beta` | 軸名稱（`d1`、`d2`…）、歷史節點中繼資料（釘選、合併來源）、2× 網格校驗與重疊檢查 |
+| `vanilla_alpha` | 四個基礎可逆操作的工廠（建立、刪除、移動、選定配方）、`std_world`、registry 查詢工具 |
+| `vanilla_beta` | 把四個操作包成 `op_templates`、軸名稱、歷史節點中繼資料、2× 網格校驗與重疊檢查、`evaluate_world` |
 | `cuboid_device` | 長方體裝置基底類別與形狀產生 |
-| `camera` | 以切片將 $N$ 維空間投影為 2D 視圖資料 |
-| `basic_renderer` | 將投影資料繪製為 DOM / SVG |
-| `basic_ui` | 面板、分割線、UI 根容器與擴充點註冊 |
-| `cli` | 字串分詞、指令執行與 `--help` |
+| `pipe` | 起點 + 位移段轉成管線裝置（未啟用） |
+| `camera` | 以切片將 $N$ 維空間投影為 2D；每個 world 的視角狀態與 `view` 指令 |
+| `basic_renderer` | 將投影繪製為 SVG 圖層；`drawable` mixin |
+| `panel` | 平鋪版面、分割線、UI 根容器與 panel 擴充點 |
+| `panel_demo` | 驗收 `panel` 的示範（未啟用） |
+| `cli` | 字串分詞、指令查找與執行、`help` |
+| `test_ui` | 測試用介面：history、view、edit、cli 四個 panel 與示範裝置 |
+| `test` | 只供 `tests/` 使用的裝置與 recipe |
 
 ---
 

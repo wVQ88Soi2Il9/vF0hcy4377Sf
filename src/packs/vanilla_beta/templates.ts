@@ -56,7 +56,7 @@ function expect_arg_count(args: unknown[], min: number, max: number, usage: stri
     }
 }
 
-export const create_device_template: core.op_template =
+export const create_device_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'create_device',
@@ -69,7 +69,7 @@ export const create_device_template: core.op_template =
     }
 };
 
-export const delete_device_template: core.op_template =
+export const delete_device_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'delete_device',
@@ -80,7 +80,7 @@ export const delete_device_template: core.op_template =
     }
 };
 
-export const move_device_template: core.op_template =
+export const move_device_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'move_device',
@@ -91,7 +91,7 @@ export const move_device_template: core.op_template =
     }
 };
 
-export const select_recipe_template: core.op_template =
+export const select_recipe_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'select_recipe',

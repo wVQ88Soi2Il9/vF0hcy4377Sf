@@ -32,21 +32,21 @@ describe('vanilla_beta op_templates 經 cli 執行', () =>
     {
         const w = make_world();
 
-        cli.run(w, 'create_device test:mock 4 4 0');
+        cli.run(w, w, 'create_device test:mock 4 4 0');
         const dev = only_device(w);
         expect(dev.device_uid).toMatch(/^[0-9a-f]{16}$/);
         expect(dev.position).toEqual([4, 4, 0]);
 
-        cli.run(w, `move_device ${dev.device_uid} 8 8 2`);
+        cli.run(w, w, `move_device ${dev.device_uid} 8 8 2`);
         expect(dev.position).toEqual([8, 8, 2]);
 
-        cli.run(w, `select_recipe ${dev.device_uid} test:r`);
+        cli.run(w, w, `select_recipe ${dev.device_uid} test:r`);
         expect(dev.selected_recipe_id).toEqual({ namespace: 'test', id: 'r' });
 
-        cli.run(w, `select_recipe ${dev.device_uid}`);
+        cli.run(w, w, `select_recipe ${dev.device_uid}`);
         expect(dev.selected_recipe_id).toBeUndefined();
 
-        cli.run(w, `delete_device ${dev.device_uid}`);
+        cli.run(w, w, `delete_device ${dev.device_uid}`);
         expect(w.space.devices.size).toBe(0);
 
         w.undo();
@@ -62,30 +62,30 @@ describe('vanilla_beta op_templates 經 cli 執行', () =>
     it('類別必須寫 pack:id', () =>
     {
         const w = make_world();
-        expect(() => cli.run(w, 'create_device mock 4 4 0')).toThrow(/must be "pack:id"/);
-        expect(() => cli.run(w, 'create_device test:none 4 4 0')).toThrow(/not found in registry/);
+        expect(() => cli.run(w, w, 'create_device mock 4 4 0')).toThrow(/must be "pack:id"/);
+        expect(() => cli.run(w, w, 'create_device test:none 4 4 0')).toThrow(/not found in registry/);
     });
 
     it('座標數量必須等於維度且全為偶數，錯誤不進入歷史', () =>
     {
         const w = make_world();
-        expect(() => cli.run(w, 'create_device test:mock 4 4')).toThrow(/Expected 3 coordinates, got 2/);
-        expect(() => cli.run(w, 'create_device test:mock 4 4 0 2')).toThrow(/Expected 3 coordinates, got 4/);
-        expect(() => cli.run(w, 'create_device test:mock 4 3 0')).toThrow(/even/);
+        expect(() => cli.run(w, w, 'create_device test:mock 4 4')).toThrow(/Expected 3 coordinates, got 2/);
+        expect(() => cli.run(w, w, 'create_device test:mock 4 4 0 2')).toThrow(/Expected 3 coordinates, got 4/);
+        expect(() => cli.run(w, w, 'create_device test:mock 4 3 0')).toThrow(/even/);
         expect(w.history.nodes.size).toBe(1);
     });
 
     it('uid 必須是字串', () =>
     {
         const w = make_world();
-        expect(() => cli.run(w, 'delete_device 7')).toThrow(/uid string/);
-        expect(() => cli.run(w, 'delete_device')).toThrow(/Usage: delete_device <uid>/);
+        expect(() => cli.run(w, w, 'delete_device 7')).toThrow(/uid string/);
+        expect(() => cli.run(w, w, 'delete_device')).toThrow(/Usage: delete_device <uid>/);
     });
 
     it('help 由 cli 常數表提供上游描述', () =>
     {
         const w = make_world();
-        expect(cli.run(w, 'help create_device')).toMatch(/^vanilla_beta:create_device — create_device <pack:id>/);
+        expect(cli.run(w, w, 'help create_device')).toMatch(/^vanilla_beta:create_device — create_device <pack:id>/);
     });
 });
 

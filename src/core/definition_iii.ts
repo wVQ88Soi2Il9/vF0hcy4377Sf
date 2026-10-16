@@ -8,15 +8,15 @@ export interface rev_op extends namespaced_id
     other_info?: Record<string, unknown>;
 }
 
-export interface op_template extends namespaced_id
+export interface op_template<W = unknown> extends namespaced_id
 {
-    create(target_world: any, ...args: any[]): rev_op;
+    create(target_world: W, ...args: any[]): rev_op;
     other_info?: Record<string, unknown>;
 }
 
-export interface cmd extends namespaced_id
+export interface cmd<C = unknown> extends namespaced_id
 {
-    execute(...args: any[]): any;
+    execute(context: C, ...args: any[]): any;
     other_info?: Record<string, unknown>;
 }
 

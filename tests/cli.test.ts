@@ -70,30 +70,42 @@ describe('coerce', () =>
 
 describe('run', () =>
 {
-    it('只寫指令名稱時找到唯一指令，並以 world 為第一個參數呼叫', () =>
+    it('cmd 收到呼叫端給的 context，原樣傳下去', () =>
+    {
+        const ui_context = { panel: 'x' };
+        const pack_ctx: core.pack_manifest =
+        {
+            pack_id:  'pack_ctx',
+            provides: { commands: { ctx: { namespace: 'pack_ctx', id: 'ctx', execute: (context: unknown) => context, other_info: { cli: { description: 'ctx' } } } } }
+        };
+        const w = make_world([pack_ctx]);
+        expect(cli.run(w, ui_context, 'ctx')).toBe(ui_context);
+    });
+
+    it('只寫指令名稱時找到唯一指令，並以 world 為 context 呼叫', () =>
     {
         const w = make_world([pack_a, pack_b]);
-        expect(cli.run(w, 'only_a 4 "x y" true')).toEqual({ world_id: 'w', from: 'pack_a', args: [4, 'x y', true] });
+        expect(cli.run(w, w, 'only_a 4 "x y" true')).toEqual({ world_id: 'w', from: 'pack_a', args: [4, 'x y', true] });
     });
 
     it('pack:指令 指定來源', () =>
     {
         const w = make_world([pack_a, pack_b]);
-        expect(cli.run(w, 'pack_b:echo')).toMatchObject({ from: 'pack_b' });
+        expect(cli.run(w, w, 'pack_b:echo')).toMatchObject({ from: 'pack_b' });
     });
 
     it('同名指令屬於多個 pack 時報錯並列出候選', () =>
     {
         const w = make_world([pack_a, pack_b]);
-        expect(() => cli.run(w, 'echo')).toThrow('pack_a:echo, pack_b:echo');
+        expect(() => cli.run(w, w, 'echo')).toThrow('pack_a:echo, pack_b:echo');
     });
 
     it('找不到指令或 pack 時報錯', () =>
     {
         const w = make_world([pack_a]);
-        expect(() => cli.run(w, 'nope')).toThrow(/not found/);
-        expect(() => cli.run(w, 'pack_z:echo')).toThrow(/Pack "pack_z" not found/);
-        expect(() => cli.run(w, '   ')).toThrow(/Empty/);
+        expect(() => cli.run(w, w, 'nope')).toThrow(/not found/);
+        expect(() => cli.run(w, w, 'pack_z:echo')).toThrow(/Pack "pack_z" not found/);
+        expect(() => cli.run(w, w, '   ')).toThrow(/Empty/);
     });
 });
 
@@ -102,7 +114,7 @@ describe('help', () =>
     it('列出所有指令與描述', () =>
     {
         const w = make_world([pack_a]);
-        expect(cli.run(w, 'help')).toBe(
+        expect(cli.run(w, w, 'help')).toBe(
             'cli:help — help [command]: list all commands, or describe one.\n'
             + 'pack_a:echo — echo from a\n'
             + 'pack_a:only_a — only in a');
@@ -111,19 +123,19 @@ describe('help', () =>
     it('查詢單一指令', () =>
     {
         const w = make_world([pack_a, pack_b]);
-        expect(cli.run(w, 'help pack_b:echo')).toBe('pack_b:echo — echo from b');
+        expect(cli.run(w, w, 'help pack_b:echo')).toBe('pack_b:echo — echo from b');
     });
 
     it('上游常數表與 other_info.cli.description 同時存在時報錯', () =>
     {
         const w = make_world([{ pack_id: 'vanilla_beta', provides: { commands: { delete_device: make_cmd('vanilla_beta', 'x', 'dup') } } }]);
-        expect(() => cli.run(w, 'help vanilla_beta:delete_device')).toThrow(/both in cli and in other_info/);
+        expect(() => cli.run(w, w, 'help vanilla_beta:delete_device')).toThrow(/both in cli and in other_info/);
     });
 
     it('指令缺少描述時報錯', () =>
     {
         const w = make_world([{ pack_id: 'pack_c', provides: { commands: { bare: make_cmd('pack_c', 'bare') } } }]);
-        expect(() => cli.run(w, 'help bare')).toThrow(/has no description/);
+        expect(() => cli.run(w, w, 'help bare')).toThrow(/has no description/);
     });
 });
 
@@ -152,8 +164,8 @@ describe('op_template', () =>
         const log: string[] = [];
         const w = make_world([{ pack_id: 'pack_t', provides: { op_templates: { mark: make_template(log) } } }]);
 
-        cli.run(w, 'mark 1');
-        cli.run(w, 'pack_t:mark 2');
+        cli.run(w, w, 'mark 1');
+        cli.run(w, w, 'pack_t:mark 2');
         expect(w.history.nodes.size).toBe(3);
 
         w.undo();
@@ -164,7 +176,7 @@ describe('op_template', () =>
     it('help 列出 op_template 的描述', () =>
     {
         const w = make_world([{ pack_id: 'pack_t', provides: { op_templates: { mark: make_template([]) } } }]);
-        expect(cli.run(w, 'help mark')).toBe('pack_t:mark — mark a value');
+        expect(cli.run(w, w, 'help mark')).toBe('pack_t:mark — mark a value');
     });
 
     it('同一個 pack 的 command 與 op_template 同名時 compose 報錯', () =>

@@ -98,7 +98,7 @@ export function parse_view_args(target: core.space, current: camera_view, args: 
     return { axes: view_axes, slice: { ...slice, ...given } };
 }
 
-export const view_command: core.cmd =
+export const view_command: core.cmd<world.pure_world> =
 {
     namespace:  'camera',
     id:         'view',

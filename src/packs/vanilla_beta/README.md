@@ -20,9 +20,8 @@
 
 以下是現況觀察與未決事項，未修改。
 
-- `delete_branch` 直接呼叫 `core.delete_node`，不經過 `std_world`，也不會觸發 `history_delete` hook。與 hook 的關係未決。
+- `delete_branch` 直接呼叫 `core.delete_node`，不經過 world，不會發出 `core:committed`。與通知的關係未決。
 - `check_map_overlap` 的第二個參數 `_registry` 沒有使用。
 - 4 個模板不寫 `other_info.cli`：描述由 cli 的上游常數表提供（避免 vanilla_beta 引用 cli）。
 - 環是合法的，但計算方式未定：`evaluate_world` 遇環報錯（docket 20261016072425）。
 - bidirectional 埠不列入圖與 inputs / outputs 順序；方向由 recipe 決定，尚未定案。
-- `world_init` 為空函式，且沒有放進 registry 條目（見 `vanilla_alpha` 的 Todo）。

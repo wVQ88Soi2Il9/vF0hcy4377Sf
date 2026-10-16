@@ -66,6 +66,8 @@ $$|\mathrm{Op}| \ \ge\ |U \times \mathrm{Class} \times \mathbb{Z}^d| = \infty$$
 So the registry does not store operations. It stores **templates**, and arguments *induce* an operation:
 $$\tau : W \times A \rightharpoonup \mathrm{Op},\qquad o = \tau(w, a)$$
 
+Core cannot import `src/world.ts`, so the template is generic: `op_template<W = unknown>`. Each pack names its $W$ (usually `world.pure_world`); the registry stores `op_template<unknown>`.
+
 This is currying. A template is an action $E : S \times A \rightharpoonup S$ that has not received its arguments yet. Supplying $a$ binds it and yields a closed $e_a : S \rightharpoonup S$, which has the type history needs:
 $$e_{\tau(w,a)}(s) = E(s, a)$$
 
@@ -75,7 +77,7 @@ Each call produces a fresh operation, $\tau(w, a_1) \ne \tau(w, a_2)$, even for 
 
 | | role | where it lives | code |
 |---|---|---|---|
-| $\tau$ | template | registry, shared by all worlds | `op_template.create(world, ...args)` |
+| $\tau$ | template | registry, shared by all worlds | `op_template<W>.create(world, ...args)` |
 | $o$ | action | one history node of one world | `rev_op` |
 
 ## 4. Commands: `cmd`
@@ -83,7 +85,7 @@ Each call produces a fresh operation, $\tau(w, a_1) \ne \tau(w, a_2)$, even for 
 A command is a procedure that does not enter history:
 $$c : X \times A \rightharpoonup R,\qquad c(x, a) = \texttt{execute}(x, \ldots a)$$
 
-$X$ is the caller's context. A command is **not limited to a world**: $X$ may be a world $W$, and later it may also be UI state or another runtime object. A command may change $x$ as a side effect, for example a UI change. That change is outside $S$, has no inverse, and is not recorded.
+$X$ is the caller's context, typed `cmd<C>`; the caller of `cli.run(world, context, line)` chooses it and the CLI passes it through unchanged. A command is **not limited to a world**: $X$ may be a world $W$, and later it may also be UI state or another runtime object. A command may change $x$ as a side effect, for example a UI change. That change is outside $S$, has no inverse, and is not recorded.
 
 Commands and templates are both things the CLI can call by name. They differ in two ways:
 
@@ -193,6 +195,4 @@ When `jump_next_node` is given a child, that node must be a child of $c$. When i
 
 ## Open
 
-- The type of $W$ in `op_template.create` is `any`, because core cannot import `src/world.ts` (docket 20261015182143).
-- The type of the command context $X$, and how the CLI obtains a context that is not a world, such as UI (docket 20261015183354).
 - The type of the recipe context $C$ (docket 20261016072425).

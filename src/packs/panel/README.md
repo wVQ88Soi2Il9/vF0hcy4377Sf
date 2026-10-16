@@ -87,6 +87,6 @@ type layout_child =
 
 - 樣式之後改用 Tailwind（`vite.config.ts` 尚未啟用 `@tailwindcss/vite`）；目前只有功能所需的 inline style 與 `data-panel_*` 屬性。
 - 沒有卸載（unmount）；需要時再加。
-- 沒有任何 panel 時版面樹無法合法（docket plan 20261015204853）。
-- `src/main.ts` 目前以 `panel_demo` 的版面掛載（驗收用）；CLI 的輸入介面由 panel 控制（docket fact 20261015184045），尚未實作。
+- 不允許空版面：沒有任何 panel 時版面樹無法合法，維持 throw（human 決定）。
+- `src/main.ts` 目前以 `test_ui` 的版面掛載；CLI 的輸入介面是 `test_ui` 的 cli panel。
 - DOM 測試在 happy-dom（沒有版面計算）；實際尺寸分配已在瀏覽器手動確認過（拖曳、收合、縮放到溢出再放大）。

@@ -44,9 +44,9 @@ describe('camera view command', () =>
     it('reads and sets the view through cli without any ui', () =>
     {
         const w = make_world();
-        expect(cli.run(w, 'view')).toBe('view d0 d1 d2=1 d3=1');
-        expect(cli.run(w, 'view d3=2')).toBe('view d0 d1 d2=1 d3=2');
-        expect(cli.run(w, 'view d2 d0 d1=3')).toBe('view d2 d0 d1=3 d3=2');
+        expect(cli.run(w, w, 'view')).toBe('view d0 d1 d2=1 d3=1');
+        expect(cli.run(w, w, 'view d3=2')).toBe('view d0 d1 d2=1 d3=2');
+        expect(cli.run(w, w, 'view d2 d0 d1=3')).toBe('view d2 d0 d1=3 d3=2');
         expect(camera.get_state(w).view).toEqual({ axes: [2, 0], slice: { 1: 3, 3: 2 } });
     });
 
@@ -55,8 +55,8 @@ describe('camera view command', () =>
         const w = make_world();
         for (const bad of ['view d0', 'view d0 d0', 'view d1=9', 'view d2=9', 'view d0=1', 'view x'])
         {
-            expect(() => cli.run(w, bad)).toThrow();
+            expect(() => cli.run(w, w, bad)).toThrow();
         }
-        expect(cli.run(w, 'view')).toBe('view d0 d1 d2=1 d3=1');
+        expect(cli.run(w, w, 'view')).toBe('view d0 d1 d2=1 d3=1');
     });
 });
