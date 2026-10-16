@@ -2,7 +2,7 @@
 
 ## 目的
 
-把「start position + segments」格式轉為 device：1 個 input 埠、1 個 output 埠，配方為 in = out。pipe 本身不是註冊在 registry 的 device 種類，只提供轉換用的 class。
+把「start position + segments」格式轉為 device：1 個 input 埠、1 個 output 埠。recipe 由下游 pack 提供（每種 item 對應的 pipe 與上限不同）。pipe 本身不是註冊在 registry 的 device 種類，只提供轉換用的 class。
 
 ## 格式
 
@@ -23,8 +23,7 @@
 | `segments_to_shape(dimension, segments)` | 起點格 `[0, ...]`，沿每段每步 ±2，回傳路徑所有格子的局部座標；`delta` 為奇數時報錯 |
 | `pipe_device` | `core.device` 子類別；constructor 為 `(device_uid, definition_id, start, segments, other_info?)`，不符合 `device_constructor`，不放進 `provides.devices` |
 | `get_port()` | `in`（input）：起點格沿第一段反方向退 1；`out`（output）：終點格沿最後一段方向進 1 |
-| `pass_through_recipe` | `pipe:pass_through`，in = out：`context.inputs` 原樣作為輸出 |
-| `manifest` | `{ pack_id: 'pipe' }`，`provides.recipes.pass_through` |
+| `manifest` | `{ pack_id: 'pipe' }` |
 
 ## Todo
 

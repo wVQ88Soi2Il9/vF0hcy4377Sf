@@ -29,7 +29,14 @@ const emit_two: core.recipe =
     evaluate(): core.item_stack[] { return [{ ...iron }, { ...iron }]; }
 };
 
-const test_pack: core.pack_manifest = { pack_id: 'test', provides: { recipes: { emit_iron, emit_two } } };
+const pass_through: core.recipe =
+{
+    namespace: 'test',
+    id:        'pass_through',
+    evaluate(context: vanilla_beta.recipe_context): core.item_stack[] { return context.inputs.map(s => ({ ...s })); }
+};
+
+const test_pack: core.pack_manifest = { pack_id: 'test', provides: { recipes: { emit_iron, emit_two, pass_through } } };
 
 function make_world(): world.pure_world
 {
@@ -51,7 +58,7 @@ function make_port_device(uid: core.uid, position: core.vector, ports: core.port
 }
 
 const pipe_id: core.namespaced_id = { namespace: 'pipe', id: 'pipe' };
-const pass_through: core.namespaced_id = { namespace: 'pipe', id: 'pass_through' };
+const pass_through_id: core.namespaced_id = { namespace: 'test', id: 'pass_through' };
 
 describe('evaluate_world', () =>
 {
@@ -59,8 +66,8 @@ describe('evaluate_world', () =>
     {
         const w = make_world();
         // pipe 先加入，確認順序由圖決定而非插入順序
-        add(w, new pipe.pipe_device('p2', pipe_id, [6, 0], [{ axis: 0, delta: 2 }]), pass_through);
-        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 2 }]), pass_through);
+        add(w, new pipe.pipe_device('p2', pipe_id, [6, 0], [{ axis: 0, delta: 2 }]), pass_through_id);
+        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 2 }]), pass_through_id);
         add(w, make_port_device('src', [0, 0], [{ port_uid: 'out', offset: [1, 0], direction: 'output' }]), { namespace: 'test', id: 'emit_iron' });
 
         expect(vanilla_beta.build_graph(w.space)).toHaveLength(2);
@@ -73,7 +80,7 @@ describe('evaluate_world', () =>
     it('未接上的 input 為 null item', () =>
     {
         const w = make_world();
-        add(w, new pipe.pipe_device('p', pipe_id, [0, 0], [{ axis: 0, delta: 2 }]), pass_through);
+        add(w, new pipe.pipe_device('p', pipe_id, [0, 0], [{ axis: 0, delta: 2 }]), pass_through_id);
         expect(vanilla_beta.evaluate_world(w).get('p')).toEqual([vanilla_beta.null_stack()]);
     });
 
@@ -90,11 +97,11 @@ describe('evaluate_world', () =>
         add(w, make_port_device('a', [0, 0], [
             { port_uid: 'in',  offset: [-1, 0], direction: 'input' },
             { port_uid: 'out', offset: [1, 0],  direction: 'output' }
-        ]), pass_through);
+        ]), pass_through_id);
         add(w, make_port_device('b', [2, 0], [
             { port_uid: 'in',  offset: [-1, 0], direction: 'input' },
             { port_uid: 'out', offset: [-3, 0], direction: 'output' }
-        ]), pass_through);
+        ]), pass_through_id);
         expect(() => vanilla_beta.evaluate_world(w)).toThrow(/Cycle/);
     });
 
@@ -117,7 +124,7 @@ describe('evaluate_world', () =>
     {
         const w = make_world();
         add(w, make_port_device('src', [0, 0], [{ port_uid: 'out', offset: [1, 0], direction: 'output' }]), { namespace: 'test', id: 'emit_iron' });
-        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 2 }]), pass_through);
+        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 2 }]), pass_through_id);
         add(w, make_port_device('x', [2, 2], [{ port_uid: 'in', offset: [-1, -2], direction: 'input' }]));
         expect(vanilla_beta.build_graph(w.space)).toEqual([]);
         expect(vanilla_beta.evaluate_world(w).get('p1')).toEqual([vanilla_beta.null_stack()]);
