@@ -4,7 +4,7 @@ import * as world from '@/world';
 import * as vanilla_alpha from '@/packs/vanilla_alpha'
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import * as cli from '@/packs/cli';
-import * as basic_ui from '@/packs/basic_ui';
+import * as basic_ui from '@/packs/panel';
 import * as basic_ui_demo from '@/packs/basic_ui_demo';
 
 // ── 1. Compose, 依序組裝所有 pack ─────────────────────────────────────────────

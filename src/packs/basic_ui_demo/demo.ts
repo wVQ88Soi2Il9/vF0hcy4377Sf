@@ -1,5 +1,5 @@
 import * as world from '@/world';
-import * as basic_ui from '@/packs/basic_ui';
+import * as basic_ui from '@/packs/panel';
 
 const collapsible_names = ['explorer', 'log', 'inspector'];
 
