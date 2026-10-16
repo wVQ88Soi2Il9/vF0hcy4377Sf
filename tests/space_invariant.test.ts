@@ -34,22 +34,24 @@ describe('uid 唯一性（目標）', () =>
 {
     it('create 遇到已存在的 uid 時 Fail-Fast', () =>
     {
-        const sp = new core.space([8, 8]);
-        vanilla_alpha.create_device_operation('7', mock_device, def_id, [0, 0]).execute(sp);
+        const w = new world.pure_world(world.compose([]), new core.space([8, 8]), 'w');
+        const sp = w.space;
+        vanilla_alpha.create_device_template.create(w, '7', mock_device, def_id, [0, 0]).execute(sp);
 
-        const duplicate = vanilla_alpha.create_device_operation('7', mock_device, def_id, [2, 2]);
+        const duplicate = vanilla_alpha.create_device_template.create(w, '7', mock_device, def_id, [2, 2]);
         expect(() => duplicate.execute(sp)).toThrowError('Device with UID 7 already exists in space.');
         expect(sp.devices.size).toBe(1);
     });
 
     it('delete 的 inverse 遇到 uid 已被佔用時 Fail-Fast', () =>
     {
-        const sp = new core.space([8, 8]);
-        vanilla_alpha.create_device_operation('7', mock_device, def_id, [0, 0]).execute(sp);
+        const w = new world.pure_world(world.compose([]), new core.space([8, 8]), 'w');
+        const sp = w.space;
+        vanilla_alpha.create_device_template.create(w, '7', mock_device, def_id, [0, 0]).execute(sp);
 
-        const del = vanilla_alpha.delete_device_operation('7');
+        const del = vanilla_alpha.delete_device_template.create(w, '7');
         del.execute(sp);
-        vanilla_alpha.create_device_operation('7', mock_device, def_id, [2, 2]).execute(sp);
+        vanilla_alpha.create_device_template.create(w, '7', mock_device, def_id, [2, 2]).execute(sp);
 
         expect(() => del.inverse(sp)).toThrowError('Device with UID 7 already exists in space.');
     });

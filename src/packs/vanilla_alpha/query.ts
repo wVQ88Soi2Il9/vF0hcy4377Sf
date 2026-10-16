@@ -74,17 +74,17 @@ export function get_device_class(registry: core.pack_registry, identifier: core.
     return cls;
 }
 
-export function has_operation(registry: core.pack_registry, identifier: core.namespaced_id): boolean
+export function has_op_template(registry: core.pack_registry, identifier: core.namespaced_id): boolean
 {
     return Boolean(registry.get(identifier.namespace)?.op_templates?.[identifier.id]);
 }
 
-export function get_operation(registry: core.pack_registry, identifier: core.namespaced_id): core.op_template
+export function get_op_template(registry: core.pack_registry, identifier: core.namespaced_id): core.op_template
 {
     const template = registry.get(identifier.namespace)?.op_templates?.[identifier.id];
     if (!template)
     {
-        throw new Error(`Operation "${format_namespaced_id(identifier)}" not found in registry.`);
+        throw new Error(`Op template "${format_namespaced_id(identifier)}" not found in registry.`);
     }
     return template;
 }

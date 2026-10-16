@@ -1,4 +1,4 @@
-export * from './operations';
+export * from './templates';
 export * from './world';
 export * from './query';
 

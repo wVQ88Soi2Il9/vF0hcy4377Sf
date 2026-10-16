@@ -1,6 +1,6 @@
 import * as core from '@/core';
 import * as world from '@/world';
-import * as operations from './operations';
+import * as templates from './templates';
 
 export class std_world extends world.pure_world
 {
@@ -20,25 +20,25 @@ export class std_world extends world.pure_world
         other_info:    Record<string, unknown> = {}
     ): core.device
     {
-        const op = operations.create_device_operation(this.allocate_uid(), device_class, definition_id, position, other_info);
+        const op = templates.create_device_template.create(this, this.allocate_uid(), device_class, definition_id, position, other_info);
         this.submit([op]);
         return op.get_device()!;
     }
 
     public delete_device(device_uid: core.uid): core.device
     {
-        const op = operations.delete_device_operation(device_uid);
+        const op = templates.delete_device_template.create(this, device_uid);
         this.submit([op]);
         return op.get_deleted_device()!;
     }
 
     public move_device(device_uid: core.uid, new_position: core.vector): void
     {
-        this.submit([operations.move_device_operation(device_uid, new_position)]);
+        this.submit([templates.move_device_template.create(this, device_uid, new_position)]);
     }
 
     public select_recipe(device_uid: core.uid, recipe_id?: core.namespaced_id): void
     {
-        this.submit([operations.select_recipe_operation(device_uid, recipe_id)]);
+        this.submit([templates.select_recipe_template.create(this, device_uid, recipe_id)]);
     }
 }

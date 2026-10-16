@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as core from '@/core';
+import * as world from '@/world';
 import * as vanilla_alpha from '@/packs/vanilla_alpha';
 
 describe('可逆操作契約與引數支援 (reversible_operation trailing args)', () =>
@@ -74,7 +75,7 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         expect(execution_history).toEqual(['exec(no-args)', 'inv(no-args)', 'exec(no-args)']);
     });
 
-    it('能於 pack_module.op_templates 註冊並透過 get_operation 查詢取得', () =>
+    it('能於 pack_module.op_templates 註冊並透過 get_op_template 查詢取得', () =>
     {
         const registry: core.pack_registry = new Map();
 
@@ -92,8 +93,8 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
             }
         });
 
-        expect(vanilla_alpha.has_operation(registry, { namespace: 'custom_pack', id: 'echo_op' })).toBe(true);
-        const retrieved = vanilla_alpha.get_operation(registry, { namespace: 'custom_pack', id: 'echo_op' });
+        expect(vanilla_alpha.has_op_template(registry, { namespace: 'custom_pack', id: 'echo_op' })).toBe(true);
+        const retrieved = vanilla_alpha.get_op_template(registry, { namespace: 'custom_pack', id: 'echo_op' });
         expect(retrieved).toBe(op_instance);
     });
 
@@ -105,7 +106,9 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
             public get_port(): core.port[] { return []; }
         }
 
-        const create_op = vanilla_alpha.create_device_operation(
+        const w = new world.pure_world(world.compose([]), new core.space([10, 10]), 'w');
+        const create_op = vanilla_alpha.create_device_template.create(
+            w,
             '1',
             mock_device,
             { namespace: 'vanilla_alpha', id: 'test_dev' },
@@ -114,14 +117,14 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
         expect(create_op.other_info?.['vanilla_alpha']).toBeDefined();
         expect(create_op.other_info?.['core']).toBeUndefined();
 
-        const delete_op = vanilla_alpha.delete_device_operation('1');
+        const delete_op = vanilla_alpha.delete_device_template.create(w, '1');
         expect(delete_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: '1' });
         expect(delete_op.other_info?.['core']).toBeUndefined();
 
-        const move_op = vanilla_alpha.move_device_operation('1', [2, 2]);
+        const move_op = vanilla_alpha.move_device_template.create(w, '1', [2, 2]);
         expect(move_op.other_info?.['vanilla_alpha']).toEqual({ device_uid: '1', position: [2, 2] });
 
-        const select_op = vanilla_alpha.select_recipe_operation('1', { namespace: 'vanilla_alpha', id: 'rec_1' });
+        const select_op = vanilla_alpha.select_recipe_template.create(w, '1', { namespace: 'vanilla_alpha', id: 'rec_1' });
         expect(select_op.other_info?.['vanilla_alpha']).toEqual({
             device_uid: '1',
             new_recipe_id: { namespace: 'vanilla_alpha', id: 'rec_1' }
@@ -130,15 +133,16 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
 
     it('delete/move/select_recipe 找不到裝置時拋出明確例外 (Fail-Fast)', () =>
     {
-        const sp = new core.space([10, 10]);
+        const w = new world.pure_world(world.compose([]), new core.space([10, 10]), 'w');
+        const sp = w.space;
 
-        const delete_op = vanilla_alpha.delete_device_operation('999');
+        const delete_op = vanilla_alpha.delete_device_template.create(w, '999');
         expect(() => delete_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
 
-        const move_op = vanilla_alpha.move_device_operation('999', [2, 2]);
+        const move_op = vanilla_alpha.move_device_template.create(w, '999', [2, 2]);
         expect(() => move_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
 
-        const select_op = vanilla_alpha.select_recipe_operation('999');
+        const select_op = vanilla_alpha.select_recipe_template.create(w, '999');
         expect(() => select_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
     });
 });

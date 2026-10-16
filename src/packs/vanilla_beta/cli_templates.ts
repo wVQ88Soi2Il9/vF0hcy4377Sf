@@ -56,7 +56,7 @@ function expect_arg_count(args: unknown[], min: number, max: number, usage: stri
     }
 }
 
-export const create_device_template: core.op_template<world.pure_world> =
+export const create_device_cli_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'create_device',
@@ -65,41 +65,41 @@ export const create_device_template: core.op_template<world.pure_world> =
         const definition_id = parse_qualified_id(args[0], 'class');
         const device_class = vanilla_alpha.get_device_class(target_world.catalog.registry, definition_id);
         const position = parse_anchor(target_world, args, 1);
-        return vanilla_alpha.create_device_operation(core.generate_uid(), device_class, definition_id, position);
+        return vanilla_alpha.create_device_template.create(target_world, core.generate_uid(), device_class, definition_id, position);
     }
 };
 
-export const delete_device_template: core.op_template<world.pure_world> =
+export const delete_device_cli_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'delete_device',
-    create(_target_world: world.pure_world, ...args: unknown[]): core.rev_op
+    create(target_world: world.pure_world, ...args: unknown[]): core.rev_op
     {
         expect_arg_count(args, 1, 1, 'delete_device <uid>');
-        return vanilla_alpha.delete_device_operation(parse_uid(args[0], 'uid'));
+        return vanilla_alpha.delete_device_template.create(target_world, parse_uid(args[0], 'uid'));
     }
 };
 
-export const move_device_template: core.op_template<world.pure_world> =
+export const move_device_cli_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'move_device',
     create(target_world: world.pure_world, ...args: unknown[]): core.rev_op
     {
         const device_uid = parse_uid(args[0], 'uid');
-        return vanilla_alpha.move_device_operation(device_uid, parse_anchor(target_world, args, 1));
+        return vanilla_alpha.move_device_template.create(target_world, device_uid, parse_anchor(target_world, args, 1));
     }
 };
 
-export const select_recipe_template: core.op_template<world.pure_world> =
+export const select_recipe_cli_template: core.op_template<world.pure_world> =
 {
     namespace: 'vanilla_beta',
     id:        'select_recipe',
-    create(_target_world: world.pure_world, ...args: unknown[]): core.rev_op
+    create(target_world: world.pure_world, ...args: unknown[]): core.rev_op
     {
         expect_arg_count(args, 1, 2, 'select_recipe <uid> [pack:id]');
         const device_uid = parse_uid(args[0], 'uid');
         const recipe_id = args[1] === undefined || args[1] === null ? undefined : parse_qualified_id(args[1], 'recipe');
-        return vanilla_alpha.select_recipe_operation(device_uid, recipe_id);
+        return vanilla_alpha.select_recipe_template.create(target_world, device_uid, recipe_id);
     }
 };
