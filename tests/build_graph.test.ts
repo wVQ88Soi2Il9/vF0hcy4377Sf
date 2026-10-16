@@ -5,11 +5,11 @@ import * as vanilla_alpha from '../src/packs/vanilla_alpha';
 import * as vanilla_beta from '../src/packs/vanilla_beta';
 import * as pipe from '../src/packs/pipe';
 import * as graph from '../src/packs/graph';
-import * as test_pack from '../src/packs/test';
+import * as test_ui from '../src/packs/test_ui';
 
 function make_world(): world.pure_world
 {
-    const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, pipe.manifest, test_pack.manifest]);
+    const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, pipe.manifest, test_ui.manifest]);
     return new world.pure_world(catalog, new core.space([32, 32]), 'w');
 }
 
@@ -18,9 +18,9 @@ function add(w: world.pure_world, device: core.device): void
     w.space.devices.set(device.device_uid, device);
 }
 
-function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): test_pack.port_device
+function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): test_ui.port_device
 {
-    const device = new test_pack.port_device(uid, { namespace: 'test', id: 'port' }, position);
+    const device = new test_ui.port_device(uid, { namespace: 'test_ui', id: 'port' }, position);
     device.ports = ports;
     return device;
 }

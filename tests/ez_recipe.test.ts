@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as core from '../src/core';
 import * as ez_recipe from '../src/packs/ez_recipe';
-import * as test_pack from '../src/packs/test';
+import * as test_ui from '../src/packs/test_ui';
 
 const a: core.namespaced_id = { namespace: 'p', id: 'a' };
 const b: core.namespaced_id = { namespace: 'p', id: 'b' };
@@ -188,7 +188,7 @@ describe('ez_recipe evaluate_ratio_graph', () =>
     /** ports 依序給方向與 offset；recipe_id 為 undefined 表示未選。 */
     function place(sp: core.space, uid: core.uid, position: core.vector, recipe_id: string | undefined, ports: [core.port_direction, core.vector][]): void
     {
-        const device = new test_pack.port_device(uid, { namespace: 'test', id: 'port' }, position);
+        const device = new test_ui.port_device(uid, { namespace: 'test_ui', id: 'port' }, position);
         device.ports = ports.map(([direction, offset], k) => ({ port_uid: `${k}`, offset, direction }));
         device.selected_recipe_id = recipe_id === undefined ? undefined : { namespace: 'p', id: recipe_id };
         sp.devices.set(uid, device);

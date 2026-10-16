@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import * as core from '../src/core';
 import * as graph from '../src/packs/graph';
-import * as test_pack from '../src/packs/test';
+import * as test_ui from '../src/packs/test_ui';
 
-function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): test_pack.port_device
+function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): test_ui.port_device
 {
-    const device = new test_pack.port_device(uid, { namespace: 'test', id: 'port' }, position);
+    const device = new test_ui.port_device(uid, { namespace: 'test_ui', id: 'port' }, position);
     device.ports = ports;
     return device;
 }

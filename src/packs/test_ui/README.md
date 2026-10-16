@@ -2,13 +2,14 @@
 
 ## 目的
 
-測試用的介面，用來確認 panel、cli 與 history 能接在一起運作。不是正式 UI。
+測試與示範用的 pack，不是正式 UI。內容：確認 panel、cli 與 history 能接在一起運作的介面（`src/main.ts` 載入）；單元測試用的 `port_device`。
 
 ## Code
 
 | 檔案 | 內容 |
 |---|---|
 | `ui.ts` | 四個 panel 與版面：左 `history`、中 `view`、右上 `edit`、右下 `cli`；`mark` 操作模板；committed 時重畫 history；view 的視角控制與 `view_color`；共用控制項樣式（第一次 render 時掛一個 `<style>` 進 `<head>`） |
+| `port_device.ts` | `port_device`：`core.device` 子類別，shape 為 `[[0, 0]]`，`ports` 由測試直接指定；只供 `tests/` 使用 |
 | `demo_device.ts` | `demo_box`／`demo_bar`／`demo_slab`：示範裝置；`project_ports`：依視角投影埠 |
 | `index.ts` | manifest：`devices.box`、`op_templates.mark`、`other_info.panel.panels`、`create_state`（每個 world 的 refresh 清單）、`on['core:committed']` |
 

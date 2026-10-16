@@ -116,10 +116,8 @@ src/
 | `camera` | 以切片將 $N$ 維空間投影為 2D；每個 world 的視角狀態與 `view` 指令 |
 | `basic_renderer` | 將投影繪製為 SVG 圖層；`drawable` mixin |
 | `panel` | 平鋪版面、分割線、UI 根容器與 panel 擴充點 |
-| `panel_demo` | 驗收 `panel` 的示範（未啟用） |
 | `cli` | 字串分詞、指令查找與執行、`help` |
-| `test_ui` | 測試用介面：history、view、edit、cli 四個 panel 與示範裝置 |
-| `test` | 只供 `tests/` 使用的裝置與 recipe |
+| `test_ui` | 測試用介面：history、view、edit、cli 四個 panel 與示範裝置；只供 `tests/` 使用的 `port_device` |
 
 ---
 

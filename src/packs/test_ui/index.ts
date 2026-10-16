@@ -5,6 +5,7 @@ import { demo_bar, demo_box, demo_slab } from './demo_device';
 
 export * from './ui';
 export * from './demo_device';
+export * from './port_device';
 
 export const manifest: core.pack_manifest =
 {

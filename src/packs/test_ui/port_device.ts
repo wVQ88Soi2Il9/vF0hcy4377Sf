@@ -7,8 +7,3 @@ export class port_device extends core.device
     public get_shape(): core.vector[] { return [[0, 0]]; }
     public get_port(): core.port[] { return this.ports; }
 }
-
-export const manifest: core.pack_manifest =
-{
-    pack_id: 'test'
-};
