@@ -21,3 +21,5 @@
 - `ratio_recipe.evaluate`（單一 recipe 的 context 版）仍未實作；整張圖的計算在 `evaluate_ratio_graph`。
 - 非 ratio 的 recipe 不在計算範圍。
 - 其他種類未做：polynomial、const、identity、exp。
+- `evaluate_ratio_graph` 的相對倍率 r 是連乘的，很長的放大鏈會溢位成 `Infinity`，使 t 變成 `NaN`；實測約 1100 段 ×2 就會發生（docket 20261016204424）。
+- `evaluate_ratio_graph` 展開 `unordered` 時，相同子項不重複排列，但不同子項仍是 n! 種，所以單一群組有很多不同子項時很慢：9 個約 1.5 s（docket 20261016204424）。

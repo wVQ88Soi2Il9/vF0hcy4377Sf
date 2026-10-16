@@ -336,4 +336,16 @@ describe('ez_recipe evaluate_ratio_graph', () =>
         const resolved = pair('{p:c, p:d}', '[p:d, p:c]');
         expect(t_of(ez_recipe.evaluate_ratio_graph(resolved.sp, resolved.registry))).toEqual({ u: 1, d: 1 });
     });
+
+    it('unordered 的相同子項不重複排列：12 個 p:x 加 1 個 p:y 只有 13 種排列', () =>
+    {
+        const sp = new core.space([32, 32]);
+        place(sp, 'm', [1, 1], 'many', Array.from({ length: 13 }, (_, i) => ['input', [-1, i]] as [core.port_direction, core.vector]));
+        const inputs = `{${Array(12).fill('p:x').join(', ')}, 2*p:y}`;
+        const result = ez_recipe.evaluate_ratio_graph(sp, make_registry([rec('many', inputs, '[]', 2)]));
+        expect(result.external).toEqual([
+            { uid: 'm', item_id: { namespace: 'p', id: 'x' }, quantity: 24 },
+            { uid: 'm', item_id: { namespace: 'p', id: 'y' }, quantity: 4 }
+        ]);
+    });
 });

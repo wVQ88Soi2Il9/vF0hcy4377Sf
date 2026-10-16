@@ -42,17 +42,63 @@ function arrangement_key(arr: arrangement): string
     return arr.map(s => `${item_key(s.item_id)}*${s.quantity}`).join('|');
 }
 
-function permutations<T>(list: T[]): T[][]
+function combination_key(comb: combination): string
 {
-    if (list.length <= 1)
+    if (!('kind' in comb))
     {
-        return [list];
+        return `${item_key(comb.item_id)}*${comb.quantity}`;
     }
-    return list.flatMap((head, k) => permutations([...list.slice(0, k), ...list.slice(k + 1)]).map(rest => [head, ...rest]));
+    const inner = comb.items.map(combination_key).join(',');
+    return comb.kind === 'ordered' ? `[${inner}]` : `{${inner}}`;
 }
 
 /**
- * 所有葉排列：ordered 的子項依序，unordered 的子項任意排列；去除重複。
+ * 多重集合排列：相同 key 的元素視為同一個，只產生不重複的排列。
+ */
+function distinct_permutations<T>(list: T[], key: (t: T) => string): T[][]
+{
+    const groups = new Map<string, { value: T; count: number }>();
+    for (const t of list)
+    {
+        const k = key(t);
+        const group = groups.get(k);
+        if (group === undefined)
+        {
+            groups.set(k, { value: t, count: 1 });
+        }
+        else
+        {
+            group.count++;
+        }
+    }
+    const result: T[][] = [];
+    const current: T[] = [];
+    const visit = (): void =>
+    {
+        if (current.length === list.length)
+        {
+            result.push([...current]);
+            return;
+        }
+        for (const group of groups.values())
+        {
+            if (group.count === 0)
+            {
+                continue;
+            }
+            group.count--;
+            current.push(group.value);
+            visit();
+            current.pop();
+            group.count++;
+        }
+    };
+    visit();
+    return result;
+}
+
+/**
+ * 所有葉排列：ordered 的子項依序，unordered 的子項任意排列（相同子項不重複排列）；去除重複。
  */
 function arrangements(comb: combination): arrangement[]
 {
@@ -61,7 +107,10 @@ function arrangements(comb: combination): arrangement[]
         return [[comb]];
     }
     const child_options = comb.items.map(arrangements);
-    const orders = comb.kind === 'ordered' ? [child_options] : permutations(child_options);
+    const keys = comb.items.map(combination_key);
+    const indices = comb.items.map((_, k) => k);
+    const index_orders = comb.kind === 'ordered' ? [indices] : distinct_permutations(indices, k => keys[k]);
+    const orders = index_orders.map(order => order.map(k => child_options[k]));
     const result = new Map<string, arrangement>();
     for (const order of orders)
     {
