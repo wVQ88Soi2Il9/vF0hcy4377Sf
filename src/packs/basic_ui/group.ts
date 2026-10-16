@@ -1,22 +1,21 @@
-import { distribute, resize_pair, set_child_size } from './layout_math';
+import { resize_pair } from './layout_math';
 import type { limit } from './layout_math';
 import type { axis, layout_child } from './layout_tree';
 
 /**
- * 分割線沿軸的固定寬度（px），從 group 長度中扣除。
+ * 分割線沿軸的固定寬度（px）。
  */
 export const separator_size = 4;
 
 /**
- * 一個 group 的 DOM 與尺寸狀態。group 掌管所有子區塊的尺寸；分割線不存尺寸。
- * - sizes：目前各子區塊的 px 長度；
- * - weights：比例，拖曳結束與展開後由 sizes 更新；收合不更新；
- *   容器放不下所有 min（溢出或容器為 0）時不更新，因為此時 sizes 是 min 的退路而非比例。
+ * 一個 group 的 DOM 與狀態。尺寸交給瀏覽器的 flexbox：
+ * 每個 slot 為 flex: <weight> 1 0px，並以 min/max-width（或 height）設上下限；
+ * 容器縮放時由瀏覽器依 weights 等比分配、夾在上下限內，放不下所有 min 時溢出捲動。
+ * 拖曳時把展開中子區塊的 weights 設為目前的 px（兩側為拖曳後的新 px）；收合把該 slot 固定為 collapsed_size。
  */
 export interface group_view
 {
     readonly element: HTMLElement;
-    layout(total: number): void;
     is_collapsed(index: number): boolean;
     collapse(index: number): void;
     expand(index: number): void;
@@ -28,30 +27,17 @@ interface drag_state
     index:      number;
     start_at:   number;
     start:      number[];
-    last_at:    number;
-    moved:      boolean;
+    changed:    boolean;
 }
 
-const epsilon = 1e-6;
-
-function sum(values: number[]): number
-{
-    return values.reduce((a, b) => a + b, 0);
-}
-
-/**
- * 依版面樹的子區塊建立 group。children_elements[i] 放進第 i 個 slot。
- * 初始 sizes 與 weights 為版面樹給的 size；第一次 layout(total) 之後依容器長度分配。
- */
 export function create_group(doc: Document, group_axis: axis, children: readonly layout_child[], children_elements: HTMLElement[]): group_view
 {
     const main = group_axis === 'x' ? 'clientX' : 'clientY';
+    const length = group_axis === 'x' ? 'width' : 'height';
+    const min_length = group_axis === 'x' ? 'minWidth' : 'minHeight';
+    const max_length = group_axis === 'x' ? 'maxWidth' : 'maxHeight';
+    const weights = children.map(c => c.size);
     const collapsed: boolean[] = children.map(() => false);
-    const remembered: number[] = children.map(c => c.size);
-    let sizes = children.map(c => c.size);
-    let weights = children.map(c => c.size);
-    let available = sum(sizes);
-    let last_total: number | null = null;
     let drag: drag_state | null = null;
 
     const element = doc.createElement('div');
@@ -74,29 +60,28 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         });
     }
 
-    function overflowing(): boolean
-    {
-        return available <= sum(limits().map(l => l.min)) + epsilon;
-    }
-
-    function save_weights(): void
-    {
-        if (!overflowing())
-        {
-            weights = weights.map((w, i) => (collapsed[i] ? w : sizes[i]));
-        }
-    }
-
     const slots: HTMLElement[] = [];
     const separators: HTMLElement[] = [];
 
     function apply(): void
     {
+        const current = limits();
         slots.forEach((slot, i) =>
         {
-            slot.style.flexBasis = `${sizes[i]}px`;
+            slot.style.flex = collapsed[i] ? `0 0 ${current[i].min}px` : `${weights[i]} 1 0px`;
+            slot.style[min_length] = `${current[i].min}px`;
+            slot.style[max_length] = current[i].max === Infinity ? 'none' : `${current[i].max}px`;
             slot.dataset.basic_ui_collapsed = String(collapsed[i]);
         });
+    }
+
+    /**
+     * 量目前各 slot 的 px；次像素誤差可能略超出上下限，夾回去。
+     */
+    function measure(): number[]
+    {
+        const current = limits();
+        return slots.map((slot, i) => Math.min(current[i].max, Math.max(current[i].min, slot.getBoundingClientRect()[length])));
     }
 
     function end_drag(): void
@@ -106,12 +91,8 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
             return;
         }
         // 先清除狀態：releasePointerCapture 可能同步觸發 lostpointercapture
-        const { index, pointer_id, moved } = drag;
+        const { index, pointer_id } = drag;
         drag = null;
-        if (moved)
-        {
-            save_weights();
-        }
         if (separators[index].hasPointerCapture(pointer_id))
         {
             separators[index].releasePointerCapture(pointer_id);
@@ -128,13 +109,14 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
 
         separator.addEventListener('pointerdown', event =>
         {
-            if (!event.isPrimary || event.button !== 0 || drag !== null)
+            // 鄰接收合中的子區塊時不拖曳：收合的 weight 要留給展開時使用
+            if (!event.isPrimary || event.button !== 0 || drag !== null || collapsed[index] || collapsed[index + 1])
             {
                 return;
             }
             event.preventDefault();
             separator.setPointerCapture(event.pointerId);
-            drag = { pointer_id: event.pointerId, index, start_at: event[main], start: [...sizes], last_at: event[main], moved: false };
+            drag = { pointer_id: event.pointerId, index, start_at: event[main], start: measure(), changed: false };
         });
         separator.addEventListener('pointermove', event =>
         {
@@ -142,10 +124,26 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
             {
                 return;
             }
-            drag.last_at = event[main];
-            drag.moved = true;
-            sizes = resize_pair(drag.start, limits(), drag.index, drag.last_at - drag.start_at);
-            apply();
+            const next = resize_pair(drag.start, limits(), drag.index, event[main] - drag.start_at);
+            // 還沒真正改變尺寸（原地按下、溢出時兩側都卡在上下限）就不動 weights，保留原比例
+            if (!drag.changed && next[drag.index] === drag.start[drag.index])
+            {
+                return;
+            }
+            drag.changed = true;
+            // 展開中的子區塊 weights 改為與目前 px 成比例：flexbox 依此分配會剛好重現畫面，其他子區塊不會跳動。
+            // 縮放成原本的 weight 總和，讓收合中子區塊的 weight 仍在同一個尺度，展開時大小不變
+            const open = next.map((_, i) => i).filter(i => !collapsed[i]);
+            const old_sum = open.reduce((total, i) => total + weights[i], 0);
+            const new_sum = open.reduce((total, i) => total + next[i], 0);
+            if (new_sum > 0)
+            {
+                for (const i of open)
+                {
+                    weights[i] = next[i] * old_sum / new_sum;
+                }
+                apply();
+            }
         });
         for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
         {
@@ -170,75 +168,38 @@ export function create_group(doc: Document, group_axis: axis, children: readonly
         }
         const slot = doc.createElement('div');
         slot.dataset.basic_ui_slot = String(i);
-        slot.style.flex = '0 0 auto';
         slot.style.overflow = 'hidden';
-        slot.style.minWidth = '0';
-        slot.style.minHeight = '0';
         slot.appendChild(child_element);
         slots.push(slot);
         element.appendChild(slot);
     });
 
-    function collapsible_child(index: number): layout_child & { collapsible: true }
+    function collapsible_child(index: number): void
     {
         const child = children[index];
         if (child === undefined || !child.collapsible)
         {
             throw new Error(`Child ${index} is not collapsible.`);
         }
-        return child;
     }
 
     apply();
 
     return {
         element,
-        /**
-         * 容器沿軸的長度改變時，扣掉分割線後依 weights 分配；長度沒變（只有交叉軸變化）時不動。
-         * 拖曳中以新尺寸為拖曳起點，避免跳動。
-         */
-        layout(total: number): void
-        {
-            if (total === last_total)
-            {
-                return;
-            }
-            last_total = total;
-            available = Math.max(0, total - separator_size * (children.length - 1));
-            sizes = distribute(weights, limits(), available);
-            if (drag !== null)
-            {
-                drag.start = [...sizes];
-                drag.start_at = drag.last_at;
-            }
-            apply();
-        },
         is_collapsed: (index: number) => collapsed[index],
         collapse(index: number): void
         {
-            const child = collapsible_child(index);
-            if (collapsed[index])
-            {
-                return;
-            }
+            collapsible_child(index);
             end_drag();
-            // 溢出時 sizes 是 min 的退路，改記 weight
-            remembered[index] = overflowing() ? weights[index] : sizes[index];
             collapsed[index] = true;
-            sizes = set_child_size(weights, limits(), index, child.collapsed_size, available);
             apply();
         },
         expand(index: number): void
         {
             collapsible_child(index);
-            if (!collapsed[index])
-            {
-                return;
-            }
             end_drag();
             collapsed[index] = false;
-            sizes = set_child_size(weights, limits(), index, remembered[index], available);
-            save_weights();
             apply();
         }
     };

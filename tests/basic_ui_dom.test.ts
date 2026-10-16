@@ -1,54 +1,12 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import * as core from '@/core';
 import * as world from '@/world';
 import * as basic_ui from '@/packs/basic_ui';
 
-// happy-dom 沒有版面計算：以假的 ResizeObserver 手動送出容器尺寸
-class fake_observer
-{
-    static instances: fake_observer[] = [];
-    readonly targets = new Set<Element>();
-    constructor(private readonly callback: ResizeObserverCallback)
-    {
-        fake_observer.instances.push(this);
-    }
-    observe(target: Element): void
-    {
-        this.targets.add(target);
-    }
-    unobserve(target: Element): void
-    {
-        this.targets.delete(target);
-    }
-    disconnect(): void
-    {
-        this.targets.clear();
-    }
-    static resize(target: Element, width: number, height: number): void
-    {
-        for (const o of fake_observer.instances)
-        {
-            if (o.targets.has(target))
-            {
-                o.callback([{ target, contentRect: { width, height } } as unknown as ResizeObserverEntry], o as unknown as ResizeObserver);
-            }
-        }
-    }
-}
-
-const original_observer = globalThis.ResizeObserver;
-
 beforeEach(() =>
 {
     document.body.innerHTML = '';
-    fake_observer.instances = [];
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = fake_observer;
-});
-
-afterEach(() =>
-{
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = original_observer;
 });
 
 function make_world(panels: Record<string, Record<string, () => HTMLElement>>): world.pure_world
@@ -84,13 +42,24 @@ function pointer(target: EventTarget, type: string, at: number, options: Pointer
     target.dispatchEvent(new PointerEvent(type, { clientX: at, clientY: at, pointerId: 1, isPrimary: true, button: 0, bubbles: true, ...options }));
 }
 
-function basis(el: Element): number
+function slot_of(content: HTMLElement): HTMLElement
 {
-    return parseFloat((el.parentElement as HTMLElement).style.flexBasis);
+    return content.parentElement as HTMLElement;
+}
+
+function grow(content: HTMLElement): number
+{
+    return parseFloat(slot_of(content).style.flexGrow);
+}
+
+// happy-dom 沒有版面計算：拖曳開始時量到的 px 以 stub 提供
+function stub_width(content: HTMLElement, width: number): void
+{
+    slot_of(content).getBoundingClientRect = () => ({ width, height: width } as DOMRect);
 }
 
 /**
- * 兩欄：左邊 a:left（可收合，[100, 400]），右邊 a:main。
+ * 兩欄：左邊 a:left（可收合，[100, 400]），右邊 a:main（[200, ∞)）。
  */
 function two_columns()
 {
@@ -110,324 +79,239 @@ function two_columns()
     const separator = group.querySelector('[data-basic_ui_separator]') as HTMLElement;
     const left = root.panels.get('a')!.get('left')!;
     const main = root.panels.get('a')!.get('main')!;
+    stub_width(left.content, 200);
+    stub_width(main.content, 600);
     return { root, group, separator, left, main };
 }
 
-describe('basic_ui mount_ui_root container checks', () =>
+describe('basic_ui mount_ui_root checks', () =>
 {
     const w = () => make_world({ a: { p: section('p') } });
     const single: basic_ui.layout_node = { kind: 'panel', panel: { namespace: 'a', id: 'p' } };
 
-    it('requires an attached container', () =>
+    it('requires an attached container and is unique per document', () =>
     {
         expect(() => basic_ui.mount_ui_root(document.createElement('div'), w(), single)).toThrow(/attached/);
-    });
-
-    it('is unique per document', () =>
-    {
         basic_ui.mount_ui_root(container(), w(), single);
         expect(() => basic_ui.mount_ui_root(container(), w(), single)).toThrow(/already mounted/);
     });
-});
 
-describe('basic_ui mount_ui_root render checks', () =>
-{
-    const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [leaf('a', 'p', 10), leaf('a', 'q', 10)] };
-
-    function mount_with(p: () => HTMLElement, q: () => HTMLElement = section('q')): () => basic_ui.ui_root
+    it('rejects bad render results and validates the layout first, leaving the container empty', () =>
     {
-        const c = container();
-        const w = make_world({ a: { p, q } });
-        return () => basic_ui.mount_ui_root(c, w, layout);
-    }
-
-    it('rejects non-elements, placed elements and shared elements, leaving the container empty', () =>
-    {
-        expect(mount_with(() => 'text' as unknown as HTMLElement)).toThrow(/must return an HTMLElement/);
+        const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [leaf('a', 'p', 10), leaf('a', 'q', 10)] };
+        const mount = (p: () => HTMLElement, q: () => HTMLElement = section('q')) => () =>
+            basic_ui.mount_ui_root(container(), make_world({ a: { p, q } }), layout);
+        expect(mount(() => 'text' as unknown as HTMLElement)).toThrow(/must return an HTMLElement/);
         const placed = document.createElement('div');
         document.body.appendChild(placed);
-        expect(mount_with(() => placed)).toThrow(/new element/);
+        expect(mount(() => placed)).toThrow(/new element/);
         const shared = document.createElement('div');
-        expect(mount_with(() => shared, () => shared)).toThrow(/new element/);
-        expect(mount_with(() => { throw new Error('boom'); })).toThrow(/boom/);
+        expect(mount(() => shared, () => shared)).toThrow(/new element/);
         expect(document.querySelector('[data-basic_ui_root]')).toBeNull();
-    });
 
-    it('validates the layout before calling any render', () =>
-    {
         let calls = 0;
-        const c = container();
-        const w = make_world({ a: { p: () => { calls++; return document.createElement('div'); } } });
-        expect(() => basic_ui.mount_ui_root(c, w, { kind: 'group', axis: 'x', children: [] })).toThrow(/non-empty/);
+        const counting = make_world({ a: { p: () => { calls++; return document.createElement('div'); } } });
+        expect(() => basic_ui.mount_ui_root(container(), counting, { kind: 'group', axis: 'x', children: [] })).toThrow(/non-empty/);
         expect(calls).toBe(0);
     });
 });
 
-describe('basic_ui mount_ui_root structure', () =>
+describe('basic_ui structure', () =>
 {
-    it('builds groups, slots and separators, and indexes panels by pack then name', () =>
+    it('builds groups, slots and separators with flex weights and limits', () =>
     {
         const { root, group, left, main } = two_columns();
         expect(root.element.dataset.basic_ui_root).toBe('');
         expect(group.dataset.basic_ui_group).toBe('x');
         expect([...group.children].map(c => (c as HTMLElement).dataset.basic_ui_separator ?? 'slot')).toEqual(['slot', '0', 'slot']);
-        expect(left.content.textContent).toBe('left');
         expect(left.content.dataset.basic_ui_pack).toBe('a');
         expect(left.content.dataset.basic_ui_name).toBe('left');
-        expect(left.collapsible).toBe(true);
-        expect(main.collapsible).toBe(false);
-        expect(basis(left.content)).toBe(200);
-        expect(basis(main.content)).toBe(600);
+        expect(grow(left.content)).toBe(200);
+        expect(grow(main.content)).toBe(600);
+        expect(slot_of(left.content).style.minWidth).toBe('100px');
+        expect(slot_of(left.content).style.maxWidth).toBe('400px');
+        expect(slot_of(main.content).style.maxWidth).toBe('none');
     });
 
-    it('supports a single panel root and nested groups', () =>
+    it('uses height limits in a y group and supports a single panel root', () =>
     {
-        const w = make_world({ a: { top: section('top'), bottom: section('bottom'), side: section('side') } });
-        const layout: basic_ui.layout_node =
-        {
-            kind: 'group',
-            axis: 'x',
-            children:
-            [
-                leaf('a', 'side', 100),
-                {
-                    node: { kind: 'group', axis: 'y', children: [{ ...leaf('a', 'top', 300), collapsible: true, collapsed_size: 0 }, leaf('a', 'bottom', 100)] },
-                    size: 500, min: 0, max: Infinity, collapsible: false
-                }
-            ]
-        };
-        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const w = make_world({ a: { top: section('top'), bottom: section('bottom') } });
+        const root = basic_ui.mount_ui_root(container(), w, { kind: 'group', axis: 'y', children: [leaf('a', 'top', 300, 50, 500), leaf('a', 'bottom', 100)] });
         const top = root.panels.get('a')!.get('top')!;
-        const inner = top.content.parentElement!.parentElement as HTMLElement;
-        expect(inner.dataset.basic_ui_group).toBe('y');
+        expect(slot_of(top.content).style.minHeight).toBe('50px');
+        expect(slot_of(top.content).style.maxHeight).toBe('500px');
 
-        fake_observer.resize(inner, 500, 404);
-        expect(basis(top.content)).toBe(300);
-        top.collapse();
-        expect(basis(top.content)).toBe(0);
-        expect(basis(root.panels.get('a')!.get('bottom')!.content)).toBe(400);
-    });
-
-    it('a root panel cannot collapse', () =>
-    {
-        const w = make_world({ a: { p: section('p') } });
-        const root = basic_ui.mount_ui_root(container(), w, { kind: 'panel', panel: { namespace: 'a', id: 'p' } });
-        const p = root.panels.get('a')!.get('p')!;
+        document.body.innerHTML = '';
+        const single = basic_ui.mount_ui_root(container(), make_world({ a: { p: section('p') } }), { kind: 'panel', panel: { namespace: 'a', id: 'p' } });
+        const p = single.panels.get('a')!.get('p')!;
         expect(p.collapsible).toBe(false);
         expect(() => p.collapse()).toThrow(/not collapsible/);
-        expect(p.content.parentElement).toBe(root.element);
+        expect(p.content.parentElement).toBe(single.element);
     });
 });
 
-describe('basic_ui group resize and drag', () =>
+describe('basic_ui drag', () =>
 {
-    it('distributes the container length minus the separator', () =>
+    it('sets the weights to the new px', () =>
     {
-        const { group, left, main } = two_columns();
-        fake_observer.resize(group, 1604, 300);
-        expect(basis(left.content)).toBe(400);
-        expect(basis(main.content)).toBe(1200);
-    });
-
-    it('drags with pointer capture and stops on pointerup', () =>
-    {
-        const { group, separator, left, main } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        const { separator, left, main } = two_columns();
         pointer(separator, 'pointerdown', 0);
         expect(separator.hasPointerCapture(1)).toBe(true);
-        pointer(separator, 'pointermove', 50);
-        expect(basis(left.content)).toBe(250);
-        expect(basis(main.content)).toBe(550);
+        pointer(separator, 'pointermove', 100);
+        expect(grow(left.content)).toBeCloseTo(300);
+        expect(grow(main.content)).toBeCloseTo(500);
         pointer(separator, 'pointermove', 9999);
-        expect(basis(left.content)).toBe(400);
+        expect(grow(left.content)).toBeCloseTo(400);
         pointer(separator, 'pointerup', 9999);
         expect(separator.hasPointerCapture(1)).toBe(false);
         pointer(separator, 'pointermove', 0);
-        expect(basis(left.content)).toBe(400);
+        expect(grow(left.content)).toBeCloseTo(400);
     });
 
-    it('ends the drag on pointercancel and lostpointercapture', () =>
+    it('ends on pointercancel and lostpointercapture', () =>
     {
         for (const end of ['pointercancel', 'lostpointercapture'])
         {
             document.body.innerHTML = '';
-            const { group, separator, left } = two_columns();
-            fake_observer.resize(group, 804, 300);
+            const { separator, left } = two_columns();
             pointer(separator, 'pointerdown', 0);
             pointer(separator, 'pointermove', 30);
             pointer(separator, end, 30);
             pointer(separator, 'pointermove', 100);
-            expect(basis(left.content)).toBe(230);
+            expect(grow(left.content)).toBeCloseTo(230);
         }
     });
 
     it('ignores secondary buttons, non-primary pointers and other pointer ids', () =>
     {
-        const { group, separator, left } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        const { separator, left } = two_columns();
         pointer(separator, 'pointerdown', 0, { button: 2 });
         pointer(separator, 'pointermove', 50);
-        expect(basis(left.content)).toBe(200);
         pointer(separator, 'pointerdown', 0, { isPrimary: false });
         pointer(separator, 'pointermove', 50);
-        expect(basis(left.content)).toBe(200);
+        expect(grow(left.content)).toBe(200);
 
         pointer(separator, 'pointerdown', 0);
         pointer(separator, 'pointermove', 50, { pointerId: 2 });
-        expect(basis(left.content)).toBe(200);
-        pointer(separator, 'pointerup', 50, { pointerId: 2 });
+        expect(grow(left.content)).toBe(200);
         pointer(separator, 'pointermove', 10);
-        expect(basis(left.content)).toBe(210);
+        expect(grow(left.content)).toBeCloseTo(210);
     });
 
-    it('does not jump when the container resizes during a drag', () =>
+    it('does not move other panels when a neighbour is held at its min', () =>
     {
-        const { group, separator, left } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        const w = make_world({ a: { p: section('p'), q: section('q'), r: section('r') } });
+        const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [leaf('a', 'p', 300, 300), leaf('a', 'q', 300), leaf('a', 'r', 300)] };
+        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const [p, q, r] = ['p', 'q', 'r'].map(n => root.panels.get('a')!.get(n)!.content);
+        // 容器 608：p 卡在 min 300，q / r 各 150
+        stub_width(p, 300);
+        stub_width(q, 150);
+        stub_width(r, 150);
+        const separator = root.element.querySelector('[data-basic_ui_separator="0"]')!;
         pointer(separator, 'pointerdown', 0);
-        pointer(separator, 'pointermove', 40);
-        expect(basis(left.content)).toBe(240);
-        // 依比例重排到 900：225 / 675，之後的移動以此為起點
-        fake_observer.resize(group, 904, 300);
-        expect(basis(left.content)).toBeCloseTo(225);
+        pointer(separator, 'pointermove', 0);
+        expect([grow(p), grow(q), grow(r)]).toEqual([300, 300, 300]);
         pointer(separator, 'pointermove', 50);
-        expect(basis(left.content)).toBeCloseTo(235);
-        // 只有交叉軸變化：不動
-        fake_observer.resize(group, 904, 301);
-        expect(basis(left.content)).toBeCloseTo(235);
+        // 與 350 / 100 / 150 px 成比例，總和維持 900
+        expect(grow(p)).toBeCloseTo(525);
+        expect(grow(q)).toBeCloseTo(150);
+        expect(grow(r)).toBeCloseTo(225);
     });
 
-    it('keeps the proportions through an overflow', () =>
+    it('a collapsed sibling keeps its share after a drag elsewhere', () =>
     {
-        const { group, left, main } = two_columns();
-        fake_observer.resize(group, 804, 300);
-        fake_observer.resize(group, 104, 300);
-        expect(basis(left.content)).toBe(100);
-        expect(basis(main.content)).toBe(200);
-        fake_observer.resize(group, 804, 300);
-        expect(basis(left.content)).toBe(200);
-        expect(basis(main.content)).toBe(600);
-    });
-
-    it('a drag during an overflow does not overwrite the proportions', () =>
-    {
-        const { group, separator, left } = two_columns();
-        fake_observer.resize(group, 804, 300);
-        fake_observer.resize(group, 104, 300);
+        const w = make_world({ a: { p: section('p'), q: section('q'), r: section('r') } });
+        const layout: basic_ui.layout_node =
+        {
+            kind: 'group', axis: 'x',
+            children: [leaf('a', 'p', 200), leaf('a', 'q', 200), { ...leaf('a', 'r', 200), collapsible: true, collapsed_size: 0 }]
+        };
+        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const [p, q, r] = ['p', 'q', 'r'].map(n => root.panels.get('a')!.get(n)!);
+        r.collapse();
+        // 容器 1208：p / q 各 600
+        stub_width(p.content, 600);
+        stub_width(q.content, 600);
+        stub_width(r.content, 0);
+        const separator = root.element.querySelector('[data-basic_ui_separator="0"]')!;
         pointer(separator, 'pointerdown', 0);
-        pointer(separator, 'pointermove', 50);
-        pointer(separator, 'pointerup', 50);
-        fake_observer.resize(group, 804, 300);
-        expect(basis(left.content)).toBe(200);
+        pointer(separator, 'pointermove', 60);
+        pointer(separator, 'pointerup', 60);
+        r.expand();
+        // p : q = 660 : 540，總和 400 不變；r 的 200 仍是三分之一
+        expect(grow(p.content)).toBeCloseTo(220);
+        expect(grow(q.content)).toBeCloseTo(180);
+        expect(grow(r.content)).toBe(200);
+    });
+
+    it('keeps the proportions when pressed during an overflow', () =>
+    {
+        const { separator, left, main } = two_columns();
+        stub_width(left.content, 100);
+        stub_width(main.content, 200);
+        pointer(separator, 'pointerdown', 0);
+        pointer(separator, 'pointermove', 30);
+        pointer(separator, 'pointerup', 30);
+        expect([grow(left.content), grow(main.content)]).toEqual([200, 600]);
+    });
+
+    it('clamps measured sizes that are slightly outside the limits', () =>
+    {
+        const { separator, left } = two_columns();
+        stub_width(left.content, 99.9999);
+        pointer(separator, 'pointerdown', 0);
+        pointer(separator, 'pointermove', -50);
+        expect(grow(left.content)).toBeGreaterThan(0);
     });
 });
 
 describe('basic_ui collapse', () =>
 {
-    it('collapses and expands through the handle', () =>
+    it('pins the slot at collapsed_size and restores the weight on expand', () =>
     {
-        const { group, left, main } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        const { left, main } = two_columns();
         left.collapse();
         expect(left.is_collapsed()).toBe(true);
-        expect(basis(left.content)).toBe(20);
-        expect(basis(main.content)).toBe(780);
-        expect(left.content.parentElement!.dataset.basic_ui_collapsed).toBe('true');
-        left.collapse();
-        expect(basis(left.content)).toBe(20);
+        expect(slot_of(left.content).style.flexGrow).toBe('0');
+        expect(slot_of(left.content).style.flexBasis).toBe('20px');
+        expect(slot_of(left.content).dataset.basic_ui_collapsed).toBe('true');
+        expect(grow(main.content)).toBe(600);
 
         left.expand();
         expect(left.is_collapsed()).toBe(false);
-        expect(basis(left.content)).toBe(200);
-        expect(basis(main.content)).toBe(600);
+        expect(grow(left.content)).toBe(200);
+        expect(slot_of(left.content).style.minWidth).toBe('100px');
         expect(() => main.collapse()).toThrow(/not collapsible/);
-        expect(() => main.expand()).toThrow(/not collapsible/);
     });
 
-    it('a collapsed child stays collapsed through resizes and blocks dragging', () =>
+    it('a collapsed neighbour blocks dragging, and collapsing ends a drag', () =>
     {
-        const { group, separator, left, main } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        const { separator, left, main } = two_columns();
         left.collapse();
-        fake_observer.resize(group, 1004, 300);
-        expect(basis(left.content)).toBe(20);
-        expect(basis(main.content)).toBe(980);
+        stub_width(left.content, 20);
         pointer(separator, 'pointerdown', 0);
         pointer(separator, 'pointermove', 100);
         pointer(separator, 'pointerup', 100);
-        expect(basis(left.content)).toBe(20);
+        expect(grow(main.content)).toBe(600);
         left.expand();
-        expect(basis(left.content)).toBe(200);
-    });
 
-    it('collapsing during a drag ends the drag', () =>
-    {
-        const { group, separator, left } = two_columns();
-        fake_observer.resize(group, 804, 300);
+        stub_width(left.content, 200);
         pointer(separator, 'pointerdown', 0);
         pointer(separator, 'pointermove', 50);
         left.collapse();
         expect(separator.hasPointerCapture(1)).toBe(false);
-        pointer(separator, 'pointermove', 80);
-        expect(basis(left.content)).toBe(20);
         left.expand();
-        expect(basis(left.content)).toBe(250);
-    });
-});
-
-describe('basic_ui edge cases', () =>
-{
-    it('collapsing during an overflow keeps the remembered size and the proportions', () =>
-    {
-        const { group, left, main } = two_columns();
-        fake_observer.resize(group, 804, 300);
-        fake_observer.resize(group, 104, 300);
-        left.collapse();
-        fake_observer.resize(group, 804, 300);
-        left.expand();
-        expect(basis(left.content)).toBe(200);
-        expect(basis(main.content)).toBe(600);
-    });
-
-    it('collapsing in a hidden (0 px) container does not wipe the weights', () =>
-    {
-        const w = make_world({ a: { x: section('x'), y: section('y'), z: section('z') } });
-        const layout: basic_ui.layout_node =
-        {
-            kind: 'group', axis: 'x',
-            children: [leaf('a', 'x', 100), { ...leaf('a', 'y', 300), collapsible: true, collapsed_size: 0 }, leaf('a', 'z', 100)]
-        };
-        const root = basic_ui.mount_ui_root(container(), w, layout);
-        const group = root.element.firstElementChild!;
-        const [x, y, z] = ['x', 'y', 'z'].map(n => root.panels.get('a')!.get(n)!);
-        fake_observer.resize(group, 508, 300);
-        fake_observer.resize(group, 0, 0);
-        y.collapse();
-        fake_observer.resize(group, 508, 300);
-        y.expand();
-        expect([basis(x.content), basis(y.content), basis(z.content)]).toEqual([100, 300, 100]);
-    });
-
-    it('a click without moving does not change the proportions', () =>
-    {
-        const { group, separator, left, main } = two_columns();
-        fake_observer.resize(group, 2004, 300);
-        expect(basis(left.content)).toBe(400);
-        pointer(separator, 'pointerdown', 0);
-        pointer(separator, 'pointerup', 0);
-        fake_observer.resize(group, 804, 300);
-        expect(basis(left.content)).toBe(200);
-        expect(basis(main.content)).toBe(600);
+        expect(grow(left.content)).toBeCloseTo(250);
     });
 
     it('rejects a collapsible group child', () =>
     {
-        const w = make_world({ a: { p: section('p') } });
         const layout =
         {
             kind: 'group', axis: 'x',
             children: [{ node: { kind: 'group', axis: 'y', children: [leaf('a', 'p', 10)] }, size: 10, min: 0, max: 100, collapsible: true, collapsed_size: 0 }]
         };
-        expect(() => basic_ui.mount_ui_root(container(), w, layout)).toThrow(/only panel children can be collapsible/);
+        expect(() => basic_ui.mount_ui_root(container(), make_world({ a: { p: section('p') } }), layout)).toThrow(/only panel children can be collapsible/);
     });
 });

@@ -1,7 +1,7 @@
 import * as world from '@/world';
 import { list_panels } from './extensions';
 import { check_layout } from './layout_tree';
-import type { layout_node, axis } from './layout_tree';
+import type { layout_node } from './layout_tree';
 import { create_group } from './group';
 import type { group_view } from './group';
 import { panel_label } from './validate';
@@ -69,7 +69,6 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     }
 
     const panels = new Map<string, Map<string, panel_handle>>();
-    const groups = new Map<Element, { view: group_view; axis: axis }>();
 
     function register(pack_id: string, name: string, content: HTMLElement, group: group_view | null, index: number, collapsible: boolean): void
     {
@@ -104,7 +103,6 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     {
         const elements = node.children.map(child => (child.node.kind === 'panel' ? content_of(child.node) : build(child.node)));
         const group = create_group(doc, node.axis, node.children, elements);
-        groups.set(group.element, { view: group, axis: node.axis });
         node.children.forEach((child, i) =>
         {
             if (child.node.kind === 'panel')
@@ -132,19 +130,5 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     }
 
     container.appendChild(element);
-
-    const observer = new ResizeObserver(entries =>
-    {
-        for (const entry of entries)
-        {
-            const group = groups.get(entry.target)!;
-            group.view.layout(group.axis === 'x' ? entry.contentRect.width : entry.contentRect.height);
-        }
-    });
-    for (const group_element of groups.keys())
-    {
-        observer.observe(group_element);
-    }
-
     return { element, panels };
 }
