@@ -1,5 +1,5 @@
 import * as core from '@/core';
-import * as vanilla_beta from '@/packs/vanilla_beta';
+import * as vanilla_gamma from '@/packs/vanilla_gamma';
 
 export const iron: core.item_stack = { item_id: { namespace: 'test', id: 'iron' }, quantity: 3 };
 
@@ -29,7 +29,7 @@ export const pass_through: core.recipe =
 {
     namespace: 'test',
     id:        'pass_through',
-    evaluate(context: vanilla_beta.recipe_context): core.item_stack[] { return context.inputs.map(s => ({ ...s })); }
+    evaluate(context: vanilla_gamma.recipe_context): core.item_stack[] { return context.inputs.map(s => ({ ...s })); }
 };
 
 export const manifest: core.pack_manifest =

@@ -6,7 +6,7 @@ export * from './history';
 export * from './spatial';
 export * from './parse';
 export * from './templates';
-export * from './evaluate';
+export * from './graph';
 
 export const manifest: core.pack_manifest =
 {
