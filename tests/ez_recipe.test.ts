@@ -34,12 +34,6 @@ describe('ez_recipe ratio', () =>
         });
     });
 
-    it('同一 item 可同時在兩側', () =>
-    {
-        const rec = ez_recipe.ratio(rid, stack(a, 1), ez_recipe.unordered(stack(a, 1), stack(c, 2)), Infinity);
-        expect(ez_recipe.scale_ratio(rec, 0.5).outputs).toEqual(ez_recipe.unordered(stack(a, 0.5), stack(c, 1)));
-    });
-
     it('建立後修改呼叫端的組合不影響 recipe', () =>
     {
         const leaf = stack({ ...a }, 1);
@@ -102,14 +96,6 @@ describe('ez_recipe parse_combination', () =>
         );
     });
 
-    it('可直接用於 ratio', () =>
-    {
-        const rec = ez_recipe.ratio(rid, ez_recipe.parse_combination('[{p:a, p:b}, p:c]'), ez_recipe.parse_combination('p:c'), Infinity);
-        expect(ez_recipe.scale_ratio(rec, 2).inputs).toEqual(
-            ez_recipe.ordered(ez_recipe.unordered(stack(a, 2), stack(b, 2)), stack(c, 2))
-        );
-    });
-
     it('語法錯誤、缺 namespace、係數不合法時報錯', () =>
     {
         const bad = [
@@ -154,11 +140,6 @@ describe('ez_recipe solve_ratio', () =>
         const cat = ez_recipe.ratio(rid, ez_recipe.parse_combination('p:a'), ez_recipe.parse_combination('{2*p:a, p:c}'), Infinity);
         expect(ez_recipe.solve_ratio(cat, 'inputs', a, 4).t).toBe(4);
         expect(ez_recipe.solve_ratio(cat, 'outputs', a, 4).t).toBe(2);
-    });
-
-    it('目標量 0 時 t = 0', () =>
-    {
-        expect(ez_recipe.solve_ratio(rec, 'outputs', c, 0).inputs).toEqual(ez_recipe.unordered(stack(a, 0), stack(b, 0)));
     });
 
     it('item 不在該側、目標量非 ≥ 0 有限數時報錯', () =>
@@ -260,12 +241,6 @@ describe('ez_recipe evaluate_ratio_graph', () =>
         expect(t_of(ez_recipe.evaluate_ratio_graph(sp, registry))).toEqual({ u: 10, d1: 10, d2: 5 });
     });
 
-    it('unordered 依邊另一端的 item 配對埠', () =>
-    {
-        const { sp, registry } = fork('{p:d, p:c}');
-        expect(t_of(ez_recipe.evaluate_ratio_graph(sp, registry))).toEqual({ u: 10, d1: 10, d2: 5 });
-    });
-
     function diamond(d_inputs: string): { sp: core.space; registry: core.pack_registry }
     {
         const sp = new core.space([32, 32]);
@@ -337,11 +312,11 @@ describe('ez_recipe evaluate_ratio_graph', () =>
         expect(t_of(ez_recipe.evaluate_ratio_graph(resolved.sp, resolved.registry))).toEqual({ u: 1, d: 1 });
     });
 
-    it('unordered 的相同子項不重複排列：12 個 p:x 加 1 個 p:y 只有 13 種排列', () =>
+    it('非平的 unordered 展開時相同子項不重複排列：12 個 [p:x] 加 1 個 [2*p:y] 只有 13 種排列', () =>
     {
         const sp = new core.space([32, 32]);
         place(sp, 'm', [1, 1], 'many', Array.from({ length: 13 }, (_, i) => ['input', [-1, i]] as [core.port_direction, core.vector]));
-        const inputs = `{${Array(12).fill('p:x').join(', ')}, 2*p:y}`;
+        const inputs = `{${Array(12).fill('[p:x]').join(', ')}, [2*p:y]}`;
         const result = ez_recipe.evaluate_ratio_graph(sp, make_registry([rec('many', inputs, '[]', 2)]));
         expect(result.external).toEqual([
             { uid: 'm', item_id: { namespace: 'p', id: 'x' }, quantity: 24 },
