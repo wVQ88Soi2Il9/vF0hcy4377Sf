@@ -99,4 +99,43 @@ describe('evaluate_world', () =>
         expect(vanilla_beta.build_graph(w.space)).toEqual([]);
         expect(vanilla_beta.evaluate_world(w).get('p1')).toEqual([vanilla_beta.null_stack()]);
     });
+
+    it('重疊的 device：不計入圖、不計算，下游得到 null item', () =>
+    {
+        const w = make_world();
+        add(w, make_port_device('src', [0, 0], [{ port_uid: 'out', offset: [1, 0], direction: 'output' }]), { namespace: 'test', id: 'emit_iron' });
+        add(w, make_port_device('dup', [0, 0], []));
+        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 2 }]), pass_through_id);
+        expect(vanilla_beta.build_graph(w.space)).toEqual([]);
+        const results = vanilla_beta.evaluate_world(w);
+        expect(results.has('src')).toBe(false);
+        expect(results.has('dup')).toBe(false);
+        expect(results.get('p1')).toEqual([vanilla_beta.null_stack()]);
+    });
+
+    it('出界的 device：不計入圖、不計算', () =>
+    {
+        const w = make_world();
+        add(w, make_port_device('src', [0, 0], [{ port_uid: 'out', offset: [1, 0], direction: 'output' }]), { namespace: 'test', id: 'emit_iron' });
+        add(w, new pipe.pipe_device('p1', pipe_id, [2, 0], [{ axis: 0, delta: 32 }]), pass_through_id);
+        expect(vanilla_beta.build_graph(w.space)).toEqual([]);
+        const results = vanilla_beta.evaluate_world(w);
+        expect(results.has('p1')).toBe(false);
+        expect(results.get('src')).toEqual([iron]);
+    });
+
+    it('重疊的 device 組成的環不 throw', () =>
+    {
+        const w = make_world();
+        add(w, make_port_device('a', [0, 0], [
+            { port_uid: 'in',  offset: [-1, 0], direction: 'input' },
+            { port_uid: 'out', offset: [1, 0],  direction: 'output' }
+        ]), pass_through_id);
+        add(w, make_port_device('b', [2, 0], [
+            { port_uid: 'in',  offset: [-1, 0], direction: 'input' },
+            { port_uid: 'out', offset: [-3, 0], direction: 'output' }
+        ]), pass_through_id);
+        add(w, make_port_device('dup', [2, 0], []));
+        expect(vanilla_beta.evaluate_world(w).get('a')).toEqual([vanilla_beta.null_stack()]);
+    });
 });

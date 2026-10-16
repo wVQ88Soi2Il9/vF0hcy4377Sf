@@ -1,7 +1,7 @@
 import * as core from '@/core';
 import * as world from '@/world';
 import * as vanilla_alpha from '@/packs/vanilla_alpha';
-import { add_vector, vector_to_string } from './spatial';
+import { add_vector, vector_to_string, check_map_overlap } from './spatial';
 
 /**
  * vanilla 交給 recipe 的 context：最大只到 space；inputs 依 input 埠順序。
@@ -42,6 +42,16 @@ function global_port_key(device: core.device, port: core.port): string
     return vector_to_string(add_vector(device.position, port.offset));
 }
 
+/**
+ * 計入圖的 device：重疊或出界的 device 不計入圖、不計算、不出現在結果中。
+ */
+export function graph_devices(sp: core.space): core.device[]
+{
+    const { out_of_bounds, overlapped } = check_map_overlap(sp);
+    const skipped = new Set([...out_of_bounds, ...overlapped]);
+    return [...sp.devices.values()].filter(d => !skipped.has(d.device_uid));
+}
+
 interface placed_port
 {
     uid:       core.uid;
@@ -51,12 +61,12 @@ interface placed_port
 
 /**
  * 從 space 現建圖。one position one port：同一全域座標恰有 1 個 output 與 1 個 input 時連一條邊；
- * 其他組合（同向、3 個以上、含 bidirectional）的座標不計入圖。
+ * 其他組合（同向、3 個以上、含 bidirectional）的座標不計入圖。重疊或出界的 device 也不計入圖。
  */
 export function build_graph(sp: core.space): port_edge[]
 {
     const by_position = new Map<string, placed_port[]>();
-    for (const device of sp.devices.values())
+    for (const device of graph_devices(sp))
     {
         const counters: Record<core.port_direction, number> = { input: 0, output: 0, bidirectional: 0 };
         for (const port of device.get_port())
@@ -86,11 +96,11 @@ export function build_graph(sp: core.space): port_edge[]
 /**
  * Kahn 拓撲排序；有環時 throw（環合法，但計算方式未定）。
  */
-function topological_order(sp: core.space, edges: port_edge[]): core.uid[]
+function topological_order(uids: core.uid[], edges: port_edge[]): core.uid[]
 {
     const in_degree = new Map<core.uid, number>();
     const next = new Map<core.uid, core.uid[]>();
-    for (const uid of sp.devices.keys())
+    for (const uid of uids)
     {
         in_degree.set(uid, 0);
         next.set(uid, []);
@@ -118,7 +128,7 @@ function topological_order(sp: core.space, edges: port_edge[]): core.uid[]
         }
     }
 
-    if (order.length !== sp.devices.size)
+    if (order.length !== uids.length)
     {
         throw new Error('Cycle evaluation not supported yet.');
     }
@@ -127,7 +137,7 @@ function topological_order(sp: core.space, edges: port_edge[]): core.uid[]
 
 /**
  * 依拓撲順序計算每個 device 的輸出；結果只回傳，不存入 world。
- * 未接上的 input 與未選 recipe 的 output 皆為 null item。
+ * 未接上的 input 與未選 recipe 的 output 皆為 null item；重疊或出界的 device 跳過。
  */
 export function evaluate_world(target_world: world.pure_world): Map<core.uid, core.item_stack[]>
 {
@@ -135,7 +145,7 @@ export function evaluate_world(target_world: world.pure_world): Map<core.uid, co
     const edges = build_graph(sp);
     const results = new Map<core.uid, core.item_stack[]>();
 
-    for (const uid of topological_order(sp, edges))
+    for (const uid of topological_order(graph_devices(sp).map(d => d.device_uid), edges))
     {
         const device = sp.devices.get(uid)!;
         const inputs = ports_of(device, 'input').map(() => null_stack());
