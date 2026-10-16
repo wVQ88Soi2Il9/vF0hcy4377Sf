@@ -1,16 +1,7 @@
 import type { axis, css_length, layout_child } from './layout_tree';
 
-/**
- * 分割線沿軸的固定寬度（px）。
- */
 export const separator_size = 4;
 
-/**
- * 一個 group 的 DOM 與狀態。尺寸交給瀏覽器的 flexbox：
- * 每個 slot 為 flex: <weight> 1 0px，並以 min/max-width（或 height）設上下限（可用任何 CSS 長度）；
- * 容器縮放時由瀏覽器依 weights 等比分配、夾在上下限內，放不下所有 min 時溢出捲動。
- * 收合把 slot 固定為 collapsed_size 並隱藏鄰接的分割線，展開恢復原 weight。
- */
 export interface group_view
 {
     readonly element: HTMLElement;
@@ -57,11 +48,10 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
     element.style.width = '100%';
     element.style.height = '100%';
 
-    // 掛載時檢查所有 CSS 長度字串：瀏覽器不接受的值會被忽略，這裡改為報錯。
-    // 拖曳時要把 min/max 換成 px，混用百分比的 calc() / max() 等算不出來，也在這裡拒絕
+    // 瀏覽器會默默忽略無效值；混用 % 的運算式拖曳時換不成 px
     for (const child of children)
     {
-        // 每個值用它實際寫入的屬性檢查（例如 'none' 只對 max 合法）；collapsed_size 同時寫進 min 與 max
+        // 依寫入的屬性檢查：'none' 只對 max 合法
         const lengths: [css_length, string[]][] = [[child.min, ['min-width']], [child.max, ['max-width']]];
         if (child.collapsible)
         {
@@ -110,9 +100,6 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
         });
     }
 
-    /**
-     * 把 slot 計算後的 min/max 換成 px：'none' 為 Infinity，百分比相對於 group 沿軸的長度。
-     */
     function computed_px(slot: HTMLElement, property: 'minWidth' | 'minHeight' | 'maxWidth' | 'maxHeight'): number
     {
         const value = doc.defaultView!.getComputedStyle(slot)[property];
@@ -147,10 +134,6 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
         }
     }
 
-    /**
-     * 拖曳第 index 條分割線：只動兩側，各自夾在上下限內；展開中子區塊的 weights 改為與目前 px 成比例
-     * （維持原 weight 總和），flexbox 依此分配會剛好重現畫面，不會跳動。
-     */
     function on_move(event: PointerEvent): void
     {
         if (drag === null || event.pointerId !== drag.pointer_id)
@@ -163,12 +146,13 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
         const lo = Math.max(limits[0][0] - start[a], start[b] - limits[1][1]);
         const hi = Math.min(limits[0][1] - start[a], start[b] - limits[1][0]);
         const d = Math.min(hi, Math.max(lo, event[main] - drag.start_at));
-        // 還沒真正改變尺寸（原地按下、溢出時兩側都卡在上下限）就不動 weights，保留原比例
+        // 尺寸沒變（原地按下、溢出）就不動 weights，以免比例被 min 覆蓋
         if (!drag.changed && d === 0)
         {
             return;
         }
         drag.changed = true;
+        // weights 改為與 px 成比例並維持總和：flexbox 會重現畫面，收合中的 weight 仍同尺度
         const next = [...start];
         next[a] = Math.min(limits[0][1], Math.max(limits[0][0], start[a] + d));
         next[b] = Math.min(limits[1][1], Math.max(limits[1][0], start[b] - d));
@@ -191,7 +175,6 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
         const separator = doc.createElement('div');
         separator.dataset.basic_ui_separator = String(index);
         separator.setAttribute('role', 'separator');
-        // x group 的分割線是直線，y group 的是橫線
         separator.setAttribute('aria-orientation', group_axis === 'x' ? 'vertical' : 'horizontal');
         separator.style.flex = `0 0 ${separator_size}px`;
         separator.style.cursor = group_axis === 'x' ? 'col-resize' : 'row-resize';
@@ -212,7 +195,7 @@ export function create_group(doc: Document, group_axis: axis, children: layout_c
             event.preventDefault();
             separator.setPointerCapture(event.pointerId);
             separator.dataset.basic_ui_dragging = '';
-            // 次像素誤差可能讓量到的 px 略超出上下限，夾回去
+            // 次像素誤差可能略超出上下限
             const start = slots.map(slot => slot.getBoundingClientRect()[length]);
             start[index] = Math.min(limits[0][1], Math.max(limits[0][0], start[index]));
             start[index + 1] = Math.min(limits[1][1], Math.max(limits[1][0], start[index + 1]));
