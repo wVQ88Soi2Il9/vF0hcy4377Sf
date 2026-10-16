@@ -20,7 +20,7 @@ interface projection       { size: [number, number]; view: projection_view; devi
 ```
 
 - 座標單位同空間（一格 = 2），原點為空間原點；`cells` 不保證在 `size` 內，裁切由呼叫端負責。
-- `size` 為空間在兩個畫面軸的大小，render 不使用，供呼叫端標示空間範圍。
+- `size` 為空間在兩個畫面軸的大小；render 只用它的高做垂直翻轉，也供呼叫端標示空間範圍。
 - `view` 為投影時的視角（畫面軸與切片），render 不解讀，原樣傳給每個裝置的 `draw`，供裝置自行投影埠等 N 維資訊。
 
 ## 裝置畫法
@@ -41,11 +41,11 @@ class conveyor extends basic_renderer.drawable(cuboid_device.base_cuboid_device)
 
 `render(view, cell_px): SVGGElement`
 
-- 回傳一個圖層 `<g>`，座標為空間座標 × `cell_px / 2`；不設寬高或 `viewBox`。看哪一塊（無限畫布的平移/縮放）由呼叫端的 `<svg viewBox>` 決定。
+- 回傳一個圖層 `<g>`，座標為空間座標 × `cell_px / 2`；不設寬高或 `viewBox`。
+- 垂直軸向上（human 選定）：圖層帶 `transform="translate(0 H) scale(1 -1)"`（`H = size[1] / 2 × cell_px`），第二軸 0 在空間範圍底部。裝置的 `draw` 照向下為正的座標畫，不必自行翻轉；文字會跟著上下顛倒。看哪一塊（無限畫布的平移/縮放）由呼叫端的 `<svg viewBox>` 決定。
 - `cell_px`（一格的 render 單位）必填，非有限正數時 throw。
 - 依 `view.devices` 順序，只畫 `is_drawable` 的裝置，以 `draw(item, cell_px, view.view)` 的回傳值 append 進圖層；其他裝置略過。
 
 ## Todo
 
-- 畫面 y 軸直接對應投影第二軸（向下為正），是否翻轉未決。
 - 沒有預設畫法、背景格線、標籤或埠的繪製；由各裝置的 `draw` 自行處理（埠由裝置依 `view` 自行投影，human 選定）。

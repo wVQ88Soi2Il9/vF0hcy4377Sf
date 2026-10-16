@@ -50,7 +50,7 @@ export function is_drawable(target: core.device): target is core.device & drawab
     return drawable_brand in target;
 }
 
-// 畫成一個圖層，座標為空間座標 × cell_px / 2；不設視窗，看哪一塊由使用端的 viewBox 決定
+// 畫成一個圖層，座標為空間座標 × cell_px / 2，垂直軸向上（第二軸 0 在 size 底部）；不設視窗，看哪一塊由使用端的 viewBox 決定
 export function render(view: projection, cell_px: number): SVGGElement
 {
     if (!Number.isFinite(cell_px) || cell_px <= 0)
@@ -59,6 +59,8 @@ export function render(view: projection, cell_px: number): SVGGElement
     }
 
     const layer = document.createElementNS(SVG_NS, 'g');
+    // draw 照向下為正的座標畫，圖層以 [0, size 高] 為範圍上下翻轉
+    layer.setAttribute('transform', `translate(0 ${view.size[1] / 2 * cell_px}) scale(1 -1)`);
     for (const item of view.devices)
     {
         if (is_drawable(item.device))

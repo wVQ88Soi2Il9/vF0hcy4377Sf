@@ -55,6 +55,7 @@ describe('basic_renderer.render', () =>
 
         expect(layer.tagName).toBe('g');
         expect(layer.hasAttribute('viewBox')).toBe(false);
+        expect(layer.getAttribute('transform')).toBe('translate(0 20) scale(1 -1)');
         expect(layer.children.length).toBe(1);
         const g = layer.children[0];
         expect(g.getAttribute('data-color')).toBe('red');

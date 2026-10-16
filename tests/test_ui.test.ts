@@ -162,9 +162,12 @@ describe('test_ui view camera controls', () =>
     it('switching axes swaps on collision and turns the old view axis into a slice', () =>
     {
         mount([8, 8, 4]);
+        const label = (which: string) => document.querySelector<HTMLElement>(`[data-test_ui_axis_${which}]`)!.textContent;
+        expect([label('h'), label('v')]).toEqual(['d0 →', 'd1 →']);
         change(axis_select(0), '1');
         expect(axis_select(0).value).toBe('1');
         expect(axis_select(1).value).toBe('0');
+        expect([label('h'), label('v')]).toEqual(['d1 →', 'd0 →']);
         expect(slice_input(2)!.value).toBe('1');
 
         change(axis_select(1), '2');

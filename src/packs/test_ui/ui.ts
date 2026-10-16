@@ -230,11 +230,28 @@ function render_view(target_world: world.pure_world): HTMLElement
     const svg = document.createElementNS(SVG_NS, 'svg');
     svg.dataset.test_ui_view = '';
     svg.style.display = 'block';
-    svg.style.flex = '1';
-    svg.style.minHeight = '0';
     svg.style.width = '100%';
+    svg.style.height = '100%';
     svg.style.cursor = 'grab';
-    el.append(controls, svg);
+    // 畫面左側標直軸、下方標橫軸：軸的 index 與正方向
+    const axis_v = document.createElement('div');
+    axis_v.dataset.test_ui_axis_v = '';
+    axis_v.style.writingMode = 'vertical-rl';
+    axis_v.style.transform = 'rotate(180deg)';
+    axis_v.style.textAlign = 'center';
+    axis_v.style.padding = '0 4px';
+    const axis_h = document.createElement('div');
+    axis_h.dataset.test_ui_axis_h = '';
+    axis_h.style.textAlign = 'center';
+    axis_h.style.padding = '4px 0 0';
+    const stage = document.createElement('div');
+    stage.style.flex = '1';
+    stage.style.minHeight = '0';
+    stage.style.display = 'grid';
+    stage.style.gridTemplateColumns = 'auto minmax(0, 1fr)';
+    stage.style.gridTemplateRows = 'minmax(0, 1fr) auto';
+    stage.append(axis_v, svg, document.createElement('div'), axis_h);
+    el.append(controls, stage);
 
     const grid = document.createElementNS(SVG_NS, 'g');
     grid.dataset.test_ui_grid = '';
@@ -313,6 +330,8 @@ function render_view(target_world: world.pure_world): HTMLElement
         });
         whole.dataset.test_ui_view_fit = '';
         controls.replaceChildren(whole, '橫 ', h, '直 ', v);
+        axis_h.textContent = `d${view.axes[0]} →`;
+        axis_v.textContent = `d${view.axes[1]} →`;
 
         for (const axis of Object.keys(view.slice).map(Number))
         {
