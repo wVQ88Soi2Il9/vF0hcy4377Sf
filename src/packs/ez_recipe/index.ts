@@ -1,5 +1,6 @@
 import * as core from '@/core';
 
+export * from './combination';
 export * from './ratio';
 
 export const manifest: core.pack_manifest =
