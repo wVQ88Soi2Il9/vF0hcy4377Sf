@@ -23,13 +23,34 @@ export interface ratio_graph_result
 
 type arrangement = core.item_stack[];
 
+/** 一段連續的埠，存仍可能的所有葉排列。 */
+interface fixed_segment
+{
+    kind:         'fixed';
+    arrangements: arrangement[];
+}
+
+/** 平的 unordered（子項全是葉、上層全是 ordered）：不展開排列，只記每種葉的個數與每個埠的候選。 */
+interface pool_segment
+{
+    kind:       'pool';
+    /** 葉 key → 葉與個數。 */
+    leaves:     Map<string, { leaf: core.item_stack; count: number }>;
+    /** 每個埠仍可能的葉 key；每個候選都出現在某個完整分配中。 */
+    candidates: Set<string>[];
+}
+
+type segment = fixed_segment | pool_segment;
+
+/** 一側的埠：第 k 個埠落在哪一段的第幾個位置。 */
+type side_state = { segment: segment; local: number }[];
+
 interface device_state
 {
     device:  core.device;
     recipe:  ratio_recipe;
-    /** 仍可能的葉排列；第 k 個葉對應該側第 k 個埠。 */
-    inputs:  arrangement[];
-    outputs: arrangement[];
+    inputs:  side_state;
+    outputs: side_state;
 }
 
 function item_key(item_id: core.namespaced_id): string
@@ -37,16 +58,21 @@ function item_key(item_id: core.namespaced_id): string
     return `${item_id.namespace}:${item_id.id}`;
 }
 
+function leaf_key(leaf: core.item_stack): string
+{
+    return `${item_key(leaf.item_id)}*${leaf.quantity}`;
+}
+
 function arrangement_key(arr: arrangement): string
 {
-    return arr.map(s => `${item_key(s.item_id)}*${s.quantity}`).join('|');
+    return arr.map(leaf_key).join('|');
 }
 
 function combination_key(comb: combination): string
 {
     if (!('kind' in comb))
     {
-        return `${item_key(comb.item_id)}*${comb.quantity}`;
+        return leaf_key(comb);
     }
     const inner = comb.items.map(combination_key).join(',');
     return comb.kind === 'ordered' ? `[${inner}]` : `{${inner}}`;
@@ -127,6 +153,185 @@ function arrangements(comb: combination): arrangement[]
     return [...result.values()];
 }
 
+function is_flat_unordered(comb: combination): comb is { kind: 'unordered'; items: core.item_stack[] }
+{
+    return 'kind' in comb && comb.kind === 'unordered' && comb.items.length > 0 && comb.items.every(c => !('kind' in c));
+}
+
+/**
+ * 依 ordered 切段：平的 unordered 成為 pool，其他（葉、非平的 unordered）展開排列成為 fixed。
+ */
+function build_side(comb: combination): side_state
+{
+    const side: side_state = [];
+    const push = (segment: segment, length: number): void =>
+    {
+        for (let local = 0; local < length; local++)
+        {
+            side.push({ segment, local });
+        }
+    };
+    const visit = (c: combination): void =>
+    {
+        if ('kind' in c && c.kind === 'ordered')
+        {
+            c.items.forEach(visit);
+            return;
+        }
+        if (is_flat_unordered(c))
+        {
+            const leaves = new Map<string, { leaf: core.item_stack; count: number }>();
+            for (const leaf of c.items)
+            {
+                const key = leaf_key(leaf);
+                const entry = leaves.get(key) ?? { leaf, count: 0 };
+                entry.count++;
+                leaves.set(key, entry);
+            }
+            push({ kind: 'pool', leaves, candidates: c.items.map(() => new Set(leaves.keys())) }, c.items.length);
+            return;
+        }
+        const arrs = arrangements(c);
+        push({ kind: 'fixed', arrangements: arrs }, arrs[0].length);
+    };
+    visit(comb);
+    return side;
+}
+
+/**
+ * 埠與葉的二分匹配：先找一個完整分配，再只留下出現在某個完整分配中的候選；沒有完整分配時回傳 false。
+ * 埠 i 目前分到葉 ρ，候選 τ 可行 ⇔ 從 τ 沿「葉 → 分到它的埠 → 該埠的候選」走得到 ρ（交錯環）。
+ */
+function prune_pool(pool: pool_segment): boolean
+{
+    const assigned: string[] = [];
+    const holders = new Map<string, number[]>([...pool.leaves.keys()].map(key => [key, []]));
+    const augment = (port: number, visited: Set<string>): boolean =>
+    {
+        for (const key of pool.candidates[port])
+        {
+            if (visited.has(key))
+            {
+                continue;
+            }
+            visited.add(key);
+            const ports = holders.get(key)!;
+            if (ports.length < pool.leaves.get(key)!.count)
+            {
+                ports.push(port);
+                assigned[port] = key;
+                return true;
+            }
+            for (let k = 0; k < ports.length; k++)
+            {
+                if (augment(ports[k], visited))
+                {
+                    ports[k] = port;
+                    assigned[port] = key;
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    for (let port = 0; port < pool.candidates.length; port++)
+    {
+        if (!augment(port, new Set()))
+        {
+            return false;
+        }
+    }
+
+    const reach = new Map<string, Set<string>>();
+    const reachable = (from: string): Set<string> =>
+    {
+        const cached = reach.get(from);
+        if (cached !== undefined)
+        {
+            return cached;
+        }
+        const seen = new Set([from]);
+        const stack = [from];
+        while (stack.length > 0)
+        {
+            for (const port of holders.get(stack.pop()!)!)
+            {
+                for (const next of pool.candidates[port])
+                {
+                    if (!seen.has(next))
+                    {
+                        seen.add(next);
+                        stack.push(next);
+                    }
+                }
+            }
+        }
+        reach.set(from, seen);
+        return seen;
+    };
+    pool.candidates = pool.candidates.map((keys, port) => new Set([...keys].filter(key => reachable(key).has(assigned[port]))));
+    return true;
+}
+
+/** 該埠仍可能的葉，依葉 key 去重。 */
+function leaves_at(side: side_state, index: number): Map<string, core.item_stack>
+{
+    const { segment, local } = side[index];
+    const result = new Map<string, core.item_stack>();
+    if (segment.kind === 'fixed')
+    {
+        for (const arr of segment.arrangements)
+        {
+            result.set(leaf_key(arr[local]), arr[local]);
+        }
+    }
+    else
+    {
+        for (const key of segment.candidates[local])
+        {
+            result.set(key, segment.leaves.get(key)!.leaf);
+        }
+    }
+    return result;
+}
+
+function items_at(side: side_state, index: number): Set<string>
+{
+    return new Set([...leaves_at(side, index).values()].map(leaf => item_key(leaf.item_id)));
+}
+
+/**
+ * 該埠只留下 item 在 allowed 中的可能；回傳是否有變動，沒有可能時回傳 null。
+ */
+function restrict(side: side_state, index: number, allowed: Set<string>): boolean | null
+{
+    const { segment, local } = side[index];
+    if (segment.kind === 'fixed')
+    {
+        const kept = segment.arrangements.filter(arr => allowed.has(item_key(arr[local].item_id)));
+        if (kept.length === 0)
+        {
+            return null;
+        }
+        const changed = kept.length !== segment.arrangements.length;
+        segment.arrangements = kept;
+        return changed;
+    }
+    const before = segment.candidates[local];
+    const kept = new Set([...before].filter(key => allowed.has(item_key(segment.leaves.get(key)!.leaf.item_id))));
+    if (kept.size === before.size)
+    {
+        return false;
+    }
+    segment.candidates[local] = kept;
+    return prune_pool(segment) ? true : null;
+}
+
+function count_leaves(comb: combination): number
+{
+    return 'kind' in comb ? comb.items.reduce((sum, item) => sum + count_leaves(item), 0) : 1;
+}
+
 function port_count(device: core.device, direction: core.port_direction): number
 {
     return device.get_port().filter(p => p.direction === direction).length;
@@ -144,26 +349,20 @@ function load_state(registry: core.pack_registry, device: core.device): device_s
     {
         throw new Error(`evaluate_ratio_graph: ${name} selects "${item_key(recipe)}", which is not a ratio recipe.`);
     }
-    const inputs = arrangements(recipe.inputs);
-    const outputs = arrangements(recipe.outputs);
-    for (const [side, arrs, direction] of [['inputs', inputs, 'input'], ['outputs', outputs, 'output']] as const)
+    for (const [side, comb, direction] of [['inputs', recipe.inputs, 'input'], ['outputs', recipe.outputs, 'output']] as const)
     {
+        const leaves = count_leaves(comb);
         const ports = port_count(device, direction);
-        if (arrs[0].length !== ports)
+        if (leaves !== ports)
         {
-            throw new Error(`evaluate_ratio_graph: ${name} recipe "${item_key(recipe)}" has ${arrs[0].length} ${side} but the device has ${ports} ${direction} ports.`);
+            throw new Error(`evaluate_ratio_graph: ${name} recipe "${item_key(recipe)}" has ${leaves} ${side} but the device has ${ports} ${direction} ports.`);
         }
     }
-    return { device, recipe, inputs, outputs };
-}
-
-function items_at(arrs: arrangement[], index: number): Set<string>
-{
-    return new Set(arrs.map(arr => item_key(arr[index].item_id)));
+    return { device, recipe, inputs: build_side(recipe.inputs), outputs: build_side(recipe.outputs) };
 }
 
 /**
- * 兩端 item 須相同：反覆刪去與另一端不相容的排列，直到不再變動。
+ * 兩端 item 須相同：反覆刪去與另一端不相容的可能，直到不再變動。
  */
 function match_items(states: Map<core.uid, device_state>, edges: graph.port_edge[]): void
 {
@@ -173,37 +372,83 @@ function match_items(states: Map<core.uid, device_state>, edges: graph.port_edge
         changed = false;
         for (const e of edges)
         {
-            const from = states.get(e.from_uid)!;
-            const to = states.get(e.to_uid)!;
-            const from_items = items_at(from.outputs, e.from_index);
-            const to_items = items_at(to.inputs, e.to_index);
-            const outputs = from.outputs.filter(arr => to_items.has(item_key(arr[e.from_index].item_id)));
-            const inputs = to.inputs.filter(arr => from_items.has(item_key(arr[e.to_index].item_id)));
-            if (outputs.length === 0 || inputs.length === 0)
+            const from = states.get(e.from_uid)!.outputs;
+            const to = states.get(e.to_uid)!.inputs;
+            const from_items = items_at(from, e.from_index);
+            const to_items = items_at(to, e.to_index);
+            const from_changed = restrict(from, e.from_index, to_items);
+            const to_changed = restrict(to, e.to_index, from_items);
+            if (from_changed === null || to_changed === null)
             {
                 throw new Error(`evaluate_ratio_graph: item mismatch on edge "${e.from_uid}" output ${e.from_index} -> "${e.to_uid}" input ${e.to_index}.`);
             }
-            if (outputs.length !== from.outputs.length || inputs.length !== to.inputs.length)
+            if (from_changed || to_changed)
             {
                 changed = true;
             }
-            from.outputs = outputs;
-            to.inputs = inputs;
         }
     }
 }
 
 /**
- * 該埠在所有剩餘排列中須為同一 item、同一係數，否則無法唯一決定。
+ * 該埠的可能須為同一 item、同一係數，否則無法唯一決定。
  */
-function unique_coefficient(arrs: arrangement[], index: number, where: string): number
+function unique_leaf(side: side_state, index: number, where: string): core.item_stack
 {
-    const keys = new Set(arrs.map(arr => `${item_key(arr[index].item_id)}*${arr[index].quantity}`));
-    if (keys.size !== 1)
+    const leaves = leaves_at(side, index);
+    if (leaves.size !== 1)
     {
-        throw new Error(`evaluate_ratio_graph: ${where} is ambiguous (${[...keys].join(', ')}).`);
+        throw new Error(`evaluate_ratio_graph: ${where} is ambiguous (${[...leaves.keys()].join(', ')}).`);
     }
-    return arrs[0][index].quantity;
+    return [...leaves.values()][0];
+}
+
+/**
+ * 沒接上游的 input 依 item 加總。已接的埠唯一，所以 fixed 段任取一個排列、pool 段扣掉已接的葉，結果都固定。
+ */
+function external_inputs(side: side_state, connected: Set<number>, t: number): Map<string, { item_id: core.namespaced_id; quantity: number }>
+{
+    const used = new Map<segment, Map<string, number>>();
+    side.forEach(({ segment }, index) =>
+    {
+        if (segment.kind === 'pool' && connected.has(index))
+        {
+            const key = leaf_key(unique_leaf(side, index, `input ${index}`));
+            const counts = used.get(segment) ?? new Map<string, number>();
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+            used.set(segment, counts);
+        }
+    });
+    const totals = new Map<string, { item_id: core.namespaced_id; quantity: number }>();
+    const add = (leaf: core.item_stack, count: number): void =>
+    {
+        const key = item_key(leaf.item_id);
+        const entry = totals.get(key) ?? { item_id: { ...leaf.item_id }, quantity: 0 };
+        entry.quantity += t * leaf.quantity * count;
+        totals.set(key, entry);
+    };
+    side.forEach(({ segment, local }, index) =>
+    {
+        if (segment.kind === 'fixed')
+        {
+            if (!connected.has(index))
+            {
+                add(segment.arrangements[0][local], 1);
+            }
+        }
+        else if (local === 0)
+        {
+            for (const [key, { leaf, count }] of segment.leaves)
+            {
+                const remaining = count - (used.get(segment)?.get(key) ?? 0);
+                if (remaining > 0)
+                {
+                    add(leaf, remaining);
+                }
+            }
+        }
+    });
+    return totals;
 }
 
 /**
@@ -234,8 +479,8 @@ export function evaluate_ratio_graph(sp: core.space, registry: core.pack_registr
     const connected_inputs = new Map<core.uid, Set<number>>();
     for (const e of edges)
     {
-        const a = unique_coefficient(states.get(e.from_uid)!.outputs, e.from_index, `"${e.from_uid}" output ${e.from_index}`);
-        const b = unique_coefficient(states.get(e.to_uid)!.inputs, e.to_index, `"${e.to_uid}" input ${e.to_index}`);
+        const a = unique_leaf(states.get(e.from_uid)!.outputs, e.from_index, `"${e.from_uid}" output ${e.from_index}`).quantity;
+        const b = unique_leaf(states.get(e.to_uid)!.inputs, e.to_index, `"${e.to_uid}" input ${e.to_index}`).quantity;
         // r_to = r_from·a / b
         neighbors.get(e.from_uid)!.push({ other: e.to_uid, factor: a / b });
         neighbors.get(e.to_uid)!.push({ other: e.from_uid, factor: b / a });
@@ -294,22 +539,7 @@ export function evaluate_ratio_graph(sp: core.space, registry: core.pack_registr
     {
         const t = t_of.get(uid)!;
         result.devices.set(uid, { t, inputs: scale_combination(state.recipe.inputs, t), outputs: scale_combination(state.recipe.outputs, t) });
-
-        // 已接上游的埠在剩餘排列中唯一，未接的葉之多重集合因此固定，取任一排列加總即可
-        const connected = connected_inputs.get(uid) ?? new Set<number>();
-        const totals = new Map<string, { item_id: core.namespaced_id; quantity: number }>();
-        state.inputs[0].forEach((leaf, index) =>
-        {
-            if (connected.has(index))
-            {
-                return;
-            }
-            const key = item_key(leaf.item_id);
-            const entry = totals.get(key) ?? { item_id: { ...leaf.item_id }, quantity: 0 };
-            entry.quantity += t * leaf.quantity;
-            totals.set(key, entry);
-        });
-        for (const entry of totals.values())
+        for (const entry of external_inputs(state.inputs, connected_inputs.get(uid) ?? new Set<number>(), t).values())
         {
             result.external.push({ uid, ...entry });
         }

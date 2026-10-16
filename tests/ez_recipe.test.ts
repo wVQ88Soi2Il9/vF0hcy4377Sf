@@ -348,4 +348,43 @@ describe('ez_recipe evaluate_ratio_graph', () =>
             { uid: 'm', item_id: { namespace: 'p', id: 'y' }, quantity: 4 }
         ]);
     });
+
+    it('平的 unordered 不展開排列：50 個不同 item，接 49 個後推出剩下的埠', () =>
+    {
+        const sp = new core.space([64, 64]);
+        place(sp, 'm', [2, 1], 'many', Array.from({ length: 50 }, (_, i) => ['input', [-1, i]] as [core.port_direction, core.vector]));
+        const recipes = [rec('many', `{${Array.from({ length: 50 }, (_, i) => `p:i${i}`).join(', ')}}`, '[]', 2)];
+        for (let k = 0; k < 49; k++)
+        {
+            place(sp, `u${k}`, [0, 1 + k], `ru${k}`, [['output', E]]);
+            recipes.push(rec(`ru${k}`, '[]', `p:i${49 - k}`, Infinity));
+        }
+        const result = ez_recipe.evaluate_ratio_graph(sp, make_registry(recipes));
+        expect(result.devices.get('u0')!.t).toBe(2);
+        expect(result.external).toEqual([{ uid: 'm', item_id: { namespace: 'p', id: 'i0' }, quantity: 2 }]);
+    });
+
+    it('ordered 裡的平 unordered：[{a, b}, c] 接 b、c 後 a 為外部需求', () =>
+    {
+        const sp = new core.space([32, 32]);
+        place(sp, 'd', [2, 1], 'rd', [['input', [-1, 0]], ['input', [-1, 1]], ['input', [-1, 2]]]);
+        place(sp, 'ub', [0, 1], 'rub', [['output', E]]);
+        place(sp, 'uc', [0, 3], 'ruc', [['output', E]]);
+        const registry = make_registry([rec('rd', '[{p:a, p:b}, p:c]', '[]', 3), rec('rub', '[]', 'p:b', Infinity), rec('ruc', '[]', 'p:c', Infinity)]);
+        const result = ez_recipe.evaluate_ratio_graph(sp, registry);
+        expect(t_of(result)).toEqual({ d: 3, ub: 3, uc: 3 });
+        expect(result.external).toEqual([{ uid: 'd', item_id: { namespace: 'p', id: 'a' }, quantity: 3 }]);
+    });
+
+    it('unordered 對 unordered 可由其他邊推出配對', () =>
+    {
+        const sp = new core.space([32, 32]);
+        place(sp, 'u', [0, 1], 'ru', [['output', E], ['output', S]]);
+        place(sp, 'd', [2, 1], 'rd', [['input', [-1, 0]], ['input', [-1, 1]]]);
+        place(sp, 'e', [0, 3], 're', [['input', N]]);
+        const registry = make_registry([rec('ru', '[]', '{p:c, p:d}', Infinity), rec('rd', '{p:c, p:d}', '[]', 4), rec('re', 'p:d', '[]', 4)]);
+        const result = ez_recipe.evaluate_ratio_graph(sp, registry);
+        expect(t_of(result)).toEqual({ u: 4, d: 4, e: 4 });
+        expect(result.external).toEqual([{ uid: 'd', item_id: { namespace: 'p', id: 'd' }, quantity: 4 }]);
+    });
 });
