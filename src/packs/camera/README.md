@@ -10,7 +10,8 @@
 |---|---|
 | `project.ts` | `camera_view`、`project` |
 | `state.ts` | `camera_state`、`pan`、`zoom_at`、`fit`、`window_of` |
-| `index.ts` | `manifest { pack_id: 'camera' }` 與上述公開 API |
+| `world_state.ts` | world 內的 camera 狀態（`get_state`、`set_state`）、`default_view`、`view` 指令 |
+| `index.ts` | manifest（`commands.view`、`create_state`）與上述公開 API |
 
 ## camera_view
 
@@ -38,13 +39,23 @@ interface camera_state { view: camera_view; origin: [number, number]; scale: num
 ```
 
 - `origin`：畫面左上角對應的空間座標（兩個畫面軸）；`scale`：一個空間單位畫成幾 px。
-- 由使用端保存（camera 不放全域或 world 狀態）；以下函式都回傳新的 state，不改舊的：
+- 以下純函式都回傳新的 state，不改舊的：
   - `pan(state, dx_px, dy_px)`：畫面內容跟著游標移動。
   - `zoom_at(state, factor, [px, py])`：以游標為中心縮放，游標下的空間點不動。
   - `fit(state, space, [w_px, h_px])`：整個空間（兩個畫面軸）置中塞進畫面。
   - `window_of(state, [w_px, h_px])`：畫面看到的空間範圍 `[x, y, w, h]`，可超出空間。
 - 不合法的 px 大小、縮放倍率或平移量時 throw。
 
-## Todo
+## world 狀態
 
-- camera CLI（`d<n>=<val>`）未實作。
+- 每個 world 一份 `camera_pack_state { current?: camera_state }`（`create_state`）。camera 沒組進 world 時讀寫都 throw。
+- `get_state(world)`：第一次讀取時以 `default_view(space)`（畫面取 d0/d1，其餘軸切在 `default_slice = 1`）、`origin [0, 0]`、`scale 1` 建立。
+- `set_state(world, next)`：檢查視角（同 `project`）、`origin` 有限、`scale` 正數，不合法時 throw 且狀態不變；不進 history，也不發事件：何時刷新畫面是 UI 的事。
+- UI 綁定：test_ui 的 view 讀寫這份狀態，自己決定何時刷新（human 選定）。
+
+## CLI
+
+`view [d<h> d<v>] [d<n>=<pos>...]`：設定畫面軸與切片，回傳目前視角（如 `view d0 d1 d2=1`）。
+- 不帶參數只顯示目前視角；畫面軸要嘛兩個都給、要嘛都不給（沿用目前的）。
+- 切片沿用目前的，新變成切片軸的從 `default_slice` 開始；給的切片覆蓋上去。
+- 不合法時 throw，視角不變。

@@ -5,6 +5,7 @@ import * as vanilla_alpha from '@/packs/vanilla_alpha'
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
+import * as camera from '@/packs/camera';
 import * as test_ui from '@/packs/test_ui';
 
 // ── 1. Compose, 依序組裝所有 pack ─────────────────────────────────────────────
@@ -14,6 +15,7 @@ const ENABLED_PACKS: core.pack_manifest[] =
     vanilla_beta.manifest,
     cli.manifest,
     panel.manifest,
+    camera.manifest,
     test_ui.manifest
 ];
 

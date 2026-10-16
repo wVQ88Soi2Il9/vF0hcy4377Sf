@@ -3,7 +3,7 @@ import * as basic_renderer from '@/packs/basic_renderer';
 
 export type camera_view = basic_renderer.projection_view;
 
-function check_view(target: core.space, view: camera_view): void
+export function check_view(target: core.space, view: camera_view): void
 {
     const dim = target.dimension;
     const [h, v] = view.axes;

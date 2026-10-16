@@ -7,6 +7,7 @@ import * as vanilla_alpha from '@/packs/vanilla_alpha';
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import * as panel from '@/packs/panel';
 import * as test_ui from '@/packs/test_ui';
+import * as camera from '@/packs/camera';
 import * as basic_renderer from '@/packs/basic_renderer';
 import * as cuboid_device from '@/packs/cuboid_device';
 
@@ -19,7 +20,7 @@ function enter(input: HTMLInputElement, line: string): void
 it('test_ui runs cli lines and keeps the history tree in sync', () =>
 {
     document.body.innerHTML = '<div id="app"></div>';
-    const catalog = world.compose([cli.manifest, panel.manifest, test_ui.manifest]);
+    const catalog = world.compose([cli.manifest, panel.manifest, camera.manifest, test_ui.manifest]);
     const w = new world.pure_world(catalog, new core.space([4, 4]), 'ui');
     panel.mount_ui_root(document.getElementById('app')!, w, test_ui.layout);
 
@@ -58,7 +59,7 @@ class box_device extends basic_renderer.drawable(cuboid_device.base_cuboid_devic
 it('test_ui view draws the camera projection and redraws on committed', () =>
 {
     document.body.innerHTML = '<div id="app"></div>';
-    const catalog = world.compose([cli.manifest, panel.manifest, test_ui.manifest]);
+    const catalog = world.compose([cli.manifest, panel.manifest, camera.manifest, test_ui.manifest]);
     const w = new world.pure_world(catalog, new core.space([8, 4, 4]), 'ui');
     panel.mount_ui_root(document.getElementById('app')!, w, test_ui.layout);
 
@@ -90,7 +91,7 @@ describe('test_ui view camera controls', () =>
     function mount(size: core.vector): world.pure_world
     {
         document.body.innerHTML = '<div id="app"></div>';
-        const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, cli.manifest, panel.manifest, test_ui.manifest]);
+        const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, cli.manifest, panel.manifest, camera.manifest, test_ui.manifest]);
         const w = new world.pure_world(catalog, new core.space(size), 'ui');
         panel.mount_ui_root(document.getElementById('app')!, w, test_ui.layout);
         return w;
@@ -157,6 +158,32 @@ describe('test_ui view camera controls', () =>
         expect(shown()).toEqual([high]);
         change(slice_input(2)!, '2');
         expect(shown()).toEqual([low, high]);
+    });
+
+    it('view cli sets axes and slices and syncs the controls', () =>
+    {
+        mount([8, 8, 4, 4]);
+        const input = document.querySelector<HTMLInputElement>('[data-test_ui_cli_input]')!;
+        const output = document.querySelector<HTMLElement>('[data-test_ui_cli_output]')!;
+        const last = () => output.lastElementChild!.textContent;
+
+        enter(input, 'view');
+        expect(last()).toBe('view d0 d1 d2=1 d3=1');
+        enter(input, 'view d3=2');
+        expect(last()).toBe('view d0 d1 d2=1 d3=2');
+        expect(slice_input(3)!.value).toBe('2');
+        enter(input, 'view d2 d0 d1=3');
+        expect(last()).toBe('view d2 d0 d1=3 d3=2');
+        expect([axis_select(0).value, axis_select(1).value]).toEqual(['2', '0']);
+        expect(document.querySelector('[data-test_ui_axis_h]')!.textContent).toBe('d2 →');
+
+        for (const bad of ['view d0', 'view d0 d0', 'view d1=9', 'view d2=1', 'view x'])
+        {
+            enter(input, bad);
+            expect(last()).not.toMatch(/^view d/);
+        }
+        enter(input, 'view');
+        expect(last()).toBe('view d2 d0 d1=3 d3=2');
     });
 
     it('switching axes swaps on collision and turns the old view axis into a slice', () =>

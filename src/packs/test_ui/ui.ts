@@ -16,12 +16,17 @@ function state_of(target_world: world.pure_world): test_ui_state
     return target_world.pack_state.get('test_ui') as test_ui_state;
 }
 
-export function on_committed(target_world: world.pure_world): void
+function refresh_ui(target_world: world.pure_world): void
 {
     for (const listener of state_of(target_world).listeners)
     {
         listener();
     }
+}
+
+export function on_committed(target_world: world.pure_world): void
+{
+    refresh_ui(target_world);
 }
 
 // 不改 space 的操作，只為了在 history 產生節點
@@ -93,15 +98,6 @@ function button(text: string, on_click: () => void): HTMLButtonElement
 }
 
 const VIEW_CELL_PX = 16;
-// 新切片軸的起始位置：第一層格中心
-const NEW_SLICE_POS = 1;
-
-// 初始視角：畫面取第 0、1 軸，其餘軸切在第一層格中心
-function default_view(target: core.space): camera.camera_view
-{
-    return with_axis(target, { axes: [0, 1], slice: {} }, 0, 0);
-}
-
 // 換畫面軸：選到另一軸時兩軸互換；保留仍是切片軸的位置，新切片軸從第一層開始
 function with_axis(target: core.space, view: camera.camera_view, index: 0 | 1, axis: number): camera.camera_view
 {
@@ -116,7 +112,7 @@ function with_axis(target: core.space, view: camera.camera_view, index: 0 | 1, a
     {
         if (a !== axes[0] && a !== axes[1])
         {
-            slice[a] = a in view.slice ? view.slice[a] : NEW_SLICE_POS;
+            slice[a] = a in view.slice ? view.slice[a] : camera.default_slice;
         }
     }
     return { axes, slice };
@@ -258,9 +254,11 @@ function render_view(target_world: world.pure_world): HTMLElement
     grid.setAttribute('stroke', '#444');
     grid.setAttribute('stroke-width', '1');
 
-    // 平移/縮放在第一次量到畫面大小時才 fit；之前沒有 viewBox
-    let cam: camera.camera_state = { view: default_view(target_world.space), origin: [0, 0], scale: 1 };
+    // 視角、平移/縮放存在 camera 的 world 狀態；第一次量到畫面大小時才 fit，之前沒有 viewBox
+    const cam = () => camera.get_state(target_world);
     let fitted = false;
+    // 上次畫圖層時的視角；sync 時只有視角變了才重畫，平移/縮放只改 viewBox
+    let drawn_view: camera.camera_view | undefined;
 
     function px_size(): [number, number] | undefined
     {
@@ -278,46 +276,55 @@ function render_view(target_world: world.pure_world): HTMLElement
         }
         if (!fitted)
         {
-            cam = camera.fit(cam, target_world.space, size);
             fitted = true;
+            camera.set_state(target_world, camera.fit(cam(), target_world.space, size));
         }
         const k = VIEW_CELL_PX / 2;
-        const box = camera.window_of(cam, size).map(n => n * k);
+        const box = camera.window_of(cam(), size).map(n => n * k);
         svg.setAttribute('viewBox', box.join(' '));
         // render 單位 → px 的倍率 = 空間單位 → px 的倍率 / k
-        draw_grid(grid, box, VIEW_CELL_PX, cam.scale / k);
+        draw_grid(grid, box, VIEW_CELL_PX, cam().scale / k);
     }
 
     function set_cam(next: camera.camera_state): void
     {
-        cam = next;
-        update_view_box();
+        camera.set_state(target_world, next);
+        sync();
     }
 
-    // 不合法的視角（例如切片超出範圍）不採用，畫面還原後照樣 throw
+    // 不合法的視角（例如切片超出範圍）不採用，控制項還原後照樣 throw
     function set_view(next: camera.camera_view): void
     {
-        const prev = cam.view;
-        cam = { ...cam, view: next };
         try
         {
-            refresh();
+            set_cam({ ...cam(), view: next });
         }
         catch (error)
         {
-            cam = { ...cam, view: prev };
-            refresh();
+            draw_controls();
             throw error;
+        }
+    }
+
+    function sync(): void
+    {
+        if (cam().view !== drawn_view)
+        {
+            refresh();
+        }
+        else
+        {
+            update_view_box();
         }
     }
 
     function draw_controls(): void
     {
         const target = target_world.space;
-        const view = cam.view;
+        const view = cam().view;
         const all_axes = [...Array(target.dimension).keys()];
-        const h = select(all_axes, view.axes[0], axis => set_view(with_axis(target, cam.view, 0, axis)));
-        const v = select(all_axes, view.axes[1], axis => set_view(with_axis(target, cam.view, 1, axis)));
+        const h = select(all_axes, view.axes[0], axis => set_view(with_axis(target, cam().view, 0, axis)));
+        const v = select(all_axes, view.axes[1], axis => set_view(with_axis(target, cam().view, 1, axis)));
         h.dataset.test_ui_view_axis = '0';
         v.dataset.test_ui_view_axis = '1';
         const whole = button('全景', () =>
@@ -325,7 +332,7 @@ function render_view(target_world: world.pure_world): HTMLElement
             const size = px_size();
             if (size !== undefined)
             {
-                set_cam(camera.fit(cam, target, size));
+                set_cam(camera.fit(cam(), target, size));
             }
         });
         whole.dataset.test_ui_view_fit = '';
@@ -346,7 +353,7 @@ function render_view(target_world: world.pure_world): HTMLElement
             input.style.marginRight = '8px';
             input.dataset.test_ui_view_slice = String(axis);
             input.addEventListener('change', () =>
-                set_view({ axes: cam.view.axes, slice: { ...cam.view.slice, [axis]: Number(input.value) } }));
+                set_view({ axes: cam().view.axes, slice: { ...cam().view.slice, [axis]: Number(input.value) } }));
             controls.append(`d${axis}=`, input);
         }
     }
@@ -355,14 +362,15 @@ function render_view(target_world: world.pure_world): HTMLElement
     {
         draw_controls();
         const target = target_world.space;
-        const projection = clip(camera.project(target, cam.view));
+        drawn_view = cam().view;
+        const projection = clip(camera.project(target, drawn_view));
         const layer = basic_renderer.render(projection, VIEW_CELL_PX);
         // 空間範圍以底色標出；外面是無限畫布
         const extent = document.createElementNS(SVG_NS, 'rect');
         extent.setAttribute('width', String(projection.size[0] / 2 * VIEW_CELL_PX));
         extent.setAttribute('height', String(projection.size[1] / 2 * VIEW_CELL_PX));
         extent.setAttribute('fill', '#111');
-        svg.style.setProperty('--test_ui_device_fill', view_color(target, cam.view));
+        svg.style.setProperty('--test_ui_device_fill', view_color(target, drawn_view));
         layer.dataset.test_ui_layer = '';
         svg.replaceChildren(extent, grid, layer);
         update_view_box();
@@ -372,7 +380,7 @@ function render_view(target_world: world.pure_world): HTMLElement
     {
         event.preventDefault();
         const rect = svg.getBoundingClientRect();
-        set_cam(camera.zoom_at(cam, Math.exp(-event.deltaY * WHEEL_ZOOM_RATE),
+        set_cam(camera.zoom_at(cam(), Math.exp(-event.deltaY * WHEEL_ZOOM_RATE),
             [event.clientX - rect.left, event.clientY - rect.top]));
     }, { passive: false });
 
@@ -382,7 +390,7 @@ function render_view(target_world: world.pure_world): HTMLElement
         svg.style.cursor = 'grabbing';
         function move(event: MouseEvent): void
         {
-            set_cam(camera.pan(cam, event.clientX - last[0], event.clientY - last[1]));
+            set_cam(camera.pan(cam(), event.clientX - last[0], event.clientY - last[1]));
             last = [event.clientX, event.clientY];
         }
         function up(): void
@@ -458,6 +466,8 @@ function render_cli(target_world: world.pure_world): HTMLElement
         try
         {
             print(format_result(cli.run(target_world, line)), '#ddd');
+            // 指令可能改了 camera 等不進 history 的狀態；刷新是 UI 的事
+            refresh_ui(target_world);
         }
         catch (error)
         {

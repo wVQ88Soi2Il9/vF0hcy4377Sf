@@ -61,9 +61,10 @@ describe('test_ui demo_box ports', () =>
         expect(marks.map(m => `${m.dataset.test_ui_port}:${m.dataset.direction}:${m.dataset.facing}:${m.tagName}`)).toEqual([
             'd0-:input:h:rect', 'd0+:output:h:rect', 'd1-:bidirectional:v:rect', 'd1+:bidirectional:v:rect',
             'd2-:input:depth:circle', 'd2+:output:depth:circle']);
-        // d0+ 在 (4,5) → 畫面 (32,40)，標記 4×4 置中
-        expect(marks[1].getAttribute('x')).toBe('30');
-        expect(marks[1].getAttribute('y')).toBe('38');
+        // d0- 在 (2,5) → 畫面 (16,40)，標記 4×4 往 + 畫進格內；d0+ 在 (4,5) → (32,40) 往 - 畫；d1- 在 (3,4) 往 + 畫
+        expect([marks[0].getAttribute('x'), marks[0].getAttribute('y')]).toEqual(['16', '38']);
+        expect([marks[1].getAttribute('x'), marks[1].getAttribute('y')]).toEqual(['28', '38']);
+        expect([marks[2].getAttribute('x'), marks[2].getAttribute('y')]).toEqual(['22', '32']);
         expect(marks[4].getAttribute('fill')).toBe('none');
     });
 });
@@ -80,5 +81,8 @@ describe('test_ui demo bar and slab', () =>
         expect(offset(bar, 'd0+')).toEqual([4, 1, 1]);
         expect(offset(bar, 'd1+')).toEqual([1, 2, 1]);
         expect(offset(slab, 'd1+')).toEqual([1, 4, 1]);
+        const inward = (dev: core.device) => test_ui.project_ports(dev, { axes: [0, 1], slice: { 2: 1 } })
+            .filter(p => p.facing !== 'depth').map(p => `${p.port.port_uid}${p.inward}`);
+        expect(inward(bar)).toEqual(['d0-1', 'd0+-1', 'd1-1', 'd1+-1']);
     });
 });

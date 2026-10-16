@@ -19,6 +19,8 @@ export interface projected_port
     port:   core.port;
     at:     [number, number];
     facing: port_facing;
+    // 面上的埠：裝置的格在面的哪一側（沿面所在軸，+1 或 -1）
+    inward: 1 | -1;
 }
 
 // 依視角投影裝置的埠：切片軸上距切片 ≤ 1（碰到切片所在的格或面）才顯示
@@ -37,7 +39,10 @@ export function project_ports(dev: core.device, view: basic_renderer.projection_
         }
         const face_axis = pos.findIndex(n => n % 2 === 0);
         const facing: port_facing = face_axis === h ? 'h' : face_axis === v ? 'v' : 'depth';
-        result.push({ port, at: [pos[h], pos[v]], facing });
+        // 面的正側有本裝置的格就朝 +，否則朝 -
+        const inward = dev.get_shape().some(cell => cell.every((c, axis) =>
+            axis === face_axis ? c === port.offset[axis] : c <= port.offset[axis] && port.offset[axis] <= c + 2)) ? 1 : -1;
+        result.push({ port, at: [pos[h], pos[v]], facing, inward });
     }
     return result;
 }
@@ -78,7 +83,7 @@ abstract class demo_cuboid extends basic_renderer.drawable(cuboid_device.base_cu
         }
 
         const mark = cell_px / 4;
-        for (const { port, at, facing } of project_ports(this, view))
+        for (const { port, at, facing, inward } of project_ports(this, view))
         {
             const cx = at[0] / 2 * cell_px;
             const cy = at[1] / 2 * cell_px;
@@ -101,9 +106,11 @@ abstract class demo_cuboid extends basic_renderer.drawable(cuboid_device.base_cu
             }
             else
             {
+                // 畫在格內、貼著面
                 el = document.createElementNS(SVG_NS, 'rect');
-                el.setAttribute('x', String(cx - mark / 2));
-                el.setAttribute('y', String(cy - mark / 2));
+                const inside = (center: number) => inward > 0 ? center : center - mark;
+                el.setAttribute('x', String(facing === 'h' ? inside(cx) : cx - mark / 2));
+                el.setAttribute('y', String(facing === 'v' ? inside(cy) : cy - mark / 2));
                 el.setAttribute('width', String(mark));
                 el.setAttribute('height', String(mark));
                 el.setAttribute('fill', color);
