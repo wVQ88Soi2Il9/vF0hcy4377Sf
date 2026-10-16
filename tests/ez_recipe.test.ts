@@ -121,3 +121,52 @@ describe('ez_recipe parse_combination', () =>
         }
     });
 });
+
+describe('ez_recipe solve_ratio', () =>
+{
+    const rec = ez_recipe.ratio(rid, ez_recipe.parse_combination('{p:a, 2*p:b}'), ez_recipe.parse_combination('p:c'));
+
+    it('要 3c：t = 3，需 3a + 6b', () =>
+    {
+        expect(ez_recipe.solve_ratio(rec, 'outputs', c, 3)).toEqual({
+            t:       3,
+            inputs:  ez_recipe.unordered(stack(a, 3), stack(b, 6)),
+            outputs: stack(c, 3)
+        });
+    });
+
+    it('由 inputs 反推：有 10b → t = 5，得 5c', () =>
+    {
+        const r = ez_recipe.solve_ratio(rec, 'inputs', b, 10);
+        expect(r.t).toBe(5);
+        expect(r.outputs).toEqual(stack(c, 5));
+    });
+
+    it('同側重複 item 取係數總和', () =>
+    {
+        const dup = ez_recipe.ratio(rid, ez_recipe.parse_combination('[{p:a, p:b}, {p:b, p:c}]'), ez_recipe.parse_combination('p:c'));
+        expect(ez_recipe.solve_ratio(dup, 'inputs', b, 6).t).toBe(3);
+    });
+
+    it('同一 item 在兩側時依指定側計算', () =>
+    {
+        const cat = ez_recipe.ratio(rid, ez_recipe.parse_combination('p:a'), ez_recipe.parse_combination('{2*p:a, p:c}'));
+        expect(ez_recipe.solve_ratio(cat, 'inputs', a, 4).t).toBe(4);
+        expect(ez_recipe.solve_ratio(cat, 'outputs', a, 4).t).toBe(2);
+    });
+
+    it('目標量 0 時 t = 0', () =>
+    {
+        expect(ez_recipe.solve_ratio(rec, 'outputs', c, 0).inputs).toEqual(ez_recipe.unordered(stack(a, 0), stack(b, 0)));
+    });
+
+    it('item 不在該側、目標量非 ≥ 0 有限數時報錯', () =>
+    {
+        expect(() => ez_recipe.solve_ratio(rec, 'inputs', c, 1)).toThrow(/not in inputs/);
+        expect(() => ez_recipe.solve_ratio(rec, 'outputs', a, 1)).toThrow(/not in outputs/);
+        for (const q of [-1, NaN, Infinity])
+        {
+            expect(() => ez_recipe.solve_ratio(rec, 'outputs', c, q)).toThrow();
+        }
+    });
+});

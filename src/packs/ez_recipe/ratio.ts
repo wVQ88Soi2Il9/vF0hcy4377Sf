@@ -38,3 +38,33 @@ export function scale_ratio(rec: ratio_recipe, t: number): { inputs: combination
     }
     return { inputs: scale_combination(rec.inputs, t), outputs: scale_combination(rec.outputs, t) };
 }
+
+export type ratio_side = 'inputs' | 'outputs';
+
+function sum_coefficient(comb: combination, item_id: core.namespaced_id): number
+{
+    if ('kind' in comb)
+    {
+        return comb.items.reduce((sum, item) => sum + sum_coefficient(item, item_id), 0);
+    }
+    return comb.item_id.namespace === item_id.namespace && comb.item_id.id === item_id.id ? comb.quantity : 0;
+}
+
+/**
+ * 由某一側某 item 的目標量反推 t 與兩側；係數取該側所有同 item 葉的總和。
+ * 例：a + 2b = c，outputs 的 c 要 3 → t = 3，inputs 為 3a + 6b。
+ */
+export function solve_ratio(rec: ratio_recipe, side: ratio_side, item_id: core.namespaced_id, quantity: number): { t: number; inputs: combination; outputs: combination }
+{
+    if (!Number.isFinite(quantity) || quantity < 0)
+    {
+        throw new Error(`solve_ratio: quantity must be a non-negative finite number, got ${quantity}.`);
+    }
+    const coefficient = sum_coefficient(rec[side], item_id);
+    if (coefficient === 0)
+    {
+        throw new Error(`solve_ratio: "${item_id.namespace}:${item_id.id}" is not in ${side} of ratio recipe "${rec.namespace}:${rec.id}".`);
+    }
+    const t = quantity / coefficient;
+    return { t, ...scale_ratio(rec, t) };
+}
