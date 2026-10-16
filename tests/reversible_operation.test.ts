@@ -8,7 +8,7 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
     {
         const log: string[] = [];
 
-        const op: core.reversible_operation =
+        const op: core.rev_op =
         {
             namespace: 'test_pack',
             id:        'custom_op',
@@ -40,16 +40,16 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
     {
         const execution_history: string[] = [];
 
-        const op: core.reversible_operation =
+        const op: core.rev_op =
         {
             namespace: 'test_pack',
             id:        'history_op',
-            execute(sp: core.space, ...args: any[])
+            execute(_sp: core.space, ...args: any[])
             {
                 const extra = args.length > 0 ? args.join(',') : 'no-args';
                 execution_history.push(`exec(${extra})`);
             },
-            inverse(sp: core.space, ...args: any[])
+            inverse(_sp: core.space, ...args: any[])
             {
                 const extra = args.length > 0 ? args.join(',') : 'no-args';
                 execution_history.push(`inv(${extra})`);
@@ -132,13 +132,13 @@ describe('可逆操作契約與引數支援 (reversible_operation trailing args)
     {
         const sp = new core.space([10, 10]);
 
-        const delete_op = vanilla_alpha.delete_device_operation(999);
+        const delete_op = vanilla_alpha.delete_device_operation('999');
         expect(() => delete_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
 
-        const move_op = vanilla_alpha.move_device_operation(999, [2, 2]);
+        const move_op = vanilla_alpha.move_device_operation('999', [2, 2]);
         expect(() => move_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
 
-        const select_op = vanilla_alpha.select_recipe_operation(999);
+        const select_op = vanilla_alpha.select_recipe_operation('999');
         expect(() => select_op.execute(sp)).toThrowError('Device with UID 999 not found in space.');
     });
 });
