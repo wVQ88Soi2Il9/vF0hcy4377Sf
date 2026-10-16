@@ -80,5 +80,5 @@ type layout_child =
 - 樣式之後改用 Tailwind（`vite.config.ts` 尚未啟用 `@tailwindcss/vite`）；目前只有功能所需的 inline style 與 `data-basic_ui_*` 屬性。
 - 沒有卸載（unmount）；需要時再加。
 - 沒有任何 panel 時版面樹無法合法（docket plan 20261015204853）。
-- `src/main.ts` 尚未啟用此 pack 或呼叫 `mount_ui_root`；CLI 的輸入介面由 basic_ui 控制（docket fact 20261015184045），尚未實作。
+- `src/main.ts` 目前以 `basic_ui_demo` 的版面掛載（驗收用）；CLI 的輸入介面由 basic_ui 控制（docket fact 20261015184045），尚未實作。
 - 只在 happy-dom 測過；捲軸、次像素 flex-basis、實際 pointer capture 需在真實瀏覽器確認。
