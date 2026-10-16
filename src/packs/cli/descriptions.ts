@@ -8,5 +8,6 @@ export const upstream_descriptions: Readonly<Record<string, string>> =
     'vanilla_beta:create_device': 'create_device <pack:id> <coords...>: create a device of that class at an even anchor.',
     'vanilla_beta:delete_device': 'delete_device <uid>: delete the device.',
     'vanilla_beta:move_device':   'move_device <uid> <coords...>: move the device to an even anchor.',
-    'vanilla_beta:select_recipe': 'select_recipe <uid> [pack:id]: select a recipe; omit it or pass null to clear.'
+    'vanilla_beta:select_recipe': 'select_recipe <uid> [pack:id]: select a recipe; omit it or pass null to clear.',
+    'vanilla_gamma:select_rule':  'select_rule <uid> [proportional | priority <i...>]: set the operating rule; omit it to use the recipe default.'
 };

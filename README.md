@@ -110,7 +110,7 @@ src/
 |---|---|
 | `vanilla_alpha` | 四個基礎可逆操作的 `op_template`（建立、刪除、移動、選定配方；不登記）、registry 查詢工具 |
 | `vanilla_beta` | 把四個操作包成 `op_templates`、軸名稱、歷史節點中繼資料、2× 網格校驗與重疊檢查、`build_graph` |
-| `vanilla_gamma` | `evaluate_world`：依 `vanilla_beta` 的圖計算每個 device 的輸出（未啟用） |
+| `vanilla_gamma` | `evaluate_world`：依 `vanilla_beta` 的圖求穩態流量（反壓）；運轉規則與 `select_rule` |
 | `cuboid_device` | 長方體裝置基底類別與形狀產生 |
 | `pipe` | 起點 + 位移段轉成管線裝置（未啟用） |
 | `camera` | 以切片將 $N$ 維空間投影為 2D；每個 world 的視角狀態與 `view` 指令 |

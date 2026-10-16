@@ -3,6 +3,7 @@ import * as world from '@/world';
 
 import * as vanilla_alpha from '@/packs/vanilla_alpha'
 import * as vanilla_beta from '@/packs/vanilla_beta';
+import * as vanilla_gamma from '@/packs/vanilla_gamma';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
 import * as camera from '@/packs/camera';
@@ -13,6 +14,7 @@ const ENABLED_PACKS: core.pack_manifest[] =
 [
     vanilla_alpha.manifest,
     vanilla_beta.manifest,
+    vanilla_gamma.manifest,
     cli.manifest,
     panel.manifest,
     camera.manifest,
