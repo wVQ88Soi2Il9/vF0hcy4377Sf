@@ -5,7 +5,7 @@ import * as vanilla_alpha from '@/packs/vanilla_alpha'
 import * as vanilla_beta from '@/packs/vanilla_beta';
 import * as cli from '@/packs/cli';
 import * as panel from '@/packs/panel';
-import * as panel_demo from '@/packs/panel_demo';
+import * as test_ui from '@/packs/test_ui';
 
 // ── 1. Compose, 依序組裝所有 pack ─────────────────────────────────────────────
 const ENABLED_PACKS: core.pack_manifest[] =
@@ -14,7 +14,7 @@ const ENABLED_PACKS: core.pack_manifest[] =
     vanilla_beta.manifest,
     cli.manifest,
     panel.manifest,
-    panel_demo.manifest
+    test_ui.manifest
 ];
 
 const catalog = world.compose(ENABLED_PACKS);
@@ -24,5 +24,4 @@ const sp = new core.space([64, 64, 4]);
 const main_world = new world.pure_world(catalog, sp, 'wwworld');
 
 // ── 3. Mount UI ──────────────────────────────────────────────────────────────
-const root = panel.mount_ui_root(document.getElementById('app')!, main_world, panel_demo.layout);
-panel_demo.wire_controls(root);
+panel.mount_ui_root(document.getElementById('app')!, main_world, test_ui.layout);
