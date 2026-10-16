@@ -5,6 +5,9 @@ import type { layout_node, layout_panel } from './layout_tree';
 import { create_group } from './group';
 import type { group_view } from './group';
 
+/**
+ * 掛上的一個 panel。收合、展開作用在它所在 group 的那個子區塊上。
+ */
 export interface panel_handle
 {
     readonly content:     HTMLElement;
@@ -17,10 +20,15 @@ export interface panel_handle
 export interface ui_root
 {
     readonly element: HTMLElement;
+    /** pack_id → panel 名稱 → handle */
     readonly panels:  ReadonlyMap<string, ReadonlyMap<string, panel_handle>>;
 }
 
-// DOM 先在 container 外建好，中途報錯時 container 不變
+/**
+ * 在 container 內建立全頁唯一的根容器，依版面樹（layout）放置各 pack 宣告的 panel。
+ * DOM 先在 container 外建好，全部成功才放進 container；中途報錯時 container 不變。
+ * container 需已接上 document，且有確定的寬高（根容器為 100% × 100%）。
+ */
 export function mount_ui_root(container: HTMLElement, target_world: world.pure_world, layout: layout_node): ui_root
 {
     const doc = container.ownerDocument;
@@ -38,7 +46,9 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
     const panels = new Map<string, Map<string, panel_handle>>();
     const seen = new Set<HTMLElement>();
 
-    // 共用或已放置的元素會被 appendChild 搬走，所以要求全新元素
+    /**
+     * 呼叫 render 並登記 handle。render 必須回傳全新、未放置的元素（同一元素被兩個 panel 共用時會被搬走）。
+     */
     function mount_panel(node: layout_panel, group: (() => group_view) | null, index: number, collapsible: boolean): HTMLElement
     {
         const { namespace, id } = node.panel;
@@ -78,7 +88,7 @@ export function mount_ui_root(container: HTMLElement, target_world: world.pure_w
         {
             return mount_panel(node, null, 0, false);
         }
-        // handle 只在 group 建好後才會被呼叫
+        // handle 在 group 建好後才會被呼叫，所以以函式延後取得 group
         let group: group_view | null = null;
         const elements = node.children.map((child, i) => (child.node.kind === 'group'
             ? build(child.node)

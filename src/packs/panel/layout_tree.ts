@@ -4,6 +4,9 @@ import type { panel_declarations } from './extensions';
 
 export type axis = 'x' | 'y';
 
+/**
+ * 版面樹：由掛載者傳入。group（內部節點）沿 axis 切分；panel（葉節點）以 namespace（pack_id）/ id（panel 名稱）引用宣告。
+ */
 export type layout_node = layout_group | layout_panel;
 
 export interface layout_group
@@ -19,15 +22,22 @@ export interface layout_panel
     panel: core.namespaced_id;
 }
 
-// 數字為 px，字串為 CSS 長度
+/**
+ * 長度：數字為 px（max 可為 Infinity），字串為任何 CSS 長度（例如 '25vw'、'max(25vw, 450px)'、'none'）。
+ */
 export type css_length = number | string;
 
-// size 是比例（flex-grow），不是 px
+/**
+ * group 的一個子區塊（樹的邊）。size 為比例（容器長度剛好等於 size 總和時即為 px）；
+ * min、max 為沿父 group 軸的上下限。只有 panel 子區塊可以收合，且必須給 collapsed_size。
+ */
 export type layout_child =
     | { node: layout_node;  size: number; min: css_length; max: css_length; collapsible: false }
     | { node: layout_panel; size: number; min: css_length; max: css_length; collapsible: true; collapsed_size: css_length };
 
-// 結構由型別保證，這裡只檢查型別表達不了的語意
+/**
+ * 檢查型別表達不了的語意：數值範圍、group 不為空、引用的 panel 存在、每個宣告的 panel 恰好出現一次。
+ */
 export function check_layout(layout: layout_node, declarations: panel_declarations): void
 {
     const placed = new Map<string, Set<string>>();
@@ -64,7 +74,7 @@ export function check_layout(layout: layout_node, declarations: panel_declaratio
             {
                 throw new Error(`${at}.size must be a finite non-negative number, got ${child.size}.`);
             }
-            // CSS 字串由 group 建立時檢查
+            // 數字（px）之間的關係可以先檢查；CSS 字串由瀏覽器解析，寫錯時在建立 group 時報錯
             const { min, max } = child;
             if (typeof min === 'number' && !(Number.isFinite(min) && min >= 0))
             {
@@ -74,6 +84,7 @@ export function check_layout(layout: layout_node, declarations: panel_declaratio
             {
                 throw new Error(`${at}.max must be a non-negative number, got ${max}.`);
             }
+            // 各自為數字的那一邊就檢查
             if ((typeof min === 'number' && child.size < min) || (typeof max === 'number' && child.size > max))
             {
                 throw new Error(`${at} needs min ≤ size ≤ max, got ${min} / ${child.size} / ${max}.`);
