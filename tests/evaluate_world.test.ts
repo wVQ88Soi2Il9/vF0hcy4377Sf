@@ -4,43 +4,13 @@ import * as world from '../src/world';
 import * as vanilla_alpha from '../src/packs/vanilla_alpha';
 import * as vanilla_beta from '../src/packs/vanilla_beta';
 import * as pipe from '../src/packs/pipe';
+import * as test_pack from '../src/packs/test';
 
-const iron: core.item_stack = { item_id: { namespace: 'test', id: 'iron' }, quantity: 3 };
-
-/** 埠由建構時給定的測試裝置。 */
-class port_device extends core.device
-{
-    public ports: core.port[] = [];
-    public get_shape(): core.vector[] { return [[0, 0]]; }
-    public get_port(): core.port[] { return this.ports; }
-}
-
-const emit_iron: core.recipe =
-{
-    namespace: 'test',
-    id:        'emit_iron',
-    evaluate(): core.item_stack[] { return [{ ...iron }]; }
-};
-
-const emit_two: core.recipe =
-{
-    namespace: 'test',
-    id:        'emit_two',
-    evaluate(): core.item_stack[] { return [{ ...iron }, { ...iron }]; }
-};
-
-const pass_through: core.recipe =
-{
-    namespace: 'test',
-    id:        'pass_through',
-    evaluate(context: vanilla_beta.recipe_context): core.item_stack[] { return context.inputs.map(s => ({ ...s })); }
-};
-
-const test_pack: core.pack_manifest = { pack_id: 'test', provides: { recipes: { emit_iron, emit_two, pass_through } } };
+const iron = test_pack.iron;
 
 function make_world(): world.pure_world
 {
-    const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, pipe.manifest, test_pack]);
+    const catalog = world.compose([vanilla_alpha.manifest, vanilla_beta.manifest, pipe.manifest, test_pack.manifest]);
     return new world.pure_world(catalog, new core.space([32, 32]), 'w');
 }
 
@@ -50,9 +20,9 @@ function add(w: world.pure_world, device: core.device, recipe_id?: core.namespac
     w.space.devices.set(device.device_uid, device);
 }
 
-function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): port_device
+function make_port_device(uid: core.uid, position: core.vector, ports: core.port[]): test_pack.port_device
 {
-    const device = new port_device(uid, { namespace: 'test', id: 'port' }, position);
+    const device = new test_pack.port_device(uid, { namespace: 'test', id: 'port' }, position);
     device.ports = ports;
     return device;
 }
