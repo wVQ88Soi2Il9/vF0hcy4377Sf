@@ -5,6 +5,7 @@ import { build_graph, graph_devices, port_edge } from '@/packs/vanilla_beta';
 import { ports_of } from './ports';
 import { type operating_rule, check_rule, get_device_rule, get_recipe_flow } from './rule';
 
+// 收斂判定用；求解（二分、fits）不放寬，誤差只剩浮點捨入，須遠小於此值
 const TOLERANCE = 1e-9;
 
 /**
@@ -72,13 +73,13 @@ interface operation_result
 
 /**
  * 在 [0, high] 中找最大的 v 使 ok(v) 成立；ok 對 v 單調（小的 v 成立）。回傳值保證成立。
+ * 二分到浮點數無法再切分為止。
  */
 function bisect_max(high: number, ok: (v: number) => boolean): number
 {
     let low = 0;
-    while (high - low > TOLERANCE)
+    for (let mid = (low + high) / 2; mid > low && mid < high; mid = (low + high) / 2)
     {
-        const mid = (low + high) / 2;
         if (ok(mid))
         {
             low = mid;
@@ -93,6 +94,7 @@ function bisect_max(high: number, ok: (v: number) => boolean): number
 
 /**
  * 在 [0, high] 中找最小的 v 使 ok(v) 成立；ok 對 v 單調（大的 v 成立）且 ok(high) 成立。回傳值保證成立。
+ * 二分到浮點數無法再切分為止。
  */
 function bisect_min(high: number, ok: (v: number) => boolean): number
 {
@@ -101,9 +103,8 @@ function bisect_min(high: number, ok: (v: number) => boolean): number
         return 0;
     }
     let low = 0;
-    while (high - low > TOLERANCE)
+    for (let mid = (low + high) / 2; mid > low && mid < high; mid = (low + high) / 2)
     {
-        const mid = (low + high) / 2;
         if (ok(mid))
         {
             high = mid;
@@ -146,7 +147,7 @@ function operate(target_world: world.pure_world, device: core.device, supply: co
 
     function fits(outputs: core.item_stack[]): boolean
     {
-        return outputs.every((o, i) => o.quantity <= limits[i] + TOLERANCE);
+        return outputs.every((o, i) => o.quantity <= limits[i]);
     }
 
     // source：實際輸出 = t·f()，取最大的 t ∈ [0, 1]
@@ -241,7 +242,7 @@ function same_numbers(a: number[], b: number[]): boolean
 
 /**
  * 穩態流量：quantity 為每單位時間流量。依拓撲順序計算每個 device 的運轉點，
- * 各 output 埠的上限為下游上一輪的消耗（沒接上為 ∞），反覆至不再變動；結果只回傳，不存入 world。
+ * 各 output 埠的上限為下游上一輪的消耗（沒接上為 ∞），反覆至前後兩輪相差 ≤ 1e-9；結果只回傳，不存入 world。
  * 超過 device 數 × 2 輪未收斂、有環、輸出數量與 output 埠數不符、輸入 ≥ 2 卻沒有規則時報錯。
  * 未接上的 input 為 null item；未選 recipe 的 device 輸出 null item、不消耗；重疊或出界的 device 跳過。
  */
