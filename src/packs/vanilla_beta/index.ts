@@ -1,11 +1,11 @@
 import * as core from '@/core';
-import { create_device_cli_template, delete_device_cli_template, move_device_cli_template, select_recipe_cli_template } from './cli_templates';
+import { create_device_template_api, delete_device_template_api, move_device_template_api, select_recipe_template_api } from './templates_api';
 
 export * from './axes';
 export * from './history';
 export * from './spatial';
 export * from './parse';
-export * from './cli_templates';
+export * from './templates_api';
 export * from './graph';
 
 export const manifest: core.pack_manifest =
@@ -15,10 +15,10 @@ export const manifest: core.pack_manifest =
     {
         op_templates:
         {
-            create_device: create_device_cli_template,
-            delete_device: delete_device_cli_template,
-            move_device:   move_device_cli_template,
-            select_recipe: select_recipe_cli_template
+            create_device: create_device_template_api,
+            delete_device: delete_device_template_api,
+            move_device:   move_device_template_api,
+            select_recipe: select_recipe_template_api
         }
     }
 };
