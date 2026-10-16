@@ -12,7 +12,9 @@ export interface projected_device
 // 投影時的視角：畫面兩軸對應的空間軸，與其餘每軸的切片位置（renderer 只轉交給 draw）
 export interface projection_view
 {
+    // 畫面水平、垂直方向對應的空間軸
     axes:  [number, number];
+    // 其餘每個軸的切片位置（空間座標，可為格面的偶數或格中心的奇數）
     slice: Record<number, number>;
 }
 

@@ -87,33 +87,31 @@ export class demo_box extends basic_renderer.drawable(cuboid_device.base_cuboid_
         {
             const cx = at[0] / 2 * cell_px;
             const cy = at[1] / 2 * cell_px;
-            const el = facing === 'depth'
-                ? document.createElementNS(SVG_NS, 'circle')
-                : document.createElementNS(SVG_NS, 'rect');
+            const color = PORT_COLOR[port.direction];
+            let el: SVGElement;
             if (facing === 'depth')
             {
+                el = document.createElementNS(SVG_NS, 'circle');
                 el.setAttribute('cx', String(cx));
                 el.setAttribute('cy', String(cy));
-                el.setAttribute('r', String(mark / 2));
+                // 朝畫面內外的輸入與輸出常疊在同一點：輸入畫成外圈，其他畫成實心
+                const ring = port.direction === 'input';
+                el.setAttribute('r', String(ring ? mark : mark / 2));
+                el.setAttribute('fill', ring ? 'none' : color);
+                if (ring)
+                {
+                    el.setAttribute('stroke', color);
+                    el.setAttribute('stroke-width', String(mark / 3));
+                }
             }
             else
             {
+                el = document.createElementNS(SVG_NS, 'rect');
                 el.setAttribute('x', String(cx - mark / 2));
                 el.setAttribute('y', String(cy - mark / 2));
                 el.setAttribute('width', String(mark));
                 el.setAttribute('height', String(mark));
-            }
-            // 朝畫面內外的輸入與輸出常疊在同一點：輸入畫成外圈，其他畫成實心
-            if (facing === 'depth' && port.direction === 'input')
-            {
-                el.setAttribute('r', String(mark));
-                el.setAttribute('fill', 'none');
-                el.setAttribute('stroke', PORT_COLOR[port.direction]);
-                el.setAttribute('stroke-width', String(mark / 3));
-            }
-            else
-            {
-                el.setAttribute('fill', PORT_COLOR[port.direction]);
+                el.setAttribute('fill', color);
             }
             el.dataset.test_ui_port = port.port_uid;
             el.dataset.direction = port.direction;

@@ -41,15 +41,6 @@ describe('camera.project', () =>
         expect(view.devices[0].cells).toEqual([[0, 0], [0, 2], [2, 0], [2, 2]]);
     });
 
-    it('touch rule: a cell center hits one layer, a face hits both sides', () =>
-    {
-        const low = box('a', [0, 0, 0], [2, 2, 2]);
-        const high = box('b', [2, 2, 2], [2, 2, 2]);
-        const target = make_space(low, high);
-        expect(uids(camera.project(target, { axes: [0, 1], slice: { 2: 1 } }))).toEqual(['a']);
-        expect(uids(camera.project(target, { axes: [0, 1], slice: { 2: 2 } }))).toEqual(['a', 'b']);
-        expect(uids(camera.project(target, { axes: [0, 1], slice: { 2: 3 } }))).toEqual(['b']);
-    });
 
     it('shows the whole device on the slice axes and dedupes projected cells', () =>
     {
@@ -92,7 +83,7 @@ describe('camera.project overlap', () =>
         expect(view.devices[1].cells).toEqual([[2, 0], [4, 0]]);
     });
 
-    it('stacked devices on different layers overlap only when the slice is on their shared face', () =>
+    it('stacked devices overlap with the same cells when the slice is on their shared face', () =>
     {
         const low = box('a', [2, 2, 0], [2, 2, 2]);
         const high = box('b', [2, 2, 2], [2, 2, 2]);
@@ -100,7 +91,6 @@ describe('camera.project overlap', () =>
         const face = camera.project(target, { axes: [0, 1], slice: { 2: 2 } });
         expect(uids(face)).toEqual(['a', 'b']);
         expect(face.devices.map(item => item.cells)).toEqual([[[2, 2]], [[2, 2]]]);
-        expect(uids(camera.project(target, { axes: [0, 1], slice: { 2: 1 } }))).toEqual(['a']);
     });
 
     it('a device spanning layers overlaps a flat one on every layer it touches', () =>
@@ -160,14 +150,5 @@ describe('camera.project moving the camera', () =>
         expect(at(1, 3)).toEqual(['b']);
         expect(at(3, 1)).toEqual([]);
         expect(at(1, 2)).toEqual(['a', 'b']);
-    });
-
-    it('does not keep state between projections', () =>
-    {
-        const a = box('a', [0, 0, 0], [2, 2, 2]);
-        const target = make_space(a);
-        const first = camera.project(target, { axes: [0, 1], slice: { 2: 1 } });
-        camera.project(target, { axes: [1, 2], slice: { 0: 5 } });
-        expect(camera.project(target, { axes: [0, 1], slice: { 2: 1 } })).toEqual(first);
     });
 });

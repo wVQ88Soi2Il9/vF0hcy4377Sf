@@ -69,12 +69,7 @@ const NEW_SLICE_POS = 1;
 // 初始視角：畫面取第 0、1 軸，其餘軸切在第一層格中心
 function default_view(target: core.space): camera.camera_view
 {
-    const slice: Record<number, number> = {};
-    for (let axis = 2; axis < target.dimension; axis++)
-    {
-        slice[axis] = NEW_SLICE_POS;
-    }
-    return { axes: [0, 1], slice };
+    return with_axis(target, { axes: [0, 1], slice: {} }, 0, 0);
 }
 
 // 換畫面軸：選到另一軸時兩軸互換；保留仍是切片軸的位置，新切片軸從第一層開始
