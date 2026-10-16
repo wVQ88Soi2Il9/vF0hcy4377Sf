@@ -95,10 +95,17 @@ describe('basic_ui check_layout', () =>
         };
         expect(with_child({ size: 50 })).toThrow(/min ≤ size ≤ max/);
         expect(with_child({ size: 500 })).toThrow(/min ≤ size ≤ max/);
-        expect(with_child({ size: NaN })).toThrow(/min ≤ size ≤ max/);
-        expect(with_child({ min: -1, collapsed_size: 0 })).toThrow(/min ≤ size ≤ max/);
+        expect(with_child({ size: NaN })).toThrow(/size must be/);
+        expect(with_child({ min: -1, collapsed_size: 0 })).toThrow(/min must be/);
         expect(with_child({ max: 50 })).toThrow(/min ≤ size ≤ max/);
         expect(with_child({ collapsed_size: 150 })).toThrow(/collapsed_size/);
         expect(with_child({ max: Infinity, size: 300 })).not.toThrow();
+    });
+
+    it('accepts CSS lengths and leaves their parsing to the browser', () =>
+    {
+        const layout = full();
+        Object.assign(layout.children[0], { min: '10vw', max: 'max(25vw, 450px)', size: 5000, collapsed_size: '38px' });
+        expect(() => basic_ui.check_layout(layout, declarations)).not.toThrow();
     });
 });

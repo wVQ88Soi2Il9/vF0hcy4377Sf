@@ -304,3 +304,99 @@ describe('basic_ui collapse', () =>
         expect(grow(left.content)).toBeCloseTo(250);
     });
 });
+
+describe('basic_ui CSS lengths, ARIA and separator state', () =>
+{
+    // 無效 CSS 長度的報錯依賴瀏覽器拒絕該值；happy-dom 會接受任何字串，所以只在真實瀏覽器驗證
+    it('writes CSS lengths as given', () =>
+    {
+        const w = make_world({ a: { p: section('p'), q: section('q') } });
+        const layout: basic_ui.layout_node =
+        {
+            kind: 'group', axis: 'x',
+            children: [{ ...leaf('a', 'p', 1), min: '10vw', max: 'max(25vw, 450px)' }, leaf('a', 'q', 1)]
+        };
+        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const p = slot_of(root.panels.get('a')!.get('p')!.content);
+        expect(p.style.minWidth).toBe('10vw');
+        expect(p.style.maxWidth).toContain('max(');
+    });
+
+    it('resolves percentage limits against the group length when dragging', () =>
+    {
+        const w = make_world({ a: { p: section('p'), q: section('q') } });
+        const layout: basic_ui.layout_node =
+        {
+            kind: 'group', axis: 'x',
+            children: [{ ...leaf('a', 'p', 400), max: '60%' }, leaf('a', 'q', 400)]
+        };
+        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const group = root.element.firstElementChild as HTMLElement;
+        group.getBoundingClientRect = () => ({ width: 804, height: 100 } as DOMRect);
+        const [p, q] = ['p', 'q'].map(n => root.panels.get('a')!.get(n)!.content);
+        stub_width(p, 400);
+        stub_width(q, 400);
+        const separator = group.querySelector('[data-basic_ui_separator]')!;
+        pointer(separator, 'pointerdown', 0);
+        pointer(separator, 'pointermove', 9999);
+        // 60% of 804 = 482.4
+        expect(grow(p) / (grow(p) + grow(q)) * 800).toBeCloseTo(482.4);
+    });
+
+    it('marks separators with ARIA, flags dragging and hides them next to collapsed panels', () =>
+    {
+        const { separator, left } = two_columns();
+        expect(separator.getAttribute('role')).toBe('separator');
+        expect(separator.getAttribute('aria-orientation')).toBe('vertical');
+
+        pointer(separator, 'pointerdown', 0);
+        expect(separator.dataset.basic_ui_dragging).toBe('');
+        pointer(separator, 'pointerup', 0);
+        expect(separator.dataset.basic_ui_dragging).toBeUndefined();
+
+        left.collapse();
+        expect(separator.hidden).toBe(true);
+        left.expand();
+        expect(separator.hidden).toBe(false);
+    });
+});
+
+describe('basic_ui CSS length review fixes', () =>
+{
+    const mount_with = (child: Partial<basic_ui.layout_child>) =>
+    {
+        const layout = { kind: 'group', axis: 'x', children: [{ ...leaf('a', 'p', 100), ...child }, leaf('a', 'q', 100)] } as basic_ui.layout_node;
+        return () => basic_ui.mount_ui_root(container(), make_world({ a: { p: section('p'), q: section('q') } }), layout);
+    };
+
+    it('rejects percentages mixed into expressions at mount', () =>
+    {
+        expect(mount_with({ max: 'calc(100% - 300px)' })).toThrow(/mixes a percentage/);
+        expect(mount_with({ collapsible: true, collapsed_size: 'max(30%, 20px)' } as Partial<basic_ui.layout_child>)).toThrow(/mixes a percentage/);
+        expect(mount_with({ max: '60%' })).not.toThrow();
+    });
+
+    it('checks each numeric side of size and rejects an infinite collapsed_size', () =>
+    {
+        expect(mount_with({ min: 120, max: '40vw', size: 50 })).toThrow(/min ≤ size ≤ max/);
+        expect(mount_with({ min: '10vw', max: 80, size: 100 })).toThrow(/min ≤ size ≤ max/);
+        expect(mount_with({ min: '10vw', collapsible: true, collapsed_size: Infinity } as Partial<basic_ui.layout_child>)).toThrow(/collapsed_size/);
+    });
+
+    it('lets min win over max when dragging, like CSS', () =>
+    {
+        const w = make_world({ a: { p: section('p'), q: section('q') } });
+        const layout: basic_ui.layout_node = { kind: 'group', axis: 'x', children: [{ ...leaf('a', 'p', 300), min: 300, max: '200px' }, leaf('a', 'q', 300)] };
+        const root = basic_ui.mount_ui_root(container(), w, layout);
+        const [p, q] = ['p', 'q'].map(n => root.panels.get('a')!.get(n)!.content);
+        stub_width(p, 300);
+        stub_width(q, 300);
+        const separator = root.element.querySelector('[data-basic_ui_separator]')!;
+        pointer(separator, 'pointerdown', 0);
+        pointer(separator, 'pointermove', -50);
+        pointer(separator, 'pointermove', 50);
+        // p 固定在 300：拖不動
+        expect(grow(p)).toBe(300);
+        expect(grow(q)).toBe(300);
+    });
+});

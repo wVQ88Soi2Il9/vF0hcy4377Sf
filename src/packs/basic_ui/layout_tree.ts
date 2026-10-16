@@ -23,12 +23,17 @@ export interface layout_panel
 }
 
 /**
- * group 的一個子區塊（樹的邊）。size、min、max 為沿父 group 軸的 px；max 可為 Infinity。
- * 只有 panel 子區塊可以收合，且必須給 collapsed_size。
+ * 長度：數字為 px（max 可為 Infinity），字串為任何 CSS 長度（例如 '25vw'、'max(25vw, 450px)'、'none'）。
+ */
+export type css_length = number | string;
+
+/**
+ * group 的一個子區塊（樹的邊）。size 為比例（容器長度剛好等於 size 總和時即為 px）；
+ * min、max 為沿父 group 軸的上下限。只有 panel 子區塊可以收合，且必須給 collapsed_size。
  */
 export type layout_child =
-    | { node: layout_node;  size: number; min: number; max: number; collapsible: false }
-    | { node: layout_panel; size: number; min: number; max: number; collapsible: true; collapsed_size: number };
+    | { node: layout_node;  size: number; min: css_length; max: css_length; collapsible: false }
+    | { node: layout_panel; size: number; min: css_length; max: css_length; collapsible: true; collapsed_size: css_length };
 
 /**
  * 檢查型別表達不了的語意：數值範圍、group 不為空、引用的 panel 存在、每個宣告的 panel 恰好出現一次。
@@ -65,13 +70,28 @@ export function check_layout(layout: layout_node, declarations: panel_declaratio
         node.children.forEach((child, i) =>
         {
             const at = `${path}.children[${i}]`;
-            if (!(Number.isFinite(child.min) && child.min >= 0 && child.max >= child.min && Number.isFinite(child.size) && child.size >= child.min && child.size <= child.max))
+            if (!(Number.isFinite(child.size) && child.size >= 0))
             {
-                throw new Error(`${at} needs 0 ≤ min ≤ size ≤ max with finite min and size, got ${child.min} / ${child.size} / ${child.max}.`);
+                throw new Error(`${at}.size must be a finite non-negative number, got ${child.size}.`);
             }
-            if (child.collapsible && !(child.collapsed_size >= 0 && child.collapsed_size <= child.min))
+            // 數字（px）之間的關係可以先檢查；CSS 字串由瀏覽器解析，寫錯時在建立 group 時報錯
+            const { min, max } = child;
+            if (typeof min === 'number' && !(Number.isFinite(min) && min >= 0))
             {
-                throw new Error(`${at}.collapsed_size must be in [0, min], got ${child.collapsed_size}.`);
+                throw new Error(`${at}.min must be a finite non-negative number, got ${min}.`);
+            }
+            if (typeof max === 'number' && !(max >= 0))
+            {
+                throw new Error(`${at}.max must be a non-negative number, got ${max}.`);
+            }
+            // 各自為數字的那一邊就檢查
+            if ((typeof min === 'number' && child.size < min) || (typeof max === 'number' && child.size > max))
+            {
+                throw new Error(`${at} needs min ≤ size ≤ max, got ${min} / ${child.size} / ${max}.`);
+            }
+            if (child.collapsible && typeof child.collapsed_size === 'number' && !(Number.isFinite(child.collapsed_size) && child.collapsed_size >= 0 && (typeof min !== 'number' || child.collapsed_size <= min)))
+            {
+                throw new Error(`${at}.collapsed_size must be a finite number in [0, min], got ${child.collapsed_size}.`);
             }
             visit(child.node, `${at}.node`);
         });

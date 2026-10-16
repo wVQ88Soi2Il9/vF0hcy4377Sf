@@ -61,6 +61,7 @@ export const panels: Record<string, basic_ui.panel_declaration> =
 
 /**
  * 示範版面：左 explorer、中間上下切成 world / log、右 inspector；三個側邊區塊可收合。
+ * explorer 與 inspector 的上限示範 CSS 長度（vw、max()）。
  */
 export const layout: basic_ui.layout_node =
 {
@@ -68,7 +69,7 @@ export const layout: basic_ui.layout_node =
     axis: 'x',
     children:
     [
-        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'explorer' } }, size: 220, min: 120, max: 400, collapsible: true, collapsed_size: 0 },
+        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'explorer' } }, size: 220, min: 120, max: '40vw', collapsible: true, collapsed_size: 0 },
         {
             node:
             {
@@ -82,7 +83,7 @@ export const layout: basic_ui.layout_node =
             },
             size: 800, min: 300, max: Infinity, collapsible: false
         },
-        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'inspector' } }, size: 240, min: 150, max: 400, collapsible: true, collapsed_size: 0 }
+        { node: { kind: 'panel', panel: { namespace: 'basic_ui_demo', id: 'inspector' } }, size: 240, min: 150, max: 'max(25vw, 300px)', collapsible: true, collapsed_size: 0 }
     ]
 };
 
